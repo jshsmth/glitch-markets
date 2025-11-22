@@ -4,7 +4,20 @@ import {
 	validateMarket,
 	validateMarkets,
 	validateEvent,
-	validateEvents
+	validateEvents,
+	validatePosition,
+	validatePositions,
+	validateTrade,
+	validateTrades,
+	validateActivity,
+	validateActivities,
+	validateHolderInfo,
+	validateMarketHolders,
+	validateMarketHoldersList,
+	validatePortfolioValue,
+	validatePortfolioValues,
+	validateClosedPosition,
+	validateClosedPositions
 } from './response-validator';
 import { ValidationError } from '../errors/api-errors';
 
@@ -940,6 +953,874 @@ describe('Property 17: Nested market data is validated', () => {
 
 				expect(result.markets).toEqual([]);
 			}),
+			{ numRuns: 100 }
+		);
+	});
+});
+
+/**
+ * Feature: polymarket-user-data, Property 3: Position response validation enforces required fields
+ * Validates: Requirements 1.3
+ *
+ * For any position object, the validator should accept it if and only if it contains all required
+ * fields (proxyWallet, asset, conditionId, size, currentValue) with valid types.
+ */
+describe('Property 3: Position response validation enforces required fields', () => {
+	// Generator for valid position objects
+	const validPositionArbitrary = fc.record({
+		proxyWallet: fc.string({ minLength: 1 }),
+		asset: fc.string({ minLength: 1 }),
+		conditionId: fc.string({ minLength: 1 }),
+		size: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		avgPrice: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		initialValue: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		currentValue: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		cashPnl: fc.float({ noNaN: true, noDefaultInfinity: true }),
+		percentPnl: fc.float({ noNaN: true, noDefaultInfinity: true }),
+		totalBought: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		realizedPnl: fc.float({ noNaN: true, noDefaultInfinity: true }),
+		percentRealizedPnl: fc.float({ noNaN: true, noDefaultInfinity: true }),
+		curPrice: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		redeemable: fc.boolean(),
+		mergeable: fc.boolean(),
+		title: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		icon: fc.webUrl(),
+		eventSlug: fc.string({ minLength: 1 }),
+		outcome: fc.string({ minLength: 1 }),
+		outcomeIndex: fc.integer({ min: 0 }),
+		oppositeOutcome: fc.string({ minLength: 1 }),
+		oppositeAsset: fc.string({ minLength: 1 }),
+		endDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		negativeRisk: fc.boolean()
+	});
+
+	it('should validate valid position objects without throwing errors', () => {
+		fc.assert(
+			fc.property(validPositionArbitrary, (positionData) => {
+				const result = validatePosition(positionData);
+				expect(result).toEqual(positionData);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate arrays of valid positions without throwing errors', () => {
+		fc.assert(
+			fc.property(
+				fc.array(validPositionArbitrary, { minLength: 0, maxLength: 10 }),
+				(positions) => {
+					const result = validatePositions(positions);
+					expect(result).toEqual(positions);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject non-object data', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.string(),
+					fc.integer(),
+					fc.boolean(),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.array(fc.anything())
+				),
+				(invalidData) => {
+					expect(() => validatePosition(invalidData)).toThrow(ValidationError);
+					expect(() => validatePosition(invalidData)).toThrow('Position data must be an object');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject positions with missing required string fields', () => {
+		const requiredStringFields = [
+			'proxyWallet',
+			'asset',
+			'conditionId',
+			'title',
+			'slug',
+			'icon',
+			'eventSlug',
+			'outcome',
+			'oppositeOutcome',
+			'oppositeAsset',
+			'endDate'
+		];
+
+		fc.assert(
+			fc.property(
+				validPositionArbitrary,
+				fc.constantFrom(...requiredStringFields),
+				(positionData, fieldToRemove) => {
+					const invalidPosition = { ...positionData };
+					delete (invalidPosition as Record<string, unknown>)[fieldToRemove];
+
+					expect(() => validatePosition(invalidPosition)).toThrow(ValidationError);
+					expect(() => validatePosition(invalidPosition)).toThrow('Position validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject positions with missing required number fields', () => {
+		const requiredNumberFields = [
+			'size',
+			'avgPrice',
+			'initialValue',
+			'currentValue',
+			'cashPnl',
+			'percentPnl',
+			'totalBought',
+			'realizedPnl',
+			'percentRealizedPnl',
+			'curPrice',
+			'outcomeIndex'
+		];
+
+		fc.assert(
+			fc.property(
+				validPositionArbitrary,
+				fc.constantFrom(...requiredNumberFields),
+				(positionData, fieldToRemove) => {
+					const invalidPosition = { ...positionData };
+					delete (invalidPosition as Record<string, unknown>)[fieldToRemove];
+
+					expect(() => validatePosition(invalidPosition)).toThrow(ValidationError);
+					expect(() => validatePosition(invalidPosition)).toThrow('Position validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject positions with missing required boolean fields', () => {
+		fc.assert(
+			fc.property(
+				validPositionArbitrary,
+				fc.constantFrom('redeemable', 'mergeable', 'negativeRisk'),
+				(positionData, fieldToRemove) => {
+					const invalidPosition = { ...positionData };
+					delete (invalidPosition as Record<string, unknown>)[fieldToRemove];
+
+					expect(() => validatePosition(invalidPosition)).toThrow(ValidationError);
+					expect(() => validatePosition(invalidPosition)).toThrow('Position validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject positions with incorrect field types', () => {
+		fc.assert(
+			fc.property(
+				validPositionArbitrary,
+				fc.constantFrom('proxyWallet', 'asset', 'size', 'redeemable'),
+				fc.oneof(fc.string(), fc.integer(), fc.boolean(), fc.constant(null)),
+				(positionData, fieldToChange, wrongValue) => {
+					// Skip if the wrong value happens to be the correct type
+					const correctType =
+						fieldToChange === 'size'
+							? 'number'
+							: fieldToChange === 'redeemable'
+								? 'boolean'
+								: 'string';
+					if (typeof wrongValue === correctType) return;
+
+					const invalidPosition = { ...positionData, [fieldToChange]: wrongValue };
+
+					expect(() => validatePosition(invalidPosition)).toThrow(ValidationError);
+					expect(() => validatePosition(invalidPosition)).toThrow('Position validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject non-array data when validating positions array', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.string(),
+					fc.integer(),
+					fc.boolean(),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.record({})
+				),
+				(invalidData) => {
+					expect(() => validatePositions(invalidData)).toThrow(ValidationError);
+					expect(() => validatePositions(invalidData)).toThrow('Positions data must be an array');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate empty position arrays successfully', () => {
+		const result = validatePositions([]);
+		expect(result).toEqual([]);
+	});
+});
+
+/**
+ * Feature: polymarket-user-data, Property 5: Trade response validation enforces required fields
+ * Validates: Requirements 2.3
+ *
+ * For any trade object, the validator should accept it if and only if it contains all required
+ * fields (proxyWallet, side, asset, size, price, timestamp) with valid types and side is either 'BUY' or 'SELL'.
+ */
+describe('Property 5: Trade response validation enforces required fields', () => {
+	// Generator for valid trade objects
+	const validTradeArbitrary = fc.record({
+		proxyWallet: fc.string({ minLength: 1 }),
+		side: fc.constantFrom('BUY' as const, 'SELL' as const),
+		asset: fc.string({ minLength: 1 }),
+		conditionId: fc.string({ minLength: 1 }),
+		size: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		price: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		timestamp: fc.integer({ min: 0 }),
+		title: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		icon: fc.webUrl(),
+		eventSlug: fc.string({ minLength: 1 }),
+		outcome: fc.string({ minLength: 1 }),
+		outcomeIndex: fc.integer({ min: 0 }),
+		name: fc.string(),
+		pseudonym: fc.string(),
+		bio: fc.string(),
+		profileImage: fc.webUrl(),
+		profileImageOptimized: fc.webUrl(),
+		transactionHash: fc.string({ minLength: 1 })
+	});
+
+	it('should validate valid trade objects without throwing errors', () => {
+		fc.assert(
+			fc.property(validTradeArbitrary, (tradeData) => {
+				const result = validateTrade(tradeData);
+				expect(result).toEqual(tradeData);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate arrays of valid trades without throwing errors', () => {
+		fc.assert(
+			fc.property(fc.array(validTradeArbitrary, { minLength: 0, maxLength: 10 }), (trades) => {
+				const result = validateTrades(trades);
+				expect(result).toEqual(trades);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject non-object data', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.string(),
+					fc.integer(),
+					fc.boolean(),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.array(fc.anything())
+				),
+				(invalidData) => {
+					expect(() => validateTrade(invalidData)).toThrow(ValidationError);
+					expect(() => validateTrade(invalidData)).toThrow('Trade data must be an object');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject trades with missing required fields', () => {
+		const requiredFields = [
+			'proxyWallet',
+			'side',
+			'asset',
+			'conditionId',
+			'size',
+			'price',
+			'timestamp'
+		];
+
+		fc.assert(
+			fc.property(
+				validTradeArbitrary,
+				fc.constantFrom(...requiredFields),
+				(tradeData, fieldToRemove) => {
+					const invalidTrade = { ...tradeData };
+					delete (invalidTrade as Record<string, unknown>)[fieldToRemove];
+
+					expect(() => validateTrade(invalidTrade)).toThrow(ValidationError);
+					expect(() => validateTrade(invalidTrade)).toThrow('Trade validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject trades with invalid side values', () => {
+		fc.assert(
+			fc.property(
+				validTradeArbitrary,
+				fc.string().filter((s) => s !== 'BUY' && s !== 'SELL'),
+				(tradeData, invalidSide) => {
+					const invalidTrade = { ...tradeData, side: invalidSide };
+
+					expect(() => validateTrade(invalidTrade as Record<string, unknown>)).toThrow(
+						ValidationError
+					);
+					expect(() => validateTrade(invalidTrade as Record<string, unknown>)).toThrow(
+						'Trade validation failed'
+					);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject non-array data when validating trades array', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.string(),
+					fc.integer(),
+					fc.boolean(),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.record({})
+				),
+				(invalidData) => {
+					expect(() => validateTrades(invalidData)).toThrow(ValidationError);
+					expect(() => validateTrades(invalidData)).toThrow('Trades data must be an array');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate empty trade arrays successfully', () => {
+		const result = validateTrades([]);
+		expect(result).toEqual([]);
+	});
+});
+
+/**
+ * Feature: polymarket-user-data, Property 6: Activity response validation enforces conditional fields
+ * Validates: Requirements 3.2, 3.3
+ *
+ * For any activity object, when the type is 'TRADE', the validator should require trade-specific
+ * fields (price, asset, side) in addition to base fields; for other types, these fields should be optional.
+ */
+describe('Property 6: Activity response validation enforces conditional fields', () => {
+	// Generator for base activity fields
+	const baseActivityFields = {
+		proxyWallet: fc.string({ minLength: 1 }),
+		timestamp: fc.integer({ min: 0 }),
+		conditionId: fc.string({ minLength: 1 }),
+		size: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		usdcSize: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		transactionHash: fc.string({ minLength: 1 }),
+		title: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		icon: fc.webUrl(),
+		eventSlug: fc.string({ minLength: 1 }),
+		outcome: fc.string({ minLength: 1 }),
+		name: fc.string(),
+		pseudonym: fc.string(),
+		bio: fc.string(),
+		profileImage: fc.webUrl(),
+		profileImageOptimized: fc.webUrl()
+	};
+
+	// Generator for trade activities
+	const validTradeActivityArbitrary = fc.record({
+		...baseActivityFields,
+		type: fc.constant('TRADE' as const),
+		price: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		asset: fc.string({ minLength: 1 }),
+		side: fc.constantFrom('BUY' as const, 'SELL' as const),
+		outcomeIndex: fc.integer({ min: 0 })
+	});
+
+	// Generator for non-trade activities
+	const validNonTradeActivityArbitrary = fc.record({
+		...baseActivityFields,
+		type: fc.constantFrom('SPLIT' as const, 'MERGE' as const, 'REDEEM' as const)
+	});
+
+	it('should validate valid trade activities with all required fields', () => {
+		fc.assert(
+			fc.property(validTradeActivityArbitrary, (activityData) => {
+				const result = validateActivity(activityData);
+				expect(result).toEqual(activityData);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate valid non-trade activities without trade-specific fields', () => {
+		fc.assert(
+			fc.property(validNonTradeActivityArbitrary, (activityData) => {
+				const result = validateActivity(activityData);
+				expect(result).toEqual(activityData);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject trade activities missing trade-specific fields', () => {
+		const tradeSpecificFields = ['price', 'asset', 'side', 'outcomeIndex'];
+
+		fc.assert(
+			fc.property(
+				validTradeActivityArbitrary,
+				fc.constantFrom(...tradeSpecificFields),
+				(activityData, fieldToRemove) => {
+					const invalidActivity = { ...activityData };
+					delete (invalidActivity as Record<string, unknown>)[fieldToRemove];
+
+					expect(() => validateActivity(invalidActivity)).toThrow(ValidationError);
+					expect(() => validateActivity(invalidActivity)).toThrow('Activity validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject activities with invalid type values', () => {
+		fc.assert(
+			fc.property(
+				validTradeActivityArbitrary,
+				fc.string().filter((s) => !['TRADE', 'SPLIT', 'MERGE', 'REDEEM'].includes(s)),
+				(activityData, invalidType) => {
+					const invalidActivity = { ...activityData, type: invalidType };
+
+					expect(() => validateActivity(invalidActivity as Record<string, unknown>)).toThrow(
+						ValidationError
+					);
+					expect(() => validateActivity(invalidActivity as Record<string, unknown>)).toThrow(
+						'Activity validation failed'
+					);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate arrays of valid activities', () => {
+		fc.assert(
+			fc.property(
+				fc.array(fc.oneof(validTradeActivityArbitrary, validNonTradeActivityArbitrary), {
+					minLength: 0,
+					maxLength: 10
+				}),
+				(activities) => {
+					const result = validateActivities(activities);
+					expect(result).toEqual(activities);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate empty activity arrays successfully', () => {
+		const result = validateActivities([]);
+		expect(result).toEqual([]);
+	});
+});
+
+/**
+ * Feature: polymarket-user-data, Property 8: Holder response validation enforces required fields
+ * Validates: Requirements 4.2
+ *
+ * For any holder object, the validator should accept it if and only if it contains all required
+ * fields (proxyWallet, asset, amount, outcomeIndex) with valid types.
+ */
+describe('Property 8: Holder response validation enforces required fields', () => {
+	// Generator for valid holder info objects
+	const validHolderInfoArbitrary = fc.record({
+		proxyWallet: fc.string({ minLength: 1 }),
+		bio: fc.string(),
+		asset: fc.string({ minLength: 1 }),
+		pseudonym: fc.string(),
+		amount: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		displayUsernamePublic: fc.boolean(),
+		outcomeIndex: fc.integer({ min: 0 }),
+		name: fc.string(),
+		profileImage: fc.webUrl(),
+		profileImageOptimized: fc.webUrl()
+	});
+
+	// Generator for valid market holders objects
+	const validMarketHoldersArbitrary = fc.record({
+		token: fc.string({ minLength: 1 }),
+		holders: fc.array(validHolderInfoArbitrary, { minLength: 0, maxLength: 10 })
+	});
+
+	it('should validate valid holder info objects without throwing errors', () => {
+		fc.assert(
+			fc.property(validHolderInfoArbitrary, (holderData) => {
+				const result = validateHolderInfo(holderData);
+				expect(result).toEqual(holderData);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate valid market holders objects without throwing errors', () => {
+		fc.assert(
+			fc.property(validMarketHoldersArbitrary, (marketHoldersData) => {
+				const result = validateMarketHolders(marketHoldersData);
+				expect(result).toEqual(marketHoldersData);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate arrays of valid market holders without throwing errors', () => {
+		fc.assert(
+			fc.property(
+				fc.array(validMarketHoldersArbitrary, { minLength: 0, maxLength: 10 }),
+				(marketHoldersList) => {
+					const result = validateMarketHoldersList(marketHoldersList);
+					expect(result).toEqual(marketHoldersList);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject holder info with missing required fields', () => {
+		const requiredFields = ['proxyWallet', 'asset', 'amount', 'outcomeIndex'];
+
+		fc.assert(
+			fc.property(
+				validHolderInfoArbitrary,
+				fc.constantFrom(...requiredFields),
+				(holderData, fieldToRemove) => {
+					const invalidHolder = { ...holderData };
+					delete (invalidHolder as Record<string, unknown>)[fieldToRemove];
+
+					expect(() => validateHolderInfo(invalidHolder)).toThrow(ValidationError);
+					expect(() => validateHolderInfo(invalidHolder)).toThrow('HolderInfo validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject market holders with missing required fields', () => {
+		fc.assert(
+			fc.property(
+				validMarketHoldersArbitrary,
+				fc.constantFrom('token', 'holders'),
+				(marketHoldersData, fieldToRemove) => {
+					const invalidMarketHolders = { ...marketHoldersData };
+					delete (invalidMarketHolders as Record<string, unknown>)[fieldToRemove];
+
+					expect(() => validateMarketHolders(invalidMarketHolders)).toThrow(ValidationError);
+					expect(() => validateMarketHolders(invalidMarketHolders)).toThrow(
+						'MarketHolders validation failed'
+					);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate empty market holders lists successfully', () => {
+		const result = validateMarketHoldersList([]);
+		expect(result).toEqual([]);
+	});
+});
+
+/**
+ * Feature: polymarket-user-data, Property 10: Portfolio value response validation enforces required fields
+ * Validates: Requirements 5.3
+ *
+ * For any portfolio value object, the validator should accept it if and only if it contains
+ * both user and value fields with valid types.
+ */
+describe('Property 10: Portfolio value response validation enforces required fields', () => {
+	// Generator for valid portfolio value objects
+	const validPortfolioValueArbitrary = fc.record({
+		user: fc.string({ minLength: 1 }),
+		value: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true })
+	});
+
+	it('should validate valid portfolio value objects without throwing errors', () => {
+		fc.assert(
+			fc.property(validPortfolioValueArbitrary, (portfolioData) => {
+				const result = validatePortfolioValue(portfolioData);
+				expect(result).toEqual(portfolioData);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate arrays of valid portfolio values without throwing errors', () => {
+		fc.assert(
+			fc.property(
+				fc.array(validPortfolioValueArbitrary, { minLength: 0, maxLength: 10 }),
+				(portfolioValues) => {
+					const result = validatePortfolioValues(portfolioValues);
+					expect(result).toEqual(portfolioValues);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject portfolio values with missing required fields', () => {
+		fc.assert(
+			fc.property(
+				validPortfolioValueArbitrary,
+				fc.constantFrom('user', 'value'),
+				(portfolioData, fieldToRemove) => {
+					const invalidPortfolio = { ...portfolioData };
+					delete (invalidPortfolio as Record<string, unknown>)[fieldToRemove];
+
+					expect(() => validatePortfolioValue(invalidPortfolio)).toThrow(ValidationError);
+					expect(() => validatePortfolioValue(invalidPortfolio)).toThrow(
+						'PortfolioValue validation failed'
+					);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject non-object data', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.string(),
+					fc.integer(),
+					fc.boolean(),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.array(fc.anything())
+				),
+				(invalidData) => {
+					expect(() => validatePortfolioValue(invalidData)).toThrow(ValidationError);
+					expect(() => validatePortfolioValue(invalidData)).toThrow(
+						'PortfolioValue data must be an object'
+					);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate empty portfolio value arrays successfully', () => {
+		const result = validatePortfolioValues([]);
+		expect(result).toEqual([]);
+	});
+});
+
+/**
+ * Feature: polymarket-user-data, Property 11: Closed position response validation enforces required fields
+ * Validates: Requirements 6.2
+ *
+ * For any closed position object, the validator should accept it if and only if it contains all
+ * required fields (proxyWallet, asset, conditionId, avgPrice, realizedPnl) with valid types.
+ */
+describe('Property 11: Closed position response validation enforces required fields', () => {
+	// Generator for valid closed position objects
+	const validClosedPositionArbitrary = fc.record({
+		proxyWallet: fc.string({ minLength: 1 }),
+		asset: fc.string({ minLength: 1 }),
+		conditionId: fc.string({ minLength: 1 }),
+		avgPrice: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		totalBought: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		realizedPnl: fc.float({ noNaN: true, noDefaultInfinity: true }),
+		curPrice: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		timestamp: fc.integer({ min: 0 }),
+		title: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		icon: fc.webUrl(),
+		eventSlug: fc.string({ minLength: 1 }),
+		outcome: fc.string({ minLength: 1 }),
+		outcomeIndex: fc.integer({ min: 0 }),
+		oppositeOutcome: fc.string({ minLength: 1 }),
+		oppositeAsset: fc.string({ minLength: 1 }),
+		endDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString())
+	});
+
+	it('should validate valid closed position objects without throwing errors', () => {
+		fc.assert(
+			fc.property(validClosedPositionArbitrary, (closedPositionData) => {
+				const result = validateClosedPosition(closedPositionData);
+				expect(result).toEqual(closedPositionData);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate arrays of valid closed positions without throwing errors', () => {
+		fc.assert(
+			fc.property(
+				fc.array(validClosedPositionArbitrary, { minLength: 0, maxLength: 10 }),
+				(closedPositions) => {
+					const result = validateClosedPositions(closedPositions);
+					expect(result).toEqual(closedPositions);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject closed positions with missing required fields', () => {
+		const requiredFields = [
+			'proxyWallet',
+			'asset',
+			'conditionId',
+			'avgPrice',
+			'realizedPnl',
+			'timestamp'
+		];
+
+		fc.assert(
+			fc.property(
+				validClosedPositionArbitrary,
+				fc.constantFrom(...requiredFields),
+				(closedPositionData, fieldToRemove) => {
+					const invalidClosedPosition = { ...closedPositionData };
+					delete (invalidClosedPosition as Record<string, unknown>)[fieldToRemove];
+
+					expect(() => validateClosedPosition(invalidClosedPosition)).toThrow(ValidationError);
+					expect(() => validateClosedPosition(invalidClosedPosition)).toThrow(
+						'ClosedPosition validation failed'
+					);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject non-object data', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.string(),
+					fc.integer(),
+					fc.boolean(),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.array(fc.anything())
+				),
+				(invalidData) => {
+					expect(() => validateClosedPosition(invalidData)).toThrow(ValidationError);
+					expect(() => validateClosedPosition(invalidData)).toThrow(
+						'ClosedPosition data must be an object'
+					);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate empty closed position arrays successfully', () => {
+		const result = validateClosedPositions([]);
+		expect(result).toEqual([]);
+	});
+});
+
+/**
+ * Feature: polymarket-user-data, Property 12: Timestamp validation accepts valid Unix timestamps
+ * Validates: Requirements 6.5
+ *
+ * For any closed position with a timestamp field, the validator should accept timestamps that are
+ * positive integers representing valid Unix epoch times.
+ */
+describe('Property 12: Timestamp validation accepts valid Unix timestamps', () => {
+	// Generator for valid closed position objects with valid timestamps
+	const validClosedPositionWithTimestampArbitrary = fc.record({
+		proxyWallet: fc.string({ minLength: 1 }),
+		asset: fc.string({ minLength: 1 }),
+		conditionId: fc.string({ minLength: 1 }),
+		avgPrice: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		totalBought: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		realizedPnl: fc.float({ noNaN: true, noDefaultInfinity: true }),
+		curPrice: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		timestamp: fc.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 }),
+		title: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		icon: fc.webUrl(),
+		eventSlug: fc.string({ minLength: 1 }),
+		outcome: fc.string({ minLength: 1 }),
+		outcomeIndex: fc.integer({ min: 0 }),
+		oppositeOutcome: fc.string({ minLength: 1 }),
+		oppositeAsset: fc.string({ minLength: 1 }),
+		endDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString())
+	});
+
+	it('should accept valid positive integer timestamps', () => {
+		fc.assert(
+			fc.property(validClosedPositionWithTimestampArbitrary, (closedPositionData) => {
+				const result = validateClosedPosition(closedPositionData);
+				expect(result).toEqual(closedPositionData);
+				expect(result.timestamp).toBeGreaterThanOrEqual(0);
+				expect(Number.isInteger(result.timestamp)).toBe(true);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject negative timestamps', () => {
+		fc.assert(
+			fc.property(
+				validClosedPositionWithTimestampArbitrary,
+				fc.integer({ max: -1 }),
+				(closedPositionData, negativeTimestamp) => {
+					const invalidClosedPosition = { ...closedPositionData, timestamp: negativeTimestamp };
+
+					expect(() => validateClosedPosition(invalidClosedPosition)).toThrow(ValidationError);
+					expect(() => validateClosedPosition(invalidClosedPosition)).toThrow(
+						'ClosedPosition validation failed'
+					);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject non-integer timestamps', () => {
+		fc.assert(
+			fc.property(
+				validClosedPositionWithTimestampArbitrary,
+				fc
+					.float({
+						min: Math.fround(0.1),
+						max: Math.fround(1000.9),
+						noDefaultInfinity: true,
+						noNaN: true
+					})
+					.filter((n) => !Number.isInteger(n)),
+				(closedPositionData, floatTimestamp) => {
+					const invalidClosedPosition = { ...closedPositionData, timestamp: floatTimestamp };
+
+					expect(() => validateClosedPosition(invalidClosedPosition)).toThrow(ValidationError);
+					expect(() => validateClosedPosition(invalidClosedPosition)).toThrow(
+						'ClosedPosition validation failed'
+					);
+				}
+			),
 			{ numRuns: 100 }
 		);
 	});

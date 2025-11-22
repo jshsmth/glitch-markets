@@ -11,6 +11,7 @@ describe('PolymarketClient', () => {
 	beforeEach(() => {
 		config = {
 			baseUrl: 'https://gamma-api.polymarket.com',
+			dataApiUrl: 'https://data-api.polymarket.com',
 			timeout: 10000,
 			cacheTtl: 60,
 			enableCache: true

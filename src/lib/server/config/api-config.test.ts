@@ -25,6 +25,7 @@ describe('API Configuration', () => {
 		it('should accept valid configuration', () => {
 			const validConfig: ApiConfig = {
 				baseUrl: 'https://api.example.com',
+				dataApiUrl: 'https://data-api.example.com',
 				timeout: 5000,
 				cacheTtl: 60,
 				enableCache: true
@@ -36,6 +37,7 @@ describe('API Configuration', () => {
 		it('should reject empty baseUrl', () => {
 			const invalidConfig: ApiConfig = {
 				baseUrl: '',
+				dataApiUrl: 'https://data-api.example.com',
 				timeout: 5000,
 				cacheTtl: 60,
 				enableCache: true
@@ -48,6 +50,7 @@ describe('API Configuration', () => {
 		it('should reject invalid URL', () => {
 			const invalidConfig: ApiConfig = {
 				baseUrl: 'not-a-valid-url',
+				dataApiUrl: 'https://data-api.example.com',
 				timeout: 5000,
 				cacheTtl: 60,
 				enableCache: true
@@ -60,6 +63,7 @@ describe('API Configuration', () => {
 		it('should reject negative timeout', () => {
 			const invalidConfig: ApiConfig = {
 				baseUrl: 'https://api.example.com',
+				dataApiUrl: 'https://data-api.example.com',
 				timeout: -1,
 				cacheTtl: 60,
 				enableCache: true
@@ -72,6 +76,7 @@ describe('API Configuration', () => {
 		it('should reject zero timeout', () => {
 			const invalidConfig: ApiConfig = {
 				baseUrl: 'https://api.example.com',
+				dataApiUrl: 'https://data-api.example.com',
 				timeout: 0,
 				cacheTtl: 60,
 				enableCache: true
@@ -83,6 +88,7 @@ describe('API Configuration', () => {
 		it('should reject negative cacheTtl', () => {
 			const invalidConfig: ApiConfig = {
 				baseUrl: 'https://api.example.com',
+				dataApiUrl: 'https://data-api.example.com',
 				timeout: 5000,
 				cacheTtl: -1,
 				enableCache: true
@@ -109,6 +115,7 @@ describe('API Configuration', () => {
 
 		it('should use environment variables when set', () => {
 			process.env.POLYMARKET_API_URL = 'https://custom-api.example.com';
+			process.env.POLYMARKET_DATA_API_URL = 'https://custom-data-api.example.com';
 			process.env.POLYMARKET_API_TIMEOUT = '15000';
 			process.env.POLYMARKET_CACHE_TTL = '120';
 			process.env.POLYMARKET_CACHE_ENABLED = 'false';
@@ -116,6 +123,7 @@ describe('API Configuration', () => {
 			const config = loadConfig();
 
 			expect(config.baseUrl).toBe('https://custom-api.example.com');
+			expect(config.dataApiUrl).toBe('https://custom-data-api.example.com');
 			expect(config.timeout).toBe(15000);
 			expect(config.cacheTtl).toBe(120);
 			expect(config.enableCache).toBe(false);
@@ -168,6 +176,7 @@ describe('API Configuration', () => {
 				fc.property(
 					fc.record({
 						baseUrl: fc.webUrl(), // valid URLs
+						dataApiUrl: fc.webUrl(), // valid URLs
 						timeout: fc.integer({ min: 1, max: 60000 }), // positive timeout
 						cacheTtl: fc.integer({ min: 0, max: 3600 }), // non-negative TTL
 						enableCache: fc.boolean()
@@ -208,6 +217,7 @@ describe('API Configuration', () => {
 				fc.property(
 					fc.record({
 						setUrl: fc.boolean(),
+						setDataUrl: fc.boolean(),
 						setTimeout: fc.boolean(),
 						setTtl: fc.boolean(),
 						setCache: fc.boolean()
@@ -215,6 +225,7 @@ describe('API Configuration', () => {
 					(envFlags) => {
 						// Clear all env vars first
 						delete process.env.POLYMARKET_API_URL;
+						delete process.env.POLYMARKET_DATA_API_URL;
 						delete process.env.POLYMARKET_API_TIMEOUT;
 						delete process.env.POLYMARKET_CACHE_TTL;
 						delete process.env.POLYMARKET_CACHE_ENABLED;
@@ -222,6 +233,9 @@ describe('API Configuration', () => {
 						// Set only the ones indicated by flags
 						if (envFlags.setUrl) {
 							process.env.POLYMARKET_API_URL = 'https://test-api.example.com';
+						}
+						if (envFlags.setDataUrl) {
+							process.env.POLYMARKET_DATA_API_URL = 'https://test-data-api.example.com';
 						}
 						if (envFlags.setTimeout) {
 							process.env.POLYMARKET_API_TIMEOUT = '5000';
@@ -239,6 +253,9 @@ describe('API Configuration', () => {
 						// Check that unset values use defaults
 						if (!envFlags.setUrl) {
 							expect(config.baseUrl).toBe(defaults.baseUrl);
+						}
+						if (!envFlags.setDataUrl) {
+							expect(config.dataApiUrl).toBe(defaults.dataApiUrl);
 						}
 						if (!envFlags.setTimeout) {
 							expect(config.timeout).toBe(defaults.timeout);

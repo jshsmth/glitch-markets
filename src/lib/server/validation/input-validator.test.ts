@@ -15,7 +15,8 @@ import {
 	validateMarketSlug,
 	validateEventQueryParams,
 	validateEventId,
-	validateEventSlug
+	validateEventSlug,
+	validateProxyWallet
 } from './input-validator.js';
 import { ValidationError } from '../errors/api-errors.js';
 
@@ -543,6 +544,220 @@ describe('Event Input Validation', () => {
 					expect(result).toBeDefined();
 					expect(typeof result).toBe('string');
 					expect(/^[a-zA-Z0-9_-]+$/.test(result)).toBe(true);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+});
+
+describe('User Data Input Validation', () => {
+	/**
+	 * Property 1: Wallet address validation rejects invalid formats
+	 * Feature: polymarket-user-data, Property 1: Wallet address validation rejects invalid formats
+	 * Validates: Requirements 1.5, 3.5, 5.5, 6.4
+	 *
+	 * For any string that does not match the format "0x" followed by exactly 40 hexadecimal
+	 * characters, the validation function should reject it with a validation error.
+	 */
+	test('Property 1: wallet address validation rejects invalid formats', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					// Non-string types
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.integer(),
+					fc.boolean(),
+					fc.object(),
+					fc.array(fc.anything()),
+					// Empty or whitespace
+					fc.constant(''),
+					fc.constant('   '),
+					fc.constant('\t'),
+					fc.constant('\n'),
+					// Missing 0x prefix (40 hex chars without prefix)
+					fc
+						.array(
+							fc.constantFrom(
+								'0',
+								'1',
+								'2',
+								'3',
+								'4',
+								'5',
+								'6',
+								'7',
+								'8',
+								'9',
+								'a',
+								'b',
+								'c',
+								'd',
+								'e',
+								'f'
+							),
+							{
+								minLength: 40,
+								maxLength: 40
+							}
+						)
+						.map((arr) => arr.join('')),
+					// Wrong length (too short)
+					fc
+						.array(
+							fc.constantFrom(
+								'0',
+								'1',
+								'2',
+								'3',
+								'4',
+								'5',
+								'6',
+								'7',
+								'8',
+								'9',
+								'a',
+								'b',
+								'c',
+								'd',
+								'e',
+								'f'
+							),
+							{
+								minLength: 1,
+								maxLength: 39
+							}
+						)
+						.map((arr) => '0x' + arr.join('')),
+					// Wrong length (too long)
+					fc
+						.array(
+							fc.constantFrom(
+								'0',
+								'1',
+								'2',
+								'3',
+								'4',
+								'5',
+								'6',
+								'7',
+								'8',
+								'9',
+								'a',
+								'b',
+								'c',
+								'd',
+								'e',
+								'f'
+							),
+							{
+								minLength: 41,
+								maxLength: 100
+							}
+						)
+						.map((arr) => '0x' + arr.join('')),
+					// Invalid characters (not hex)
+					fc.constant('0x' + 'g'.repeat(40)),
+					fc.constant('0x' + 'z'.repeat(40)),
+					fc.constant('0x' + ' '.repeat(40)),
+					fc.constant('0x' + '!'.repeat(40)),
+					// Mixed valid and invalid
+					fc
+						.tuple(
+							fc.array(
+								fc.constantFrom(
+									'0',
+									'1',
+									'2',
+									'3',
+									'4',
+									'5',
+									'6',
+									'7',
+									'8',
+									'9',
+									'a',
+									'b',
+									'c',
+									'd',
+									'e',
+									'f'
+								),
+								{
+									minLength: 20,
+									maxLength: 20
+								}
+							),
+							fc.string({ minLength: 20, maxLength: 20 })
+						)
+						.map(
+							([valid, invalid]) => '0x' + valid.join('') + invalid.replace(/[0-9a-fA-F]/g, 'g')
+						),
+					// Case variations with wrong format
+					fc.constant('0X' + 'a'.repeat(40)), // uppercase X
+					fc.constant('x' + 'a'.repeat(40)), // missing 0
+					fc.constant('0' + 'a'.repeat(40)) // missing x
+				),
+				(invalidWallet) => {
+					expect(() => validateProxyWallet(invalidWallet)).toThrow(ValidationError);
+
+					try {
+						validateProxyWallet(invalidWallet);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.statusCode).toBe(400);
+							expect(error.message).toContain('proxy wallet');
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	test('valid wallet addresses do not throw errors', () => {
+		fc.assert(
+			fc.property(
+				fc
+					.array(
+						fc.constantFrom(
+							'0',
+							'1',
+							'2',
+							'3',
+							'4',
+							'5',
+							'6',
+							'7',
+							'8',
+							'9',
+							'a',
+							'b',
+							'c',
+							'd',
+							'e',
+							'f',
+							'A',
+							'B',
+							'C',
+							'D',
+							'E',
+							'F'
+						),
+						{
+							minLength: 40,
+							maxLength: 40
+						}
+					)
+					.map((arr) => '0x' + arr.join('')),
+				(validWallet) => {
+					expect(() => validateProxyWallet(validWallet)).not.toThrow();
+					const result = validateProxyWallet(validWallet);
+					expect(result).toBeDefined();
+					expect(typeof result).toBe('string');
+					expect(/^0x[0-9a-fA-F]{40}$/.test(result)).toBe(true);
 				}
 			),
 			{ numRuns: 100 }
