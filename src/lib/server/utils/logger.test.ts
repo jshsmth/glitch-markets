@@ -49,7 +49,7 @@ describe('Logger', () => {
 						fc.object()
 					)
 				),
-				fc.option(fc.record({ [fc.string()]: fc.anything() })),
+				fc.option(fc.dictionary(fc.string(), fc.anything())),
 				(message, error, data) => {
 					// Reset the spy before each iteration
 					consoleSpies.error.mockClear();
@@ -57,7 +57,7 @@ describe('Logger', () => {
 					const logger = new Logger();
 
 					// Log the error
-					logger.error(message, error, data);
+					logger.error(message, error ?? undefined, data ?? undefined);
 
 					// Verify console.error was called
 					expect(consoleSpies.error).toHaveBeenCalled();
@@ -94,7 +94,7 @@ describe('Logger', () => {
 		fc.assert(
 			fc.property(
 				fc.string({ minLength: 1 }),
-				fc.option(fc.record({ [fc.string()]: fc.anything() })),
+				fc.option(fc.dictionary(fc.string(), fc.anything())),
 				(message, data) => {
 					// Reset the spy before each iteration
 					consoleSpies.info.mockClear();
@@ -102,7 +102,7 @@ describe('Logger', () => {
 					const logger = new Logger();
 
 					// Log the info
-					logger.info(message, data);
+					logger.info(message, data ?? undefined);
 
 					// Verify console.info was called
 					expect(consoleSpies.info).toHaveBeenCalled();
@@ -128,7 +128,7 @@ describe('Logger', () => {
 		fc.assert(
 			fc.property(
 				fc.string({ minLength: 1 }),
-				fc.option(fc.record({ [fc.string()]: fc.anything() })),
+				fc.option(fc.dictionary(fc.string(), fc.anything())),
 				(message, data) => {
 					// Reset the spy before each iteration
 					consoleSpies.warn.mockClear();
@@ -136,7 +136,7 @@ describe('Logger', () => {
 					const logger = new Logger();
 
 					// Log the warning
-					logger.warn(message, data);
+					logger.warn(message, data ?? undefined);
 
 					// Verify console.warn was called
 					expect(consoleSpies.warn).toHaveBeenCalled();
@@ -161,7 +161,7 @@ describe('Logger', () => {
 	test('Property 9: logger context is included in all logs', () => {
 		fc.assert(
 			fc.property(
-				fc.record({ [fc.string({ minLength: 1 })]: fc.string({ minLength: 1 }) }),
+				fc.dictionary(fc.string({ minLength: 1 }), fc.string({ minLength: 1 })),
 				fc.string({ minLength: 1 }),
 				(context, message) => {
 					// Reset the spy before each iteration
@@ -181,7 +181,7 @@ describe('Logger', () => {
 					// Verify context values are present in the log
 					for (const [key, value] of Object.entries(context)) {
 						const trimmedKey = key.trim();
-						const trimmedValue = value.trim();
+						const trimmedValue = typeof value === 'string' ? value.trim() : String(value);
 						// Only check for non-trivial keys and values
 						if (
 							trimmedKey &&

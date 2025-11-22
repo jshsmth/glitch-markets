@@ -39,22 +39,20 @@ export class NetworkError extends ApiError {
 /**
  * Timeout errors
  */
-export class TimeoutError extends NetworkError {
+export class TimeoutError extends ApiError {
 	constructor(message = 'Request timeout', details?: unknown) {
-		super(message, details);
+		super(message, 503, 'TIMEOUT_ERROR', details);
 		this.name = 'TimeoutError';
-		this.errorType = 'TIMEOUT_ERROR';
 	}
 }
 
 /**
  * Connection errors (connection refused, DNS failures)
  */
-export class ConnectionError extends NetworkError {
+export class ConnectionError extends ApiError {
 	constructor(message: string, details?: unknown) {
-		super(message, details);
+		super(message, 503, 'CONNECTION_ERROR', details);
 		this.name = 'ConnectionError';
-		this.errorType = 'CONNECTION_ERROR';
 	}
 }
 

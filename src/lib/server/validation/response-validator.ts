@@ -141,7 +141,7 @@ export function validateMarket(data: unknown): Market {
 	}
 
 	// Type assertion is safe here because we've validated all fields
-	return data as Market;
+	return data as unknown as Market;
 }
 
 /**

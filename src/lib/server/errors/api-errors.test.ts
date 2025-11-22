@@ -75,27 +75,30 @@ describe('Error Handling', () => {
 
 					switch (errorSpec.type) {
 						case 'network':
-							error = new NetworkError(errorSpec.message, errorSpec.details);
+							error = new NetworkError(errorSpec.message, errorSpec.details ?? undefined);
 							break;
 						case 'timeout':
-							error = new TimeoutError(errorSpec.message, errorSpec.details);
+							error = new TimeoutError(
+								errorSpec.message ?? undefined,
+								errorSpec.details ?? undefined
+							);
 							break;
 						case 'connection':
-							error = new ConnectionError(errorSpec.message, errorSpec.details);
+							error = new ConnectionError(errorSpec.message, errorSpec.details ?? undefined);
 							break;
 						case 'apiResponse':
 							error = new ApiResponseError(
 								errorSpec.message,
 								errorSpec.statusCode,
 								errorSpec.responseStatus,
-								errorSpec.responseBody
+								errorSpec.responseBody ?? undefined
 							);
 							break;
 						case 'validation':
-							error = new ValidationError(errorSpec.message, errorSpec.details);
+							error = new ValidationError(errorSpec.message, errorSpec.details ?? undefined);
 							break;
 						case 'parsing':
-							error = new ParsingError(errorSpec.message, errorSpec.details);
+							error = new ParsingError(errorSpec.message, errorSpec.details ?? undefined);
 							break;
 					}
 
