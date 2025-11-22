@@ -75,21 +75,54 @@ export function validateMarket(data: unknown): Market {
 		}
 	}
 
-	// Validate required array fields
+	// Validate and parse outcomes field (can be JSON string or array)
 	if (!('outcomes' in data)) {
 		missingFields.push('outcomes');
-	} else if (!isArray(data.outcomes)) {
-		invalidTypeFields.push(`outcomes (expected array, got ${typeof data.outcomes})`);
-	} else if (!data.outcomes.every(isString)) {
-		invalidTypeFields.push('outcomes (array must contain only strings)');
+	} else {
+		let outcomes: unknown;
+		if (isString(data.outcomes)) {
+			try {
+				outcomes = JSON.parse(data.outcomes);
+				(data as Record<string, unknown>).outcomes = outcomes;
+			} catch {
+				invalidTypeFields.push('outcomes (invalid JSON string)');
+			}
+		} else {
+			outcomes = data.outcomes;
+		}
+
+		if (outcomes !== undefined && !isArray(outcomes)) {
+			invalidTypeFields.push(
+				`outcomes (expected array or JSON array string, got ${typeof data.outcomes})`
+			);
+		} else if (outcomes !== undefined && !outcomes.every(isString)) {
+			invalidTypeFields.push('outcomes (array must contain only strings)');
+		}
 	}
 
+	// Validate and parse outcomePrices field (can be JSON string or array)
 	if (!('outcomePrices' in data)) {
 		missingFields.push('outcomePrices');
-	} else if (!isArray(data.outcomePrices)) {
-		invalidTypeFields.push(`outcomePrices (expected array, got ${typeof data.outcomePrices})`);
-	} else if (!data.outcomePrices.every(isString)) {
-		invalidTypeFields.push('outcomePrices (array must contain only strings)');
+	} else {
+		let outcomePrices: unknown;
+		if (isString(data.outcomePrices)) {
+			try {
+				outcomePrices = JSON.parse(data.outcomePrices);
+				(data as Record<string, unknown>).outcomePrices = outcomePrices;
+			} catch {
+				invalidTypeFields.push('outcomePrices (invalid JSON string)');
+			}
+		} else {
+			outcomePrices = data.outcomePrices;
+		}
+
+		if (outcomePrices !== undefined && !isArray(outcomePrices)) {
+			invalidTypeFields.push(
+				`outcomePrices (expected array or JSON array string, got ${typeof data.outcomePrices})`
+			);
+		} else if (outcomePrices !== undefined && !outcomePrices.every(isString)) {
+			invalidTypeFields.push('outcomePrices (array must contain only strings)');
+		}
 	}
 
 	// Validate required boolean fields
@@ -175,23 +208,21 @@ export function validateEvent(data: unknown): Event {
 		throw new ValidationError('Event data must be an object', { data });
 	}
 
-	// Validate required string fields
+	// Validate required string fields (must be strings)
 	const requiredStringFields = [
 		'id',
 		'ticker',
 		'slug',
 		'title',
-		'subtitle',
 		'description',
-		'resolutionSource',
 		'startDate',
 		'creationDate',
 		'endDate',
-		'image',
-		'icon',
-		'category',
-		'subcategory'
+		'category'
 	];
+
+	// Optional string fields (can be null or empty string)
+	const optionalStringFields = ['subtitle', 'subcategory', 'resolutionSource', 'image', 'icon'];
 
 	const missingFields: string[] = [];
 	const invalidTypeFields: string[] = [];
@@ -201,6 +232,13 @@ export function validateEvent(data: unknown): Event {
 			missingFields.push(field);
 		} else if (!isString(data[field])) {
 			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	// Validate optional string fields (must be string or null)
+	for (const field of optionalStringFields) {
+		if (field in data && data[field] !== null && !isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string or null, got ${typeof data[field]})`);
 		}
 	}
 
@@ -241,10 +279,9 @@ export function validateEvent(data: unknown): Event {
 		invalidTypeFields.push(`markets (expected array, got ${typeof data.markets})`);
 	}
 
-	if (!('categories' in data)) {
-		missingFields.push('categories');
-	} else if (!isArray(data.categories)) {
-		invalidTypeFields.push(`categories (expected array, got ${typeof data.categories})`);
+	// Validate optional array fields (can be null)
+	if ('categories' in data && data.categories !== null && !isArray(data.categories)) {
+		invalidTypeFields.push(`categories (expected array or null, got ${typeof data.categories})`);
 	}
 
 	if (!('tags' in data)) {

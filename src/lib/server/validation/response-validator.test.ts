@@ -536,16 +536,11 @@ describe('Property 16: Response validation checks required fields', () => {
 			'ticker',
 			'slug',
 			'title',
-			'subtitle',
 			'description',
-			'resolutionSource',
 			'startDate',
 			'creationDate',
 			'endDate',
-			'image',
-			'icon',
-			'category',
-			'subcategory'
+			'category'
 		];
 
 		fc.assert(
@@ -615,7 +610,7 @@ describe('Property 16: Response validation checks required fields', () => {
 		fc.assert(
 			fc.property(
 				validEventArbitrary,
-				fc.constantFrom('markets', 'categories', 'tags'),
+				fc.constantFrom('markets', 'tags'),
 				(eventData, fieldToRemove) => {
 					const invalidEvent = { ...eventData };
 					delete (invalidEvent as Record<string, unknown>)[fieldToRemove];
@@ -629,28 +624,56 @@ describe('Property 16: Response validation checks required fields', () => {
 	});
 
 	it('should reject events with incorrect string field types', () => {
-		const stringFields = [
+		const requiredStringFields = [
 			'id',
 			'ticker',
 			'slug',
 			'title',
-			'subtitle',
 			'description',
-			'resolutionSource',
 			'startDate',
 			'creationDate',
 			'endDate',
-			'image',
-			'icon',
-			'category',
-			'subcategory'
+			'category'
 		];
 
 		fc.assert(
 			fc.property(
 				validEventArbitrary,
-				fc.constantFrom(...stringFields),
+				fc.constantFrom(...requiredStringFields),
 				fc.oneof(fc.integer(), fc.boolean(), fc.constant(null), fc.array(fc.anything())),
+				(eventData, fieldToChange, wrongValue) => {
+					const invalidEvent = { ...eventData, [fieldToChange]: wrongValue };
+
+					expect(() => validateEvent(invalidEvent)).toThrow(ValidationError);
+					expect(() => validateEvent(invalidEvent)).toThrow('Event validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should accept events with null optional string fields', () => {
+		fc.assert(
+			fc.property(
+				validEventArbitrary,
+				fc.constantFrom('subtitle', 'subcategory', 'resolutionSource', 'image', 'icon'),
+				(eventData, fieldToSetNull) => {
+					const eventWithNull = { ...eventData, [fieldToSetNull]: null };
+					expect(() => validateEvent(eventWithNull)).not.toThrow();
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject events with incorrect types for optional string fields', () => {
+		const optionalStringFields = ['subtitle', 'subcategory', 'resolutionSource', 'image', 'icon'];
+
+		fc.assert(
+			fc.property(
+				validEventArbitrary,
+				fc.constantFrom(...optionalStringFields),
+				fc.oneof(fc.integer(), fc.boolean(), fc.array(fc.anything())),
 				(eventData, fieldToChange, wrongValue) => {
 					const invalidEvent = { ...eventData, [fieldToChange]: wrongValue };
 
@@ -713,10 +736,36 @@ describe('Property 16: Response validation checks required fields', () => {
 		fc.assert(
 			fc.property(
 				validEventArbitrary,
-				fc.constantFrom('markets', 'categories', 'tags'),
+				fc.constantFrom('markets', 'tags'),
 				fc.oneof(fc.string(), fc.integer(), fc.boolean(), fc.constant(null)),
 				(eventData, fieldToChange, wrongValue) => {
 					const invalidEvent = { ...eventData, [fieldToChange]: wrongValue };
+
+					expect(() => validateEvent(invalidEvent)).toThrow(ValidationError);
+					expect(() => validateEvent(invalidEvent)).toThrow('Event validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should accept events with null categories field', () => {
+		fc.assert(
+			fc.property(validEventArbitrary, (eventData) => {
+				const eventWithNull = { ...eventData, categories: null };
+				expect(() => validateEvent(eventWithNull)).not.toThrow();
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject events with incorrect types for categories field', () => {
+		fc.assert(
+			fc.property(
+				validEventArbitrary,
+				fc.oneof(fc.string(), fc.integer(), fc.boolean()),
+				(eventData, wrongValue) => {
+					const invalidEvent = { ...eventData, categories: wrongValue };
 
 					expect(() => validateEvent(invalidEvent)).toThrow(ValidationError);
 					expect(() => validateEvent(invalidEvent)).toThrow('Event validation failed');

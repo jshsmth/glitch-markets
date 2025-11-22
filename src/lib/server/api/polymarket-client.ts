@@ -84,14 +84,14 @@ export interface Event {
 	ticker: string;
 	slug: string;
 	title: string;
-	subtitle: string;
+	subtitle: string | null;
 	description: string;
-	resolutionSource: string;
+	resolutionSource: string | null;
 	startDate: string;
 	creationDate: string;
 	endDate: string;
-	image: string;
-	icon: string;
+	image: string | null;
+	icon: string | null;
 	active: boolean;
 	closed: boolean;
 	archived: boolean;
@@ -102,14 +102,14 @@ export interface Event {
 	volume: number;
 	openInterest: number;
 	category: string;
-	subcategory: string;
+	subcategory: string | null;
 	volume24hr: number;
 	volume1wk: number;
 	volume1mo: number;
 	volume1yr: number;
 	commentCount: number;
 	markets: Market[];
-	categories: Category[];
+	categories: Category[] | null;
 	tags: Tag[];
 }
 
