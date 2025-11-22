@@ -16,7 +16,9 @@ import {
 	validateEventQueryParams,
 	validateEventId,
 	validateEventSlug,
-	validateProxyWallet
+	validateProxyWallet,
+	validateTagId,
+	validateTagSlug
 } from './input-validator.js';
 import { ValidationError } from '../errors/api-errors.js';
 
@@ -544,6 +546,114 @@ describe('Event Input Validation', () => {
 					expect(result).toBeDefined();
 					expect(typeof result).toBe('string');
 					expect(/^[a-zA-Z0-9_-]+$/.test(result)).toBe(true);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+});
+
+describe('Tag Input Validation', () => {
+	/**
+	 * Property 3: Input validation rejection
+	 * Feature: polymarket-tags-api, Property 3: Input validation rejection
+	 * Validates: Requirements 2.1, 3.1
+	 *
+	 * For any invalid input (empty string, whitespace-only string, or non-string),
+	 * the validation function should throw a ValidationError before making an API request.
+	 */
+	test('Property 3: invalid tag IDs throw ValidationError', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.constant(''),
+					fc.constant('   '),
+					fc.constant('\t'),
+					fc.constant('\n'),
+					fc.constant('  \t\n  '),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.integer(),
+					fc.boolean(),
+					fc.object(),
+					fc.array(fc.anything())
+				),
+				(invalidId) => {
+					expect(() => validateTagId(invalidId)).toThrow(ValidationError);
+
+					try {
+						validateTagId(invalidId);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.statusCode).toBe(400);
+							expect(error.message).toContain('tag ID');
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	test('Property 3: invalid tag slugs throw ValidationError', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.constant(''),
+					fc.constant('   '),
+					fc.constant('\t'),
+					fc.constant('\n'),
+					fc.constant('  \t\n  '),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.integer(),
+					fc.boolean(),
+					fc.object(),
+					fc.array(fc.anything())
+				),
+				(invalidSlug) => {
+					expect(() => validateTagSlug(invalidSlug)).toThrow(ValidationError);
+
+					try {
+						validateTagSlug(invalidSlug);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.statusCode).toBe(400);
+							expect(error.message).toContain('tag slug');
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	test('valid tag IDs do not throw errors', () => {
+		fc.assert(
+			fc.property(
+				fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0),
+				(validId) => {
+					expect(() => validateTagId(validId)).not.toThrow();
+					const result = validateTagId(validId);
+					expect(result).toBeDefined();
+					expect(typeof result).toBe('string');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	test('valid tag slugs do not throw errors', () => {
+		fc.assert(
+			fc.property(
+				fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0),
+				(validSlug) => {
+					expect(() => validateTagSlug(validSlug)).not.toThrow();
+					const result = validateTagSlug(validSlug);
+					expect(result).toBeDefined();
+					expect(typeof result).toBe('string');
 				}
 			),
 			{ numRuns: 100 }

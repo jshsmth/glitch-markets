@@ -6,6 +6,7 @@ A SvelteKit application for displaying prediction market data from Polymarket. T
 
 - 🔍 **Market Search**: Search markets by text query with case-insensitive matching
 - 🎯 **Advanced Filtering**: Filter markets by category, status (active/closed), and more
+- 🏷️ **Tag Management**: Fetch and browse tags used to categorize events
 - 📊 **Sorting**: Sort markets by volume, liquidity, or creation date
 - ⚡ **Caching**: Built-in caching layer for improved performance
 - 🛡️ **Type Safety**: Full TypeScript support with comprehensive type definitions
@@ -227,6 +228,128 @@ curl "http://localhost:5173/api/markets/search?query=bitcoin&sortBy=volume&sortO
 
 Returns an array of markets matching the search criteria, sorted as specified.
 
+### GET /api/tags
+
+Fetch a list of all tags used to categorize events.
+
+**Query Parameters:**
+
+None.
+
+**Example Request:**
+
+```sh
+curl "http://localhost:5173/api/tags"
+```
+
+**Example Response:**
+
+```json
+[
+	{
+		"id": "1",
+		"label": "Crypto",
+		"slug": "crypto"
+	},
+	{
+		"id": "2",
+		"label": "Politics",
+		"slug": "politics"
+	},
+	{
+		"id": "3",
+		"label": "Sports",
+		"slug": "sports"
+	}
+]
+```
+
+**Response Format:**
+
+Each tag object contains:
+
+| Field   | Type   | Description                             |
+| ------- | ------ | --------------------------------------- |
+| `id`    | string | Unique identifier for the tag           |
+| `label` | string | Human-readable display name for the tag |
+| `slug`  | string | URL-friendly identifier for the tag     |
+
+### GET /api/tags/[id]
+
+Fetch a specific tag by its unique identifier.
+
+**Path Parameters:**
+
+| Parameter | Type   | Description               |
+| --------- | ------ | ------------------------- |
+| `id`      | string | The unique tag identifier |
+
+**Example Request:**
+
+```sh
+curl "http://localhost:5173/api/tags/1"
+```
+
+**Example Response:**
+
+```json
+{
+	"id": "1",
+	"label": "Crypto",
+	"slug": "crypto"
+}
+```
+
+**Error Response (404):**
+
+```json
+{
+	"error": {
+		"message": "Tag not found",
+		"code": "NOT_FOUND",
+		"statusCode": 404
+	}
+}
+```
+
+### GET /api/tags/slug/[slug]
+
+Fetch a specific tag by its URL-friendly slug.
+
+**Path Parameters:**
+
+| Parameter | Type   | Description                     |
+| --------- | ------ | ------------------------------- |
+| `slug`    | string | The URL-friendly tag identifier |
+
+**Example Request:**
+
+```sh
+curl "http://localhost:5173/api/tags/slug/crypto"
+```
+
+**Example Response:**
+
+```json
+{
+	"id": "1",
+	"label": "Crypto",
+	"slug": "crypto"
+}
+```
+
+**Error Response (404):**
+
+```json
+{
+	"error": {
+		"message": "Tag not found",
+		"code": "NOT_FOUND",
+		"statusCode": 404
+	}
+}
+```
+
 ## Usage Examples
 
 ### Example 1: Fetch Active Markets
@@ -293,7 +416,64 @@ const searchResults = await marketService.searchMarkets({
 const market = await marketService.getMarketById('0x123...');
 ```
 
-### Example 5: Error Handling
+### Example 5: Fetch Tags
+
+```typescript
+// Fetch all available tags
+const response = await fetch('/api/tags');
+const tags = await response.json();
+
+console.log(`Found ${tags.length} tags`);
+tags.forEach((tag) => {
+	console.log(`${tag.label} (${tag.slug})`);
+});
+```
+
+### Example 6: Get Tag by ID or Slug
+
+```typescript
+// Fetch a specific tag by ID
+const tagId = '1';
+const response = await fetch(`/api/tags/${tagId}`);
+
+if (response.ok) {
+	const tag = await response.json();
+	console.log(`Tag: ${tag.label}`);
+} else if (response.status === 404) {
+	console.log('Tag not found');
+}
+
+// Or fetch by slug
+const tagSlug = 'crypto';
+const slugResponse = await fetch(`/api/tags/slug/${tagSlug}`);
+const tagBySlug = await slugResponse.json();
+```
+
+### Example 7: Using the Tag Service Directly (Server-Side)
+
+```typescript
+import { TagService } from '$lib/server/services/tag-service';
+
+// Create a service instance
+const tagService = new TagService();
+
+// Fetch all tags
+const tags = await tagService.getTags();
+
+// Get a specific tag by ID
+const tag = await tagService.getTagById('1');
+
+// Get a specific tag by slug
+const tagBySlug = await tagService.getTagBySlug('crypto');
+
+if (tagBySlug) {
+	console.log(`Found tag: ${tagBySlug.label}`);
+} else {
+	console.log('Tag not found');
+}
+```
+
+### Example 8: Error Handling
 
 ```typescript
 try {
@@ -322,12 +502,13 @@ The application follows a layered architecture:
          │ HTTP Request
          │
 ┌────────▼────────┐
-│  Server Routes  │  ← /api/markets/*
+│  Server Routes  │  ← /api/markets/*, /api/tags/*
 │  (+server.ts)   │
 └────────┬────────┘
          │
 ┌────────▼────────┐
-│  Market Service │  ← Business logic, caching
+│  Services       │  ← Business logic, caching
+│  (Market, Tag)  │
 └────────┬────────┘
          │
 ┌────────▼────────┐
@@ -343,7 +524,7 @@ The application follows a layered architecture:
 ### Key Components
 
 - **Server Routes**: SvelteKit endpoints that handle HTTP requests
-- **Market Service**: Business logic layer with caching and filtering
+- **Services**: Business logic layer with caching and filtering (MarketService, TagService, EventService, UserDataService)
 - **API Client**: HTTP client for communicating with Polymarket Gamma API
 - **Cache Manager**: In-memory LRU cache with TTL support
 - **Validators**: Input and response validation
@@ -400,13 +581,14 @@ src/
 │   │   ├── config/           # Configuration
 │   │   ├── db/               # Database schema
 │   │   ├── errors/           # Error types
-│   │   ├── services/         # Business logic
+│   │   ├── services/         # Business logic (markets, tags, events, user data)
 │   │   ├── utils/            # Utilities (logger)
 │   │   └── validation/       # Validators
 │   └── components/           # Svelte components
 └── routes/
     └── api/
-        └── markets/          # API endpoints
+        ├── markets/          # Market API endpoints
+        └── tags/             # Tag API endpoints
 ```
 
 ## Testing

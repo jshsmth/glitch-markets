@@ -90,7 +90,6 @@ export function validateMarketQueryParams(
 				validated[key] = validateNonEmptyString(value, key);
 				break;
 			default:
-				// Allow other parameters to pass through
 				validated[key] = value;
 		}
 	}
@@ -134,7 +133,6 @@ export function validateEventQueryParams(
 				validated[key] = validateNonEmptyString(value, key);
 				break;
 			default:
-				// Allow other parameters to pass through
 				validated[key] = value;
 		}
 	}
@@ -155,7 +153,6 @@ export function validateEventId(id: unknown): string {
 export function validateEventSlug(slug: unknown): string {
 	const validated = validateNonEmptyString(slug, 'event slug');
 
-	// Check for valid URL characters (alphanumeric, hyphens, underscores)
 	if (!/^[a-zA-Z0-9_-]+$/.test(validated)) {
 		throw new ValidationError(
 			'event slug must contain only alphanumeric characters, hyphens, and underscores',
@@ -169,12 +166,25 @@ export function validateEventSlug(slug: unknown): string {
 }
 
 /**
+ * Validates a tag ID
+ */
+export function validateTagId(id: unknown): string {
+	return validateNonEmptyString(id, 'tag ID');
+}
+
+/**
+ * Validates a tag slug
+ */
+export function validateTagSlug(slug: unknown): string {
+	return validateNonEmptyString(slug, 'tag slug');
+}
+
+/**
  * Validates a proxy wallet address (0x + 40 hex chars)
  */
 export function validateProxyWallet(wallet: unknown): string {
 	const validated = validateNonEmptyString(wallet, 'proxy wallet');
 
-	// Check for valid wallet format: 0x followed by 40 hex characters
 	if (!/^0x[0-9a-fA-F]{40}$/.test(validated)) {
 		throw new ValidationError(
 			'proxy wallet must be a valid Ethereum address (0x followed by 40 hexadecimal characters)',
@@ -193,7 +203,6 @@ export function validateProxyWallet(wallet: unknown): string {
 export function validateConditionId(conditionId: unknown): string {
 	const validated = validateNonEmptyString(conditionId, 'condition ID');
 
-	// Check for valid condition ID format: 0x followed by 64 hex characters
 	if (!/^0x[0-9a-fA-F]{64}$/.test(validated)) {
 		throw new ValidationError(
 			'condition ID must be a valid format (0x followed by 64 hexadecimal characters)',
@@ -245,7 +254,6 @@ export function validateUserPositionsParams(params: Record<string, unknown>): {
 	const result: { user: string; market?: string[] } = { user };
 
 	if (params.market !== undefined && params.market !== null) {
-		// Handle both single string and array of strings
 		const marketParam = Array.isArray(params.market) ? params.market : [params.market];
 		result.market = validateMarketTokens(marketParam);
 	}
@@ -263,7 +271,6 @@ export function validateTradesParams(params: Record<string, unknown>): {
 } {
 	const result: { user?: string; market?: string[] } = {};
 
-	// Validate that at least one parameter is provided
 	if (
 		(params.user === undefined || params.user === null) &&
 		(params.market === undefined || params.market === null)
@@ -278,7 +285,6 @@ export function validateTradesParams(params: Record<string, unknown>): {
 	}
 
 	if (params.market !== undefined && params.market !== null) {
-		// Handle both single string and array of strings
 		const marketParam = Array.isArray(params.market) ? params.market : [params.market];
 		result.market = validateMarketTokens(marketParam);
 	}
@@ -307,7 +313,6 @@ export function validateTopHoldersParams(params: Record<string, unknown>): {
 		throw new ValidationError('holders endpoint requires market parameter', { params });
 	}
 
-	// Handle both single string and array of strings
 	const marketParam = Array.isArray(params.market) ? params.market : [params.market];
 	const market = validateMarketTokens(marketParam);
 
@@ -326,7 +331,6 @@ export function validatePortfolioValueParams(params: Record<string, unknown>): {
 	const result: { user: string; market?: string[] } = { user };
 
 	if (params.market !== undefined && params.market !== null) {
-		// Handle both single string and array of strings
 		const marketParam = Array.isArray(params.market) ? params.market : [params.market];
 		result.market = validateMarketTokens(marketParam);
 	}

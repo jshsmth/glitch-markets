@@ -5,6 +5,8 @@ import {
 	validateMarkets,
 	validateEvent,
 	validateEvents,
+	validateTag,
+	validateTags,
 	validatePosition,
 	validatePositions,
 	validateTrade,
@@ -1823,5 +1825,148 @@ describe('Property 12: Timestamp validation accepts valid Unix timestamps', () =
 			),
 			{ numRuns: 100 }
 		);
+	});
+});
+
+/**
+ * Feature: polymarket-tags-api, Property 5: Response structure validation
+ * Validates: Requirements 1.2
+ *
+ * For any API response data, the validation function should verify that all required fields
+ * (id, label, slug) are present and are strings, throwing a ValidationError if any field is
+ * missing or has the wrong type.
+ */
+describe('Property 5: Response structure validation', () => {
+	// Generator for valid tag objects
+	const validTagArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		label: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 })
+	});
+
+	it('should validate valid tag objects without throwing errors', () => {
+		fc.assert(
+			fc.property(validTagArbitrary, (tagData) => {
+				const result = validateTag(tagData);
+				expect(result).toEqual(tagData);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate arrays of valid tags without throwing errors', () => {
+		fc.assert(
+			fc.property(fc.array(validTagArbitrary, { minLength: 0, maxLength: 10 }), (tags) => {
+				const result = validateTags(tags);
+				expect(result).toEqual(tags);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject non-object data', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.string(),
+					fc.integer(),
+					fc.boolean(),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.array(fc.anything())
+				),
+				(invalidData) => {
+					expect(() => validateTag(invalidData)).toThrow(ValidationError);
+					expect(() => validateTag(invalidData)).toThrow('Tag data must be an object');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject tags with missing required string fields', () => {
+		const requiredStringFields = ['id', 'label', 'slug'];
+
+		fc.assert(
+			fc.property(
+				validTagArbitrary,
+				fc.constantFrom(...requiredStringFields),
+				(tagData, fieldToRemove) => {
+					const invalidTag = { ...tagData };
+					delete (invalidTag as Record<string, unknown>)[fieldToRemove];
+
+					expect(() => validateTag(invalidTag)).toThrow(ValidationError);
+					expect(() => validateTag(invalidTag)).toThrow('Tag validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject tags with incorrect string field types', () => {
+		const stringFields = ['id', 'label', 'slug'];
+
+		fc.assert(
+			fc.property(
+				validTagArbitrary,
+				fc.constantFrom(...stringFields),
+				fc.oneof(fc.integer(), fc.boolean(), fc.constant(null), fc.array(fc.anything())),
+				(tagData, fieldToChange, wrongValue) => {
+					const invalidTag = { ...tagData, [fieldToChange]: wrongValue };
+
+					expect(() => validateTag(invalidTag)).toThrow(ValidationError);
+					expect(() => validateTag(invalidTag)).toThrow('Tag validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject non-array data when validating tags array', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.string(),
+					fc.integer(),
+					fc.boolean(),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.record({})
+				),
+				(invalidData) => {
+					expect(() => validateTags(invalidData)).toThrow(ValidationError);
+					expect(() => validateTags(invalidData)).toThrow('Tags data must be an array');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject arrays containing invalid tag objects', () => {
+		fc.assert(
+			fc.property(
+				fc.array(validTagArbitrary, { minLength: 1, maxLength: 5 }),
+				fc.integer({ min: 0, max: 4 }),
+				(tags, indexToCorrupt) => {
+					// Only corrupt if we have enough tags
+					if (indexToCorrupt >= tags.length) return;
+
+					const corruptedTags = [...tags];
+					// Remove a required field from one tag
+					const corruptedTag = { ...corruptedTags[indexToCorrupt] };
+					delete (corruptedTag as Record<string, unknown>).id;
+					corruptedTags[indexToCorrupt] = corruptedTag;
+
+					expect(() => validateTags(corruptedTags)).toThrow(ValidationError);
+					expect(() => validateTags(corruptedTags)).toThrow(/Tag at index \d+ is invalid/);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate empty tag arrays successfully', () => {
+		const result = validateTags([]);
+		expect(result).toEqual([]);
 	});
 });
