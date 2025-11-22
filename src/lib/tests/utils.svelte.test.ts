@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { flushSync } from 'svelte';
 import { createCounter, createMultiplier } from '../utils.svelte';
 
 describe('createCounter', () => {

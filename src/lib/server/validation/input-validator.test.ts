@@ -8,7 +8,6 @@ import * as fc from 'fast-check';
 import {
 	validateNonEmptyString,
 	validatePositiveNumber,
-	validateNonNegativeNumber,
 	validateBoolean,
 	validateMarketQueryParams,
 	validateMarketId,

@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { validateMarket, validateMarkets } from './response-validator';
 import { ValidationError } from '../errors/api-errors';
-import type { Market } from '../api/polymarket-client';
 
 describe('Response Validator', () => {
 	/**
@@ -111,7 +110,7 @@ describe('Response Validator', () => {
 					fc.constantFrom(...requiredStringFields),
 					(marketData, fieldToRemove) => {
 						const invalidMarket = { ...marketData };
-						delete (invalidMarket as any)[fieldToRemove];
+						delete (invalidMarket as Record<string, unknown>)[fieldToRemove];
 
 						expect(() => validateMarket(invalidMarket)).toThrow(ValidationError);
 						expect(() => validateMarket(invalidMarket)).toThrow('Market validation failed');
@@ -128,7 +127,7 @@ describe('Response Validator', () => {
 					fc.constantFrom('outcomes', 'outcomePrices'),
 					(marketData, fieldToRemove) => {
 						const invalidMarket = { ...marketData };
-						delete (invalidMarket as any)[fieldToRemove];
+						delete (invalidMarket as Record<string, unknown>)[fieldToRemove];
 
 						expect(() => validateMarket(invalidMarket)).toThrow(ValidationError);
 						expect(() => validateMarket(invalidMarket)).toThrow('Market validation failed');
@@ -145,7 +144,7 @@ describe('Response Validator', () => {
 					fc.constantFrom('active', 'closed'),
 					(marketData, fieldToRemove) => {
 						const invalidMarket = { ...marketData };
-						delete (invalidMarket as any)[fieldToRemove];
+						delete (invalidMarket as Record<string, unknown>)[fieldToRemove];
 
 						expect(() => validateMarket(invalidMarket)).toThrow(ValidationError);
 						expect(() => validateMarket(invalidMarket)).toThrow('Market validation failed');
@@ -173,7 +172,7 @@ describe('Response Validator', () => {
 					fc.constantFrom(...requiredNumberFields),
 					(marketData, fieldToRemove) => {
 						const invalidMarket = { ...marketData };
-						delete (invalidMarket as any)[fieldToRemove];
+						delete (invalidMarket as Record<string, unknown>)[fieldToRemove];
 
 						expect(() => validateMarket(invalidMarket)).toThrow(ValidationError);
 						expect(() => validateMarket(invalidMarket)).toThrow('Market validation failed');
@@ -284,8 +283,12 @@ describe('Response Validator', () => {
 					(marketData, invalidMarketType) => {
 						const invalidMarket = { ...marketData, marketType: invalidMarketType };
 
-						expect(() => validateMarket(invalidMarket as any)).toThrow(ValidationError);
-						expect(() => validateMarket(invalidMarket as any)).toThrow('Market validation failed');
+						expect(() => validateMarket(invalidMarket as Record<string, unknown>)).toThrow(
+							ValidationError
+						);
+						expect(() => validateMarket(invalidMarket as Record<string, unknown>)).toThrow(
+							'Market validation failed'
+						);
 					}
 				),
 				{ numRuns: 100 }
@@ -324,7 +327,7 @@ describe('Response Validator', () => {
 						const corruptedMarkets = [...markets];
 						// Remove a required field from one market
 						const corruptedMarket = { ...corruptedMarkets[indexToCorrupt] };
-						delete (corruptedMarket as any).id;
+						delete (corruptedMarket as Record<string, unknown>).id;
 						corruptedMarkets[indexToCorrupt] = corruptedMarket;
 
 						expect(() => validateMarkets(corruptedMarkets)).toThrow(ValidationError);
@@ -350,8 +353,12 @@ describe('Response Validator', () => {
 					(marketData, invalidOutcomes) => {
 						const invalidMarket = { ...marketData, outcomes: invalidOutcomes };
 
-						expect(() => validateMarket(invalidMarket as any)).toThrow(ValidationError);
-						expect(() => validateMarket(invalidMarket as any)).toThrow('Market validation failed');
+						expect(() => validateMarket(invalidMarket as Record<string, unknown>)).toThrow(
+							ValidationError
+						);
+						expect(() => validateMarket(invalidMarket as Record<string, unknown>)).toThrow(
+							'Market validation failed'
+						);
 					}
 				),
 				{ numRuns: 100 }
@@ -366,7 +373,9 @@ describe('Response Validator', () => {
 					(marketData, invalidPrices) => {
 						const invalidMarket = { ...marketData, outcomePrices: invalidPrices };
 
-						expect(() => validateMarket(invalidMarket as any)).toThrow(ValidationError);
+						expect(() => validateMarket(invalidMarket as Record<string, unknown>)).toThrow(
+							ValidationError
+						);
 						expect(() => validateMarket(invalidMarket as unknown)).toThrow(
 							'Market validation failed'
 						);

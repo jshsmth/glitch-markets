@@ -249,7 +249,6 @@ describe('Logger', () => {
 					const logger = new Logger();
 
 					// Simulate logging a request
-					const requestStartTime = Date.now();
 					logger.info('Incoming request', {
 						method,
 						url,

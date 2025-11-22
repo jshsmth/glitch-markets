@@ -52,13 +52,15 @@ describe('PolymarketClient', () => {
 
 						// Mock fetch to capture the URL
 						let capturedUrl: string | undefined;
-						(global.fetch as any) = vi.fn(async (url: string | URL | Request) => {
-							capturedUrl = url.toString();
-							return new Response(JSON.stringify([]), {
-								status: 200,
-								headers: { 'Content-Type': 'application/json' }
-							});
-						});
+						(global.fetch as unknown as typeof global.fetch) = vi.fn(
+							async (url: string | URL | Request) => {
+								capturedUrl = url.toString();
+								return new Response(JSON.stringify([]), {
+									status: 200,
+									headers: { 'Content-Type': 'application/json' }
+								});
+							}
+						);
 
 						await client.fetchMarkets({ params: cleanParams });
 
@@ -79,13 +81,15 @@ describe('PolymarketClient', () => {
 
 		it('should handle empty parameters correctly', async () => {
 			let capturedUrl: string | undefined;
-			(global.fetch as any) = vi.fn(async (url: string | URL | Request) => {
-				capturedUrl = url.toString();
-				return new Response(JSON.stringify([]), {
-					status: 200,
-					headers: { 'Content-Type': 'application/json' }
-				});
-			});
+			(global.fetch as unknown as typeof global.fetch) = vi.fn(
+				async (url: string | URL | Request) => {
+					capturedUrl = url.toString();
+					return new Response(JSON.stringify([]), {
+						status: 200,
+						headers: { 'Content-Type': 'application/json' }
+					});
+				}
+			);
 
 			await client.fetchMarkets();
 
@@ -105,13 +109,15 @@ describe('PolymarketClient', () => {
 					}),
 					async (params) => {
 						let capturedUrl: string | undefined;
-						(global.fetch as any) = vi.fn(async (url: string | URL | Request) => {
-							capturedUrl = url.toString();
-							return new Response(JSON.stringify([]), {
-								status: 200,
-								headers: { 'Content-Type': 'application/json' }
-							});
-						});
+						(global.fetch as unknown as typeof global.fetch) = vi.fn(
+							async (url: string | URL | Request) => {
+								capturedUrl = url.toString();
+								return new Response(JSON.stringify([]), {
+									status: 200,
+									headers: { 'Content-Type': 'application/json' }
+								});
+							}
+						);
 
 						await client.fetchMarkets({ params });
 
@@ -167,7 +173,7 @@ describe('PolymarketClient', () => {
 					async (marketId) => {
 						const mockMarket = createMockMarket(marketId, `slug-${marketId}`);
 
-						(global.fetch as any) = vi.fn(async () => {
+						(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
 							return new Response(JSON.stringify(mockMarket), {
 								status: 200,
 								headers: { 'Content-Type': 'application/json' }
@@ -219,7 +225,7 @@ describe('PolymarketClient', () => {
 					async (slug) => {
 						const mockMarket = createMockMarket(`id-${slug}`, slug);
 
-						(global.fetch as any) = vi.fn(async () => {
+						(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
 							return new Response(JSON.stringify(mockMarket), {
 								status: 200,
 								headers: { 'Content-Type': 'application/json' }
@@ -254,13 +260,15 @@ describe('PolymarketClient', () => {
 						let capturedUrl: string | undefined;
 						const mockMarket = createMockMarket(marketId, `slug-${marketId}`);
 
-						(global.fetch as any) = vi.fn(async (url: string | URL | Request) => {
-							capturedUrl = url.toString();
-							return new Response(JSON.stringify(mockMarket), {
-								status: 200,
-								headers: { 'Content-Type': 'application/json' }
-							});
-						});
+						(global.fetch as unknown as typeof global.fetch) = vi.fn(
+							async (url: string | URL | Request) => {
+								capturedUrl = url.toString();
+								return new Response(JSON.stringify(mockMarket), {
+									status: 200,
+									headers: { 'Content-Type': 'application/json' }
+								});
+							}
+						);
 
 						await client.fetchMarketById(marketId);
 
@@ -285,13 +293,15 @@ describe('PolymarketClient', () => {
 						let capturedUrl: string | undefined;
 						const mockMarket = createMockMarket(`id-${slug}`, slug);
 
-						(global.fetch as any) = vi.fn(async (url: string | URL | Request) => {
-							capturedUrl = url.toString();
-							return new Response(JSON.stringify(mockMarket), {
-								status: 200,
-								headers: { 'Content-Type': 'application/json' }
-							});
-						});
+						(global.fetch as unknown as typeof global.fetch) = vi.fn(
+							async (url: string | URL | Request) => {
+								capturedUrl = url.toString();
+								return new Response(JSON.stringify(mockMarket), {
+									status: 200,
+									headers: { 'Content-Type': 'application/json' }
+								});
+							}
+						);
 
 						await client.fetchMarketBySlug(slug);
 
@@ -309,7 +319,7 @@ describe('PolymarketClient', () => {
 			const shortTimeoutConfig = { ...config, timeout: 100 };
 			const shortTimeoutClient = new PolymarketClient(shortTimeoutConfig);
 
-			(global.fetch as any) = vi
+			(global.fetch as unknown as typeof global.fetch) = vi
 				.fn()
 				.mockImplementation(async (_url: string | URL | Request, init?: RequestInit) => {
 					// Simulate a long-running request that gets aborted
@@ -339,7 +349,7 @@ describe('PolymarketClient', () => {
 		});
 
 		it('should handle HTTP errors', async () => {
-			(global.fetch as any) = vi.fn(async () => {
+			(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
 				return new Response('Not Found', { status: 404, statusText: 'Not Found' });
 			});
 
@@ -347,7 +357,9 @@ describe('PolymarketClient', () => {
 		});
 
 		it('should handle network errors', async () => {
-			(global.fetch as any) = vi.fn().mockRejectedValue(new Error('Network error'));
+			(global.fetch as unknown as typeof global.fetch) = vi
+				.fn()
+				.mockRejectedValue(new Error('Network error'));
 
 			await expect(client.fetchMarkets()).rejects.toThrow('Network error');
 		});
