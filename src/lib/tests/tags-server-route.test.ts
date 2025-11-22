@@ -4,7 +4,6 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
-import type { RequestEvent } from '@sveltejs/kit';
 import type { Tag } from '$lib/server/api/polymarket-client';
 import {
 	ValidationError,
@@ -67,13 +66,8 @@ describe('Tags Server Route', () => {
 					mockFetchTags.mockReset();
 					mockFetchTags.mockRejectedValue(new ValidationError(errorMessage));
 
-					const mockUrl = new URL('http://localhost/api/tags');
-					const mockEvent: RequestEvent = {
-						url: mockUrl
-					} as RequestEvent;
-
 					// Call the GET handler
-					const response = await GET(mockEvent);
+					const response = await GET();
 
 					// Should return 400 for validation error
 					expect(response.status).toBe(400);
@@ -99,13 +93,8 @@ describe('Tags Server Route', () => {
 					mockFetchTags.mockReset();
 					mockFetchTags.mockRejectedValue(new NetworkError(errorMessage));
 
-					const mockUrl = new URL('http://localhost/api/tags');
-					const mockEvent: RequestEvent = {
-						url: mockUrl
-					} as RequestEvent;
-
 					// Call the GET handler
-					const response = await GET(mockEvent);
+					const response = await GET();
 
 					// Should return 503 for network error
 					expect(response.status).toBe(503);
@@ -131,13 +120,8 @@ describe('Tags Server Route', () => {
 					mockFetchTags.mockReset();
 					mockFetchTags.mockRejectedValue(new TimeoutError(errorMessage));
 
-					const mockUrl = new URL('http://localhost/api/tags');
-					const mockEvent: RequestEvent = {
-						url: mockUrl
-					} as RequestEvent;
-
 					// Call the GET handler
-					const response = await GET(mockEvent);
+					const response = await GET();
 
 					// Should return 504 for timeout error
 					expect(response.status).toBe(503);
@@ -168,13 +152,8 @@ describe('Tags Server Route', () => {
 							new ApiResponseError(errorMessage, statusCode, statusCode, {})
 						);
 
-						const mockUrl = new URL('http://localhost/api/tags');
-						const mockEvent: RequestEvent = {
-							url: mockUrl
-						} as RequestEvent;
-
 						// Call the GET handler
-						const response = await GET(mockEvent);
+						const response = await GET();
 
 						// Should return the same status code as the ApiResponseError
 						expect(response.status).toBe(statusCode);
@@ -201,13 +180,8 @@ describe('Tags Server Route', () => {
 					mockFetchTags.mockReset();
 					mockFetchTags.mockRejectedValue(new Error(errorMessage));
 
-					const mockUrl = new URL('http://localhost/api/tags');
-					const mockEvent: RequestEvent = {
-						url: mockUrl
-					} as RequestEvent;
-
 					// Call the GET handler
-					const response = await GET(mockEvent);
+					const response = await GET();
 
 					// Should return 500 for unknown error
 					expect(response.status).toBe(500);
@@ -244,13 +218,8 @@ describe('Tags Server Route', () => {
 						mockFetchTags.mockReset();
 						mockFetchTags.mockResolvedValue(tags);
 
-						const mockUrl = new URL('http://localhost/api/tags');
-						const mockEvent: RequestEvent = {
-							url: mockUrl
-						} as RequestEvent;
-
 						// Call the GET handler
-						const response = await GET(mockEvent);
+						const response = await GET();
 
 						// Verify the response is successful
 						expect(response.status).toBe(200);
@@ -281,12 +250,7 @@ describe('Tags Server Route', () => {
 			mockFetchTags.mockReset();
 			mockFetchTags.mockResolvedValue([]);
 
-			const mockUrl = new URL('http://localhost/api/tags');
-			const mockEvent: RequestEvent = {
-				url: mockUrl
-			} as RequestEvent;
-
-			const response = await GET(mockEvent);
+			const response = await GET();
 
 			expect(response.status).toBe(200);
 
@@ -309,12 +273,7 @@ describe('Tags Server Route', () => {
 			mockFetchTags.mockReset();
 			mockFetchTags.mockResolvedValue([]);
 
-			const mockUrl = new URL('http://localhost/api/tags');
-			const mockEvent: RequestEvent = {
-				url: mockUrl
-			} as RequestEvent;
-
-			const response = await GET(mockEvent);
+			const response = await GET();
 
 			expect(response.status).toBe(200);
 
