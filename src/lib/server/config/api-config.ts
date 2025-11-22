@@ -1,5 +1,6 @@
 export interface ApiConfig {
 	baseUrl: string;
+	dataApiUrl: string;
 	timeout: number;
 	cacheTtl: number;
 	enableCache: boolean;
@@ -7,6 +8,7 @@ export interface ApiConfig {
 
 const DEFAULT_CONFIG: ApiConfig = {
 	baseUrl: 'https://gamma-api.polymarket.com',
+	dataApiUrl: 'https://data-api.polymarket.com',
 	timeout: 10000,
 	cacheTtl: 60,
 	enableCache: true
@@ -45,7 +47,7 @@ function isValidUrl(url: string): boolean {
  *
  * @example
  * ```typescript
- * const config = { baseUrl: 'https://api.example.com', timeout: 10000, cacheTtl: 60, enableCache: true };
+ * const config = { baseUrl: 'https://api.example.com', dataApiUrl: 'https://data-api.example.com', timeout: 10000, cacheTtl: 60, enableCache: true };
  * validateConfig(config); // Throws if invalid
  * ```
  */
@@ -56,6 +58,14 @@ export function validateConfig(config: ApiConfig): void {
 
 	if (!isValidUrl(config.baseUrl)) {
 		throw new ConfigurationError('baseUrl must be a valid URL');
+	}
+
+	if (!config.dataApiUrl || typeof config.dataApiUrl !== 'string') {
+		throw new ConfigurationError('dataApiUrl must be a non-empty string');
+	}
+
+	if (!isValidUrl(config.dataApiUrl)) {
+		throw new ConfigurationError('dataApiUrl must be a valid URL');
 	}
 
 	if (typeof config.timeout !== 'number' || config.timeout <= 0) {
@@ -76,7 +86,8 @@ export function validateConfig(config: ApiConfig): void {
  * Reads from process.env and validates the resulting configuration
  *
  * Environment variables:
- * - POLYMARKET_API_URL: Base URL for the API
+ * - POLYMARKET_API_URL: Base URL for the Gamma API
+ * - POLYMARKET_DATA_API_URL: Base URL for the Data API
  * - POLYMARKET_API_TIMEOUT: Request timeout in milliseconds
  * - POLYMARKET_CACHE_TTL: Cache TTL in seconds
  * - POLYMARKET_CACHE_ENABLED: Enable/disable caching ("true" or "false")
@@ -88,11 +99,13 @@ export function validateConfig(config: ApiConfig): void {
  * ```typescript
  * const config = loadConfig();
  * console.log(config.baseUrl); // https://gamma-api.polymarket.com
+ * console.log(config.dataApiUrl); // https://data-api.polymarket.com
  * ```
  */
 export function loadConfig(): ApiConfig {
 	const config: ApiConfig = {
 		baseUrl: process.env.POLYMARKET_API_URL || DEFAULT_CONFIG.baseUrl,
+		dataApiUrl: process.env.POLYMARKET_DATA_API_URL || DEFAULT_CONFIG.dataApiUrl,
 		timeout: process.env.POLYMARKET_API_TIMEOUT
 			? parseInt(process.env.POLYMARKET_API_TIMEOUT, 10)
 			: DEFAULT_CONFIG.timeout,

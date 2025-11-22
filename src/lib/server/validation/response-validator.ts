@@ -3,7 +3,17 @@
  */
 
 import { ValidationError } from '../errors/api-errors.js';
-import type { Market, Event } from '../api/polymarket-client.js';
+import type {
+	Market,
+	Event,
+	Position,
+	Trade,
+	Activity,
+	HolderInfo,
+	MarketHolders,
+	PortfolioValue,
+	ClosedPosition
+} from '../api/polymarket-client.js';
 
 /**
  * Validates that a value is a string
@@ -321,6 +331,622 @@ export function validateEvents(data: unknown): Event[] {
 		} catch (error) {
 			if (error instanceof ValidationError) {
 				throw new ValidationError(`Event at index ${index} is invalid: ${error.message}`, {
+					index,
+					originalError: error.details
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single position object
+ */
+export function validatePosition(data: unknown): Position {
+	if (!isObject(data)) {
+		throw new ValidationError('Position data must be an object', { data });
+	}
+
+	const requiredStringFields = [
+		'proxyWallet',
+		'asset',
+		'conditionId',
+		'title',
+		'slug',
+		'icon',
+		'eventSlug',
+		'outcome',
+		'oppositeOutcome',
+		'oppositeAsset',
+		'endDate'
+	];
+
+	const requiredNumberFields = [
+		'size',
+		'avgPrice',
+		'initialValue',
+		'currentValue',
+		'cashPnl',
+		'percentPnl',
+		'totalBought',
+		'realizedPnl',
+		'percentRealizedPnl',
+		'curPrice',
+		'outcomeIndex'
+	];
+
+	const requiredBooleanFields = ['redeemable', 'mergeable', 'negativeRisk'];
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of requiredStringFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of requiredNumberFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isNumber(data[field])) {
+			invalidTypeFields.push(`${field} (expected number, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of requiredBooleanFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isBoolean(data[field])) {
+			invalidTypeFields.push(`${field} (expected boolean, got ${typeof data[field]})`);
+		}
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('Position validation failed', errorDetails);
+	}
+
+	return data as unknown as Position;
+}
+
+/**
+ * Validates an array of positions
+ */
+export function validatePositions(data: unknown): Position[] {
+	if (!isArray(data)) {
+		throw new ValidationError('Positions data must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validatePosition(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`Position at index ${index} is invalid: ${error.message}`, {
+					index,
+					originalError: error.details
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single trade object
+ */
+export function validateTrade(data: unknown): Trade {
+	if (!isObject(data)) {
+		throw new ValidationError('Trade data must be an object', { data });
+	}
+
+	const requiredStringFields = [
+		'proxyWallet',
+		'asset',
+		'conditionId',
+		'title',
+		'slug',
+		'icon',
+		'eventSlug',
+		'outcome',
+		'name',
+		'pseudonym',
+		'bio',
+		'profileImage',
+		'profileImageOptimized',
+		'transactionHash'
+	];
+
+	const requiredNumberFields = ['size', 'price', 'timestamp', 'outcomeIndex'];
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of requiredStringFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of requiredNumberFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isNumber(data[field])) {
+			invalidTypeFields.push(`${field} (expected number, got ${typeof data[field]})`);
+		}
+	}
+
+	// Validate side enum
+	if (!('side' in data)) {
+		missingFields.push('side');
+	} else if (data.side !== 'BUY' && data.side !== 'SELL') {
+		invalidTypeFields.push(`side (expected 'BUY' or 'SELL', got '${data.side}')`);
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('Trade validation failed', errorDetails);
+	}
+
+	return data as unknown as Trade;
+}
+
+/**
+ * Validates an array of trades
+ */
+export function validateTrades(data: unknown): Trade[] {
+	if (!isArray(data)) {
+		throw new ValidationError('Trades data must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateTrade(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`Trade at index ${index} is invalid: ${error.message}`, {
+					index,
+					originalError: error.details
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single activity object
+ */
+export function validateActivity(data: unknown): Activity {
+	if (!isObject(data)) {
+		throw new ValidationError('Activity data must be an object', { data });
+	}
+
+	const requiredStringFields = [
+		'proxyWallet',
+		'conditionId',
+		'transactionHash',
+		'title',
+		'slug',
+		'icon',
+		'eventSlug',
+		'outcome',
+		'name',
+		'pseudonym',
+		'bio',
+		'profileImage',
+		'profileImageOptimized'
+	];
+
+	const requiredNumberFields = ['timestamp', 'size', 'usdcSize'];
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of requiredStringFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of requiredNumberFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isNumber(data[field])) {
+			invalidTypeFields.push(`${field} (expected number, got ${typeof data[field]})`);
+		}
+	}
+
+	// Validate type enum
+	if (!('type' in data)) {
+		missingFields.push('type');
+	} else if (
+		data.type !== 'TRADE' &&
+		data.type !== 'SPLIT' &&
+		data.type !== 'MERGE' &&
+		data.type !== 'REDEEM' &&
+		data.type !== 'REWARD' &&
+		data.type !== 'CONVERSION'
+	) {
+		invalidTypeFields.push(
+			`type (expected 'TRADE', 'SPLIT', 'MERGE', 'REDEEM', 'REWARD', or 'CONVERSION', got '${data.type}')`
+		);
+	}
+
+	// Conditional validation for trade-specific fields
+	if (data.type === 'TRADE') {
+		const tradeFields = ['price', 'asset', 'outcomeIndex'];
+		for (const field of tradeFields) {
+			if (!(field in data)) {
+				missingFields.push(`${field} (required when type is TRADE)`);
+			} else if (field === 'asset' && !isString(data[field])) {
+				invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+			} else if ((field === 'price' || field === 'outcomeIndex') && !isNumber(data[field])) {
+				invalidTypeFields.push(`${field} (expected number, got ${typeof data[field]})`);
+			}
+		}
+
+		// Validate side enum for trades
+		if (!('side' in data)) {
+			missingFields.push('side (required when type is TRADE)');
+		} else if (data.side !== 'BUY' && data.side !== 'SELL') {
+			invalidTypeFields.push(`side (expected 'BUY' or 'SELL', got '${data.side}')`);
+		}
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('Activity validation failed', errorDetails);
+	}
+
+	return data as unknown as Activity;
+}
+
+/**
+ * Validates an array of activities
+ */
+export function validateActivities(data: unknown): Activity[] {
+	if (!isArray(data)) {
+		throw new ValidationError('Activities data must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateActivity(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`Activity at index ${index} is invalid: ${error.message}`, {
+					index,
+					originalError: error.details
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single holder info object
+ */
+export function validateHolderInfo(data: unknown): HolderInfo {
+	if (!isObject(data)) {
+		throw new ValidationError('HolderInfo data must be an object', { data });
+	}
+
+	const requiredStringFields = [
+		'proxyWallet',
+		'bio',
+		'asset',
+		'pseudonym',
+		'name',
+		'profileImage',
+		'profileImageOptimized'
+	];
+
+	const requiredNumberFields = ['amount', 'outcomeIndex'];
+
+	const requiredBooleanFields = ['displayUsernamePublic'];
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of requiredStringFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of requiredNumberFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isNumber(data[field])) {
+			invalidTypeFields.push(`${field} (expected number, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of requiredBooleanFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isBoolean(data[field])) {
+			invalidTypeFields.push(`${field} (expected boolean, got ${typeof data[field]})`);
+		}
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('HolderInfo validation failed', errorDetails);
+	}
+
+	return data as unknown as HolderInfo;
+}
+
+/**
+ * Validates a single market holders object
+ */
+export function validateMarketHolders(data: unknown): MarketHolders {
+	if (!isObject(data)) {
+		throw new ValidationError('MarketHolders data must be an object', { data });
+	}
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	if (!('token' in data)) {
+		missingFields.push('token');
+	} else if (!isString(data.token)) {
+		invalidTypeFields.push(`token (expected string, got ${typeof data.token})`);
+	}
+
+	if (!('holders' in data)) {
+		missingFields.push('holders');
+	} else if (!isArray(data.holders)) {
+		invalidTypeFields.push(`holders (expected array, got ${typeof data.holders})`);
+	} else {
+		// Validate each holder in the array
+		try {
+			data.holders.forEach((holder, index) => {
+				try {
+					validateHolderInfo(holder);
+				} catch (error) {
+					if (error instanceof ValidationError) {
+						throw new ValidationError(`Holder at index ${index} is invalid: ${error.message}`, {
+							index,
+							originalError: error.details
+						});
+					}
+					throw error;
+				}
+			});
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				invalidTypeFields.push(`holders: ${error.message}`);
+			}
+		}
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('MarketHolders validation failed', errorDetails);
+	}
+
+	return data as unknown as MarketHolders;
+}
+
+/**
+ * Validates an array of market holders
+ */
+export function validateMarketHoldersList(data: unknown): MarketHolders[] {
+	if (!isArray(data)) {
+		throw new ValidationError('MarketHolders list data must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateMarketHolders(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`MarketHolders at index ${index} is invalid: ${error.message}`, {
+					index,
+					originalError: error.details
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single portfolio value object
+ */
+export function validatePortfolioValue(data: unknown): PortfolioValue {
+	if (!isObject(data)) {
+		throw new ValidationError('PortfolioValue data must be an object', { data });
+	}
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	if (!('user' in data)) {
+		missingFields.push('user');
+	} else if (!isString(data.user)) {
+		invalidTypeFields.push(`user (expected string, got ${typeof data.user})`);
+	}
+
+	if (!('value' in data)) {
+		missingFields.push('value');
+	} else if (!isNumber(data.value)) {
+		invalidTypeFields.push(`value (expected number, got ${typeof data.value})`);
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('PortfolioValue validation failed', errorDetails);
+	}
+
+	return data as unknown as PortfolioValue;
+}
+
+/**
+ * Validates an array of portfolio values
+ */
+export function validatePortfolioValues(data: unknown): PortfolioValue[] {
+	if (!isArray(data)) {
+		throw new ValidationError('PortfolioValues data must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validatePortfolioValue(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`PortfolioValue at index ${index} is invalid: ${error.message}`, {
+					index,
+					originalError: error.details
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single closed position object
+ */
+export function validateClosedPosition(data: unknown): ClosedPosition {
+	if (!isObject(data)) {
+		throw new ValidationError('ClosedPosition data must be an object', { data });
+	}
+
+	const requiredStringFields = [
+		'proxyWallet',
+		'asset',
+		'conditionId',
+		'title',
+		'slug',
+		'icon',
+		'eventSlug',
+		'outcome',
+		'oppositeOutcome',
+		'oppositeAsset',
+		'endDate'
+	];
+
+	const requiredNumberFields = [
+		'avgPrice',
+		'totalBought',
+		'realizedPnl',
+		'curPrice',
+		'timestamp',
+		'outcomeIndex'
+	];
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of requiredStringFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of requiredNumberFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isNumber(data[field])) {
+			invalidTypeFields.push(`${field} (expected number, got ${typeof data[field]})`);
+		}
+	}
+
+	// Validate timestamp is a positive integer
+	if ('timestamp' in data && isNumber(data.timestamp)) {
+		if (data.timestamp < 0 || !Number.isInteger(data.timestamp)) {
+			invalidTypeFields.push('timestamp (expected positive integer Unix timestamp)');
+		}
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('ClosedPosition validation failed', errorDetails);
+	}
+
+	return data as unknown as ClosedPosition;
+}
+
+/**
+ * Validates an array of closed positions
+ */
+export function validateClosedPositions(data: unknown): ClosedPosition[] {
+	if (!isArray(data)) {
+		throw new ValidationError('ClosedPositions data must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateClosedPosition(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`ClosedPosition at index ${index} is invalid: ${error.message}`, {
 					index,
 					originalError: error.details
 				});

@@ -167,3 +167,179 @@ export function validateEventSlug(slug: unknown): string {
 
 	return validated;
 }
+
+/**
+ * Validates a proxy wallet address (0x + 40 hex chars)
+ */
+export function validateProxyWallet(wallet: unknown): string {
+	const validated = validateNonEmptyString(wallet, 'proxy wallet');
+
+	// Check for valid wallet format: 0x followed by 40 hex characters
+	if (!/^0x[0-9a-fA-F]{40}$/.test(validated)) {
+		throw new ValidationError(
+			'proxy wallet must be a valid Ethereum address (0x followed by 40 hexadecimal characters)',
+			{
+				wallet: validated
+			}
+		);
+	}
+
+	return validated;
+}
+
+/**
+ * Validates a condition ID (0x + 64 hex chars)
+ */
+export function validateConditionId(conditionId: unknown): string {
+	const validated = validateNonEmptyString(conditionId, 'condition ID');
+
+	// Check for valid condition ID format: 0x followed by 64 hex characters
+	if (!/^0x[0-9a-fA-F]{64}$/.test(validated)) {
+		throw new ValidationError(
+			'condition ID must be a valid format (0x followed by 64 hexadecimal characters)',
+			{
+				conditionId: validated
+			}
+		);
+	}
+
+	return validated;
+}
+
+/**
+ * Validates an array of market token strings
+ */
+export function validateMarketTokens(tokens: unknown): string[] {
+	if (!Array.isArray(tokens)) {
+		throw new ValidationError('market tokens must be an array', { tokens });
+	}
+
+	if (tokens.length === 0) {
+		throw new ValidationError('market tokens array cannot be empty', { tokens });
+	}
+
+	const validated: string[] = [];
+	for (let i = 0; i < tokens.length; i++) {
+		const token = tokens[i];
+		if (typeof token !== 'string' || token.trim().length === 0) {
+			throw new ValidationError(`market token at index ${i} must be a non-empty string`, {
+				token,
+				index: i
+			});
+		}
+		validated.push(token);
+	}
+
+	return validated;
+}
+
+/**
+ * Validates parameters for the user positions endpoint
+ */
+export function validateUserPositionsParams(params: Record<string, unknown>): {
+	user: string;
+	market?: string[];
+} {
+	const user = validateProxyWallet(params.user);
+
+	const result: { user: string; market?: string[] } = { user };
+
+	if (params.market !== undefined && params.market !== null) {
+		// Handle both single string and array of strings
+		const marketParam = Array.isArray(params.market) ? params.market : [params.market];
+		result.market = validateMarketTokens(marketParam);
+	}
+
+	return result;
+}
+
+/**
+ * Validates parameters for the trades endpoint
+ * Requires at least one of user or market
+ */
+export function validateTradesParams(params: Record<string, unknown>): {
+	user?: string;
+	market?: string[];
+} {
+	const result: { user?: string; market?: string[] } = {};
+
+	// Validate that at least one parameter is provided
+	if (
+		(params.user === undefined || params.user === null) &&
+		(params.market === undefined || params.market === null)
+	) {
+		throw new ValidationError('trades endpoint requires at least one of: user or market', {
+			params
+		});
+	}
+
+	if (params.user !== undefined && params.user !== null) {
+		result.user = validateProxyWallet(params.user);
+	}
+
+	if (params.market !== undefined && params.market !== null) {
+		// Handle both single string and array of strings
+		const marketParam = Array.isArray(params.market) ? params.market : [params.market];
+		result.market = validateMarketTokens(marketParam);
+	}
+
+	return result;
+}
+
+/**
+ * Validates parameters for the user activity endpoint
+ */
+export function validateUserActivityParams(params: Record<string, unknown>): {
+	user: string;
+} {
+	const user = validateProxyWallet(params.user);
+	return { user };
+}
+
+/**
+ * Validates parameters for the top holders endpoint
+ * Requires at least one market
+ */
+export function validateTopHoldersParams(params: Record<string, unknown>): {
+	market: string[];
+} {
+	if (params.market === undefined || params.market === null) {
+		throw new ValidationError('holders endpoint requires market parameter', { params });
+	}
+
+	// Handle both single string and array of strings
+	const marketParam = Array.isArray(params.market) ? params.market : [params.market];
+	const market = validateMarketTokens(marketParam);
+
+	return { market };
+}
+
+/**
+ * Validates parameters for the portfolio value endpoint
+ */
+export function validatePortfolioValueParams(params: Record<string, unknown>): {
+	user: string;
+	market?: string[];
+} {
+	const user = validateProxyWallet(params.user);
+
+	const result: { user: string; market?: string[] } = { user };
+
+	if (params.market !== undefined && params.market !== null) {
+		// Handle both single string and array of strings
+		const marketParam = Array.isArray(params.market) ? params.market : [params.market];
+		result.market = validateMarketTokens(marketParam);
+	}
+
+	return result;
+}
+
+/**
+ * Validates parameters for the closed positions endpoint
+ */
+export function validateClosedPositionsParams(params: Record<string, unknown>): {
+	user: string;
+} {
+	const user = validateProxyWallet(params.user);
+	return { user };
+}

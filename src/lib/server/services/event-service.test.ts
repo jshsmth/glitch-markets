@@ -21,6 +21,7 @@ describe('EventService', () => {
 		// Mock loadConfig
 		vi.mocked(loadConfig).mockReturnValue({
 			baseUrl: 'https://test-api.com',
+			dataApiUrl: 'https://data-api.polymarket.com',
 			timeout: 5000,
 			cacheTtl: 60,
 			enableCache: true

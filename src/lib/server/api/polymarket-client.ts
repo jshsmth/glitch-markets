@@ -20,13 +20,25 @@ import {
 	validateMarketSlug,
 	validateEventQueryParams,
 	validateEventId,
-	validateEventSlug
+	validateEventSlug,
+	validateUserPositionsParams,
+	validateTradesParams,
+	validateUserActivityParams,
+	validateTopHoldersParams,
+	validatePortfolioValueParams,
+	validateClosedPositionsParams
 } from '../validation/input-validator.js';
 import {
 	validateMarket,
 	validateMarkets,
 	validateEvent,
-	validateEvents
+	validateEvents,
+	validatePositions,
+	validateTrades,
+	validateActivities,
+	validateMarketHoldersList,
+	validatePortfolioValues,
+	validateClosedPositions
 } from '../validation/response-validator.js';
 
 /**
@@ -113,6 +125,147 @@ export interface Event {
 	tags: Tag[];
 }
 
+/**
+ * Represents a user's current position in a market
+ */
+export interface Position {
+	proxyWallet: string;
+	asset: string;
+	conditionId: string;
+	size: number;
+	avgPrice: number;
+	initialValue: number;
+	currentValue: number;
+	cashPnl: number;
+	percentPnl: number;
+	totalBought: number;
+	realizedPnl: number;
+	percentRealizedPnl: number;
+	curPrice: number;
+	redeemable: boolean;
+	mergeable: boolean;
+	title: string;
+	slug: string;
+	icon: string;
+	eventSlug: string;
+	outcome: string;
+	outcomeIndex: number;
+	oppositeOutcome: string;
+	oppositeAsset: string;
+	endDate: string;
+	negativeRisk: boolean;
+}
+
+/**
+ * Represents a trade transaction
+ */
+export interface Trade {
+	proxyWallet: string;
+	side: 'BUY' | 'SELL';
+	asset: string;
+	conditionId: string;
+	size: number;
+	price: number;
+	timestamp: number;
+	title: string;
+	slug: string;
+	icon: string;
+	eventSlug: string;
+	outcome: string;
+	outcomeIndex: number;
+	name: string;
+	pseudonym: string;
+	bio: string;
+	profileImage: string;
+	profileImageOptimized: string;
+	transactionHash: string;
+}
+
+/**
+ * Represents a user activity record
+ */
+export interface Activity {
+	proxyWallet: string;
+	timestamp: number;
+	conditionId: string;
+	type: 'TRADE' | 'SPLIT' | 'MERGE' | 'REDEEM' | 'REWARD' | 'CONVERSION';
+	size: number;
+	usdcSize: number;
+	transactionHash: string;
+	// Trade-specific fields (when type === 'TRADE')
+	price?: number;
+	asset?: string;
+	side?: 'BUY' | 'SELL';
+	outcomeIndex?: number;
+	// Market metadata
+	title: string;
+	slug: string;
+	icon: string;
+	eventSlug: string;
+	outcome: string;
+	// User metadata
+	name: string;
+	pseudonym: string;
+	bio: string;
+	profileImage: string;
+	profileImageOptimized: string;
+}
+
+/**
+ * Represents information about a top holder
+ */
+export interface HolderInfo {
+	proxyWallet: string;
+	bio: string;
+	asset: string;
+	pseudonym: string;
+	amount: number;
+	displayUsernamePublic: boolean;
+	outcomeIndex: number;
+	name: string;
+	profileImage: string;
+	profileImageOptimized: string;
+}
+
+/**
+ * Represents top holders for a specific market
+ */
+export interface MarketHolders {
+	token: string;
+	holders: HolderInfo[];
+}
+
+/**
+ * Represents a user's total portfolio value
+ */
+export interface PortfolioValue {
+	user: string;
+	value: number;
+}
+
+/**
+ * Represents a closed position
+ */
+export interface ClosedPosition {
+	proxyWallet: string;
+	asset: string;
+	conditionId: string;
+	avgPrice: number;
+	totalBought: number;
+	realizedPnl: number;
+	curPrice: number;
+	timestamp: number;
+	title: string;
+	slug: string;
+	icon: string;
+	eventSlug: string;
+	outcome: string;
+	outcomeIndex: number;
+	oppositeOutcome: string;
+	oppositeAsset: string;
+	endDate: string;
+}
+
 export interface FetchOptions {
 	params?: Record<string, string | number | boolean>;
 	signal?: AbortSignal;
@@ -133,6 +286,7 @@ export interface FetchOptions {
  */
 export class PolymarketClient {
 	private baseUrl: string;
+	private dataApiBaseUrl: string;
 	private timeout: number;
 	private logger: Logger;
 
@@ -142,6 +296,7 @@ export class PolymarketClient {
 	 */
 	constructor(config: ApiConfig) {
 		this.baseUrl = config.baseUrl;
+		this.dataApiBaseUrl = config.dataApiUrl;
 		this.timeout = config.timeout;
 		this.logger = new Logger({ component: 'PolymarketClient' });
 	}
@@ -152,6 +307,22 @@ export class PolymarketClient {
 		if (params) {
 			Object.entries(params).forEach(([key, value]) => {
 				url.searchParams.append(key, String(value));
+			});
+		}
+
+		return url.toString();
+	}
+
+	private buildDataApiUrl(endpoint: string, params?: Record<string, string | string[]>): string {
+		const url = new URL(endpoint, this.dataApiBaseUrl);
+
+		if (params) {
+			Object.entries(params).forEach(([key, value]) => {
+				if (Array.isArray(value)) {
+					value.forEach((v) => url.searchParams.append(key, v));
+				} else {
+					url.searchParams.append(key, value);
+				}
 			});
 		}
 
@@ -403,5 +574,162 @@ export class PolymarketClient {
 		const url = this.buildUrl(`/events/slug/${validatedSlug}`);
 		const data = await this.request<unknown>(url);
 		return validateEvent(data);
+	}
+
+	/**
+	 * Fetches current positions for a user from the Data API
+	 * Validates input parameters and response structure
+	 *
+	 * @param user - The user's proxy wallet address
+	 * @param markets - Optional array of market token identifiers to filter by
+	 * @returns Promise resolving to an array of positions
+	 * @throws {ValidationError} When parameters are invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error response
+	 *
+	 * @example
+	 * ```typescript
+	 * const positions = await client.fetchCurrentPositions('0x123...', ['market1', 'market2']);
+	 * ```
+	 */
+	async fetchCurrentPositions(user: string, markets?: string[]): Promise<Position[]> {
+		const validatedParams = validateUserPositionsParams({ user, market: markets });
+		const params: Record<string, string | string[]> = { user: validatedParams.user };
+		if (validatedParams.market) {
+			params.market = validatedParams.market;
+		}
+		const url = this.buildDataApiUrl('/positions', params);
+		const data = await this.request<unknown>(url);
+		return validatePositions(data);
+	}
+
+	/**
+	 * Fetches trades from the Data API
+	 * Requires at least one of user or markets parameter
+	 * Validates input parameters and response structure
+	 *
+	 * @param user - Optional user's proxy wallet address
+	 * @param markets - Optional array of market token identifiers
+	 * @returns Promise resolving to an array of trades
+	 * @throws {ValidationError} When parameters are invalid or both are missing
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error response
+	 *
+	 * @example
+	 * ```typescript
+	 * const trades = await client.fetchTrades('0x123...', ['market1']);
+	 * ```
+	 */
+	async fetchTrades(user?: string, markets?: string[]): Promise<Trade[]> {
+		const validatedParams = validateTradesParams({ user, market: markets });
+		const params: Record<string, string | string[]> = {};
+		if (validatedParams.user) {
+			params.user = validatedParams.user;
+		}
+		if (validatedParams.market) {
+			params.market = validatedParams.market;
+		}
+		const url = this.buildDataApiUrl('/trades', params);
+		const data = await this.request<unknown>(url);
+		return validateTrades(data);
+	}
+
+	/**
+	 * Fetches activity history for a user from the Data API
+	 * Validates input parameters and response structure
+	 *
+	 * @param user - The user's proxy wallet address
+	 * @returns Promise resolving to an array of activity records
+	 * @throws {ValidationError} When the user parameter is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error response
+	 *
+	 * @example
+	 * ```typescript
+	 * const activity = await client.fetchUserActivity('0x123...');
+	 * ```
+	 */
+	async fetchUserActivity(user: string): Promise<Activity[]> {
+		const validatedParams = validateUserActivityParams({ user });
+		const url = this.buildDataApiUrl('/activity', { user: validatedParams.user });
+		const data = await this.request<unknown>(url);
+		return validateActivities(data);
+	}
+
+	/**
+	 * Fetches top holders for specific markets from the Data API
+	 * Validates input parameters and response structure
+	 *
+	 * @param markets - Array of market token identifiers
+	 * @returns Promise resolving to an array of market holders
+	 * @throws {ValidationError} When the markets parameter is invalid or empty
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error response
+	 *
+	 * @example
+	 * ```typescript
+	 * const holders = await client.fetchTopHolders(['market1', 'market2']);
+	 * ```
+	 */
+	async fetchTopHolders(markets: string[]): Promise<MarketHolders[]> {
+		const validatedParams = validateTopHoldersParams({ market: markets });
+		const url = this.buildDataApiUrl('/holders', { market: validatedParams.market });
+		const data = await this.request<unknown>(url);
+		return validateMarketHoldersList(data);
+	}
+
+	/**
+	 * Fetches portfolio value for a user from the Data API
+	 * Validates input parameters and response structure
+	 *
+	 * @param user - The user's proxy wallet address
+	 * @param markets - Optional array of market token identifiers to filter by
+	 * @returns Promise resolving to an array of portfolio values
+	 * @throws {ValidationError} When parameters are invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error response
+	 *
+	 * @example
+	 * ```typescript
+	 * const value = await client.fetchPortfolioValue('0x123...', ['market1']);
+	 * ```
+	 */
+	async fetchPortfolioValue(user: string, markets?: string[]): Promise<PortfolioValue[]> {
+		const validatedParams = validatePortfolioValueParams({ user, market: markets });
+		const params: Record<string, string | string[]> = { user: validatedParams.user };
+		if (validatedParams.market) {
+			params.market = validatedParams.market;
+		}
+		const url = this.buildDataApiUrl('/value', params);
+		const data = await this.request<unknown>(url);
+		return validatePortfolioValues(data);
+	}
+
+	/**
+	 * Fetches closed positions for a user from the Data API
+	 * Validates input parameters and response structure
+	 *
+	 * @param user - The user's proxy wallet address
+	 * @returns Promise resolving to an array of closed positions
+	 * @throws {ValidationError} When the user parameter is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error response
+	 *
+	 * @example
+	 * ```typescript
+	 * const closedPositions = await client.fetchClosedPositions('0x123...');
+	 * ```
+	 */
+	async fetchClosedPositions(user: string): Promise<ClosedPosition[]> {
+		const validatedParams = validateClosedPositionsParams({ user });
+		const url = this.buildDataApiUrl('/closed-positions', { user: validatedParams.user });
+		const data = await this.request<unknown>(url);
+		return validateClosedPositions(data);
 	}
 }
