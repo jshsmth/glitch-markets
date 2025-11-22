@@ -179,6 +179,7 @@ describe('Logger', () => {
 					const loggedOutput = consoleSpies.info.mock.calls[0][0] as string;
 
 					// Verify context values are present in the log
+					// The logger outputs JSON, so we need to check for JSON-escaped keys
 					for (const [key, value] of Object.entries(context)) {
 						const trimmedKey = key.trim();
 						const trimmedValue = typeof value === 'string' ? value.trim() : String(value);
@@ -189,7 +190,11 @@ describe('Logger', () => {
 							!trimmedKey.match(/^\[object/) &&
 							!trimmedValue.match(/^["\\]+$/)
 						) {
-							expect(loggedOutput).toContain(trimmedKey);
+							// Check for the JSON-stringified version of the key
+							const jsonKey = JSON.stringify(trimmedKey);
+							// Remove the surrounding quotes from JSON.stringify
+							const escapedKey = jsonKey.slice(1, -1);
+							expect(loggedOutput).toContain(escapedKey);
 						}
 					}
 				}
