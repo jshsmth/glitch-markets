@@ -530,3 +530,353 @@ describe('API Integration Tests', () => {
 		});
 	});
 });
+
+// Mock data for events testing
+const createMockEvent = (
+	overrides: Partial<import('$lib/server/api/polymarket-client').Event> = {}
+): import('$lib/server/api/polymarket-client').Event => ({
+	id: 'event-1',
+	ticker: 'CRYPTO',
+	slug: 'crypto-predictions-2024',
+	title: 'Crypto Predictions 2024',
+	subtitle: 'Major cryptocurrency predictions',
+	description: 'A collection of markets about cryptocurrency predictions for 2024',
+	resolutionSource: 'CoinMarketCap',
+	startDate: '2024-01-01T00:00:00Z',
+	creationDate: '2023-12-01T00:00:00Z',
+	endDate: '2024-12-31T23:59:59Z',
+	image: 'https://example.com/crypto.jpg',
+	icon: 'https://example.com/crypto-icon.jpg',
+	active: true,
+	closed: false,
+	archived: false,
+	new: false,
+	featured: true,
+	restricted: false,
+	liquidity: 100000,
+	volume: 500000,
+	openInterest: 75000,
+	category: 'crypto',
+	subcategory: 'bitcoin',
+	volume24hr: 25000,
+	volume1wk: 100000,
+	volume1mo: 350000,
+	volume1yr: 500000,
+	commentCount: 150,
+	markets: [],
+	categories: [{ id: 'cat-1', name: 'crypto' }],
+	tags: [
+		{ id: 'tag-1', label: 'bitcoin', slug: 'bitcoin' },
+		{ id: 'tag-2', label: 'ethereum', slug: 'ethereum' }
+	],
+	...overrides
+});
+
+// Mock the event-related methods
+const mockFetchEvents = vi.fn();
+const mockFetchEventById = vi.fn();
+const mockFetchEventBySlug = vi.fn();
+
+// Update the mock to include event methods
+vi.mock('$lib/server/api/polymarket-client', () => {
+	return {
+		PolymarketClient: class {
+			fetchMarkets = mockFetchMarkets;
+			fetchMarketById = mockFetchMarketById;
+			fetchMarketBySlug = mockFetchMarketBySlug;
+			fetchEvents = mockFetchEvents;
+			fetchEventById = mockFetchEventById;
+			fetchEventBySlug = mockFetchEventBySlug;
+		}
+	};
+});
+
+describe('Events API Integration Tests', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockFetchEvents.mockReset();
+		mockFetchEventById.mockReset();
+		mockFetchEventBySlug.mockReset();
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
+
+	describe('/api/events endpoint', () => {
+		it('should fetch events with various filter combinations', async () => {
+			const events = [
+				createMockEvent({ id: '1', category: 'crypto', active: true, closed: false }),
+				createMockEvent({ id: '2', category: 'sports', active: true, closed: false }),
+				createMockEvent({ id: '3', category: 'crypto', active: false, closed: true })
+			];
+
+			mockFetchEvents.mockResolvedValue(events);
+
+			const { GET } = await import('../../routes/api/events/+server');
+
+			// Test with category filter
+			const url1 = new URL('http://localhost/api/events?category=crypto');
+			const response1 = await GET({ url: url1 } as never);
+			expect(response1.status).toBe(200);
+			const data1 = await response1.json();
+			expect(Array.isArray(data1)).toBe(true);
+
+			// Test with active filter
+			const url2 = new URL('http://localhost/api/events?active=true');
+			const response2 = await GET({ url: url2 } as never);
+			expect(response2.status).toBe(200);
+			const data2 = await response2.json();
+			expect(Array.isArray(data2)).toBe(true);
+
+			// Test with multiple filters
+			const url3 = new URL('http://localhost/api/events?category=crypto&active=true&closed=false');
+			const response3 = await GET({ url: url3 } as never);
+			expect(response3.status).toBe(200);
+			const data3 = await response3.json();
+			expect(Array.isArray(data3)).toBe(true);
+		});
+
+		it('should handle pagination parameters correctly', async () => {
+			const events = Array.from({ length: 50 }, (_, i) =>
+				createMockEvent({ id: `event-${i}`, title: `Event ${i}` })
+			);
+
+			mockFetchEvents.mockResolvedValue(events.slice(0, 10));
+
+			const { GET } = await import('../../routes/api/events/+server');
+
+			const url = new URL('http://localhost/api/events?limit=10&offset=0');
+			const response = await GET({ url } as never);
+
+			expect(response.status).toBe(200);
+			const data = await response.json();
+			expect(Array.isArray(data)).toBe(true);
+			expect(data.length).toBeLessThanOrEqual(10);
+		});
+
+		it('should return error for invalid limit parameter', async () => {
+			const { GET } = await import('../../routes/api/events/+server');
+
+			const url = new URL('http://localhost/api/events?limit=-5');
+			const response = await GET({ url } as never);
+
+			expect(response.status).toBe(400);
+			const data = await response.json();
+			expect(data.error).toBe('VALIDATION_ERROR');
+			expect(data.message).toContain('limit');
+		});
+
+		it('should return error for invalid offset parameter', async () => {
+			const { GET } = await import('../../routes/api/events/+server');
+
+			const url = new URL('http://localhost/api/events?offset=invalid');
+			const response = await GET({ url } as never);
+
+			expect(response.status).toBe(400);
+			const data = await response.json();
+			expect(data.error).toBe('VALIDATION_ERROR');
+		});
+
+		it('should return error for invalid active parameter', async () => {
+			const { GET } = await import('../../routes/api/events/+server');
+
+			const url = new URL('http://localhost/api/events?active=maybe');
+			const response = await GET({ url } as never);
+
+			expect(response.status).toBe(400);
+			const data = await response.json();
+			expect(data.error).toBe('VALIDATION_ERROR');
+			expect(data.message).toContain('active');
+		});
+
+		it('should return error for invalid closed parameter', async () => {
+			const { GET } = await import('../../routes/api/events/+server');
+
+			const url = new URL('http://localhost/api/events?closed=yes');
+			const response = await GET({ url } as never);
+
+			expect(response.status).toBe(400);
+			const data = await response.json();
+			expect(data.error).toBe('VALIDATION_ERROR');
+			expect(data.message).toContain('closed');
+		});
+
+		it('should include cache headers in response', async () => {
+			mockFetchEvents.mockResolvedValue([]);
+
+			const { GET } = await import('../../routes/api/events/+server');
+
+			const url = new URL('http://localhost/api/events');
+			const response = await GET({ url } as never);
+
+			expect(response.status).toBe(200);
+			expect(response.headers.get('Cache-Control')).toContain('max-age=60');
+			expect(response.headers.get('Cache-Control')).toContain('public');
+		});
+	});
+
+	describe('/api/events/[id] endpoint', () => {
+		it('should fetch event by valid ID', async () => {
+			const event = createMockEvent({ id: 'test-event-123' });
+			mockFetchEventById.mockResolvedValue(event);
+
+			const { GET } = await import('../../routes/api/events/[id]/+server');
+
+			const response = await GET({
+				params: { id: 'test-event-123' },
+				url: new URL('http://localhost/api/events/test-event-123')
+			} as never);
+
+			expect(response.status).toBe(200);
+			const data = await response.json();
+			expect(data.id).toBe('test-event-123');
+		});
+
+		it('should return 400 for empty event ID', async () => {
+			const { GET } = await import('../../routes/api/events/[id]/+server');
+
+			const response = await GET({
+				params: { id: '' },
+				url: new URL('http://localhost/api/events/')
+			} as never);
+
+			expect(response.status).toBe(400);
+			const data = await response.json();
+			expect(data.error).toBe('VALIDATION_ERROR');
+			expect(data.message).toContain('Event ID is required');
+		});
+
+		it('should include cache headers in response', async () => {
+			const event = createMockEvent();
+			mockFetchEventById.mockResolvedValue(event);
+
+			const { GET } = await import('../../routes/api/events/[id]/+server');
+
+			const response = await GET({
+				params: { id: 'test-123' },
+				url: new URL('http://localhost/api/events/test-123')
+			} as never);
+
+			expect(response.status).toBe(200);
+			expect(response.headers.get('Cache-Control')).toContain('max-age=60');
+		});
+	});
+
+	describe('/api/events/slug/[slug] endpoint', () => {
+		it('should fetch event by valid slug', async () => {
+			const event = createMockEvent({ slug: 'crypto-predictions-2024' });
+			mockFetchEventBySlug.mockResolvedValue(event);
+
+			const { GET } = await import('../../routes/api/events/slug/[slug]/+server');
+
+			const response = await GET({
+				params: { slug: 'crypto-predictions-2024' },
+				url: new URL('http://localhost/api/events/slug/crypto-predictions-2024')
+			} as never);
+
+			expect(response.status).toBe(200);
+			const data = await response.json();
+			expect(data.slug).toBe('crypto-predictions-2024');
+		});
+
+		it('should return 400 for empty slug', async () => {
+			const { GET } = await import('../../routes/api/events/slug/[slug]/+server');
+
+			const response = await GET({
+				params: { slug: '' },
+				url: new URL('http://localhost/api/events/slug/')
+			} as never);
+
+			expect(response.status).toBe(400);
+			const data = await response.json();
+			expect(data.error).toBe('VALIDATION_ERROR');
+			expect(data.message).toContain('Event slug is required');
+		});
+
+		it('should include cache headers in response', async () => {
+			const event = createMockEvent();
+			mockFetchEventBySlug.mockResolvedValue(event);
+
+			const { GET } = await import('../../routes/api/events/slug/[slug]/+server');
+
+			const response = await GET({
+				params: { slug: 'test-slug' },
+				url: new URL('http://localhost/api/events/slug/test-slug')
+			} as never);
+
+			expect(response.status).toBe(200);
+			expect(response.headers.get('Cache-Control')).toContain('max-age=60');
+		});
+	});
+
+	describe('Events error scenarios', () => {
+		it('should handle validation errors consistently across event routes', async () => {
+			const { GET: getEvents } = await import('../../routes/api/events/+server');
+
+			const response1 = await getEvents({
+				url: new URL('http://localhost/api/events?limit=invalid')
+			} as never);
+
+			const response2 = await getEvents({
+				url: new URL('http://localhost/api/events?active=invalid')
+			} as never);
+
+			expect(response1.status).toBe(400);
+			expect(response2.status).toBe(400);
+
+			const data1 = await response1.json();
+			const data2 = await response2.json();
+
+			// Both should have consistent error structure
+			expect(data1.error).toBe('VALIDATION_ERROR');
+			expect(data2.error).toBe('VALIDATION_ERROR');
+		});
+	});
+
+	describe('Events caching behavior', () => {
+		it('should set appropriate cache headers for event endpoints', async () => {
+			mockFetchEvents.mockResolvedValue([]);
+			const event = createMockEvent();
+			mockFetchEventById.mockResolvedValue(event);
+			mockFetchEventBySlug.mockResolvedValue(event);
+
+			const { GET: getEvents } = await import('../../routes/api/events/+server');
+			const { GET: getEventById } = await import('../../routes/api/events/[id]/+server');
+			const { GET: getEventBySlug } = await import('../../routes/api/events/slug/[slug]/+server');
+
+			// Events list - 60 second cache
+			const response1 = await getEvents({
+				url: new URL('http://localhost/api/events')
+			} as never);
+			expect(response1.headers.get('Cache-Control')).toContain('max-age=60');
+
+			// Individual event by ID - 60 second cache
+			const response2 = await getEventById({
+				params: { id: 'test-123' },
+				url: new URL('http://localhost/api/events/test-123')
+			} as never);
+			expect(response2.headers.get('Cache-Control')).toContain('max-age=60');
+
+			// Individual event by slug - 60 second cache
+			const response3 = await getEventBySlug({
+				params: { slug: 'test-slug' },
+				url: new URL('http://localhost/api/events/slug/test-slug')
+			} as never);
+			expect(response3.headers.get('Cache-Control')).toContain('max-age=60');
+		});
+
+		it('should include CDN cache headers for events', async () => {
+			mockFetchEvents.mockResolvedValue([]);
+
+			const { GET } = await import('../../routes/api/events/+server');
+
+			const response = await GET({
+				url: new URL('http://localhost/api/events')
+			} as never);
+
+			expect(response.headers.get('CDN-Cache-Control')).toBeDefined();
+			expect(response.headers.get('Vercel-CDN-Cache-Control')).toBeDefined();
+		});
+	});
+});
