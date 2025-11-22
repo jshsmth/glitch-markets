@@ -1,0 +1,355 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import * as fc from 'fast-check';
+import { PolymarketClient, type Market } from './polymarket-client';
+import type { ApiConfig } from '../config/api-config';
+
+describe('PolymarketClient', () => {
+	let client: PolymarketClient;
+	let config: ApiConfig;
+	let originalFetch: typeof global.fetch;
+
+	beforeEach(() => {
+		config = {
+			baseUrl: 'https://gamma-api.polymarket.com',
+			timeout: 10000,
+			cacheTtl: 60,
+			enableCache: true
+		};
+		client = new PolymarketClient(config);
+		originalFetch = global.fetch;
+	});
+
+	afterEach(() => {
+		global.fetch = originalFetch;
+		vi.restoreAllMocks();
+	});
+
+	/**
+	 * Feature: polymarket-api-integration, Property 2: Query parameter forwarding
+	 * Validates: Requirements 1.2
+	 *
+	 * For any set of query parameters provided to the server route, those parameters
+	 * should be correctly forwarded to the Gamma API request.
+	 */
+	describe('Property 2: Query parameter forwarding', () => {
+		it('should forward all query parameters to the API request', async () => {
+			await fc.assert(
+				fc.asyncProperty(
+					fc.record({
+						limit: fc.option(fc.integer({ min: 1, max: 100 })),
+						offset: fc.option(fc.integer({ min: 0, max: 1000 })),
+						category: fc.option(
+							fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0)
+						),
+						active: fc.option(fc.boolean()),
+						closed: fc.option(fc.boolean())
+					}),
+					async (params) => {
+						// Filter out undefined values
+						const cleanParams = Object.fromEntries(
+							Object.entries(params).filter(([, v]) => v !== null)
+						) as Record<string, string | number | boolean>;
+
+						// Mock fetch to capture the URL
+						let capturedUrl: string | undefined;
+						(global.fetch as any) = vi.fn(async (url: string | URL | Request) => {
+							capturedUrl = url.toString();
+							return new Response(JSON.stringify([]), {
+								status: 200,
+								headers: { 'Content-Type': 'application/json' }
+							});
+						});
+
+						await client.fetchMarkets({ params: cleanParams });
+
+						// Verify fetch was called
+						expect(global.fetch).toHaveBeenCalled();
+						expect(capturedUrl).toBeDefined();
+
+						// Parse the URL and check all parameters are present
+						const url = new URL(capturedUrl!);
+						Object.entries(cleanParams).forEach(([key, value]) => {
+							expect(url.searchParams.get(key)).toBe(String(value));
+						});
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should handle empty parameters correctly', async () => {
+			let capturedUrl: string | undefined;
+			(global.fetch as any) = vi.fn(async (url: string | URL | Request) => {
+				capturedUrl = url.toString();
+				return new Response(JSON.stringify([]), {
+					status: 200,
+					headers: { 'Content-Type': 'application/json' }
+				});
+			});
+
+			await client.fetchMarkets();
+
+			expect(global.fetch).toHaveBeenCalled();
+			expect(capturedUrl).toBeDefined();
+
+			const url = new URL(capturedUrl!);
+			// Should have no query parameters
+			expect(Array.from(url.searchParams.keys()).length).toBe(0);
+		});
+
+		it('should correctly encode special characters in parameters', async () => {
+			await fc.assert(
+				fc.asyncProperty(
+					fc.record({
+						category: fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0) // Exclude whitespace-only strings
+					}),
+					async (params) => {
+						let capturedUrl: string | undefined;
+						(global.fetch as any) = vi.fn(async (url: string | URL | Request) => {
+							capturedUrl = url.toString();
+							return new Response(JSON.stringify([]), {
+								status: 200,
+								headers: { 'Content-Type': 'application/json' }
+							});
+						});
+
+						await client.fetchMarkets({ params });
+
+						const url = new URL(capturedUrl!);
+						// The parameter should be properly URL-encoded and decodable
+						expect(url.searchParams.get('category')).toBe(params.category);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+	});
+
+	/**
+	 * Feature: polymarket-api-integration, Property 5: Market retrieval by identifier
+	 * Validates: Requirements 2.1, 2.2, 2.3, 2.5
+	 *
+	 * For any valid market ID or slug, the server route should fetch and return
+	 * the correct market data with all required fields present.
+	 */
+	describe('Property 5: Market retrieval by identifier', () => {
+		const createMockMarket = (id: string, slug: string): Market => ({
+			id,
+			question: `Test question for ${id}`,
+			conditionId: `condition-${id}`,
+			slug,
+			endDate: new Date().toISOString(),
+			category: 'test',
+			liquidity: '1000',
+			image: 'https://example.com/image.jpg',
+			icon: 'https://example.com/icon.jpg',
+			description: 'Test description',
+			outcomes: ['Yes', 'No'],
+			outcomePrices: ['0.5', '0.5'],
+			volume: '5000',
+			active: true,
+			marketType: 'normal',
+			closed: false,
+			volumeNum: 5000,
+			liquidityNum: 1000,
+			volume24hr: 1000,
+			volume1wk: 3000,
+			volume1mo: 5000,
+			lastTradePrice: 0.5,
+			bestBid: 0.49,
+			bestAsk: 0.51
+		});
+
+		it('should fetch market by ID with all required fields', async () => {
+			await fc.assert(
+				fc.asyncProperty(
+					fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0),
+					async (marketId) => {
+						const mockMarket = createMockMarket(marketId, `slug-${marketId}`);
+
+						(global.fetch as any) = vi.fn(async () => {
+							return new Response(JSON.stringify(mockMarket), {
+								status: 200,
+								headers: { 'Content-Type': 'application/json' }
+							});
+						});
+
+						const result = await client.fetchMarketById(marketId);
+
+						// Verify all required fields are present
+						expect(result).toHaveProperty('id');
+						expect(result).toHaveProperty('question');
+						expect(result).toHaveProperty('conditionId');
+						expect(result).toHaveProperty('slug');
+						expect(result).toHaveProperty('endDate');
+						expect(result).toHaveProperty('category');
+						expect(result).toHaveProperty('liquidity');
+						expect(result).toHaveProperty('image');
+						expect(result).toHaveProperty('icon');
+						expect(result).toHaveProperty('description');
+						expect(result).toHaveProperty('outcomes');
+						expect(result).toHaveProperty('outcomePrices');
+						expect(result).toHaveProperty('volume');
+						expect(result).toHaveProperty('active');
+						expect(result).toHaveProperty('marketType');
+						expect(result).toHaveProperty('closed');
+						expect(result).toHaveProperty('volumeNum');
+						expect(result).toHaveProperty('liquidityNum');
+						expect(result).toHaveProperty('volume24hr');
+						expect(result).toHaveProperty('volume1wk');
+						expect(result).toHaveProperty('volume1mo');
+						expect(result).toHaveProperty('lastTradePrice');
+						expect(result).toHaveProperty('bestBid');
+						expect(result).toHaveProperty('bestAsk');
+
+						// Verify the ID matches
+						expect(result.id).toBe(marketId);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should fetch market by slug with all required fields', async () => {
+			await fc.assert(
+				fc.asyncProperty(
+					fc
+						.string({ minLength: 1, maxLength: 50 })
+						.map((s) => s.toLowerCase().replace(/[^a-z0-9]/g, '-')),
+					async (slug) => {
+						const mockMarket = createMockMarket(`id-${slug}`, slug);
+
+						(global.fetch as any) = vi.fn(async () => {
+							return new Response(JSON.stringify(mockMarket), {
+								status: 200,
+								headers: { 'Content-Type': 'application/json' }
+							});
+						});
+
+						const result = await client.fetchMarketBySlug(slug);
+
+						// Verify all required fields are present
+						expect(result).toHaveProperty('id');
+						expect(result).toHaveProperty('question');
+						expect(result).toHaveProperty('slug');
+						expect(result).toHaveProperty('outcomes');
+						expect(result).toHaveProperty('outcomePrices');
+						expect(result).toHaveProperty('volume');
+						expect(result).toHaveProperty('liquidity');
+
+						// Verify the slug matches
+						expect(result.slug).toBe(slug);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should use correct endpoint for ID-based retrieval', async () => {
+			await fc.assert(
+				fc.asyncProperty(
+					// Generate alphanumeric IDs with hyphens and underscores (typical market ID format)
+					fc.stringMatching(/^[a-zA-Z0-9_-]+$/).filter((s) => s.length > 0 && s.length <= 50),
+					async (marketId) => {
+						let capturedUrl: string | undefined;
+						const mockMarket = createMockMarket(marketId, `slug-${marketId}`);
+
+						(global.fetch as any) = vi.fn(async (url: string | URL | Request) => {
+							capturedUrl = url.toString();
+							return new Response(JSON.stringify(mockMarket), {
+								status: 200,
+								headers: { 'Content-Type': 'application/json' }
+							});
+						});
+
+						await client.fetchMarketById(marketId);
+
+						expect(capturedUrl).toBeDefined();
+						// Check that the URL has the correct structure (base + /markets/ + ID)
+						const url = new URL(capturedUrl!);
+						expect(url.pathname).toBe(`/markets/${marketId}`);
+						expect(url.origin).toBe(config.baseUrl);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should use correct endpoint for slug-based retrieval', async () => {
+			await fc.assert(
+				fc.asyncProperty(
+					fc
+						.string({ minLength: 1, maxLength: 50 })
+						.map((s) => s.toLowerCase().replace(/[^a-z0-9]/g, '-')),
+					async (slug) => {
+						let capturedUrl: string | undefined;
+						const mockMarket = createMockMarket(`id-${slug}`, slug);
+
+						(global.fetch as any) = vi.fn(async (url: string | URL | Request) => {
+							capturedUrl = url.toString();
+							return new Response(JSON.stringify(mockMarket), {
+								status: 200,
+								headers: { 'Content-Type': 'application/json' }
+							});
+						});
+
+						await client.fetchMarketBySlug(slug);
+
+						expect(capturedUrl).toBeDefined();
+						expect(capturedUrl).toContain(`/markets/slug/${slug}`);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+	});
+
+	describe('Error handling', () => {
+		it('should handle timeout errors', async () => {
+			const shortTimeoutConfig = { ...config, timeout: 100 };
+			const shortTimeoutClient = new PolymarketClient(shortTimeoutConfig);
+
+			(global.fetch as any) = vi
+				.fn()
+				.mockImplementation(async (_url: string | URL | Request, init?: RequestInit) => {
+					// Simulate a long-running request that gets aborted
+					return new Promise<Response>((resolve, reject) => {
+						const timeout = setTimeout(
+							() =>
+								resolve(
+									new Response(JSON.stringify([]), {
+										status: 200,
+										headers: { 'Content-Type': 'application/json' }
+									})
+								),
+							200
+						);
+
+						// Listen for abort signal
+						if (init?.signal) {
+							init.signal.addEventListener('abort', () => {
+								clearTimeout(timeout);
+								reject(new DOMException('The operation was aborted', 'AbortError'));
+							});
+						}
+					});
+				});
+
+			await expect(shortTimeoutClient.fetchMarkets()).rejects.toThrow('Request timeout');
+		});
+
+		it('should handle HTTP errors', async () => {
+			(global.fetch as any) = vi.fn(async () => {
+				return new Response('Not Found', { status: 404, statusText: 'Not Found' });
+			});
+
+			await expect(client.fetchMarketById('nonexistent')).rejects.toThrow('API request failed');
+		});
+
+		it('should handle network errors', async () => {
+			(global.fetch as any) = vi.fn().mockRejectedValue(new Error('Network error'));
+
+			await expect(client.fetchMarkets()).rejects.toThrow('Network error');
+		});
+	});
+});
