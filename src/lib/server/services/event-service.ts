@@ -38,6 +38,7 @@ export class EventService {
 	private cache: CacheManager;
 	private logger: Logger;
 	private cacheTtl: number;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private pendingRequests: Map<string, Promise<any>>;
 
 	/**
@@ -108,10 +109,7 @@ export class EventService {
 	 * Internal method to fetch and cache events
 	 * Separated for better cache stampede protection
 	 */
-	private async fetchAndCacheEvents(
-		cacheKey: string,
-		filters: EventFilters
-	): Promise<Event[]> {
+	private async fetchAndCacheEvents(cacheKey: string, filters: EventFilters): Promise<Event[]> {
 		const params: Record<string, string | number | boolean> = {};
 		if (filters.category !== undefined) params.category = filters.category;
 		if (filters.active !== undefined) params.active = filters.active;
@@ -166,7 +164,12 @@ export class EventService {
 				this.cache.set(cacheKey, event, this.cacheTtl);
 				return event;
 			} catch (error) {
-				if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
+				if (
+					error &&
+					typeof error === 'object' &&
+					'statusCode' in error &&
+					error.statusCode === 404
+				) {
 					return null;
 				}
 				throw error;
@@ -222,7 +225,12 @@ export class EventService {
 				this.cache.set(cacheKey, event, this.cacheTtl);
 				return event;
 			} catch (error) {
-				if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
+				if (
+					error &&
+					typeof error === 'object' &&
+					'statusCode' in error &&
+					error.statusCode === 404
+				) {
 					return null;
 				}
 				throw error;

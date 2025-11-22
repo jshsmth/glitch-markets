@@ -35,10 +35,7 @@ function getClientId(request: Request): string {
 	const cfConnectingIp = request.headers.get('cf-connecting-ip'); // Cloudflare
 
 	return (
-		cfConnectingIp ||
-		realIp ||
-		(forwardedFor ? forwardedFor.split(',')[0].trim() : '') ||
-		'unknown'
+		cfConnectingIp || realIp || (forwardedFor ? forwardedFor.split(',')[0].trim() : '') || 'unknown'
 	);
 }
 

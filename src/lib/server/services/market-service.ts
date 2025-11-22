@@ -38,6 +38,7 @@ export class MarketService {
 	private cache: CacheManager;
 	private logger: Logger;
 	private cacheTtl: number;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private pendingRequests: Map<string, Promise<any>>;
 
 	/**
@@ -108,10 +109,7 @@ export class MarketService {
 	 * Internal method to fetch and cache markets
 	 * Separated for better cache stampede protection
 	 */
-	private async fetchAndCacheMarkets(
-		cacheKey: string,
-		filters: MarketFilters
-	): Promise<Market[]> {
+	private async fetchAndCacheMarkets(cacheKey: string, filters: MarketFilters): Promise<Market[]> {
 		const params: Record<string, string | number | boolean> = {};
 		if (filters.category !== undefined) params.category = filters.category;
 		if (filters.active !== undefined) params.active = filters.active;
@@ -166,7 +164,12 @@ export class MarketService {
 				this.cache.set(cacheKey, market, this.cacheTtl);
 				return market;
 			} catch (error) {
-				if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
+				if (
+					error &&
+					typeof error === 'object' &&
+					'statusCode' in error &&
+					error.statusCode === 404
+				) {
 					return null;
 				}
 				throw error;
@@ -222,7 +225,12 @@ export class MarketService {
 				this.cache.set(cacheKey, market, this.cacheTtl);
 				return market;
 			} catch (error) {
-				if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
+				if (
+					error &&
+					typeof error === 'object' &&
+					'statusCode' in error &&
+					error.statusCode === 404
+				) {
 					return null;
 				}
 				throw error;

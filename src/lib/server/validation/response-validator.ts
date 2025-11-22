@@ -3,7 +3,7 @@
  */
 
 import { ValidationError } from '../errors/api-errors.js';
-import type { Market, Event, Category, Tag } from '../api/polymarket-client.js';
+import type { Market, Event } from '../api/polymarket-client.js';
 
 /**
  * Validates that a value is a string
