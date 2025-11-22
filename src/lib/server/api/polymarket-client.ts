@@ -21,6 +21,8 @@ import {
 	validateEventQueryParams,
 	validateEventId,
 	validateEventSlug,
+	validateTagId,
+	validateTagSlug,
 	validateUserPositionsParams,
 	validateTradesParams,
 	validateUserActivityParams,
@@ -33,6 +35,8 @@ import {
 	validateMarkets,
 	validateEvent,
 	validateEvents,
+	validateTag,
+	validateTags,
 	validatePositions,
 	validateTrades,
 	validateActivities,
@@ -347,7 +351,6 @@ export class PolymarketClient {
 			clearTimeout(timeoutId);
 			const duration = Date.now() - startTime;
 
-			// Handle non-OK responses
 			if (!response.ok) {
 				let responseBody: unknown;
 				try {
@@ -370,7 +373,6 @@ export class PolymarketClient {
 					duration
 				});
 
-				// Map status codes to appropriate error types
 				if (response.status >= 500) {
 					throw new ApiResponseError(
 						`Upstream API error: ${response.statusText}`,
@@ -383,7 +385,6 @@ export class PolymarketClient {
 				}
 			}
 
-			// Parse response
 			let data: T;
 			try {
 				data = await response.json();
@@ -399,7 +400,6 @@ export class PolymarketClient {
 			clearTimeout(timeoutId);
 			const duration = Date.now() - startTime;
 
-			// Re-throw if already an ApiError
 			if (
 				error instanceof TimeoutError ||
 				error instanceof NetworkError ||
@@ -409,21 +409,18 @@ export class PolymarketClient {
 				throw error;
 			}
 
-			// Handle timeout/abort errors
 			if (isAbortError(error)) {
 				const errorMessage = 'Request timeout';
 				this.logger.error(errorMessage, error, { url, timeout: this.timeout, duration });
 				throw new TimeoutError(errorMessage, { url, timeout: this.timeout });
 			}
 
-			// Handle network errors
 			if (isNetworkError(error)) {
 				const errorMessage = error instanceof Error ? error.message : 'Network connection failed';
 				this.logger.error('Network error', error, { url, duration });
 				throw new ConnectionError(errorMessage, { url, originalError: error });
 			}
 
-			// Handle unknown errors
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 			this.logger.error('Unexpected error', error, { url, duration });
 			throw new NetworkError(errorMessage, { url, originalError: error });
@@ -574,6 +571,75 @@ export class PolymarketClient {
 		const url = this.buildUrl(`/events/slug/${validatedSlug}`);
 		const data = await this.request<unknown>(url);
 		return validateEvent(data);
+	}
+
+	/**
+	 * Fetches a list of tags from the Gamma API
+	 * Validates response structure
+	 *
+	 * @returns Promise resolving to an array of tags
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error response
+	 *
+	 * @example
+	 * ```typescript
+	 * const tags = await client.fetchTags();
+	 * console.log(tags);
+	 * ```
+	 */
+	async fetchTags(): Promise<Tag[]> {
+		const url = this.buildUrl('/tags');
+		const data = await this.request<unknown>(url);
+		return validateTags(data);
+	}
+
+	/**
+	 * Fetches a specific tag by its unique identifier
+	 * Validates the ID and response structure
+	 *
+	 * @param id - The unique tag ID
+	 * @returns Promise resolving to the tag
+	 * @throws {ValidationError} When the ID is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const tag = await client.fetchTagById('tag-123');
+	 * console.log(tag.label);
+	 * ```
+	 */
+	async fetchTagById(id: string): Promise<Tag> {
+		const validatedId = validateTagId(id);
+		const url = this.buildUrl(`/tags/${validatedId}`);
+		const data = await this.request<unknown>(url);
+		return validateTag(data);
+	}
+
+	/**
+	 * Fetches a specific tag by its URL-friendly slug
+	 * Validates the slug and response structure
+	 *
+	 * @param slug - The URL-friendly tag identifier
+	 * @returns Promise resolving to the tag
+	 * @throws {ValidationError} When the slug is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const tag = await client.fetchTagBySlug('crypto');
+	 * console.log(tag.label);
+	 * ```
+	 */
+	async fetchTagBySlug(slug: string): Promise<Tag> {
+		const validatedSlug = validateTagSlug(slug);
+		const url = this.buildUrl(`/tags/slug/${validatedSlug}`);
+		const data = await this.request<unknown>(url);
+		return validateTag(data);
 	}
 
 	/**

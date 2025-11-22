@@ -6,6 +6,7 @@ import { ValidationError } from '../errors/api-errors.js';
 import type {
 	Market,
 	Event,
+	Tag,
 	Position,
 	Trade,
 	Activity,
@@ -58,7 +59,6 @@ export function validateMarket(data: unknown): Market {
 		throw new ValidationError('Market data must be an object', { data });
 	}
 
-	// Validate required string fields
 	const requiredStringFields = [
 		'id',
 		'question',
@@ -85,7 +85,6 @@ export function validateMarket(data: unknown): Market {
 		}
 	}
 
-	// Validate and parse outcomes field (can be JSON string or array)
 	if (!('outcomes' in data)) {
 		missingFields.push('outcomes');
 	} else {
@@ -110,7 +109,6 @@ export function validateMarket(data: unknown): Market {
 		}
 	}
 
-	// Validate and parse outcomePrices field (can be JSON string or array)
 	if (!('outcomePrices' in data)) {
 		missingFields.push('outcomePrices');
 	} else {
@@ -135,7 +133,6 @@ export function validateMarket(data: unknown): Market {
 		}
 	}
 
-	// Validate required boolean fields
 	const requiredBooleanFields = ['active', 'closed'];
 	for (const field of requiredBooleanFields) {
 		if (!(field in data)) {
@@ -145,7 +142,6 @@ export function validateMarket(data: unknown): Market {
 		}
 	}
 
-	// Validate required number fields
 	const requiredNumberFields = [
 		'volumeNum',
 		'liquidityNum',
@@ -165,12 +161,10 @@ export function validateMarket(data: unknown): Market {
 		}
 	}
 
-	// Validate marketType enum
 	if ('marketType' in data && data.marketType !== 'normal' && data.marketType !== 'scalar') {
 		invalidTypeFields.push(`marketType (expected 'normal' or 'scalar', got '${data.marketType}')`);
 	}
 
-	// Throw validation error if any issues found
 	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
 		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
 		if (missingFields.length > 0) {
@@ -183,7 +177,6 @@ export function validateMarket(data: unknown): Market {
 		throw new ValidationError('Market validation failed', errorDetails);
 	}
 
-	// Type assertion is safe here because we've validated all fields
 	return data as unknown as Market;
 }
 
@@ -218,7 +211,6 @@ export function validateEvent(data: unknown): Event {
 		throw new ValidationError('Event data must be an object', { data });
 	}
 
-	// Validate required string fields (must be strings)
 	const requiredStringFields = [
 		'id',
 		'ticker',
@@ -231,7 +223,6 @@ export function validateEvent(data: unknown): Event {
 		'category'
 	];
 
-	// Optional string fields (can be null or empty string)
 	const optionalStringFields = ['subtitle', 'subcategory', 'resolutionSource', 'image', 'icon'];
 
 	const missingFields: string[] = [];
@@ -245,14 +236,12 @@ export function validateEvent(data: unknown): Event {
 		}
 	}
 
-	// Validate optional string fields (must be string or null)
 	for (const field of optionalStringFields) {
 		if (field in data && data[field] !== null && !isString(data[field])) {
 			invalidTypeFields.push(`${field} (expected string or null, got ${typeof data[field]})`);
 		}
 	}
 
-	// Validate required boolean fields
 	const requiredBooleanFields = ['active', 'closed', 'archived', 'new', 'featured', 'restricted'];
 	for (const field of requiredBooleanFields) {
 		if (!(field in data)) {
@@ -262,7 +251,6 @@ export function validateEvent(data: unknown): Event {
 		}
 	}
 
-	// Validate required number fields
 	const requiredNumberFields = [
 		'liquidity',
 		'volume',
@@ -282,14 +270,12 @@ export function validateEvent(data: unknown): Event {
 		}
 	}
 
-	// Validate required array fields
 	if (!('markets' in data)) {
 		missingFields.push('markets');
 	} else if (!isArray(data.markets)) {
 		invalidTypeFields.push(`markets (expected array, got ${typeof data.markets})`);
 	}
 
-	// Validate optional array fields (can be null)
 	if ('categories' in data && data.categories !== null && !isArray(data.categories)) {
 		invalidTypeFields.push(`categories (expected array or null, got ${typeof data.categories})`);
 	}
@@ -300,7 +286,6 @@ export function validateEvent(data: unknown): Event {
 		invalidTypeFields.push(`tags (expected array, got ${typeof data.tags})`);
 	}
 
-	// Throw validation error if any issues found
 	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
 		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
 		if (missingFields.length > 0) {
@@ -313,7 +298,6 @@ export function validateEvent(data: unknown): Event {
 		throw new ValidationError('Event validation failed', errorDetails);
 	}
 
-	// Type assertion is safe here because we've validated all fields
 	return data as unknown as Event;
 }
 
@@ -331,6 +315,65 @@ export function validateEvents(data: unknown): Event[] {
 		} catch (error) {
 			if (error instanceof ValidationError) {
 				throw new ValidationError(`Event at index ${index} is invalid: ${error.message}`, {
+					index,
+					originalError: error.details
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single tag object
+ */
+export function validateTag(data: unknown): Tag {
+	if (!isObject(data)) {
+		throw new ValidationError('Tag data must be an object', { data });
+	}
+
+	const requiredStringFields = ['id', 'label', 'slug'];
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of requiredStringFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('Tag validation failed', errorDetails);
+	}
+
+	return data as unknown as Tag;
+}
+
+/**
+ * Validates an array of tags
+ */
+export function validateTags(data: unknown): Tag[] {
+	if (!isArray(data)) {
+		throw new ValidationError('Tags data must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateTag(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`Tag at index ${index} is invalid: ${error.message}`, {
 					index,
 					originalError: error.details
 				});
@@ -595,7 +638,6 @@ export function validateActivity(data: unknown): Activity {
 		);
 	}
 
-	// Conditional validation for trade-specific fields
 	if (data.type === 'TRADE') {
 		const tradeFields = ['price', 'asset', 'outcomeIndex'];
 		for (const field of tradeFields) {
@@ -608,7 +650,6 @@ export function validateActivity(data: unknown): Activity {
 			}
 		}
 
-		// Validate side enum for trades
 		if (!('side' in data)) {
 			missingFields.push('side (required when type is TRADE)');
 		} else if (data.side !== 'BUY' && data.side !== 'SELL') {
@@ -740,7 +781,6 @@ export function validateMarketHolders(data: unknown): MarketHolders {
 	} else if (!isArray(data.holders)) {
 		invalidTypeFields.push(`holders (expected array, got ${typeof data.holders})`);
 	} else {
-		// Validate each holder in the array
 		try {
 			data.holders.forEach((holder, index) => {
 				try {
@@ -911,7 +951,6 @@ export function validateClosedPosition(data: unknown): ClosedPosition {
 		}
 	}
 
-	// Validate timestamp is a positive integer
 	if ('timestamp' in data && isNumber(data.timestamp)) {
 		if (data.timestamp < 0 || !Number.isInteger(data.timestamp)) {
 			invalidTypeFields.push('timestamp (expected positive integer Unix timestamp)');
