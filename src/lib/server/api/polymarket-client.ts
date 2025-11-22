@@ -17,9 +17,17 @@ import { Logger } from '../utils/logger.js';
 import {
 	validateMarketQueryParams,
 	validateMarketId,
-	validateMarketSlug
+	validateMarketSlug,
+	validateEventQueryParams,
+	validateEventId,
+	validateEventSlug
 } from '../validation/input-validator.js';
-import { validateMarket, validateMarkets } from '../validation/response-validator.js';
+import {
+	validateMarket,
+	validateMarkets,
+	validateEvent,
+	validateEvents
+} from '../validation/response-validator.js';
 
 /**
  * Represents a prediction market from Polymarket
@@ -49,6 +57,60 @@ export interface Market {
 	lastTradePrice: number;
 	bestBid: number;
 	bestAsk: number;
+}
+
+/**
+ * Represents a category for events and markets
+ */
+export interface Category {
+	id: string;
+	name: string;
+}
+
+/**
+ * Represents a tag for events
+ */
+export interface Tag {
+	id: string;
+	label: string;
+	slug: string;
+}
+
+/**
+ * Represents an event - a collection of related prediction markets
+ */
+export interface Event {
+	id: string;
+	ticker: string;
+	slug: string;
+	title: string;
+	subtitle: string;
+	description: string;
+	resolutionSource: string;
+	startDate: string;
+	creationDate: string;
+	endDate: string;
+	image: string;
+	icon: string;
+	active: boolean;
+	closed: boolean;
+	archived: boolean;
+	new: boolean;
+	featured: boolean;
+	restricted: boolean;
+	liquidity: number;
+	volume: number;
+	openInterest: number;
+	category: string;
+	subcategory: string;
+	volume24hr: number;
+	volume1wk: number;
+	volume1mo: number;
+	volume1yr: number;
+	commentCount: number;
+	markets: Market[];
+	categories: Category[];
+	tags: Tag[];
 }
 
 export interface FetchOptions {
@@ -268,5 +330,78 @@ export class PolymarketClient {
 		const url = this.buildUrl(`/markets/slug/${validatedSlug}`);
 		const data = await this.request<unknown>(url);
 		return validateMarket(data);
+	}
+
+	/**
+	 * Fetches a list of events from the Gamma API
+	 * Validates query parameters and response structure
+	 *
+	 * @param options - Optional fetch options including query parameters
+	 * @returns Promise resolving to an array of events
+	 * @throws {ValidationError} When query parameters are invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error response
+	 *
+	 * @example
+	 * ```typescript
+	 * const events = await client.fetchEvents({
+	 *   params: { limit: 50, category: 'crypto', active: true }
+	 * });
+	 * ```
+	 */
+	async fetchEvents(options?: FetchOptions): Promise<Event[]> {
+		const validatedParams = options?.params ? validateEventQueryParams(options.params) : undefined;
+		const url = this.buildUrl('/events', validatedParams);
+		const data = await this.request<unknown>(url, { ...options, params: validatedParams });
+		return validateEvents(data);
+	}
+
+	/**
+	 * Fetches a specific event by its unique identifier
+	 * Validates the ID and response structure
+	 *
+	 * @param id - The unique event ID
+	 * @returns Promise resolving to the event
+	 * @throws {ValidationError} When the ID is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const event = await client.fetchEventById('event-123');
+	 * console.log(event.title);
+	 * ```
+	 */
+	async fetchEventById(id: string): Promise<Event> {
+		const validatedId = validateEventId(id);
+		const url = this.buildUrl(`/events/${validatedId}`);
+		const data = await this.request<unknown>(url);
+		return validateEvent(data);
+	}
+
+	/**
+	 * Fetches a specific event by its URL-friendly slug
+	 * Validates the slug and response structure
+	 *
+	 * @param slug - The URL-friendly event identifier
+	 * @returns Promise resolving to the event
+	 * @throws {ValidationError} When the slug is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const event = await client.fetchEventBySlug('bitcoin-predictions-2024');
+	 * console.log(event.title);
+	 * ```
+	 */
+	async fetchEventBySlug(slug: string): Promise<Event> {
+		const validatedSlug = validateEventSlug(slug);
+		const url = this.buildUrl(`/events/slug/${validatedSlug}`);
+		const data = await this.request<unknown>(url);
+		return validateEvent(data);
 	}
 }

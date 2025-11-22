@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
-import { PolymarketClient, type Market } from './polymarket-client';
+import { PolymarketClient, type Market, type Event } from './polymarket-client';
 import type { ApiConfig } from '../config/api-config';
 
 describe('PolymarketClient', () => {
@@ -311,6 +311,252 @@ describe('PolymarketClient', () => {
 				),
 				{ numRuns: 100 }
 			);
+		});
+	});
+
+	/**
+	 * Feature: polymarket-events, Property 1: Event fetch returns valid structure
+	 * Validates: Requirements 1.1
+	 *
+	 * For any successful API request for events, all returned event objects should
+	 * contain the required fields (id, title, slug, markets) with correct types.
+	 */
+	describe('Property 1: Event fetch returns valid structure', () => {
+		const createMockEvent = (id: string, slug: string): Event => ({
+			id,
+			ticker: `TICKER-${id}`,
+			slug,
+			title: `Test Event ${id}`,
+			subtitle: 'Test subtitle',
+			description: 'Test description',
+			resolutionSource: 'Test source',
+			startDate: new Date().toISOString(),
+			creationDate: new Date().toISOString(),
+			endDate: new Date().toISOString(),
+			image: 'https://example.com/image.jpg',
+			icon: 'https://example.com/icon.jpg',
+			active: true,
+			closed: false,
+			archived: false,
+			new: false,
+			featured: false,
+			restricted: false,
+			liquidity: 1000,
+			volume: 5000,
+			openInterest: 2000,
+			category: 'test',
+			subcategory: 'test-sub',
+			volume24hr: 1000,
+			volume1wk: 3000,
+			volume1mo: 5000,
+			volume1yr: 10000,
+			commentCount: 10,
+			markets: [],
+			categories: [],
+			tags: []
+		});
+
+		it('should fetch events with all required fields', async () => {
+			await fc.assert(
+				fc.asyncProperty(
+					fc.array(
+						fc.record({
+							id: fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0),
+							slug: fc
+								.string({ minLength: 1, maxLength: 50 })
+								.map((s) => s.toLowerCase().replace(/[^a-z0-9]/g, '-'))
+								.filter((s) => s.length > 0)
+						}),
+						{ minLength: 0, maxLength: 10 }
+					),
+					async (eventData) => {
+						const mockEvents = eventData.map((e) => createMockEvent(e.id, e.slug));
+
+						(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
+							return new Response(JSON.stringify(mockEvents), {
+								status: 200,
+								headers: { 'Content-Type': 'application/json' }
+							});
+						});
+
+						const result = await client.fetchEvents();
+
+						// Verify result is an array
+						expect(Array.isArray(result)).toBe(true);
+						expect(result.length).toBe(mockEvents.length);
+
+						// Verify each event has all required fields
+						result.forEach((event) => {
+							expect(event).toHaveProperty('id');
+							expect(event).toHaveProperty('title');
+							expect(event).toHaveProperty('slug');
+							expect(event).toHaveProperty('markets');
+							expect(Array.isArray(event.markets)).toBe(true);
+							expect(typeof event.id).toBe('string');
+							expect(typeof event.title).toBe('string');
+							expect(typeof event.slug).toBe('string');
+						});
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should fetch event by ID with all required fields', async () => {
+			await fc.assert(
+				fc.asyncProperty(
+					fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0),
+					async (eventId) => {
+						const mockEvent = createMockEvent(eventId, `slug-${eventId}`);
+
+						(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
+							return new Response(JSON.stringify(mockEvent), {
+								status: 200,
+								headers: { 'Content-Type': 'application/json' }
+							});
+						});
+
+						const result = await client.fetchEventById(eventId);
+
+						// Verify all required fields are present
+						expect(result).toHaveProperty('id');
+						expect(result).toHaveProperty('ticker');
+						expect(result).toHaveProperty('slug');
+						expect(result).toHaveProperty('title');
+						expect(result).toHaveProperty('subtitle');
+						expect(result).toHaveProperty('description');
+						expect(result).toHaveProperty('markets');
+						expect(result).toHaveProperty('categories');
+						expect(result).toHaveProperty('tags');
+						expect(result).toHaveProperty('active');
+						expect(result).toHaveProperty('closed');
+						expect(result).toHaveProperty('volume');
+						expect(result).toHaveProperty('liquidity');
+
+						// Verify the ID matches
+						expect(result.id).toBe(eventId);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should fetch event by slug with all required fields', async () => {
+			await fc.assert(
+				fc.asyncProperty(
+					fc
+						.string({ minLength: 1, maxLength: 50 })
+						.map((s) => s.toLowerCase().replace(/[^a-z0-9]/g, '-'))
+						.filter((s) => s.length > 0),
+					async (slug) => {
+						const mockEvent = createMockEvent(`id-${slug}`, slug);
+
+						(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
+							return new Response(JSON.stringify(mockEvent), {
+								status: 200,
+								headers: { 'Content-Type': 'application/json' }
+							});
+						});
+
+						const result = await client.fetchEventBySlug(slug);
+
+						// Verify all required fields are present
+						expect(result).toHaveProperty('id');
+						expect(result).toHaveProperty('title');
+						expect(result).toHaveProperty('slug');
+						expect(result).toHaveProperty('markets');
+
+						// Verify the slug matches
+						expect(result.slug).toBe(slug);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+	});
+
+	/**
+	 * Feature: polymarket-events, Property 4: Failed requests throw appropriate errors
+	 * Validates: Requirements 1.5
+	 *
+	 * For any API request that fails, the system should throw an error with the
+	 * appropriate status code and error details.
+	 */
+	describe('Property 4: Failed requests throw appropriate errors', () => {
+		it('should throw appropriate errors for various HTTP status codes', async () => {
+			await fc.assert(
+				fc.asyncProperty(
+					fc.integer({ min: 400, max: 599 }),
+					fc.constantFrom('events', 'event-by-id', 'event-by-slug'),
+					async (statusCode, endpoint) => {
+						(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
+							return new Response(JSON.stringify({ error: 'Test error' }), {
+								status: statusCode,
+								statusText: 'Error'
+							});
+						});
+
+						let error: Error | undefined;
+						try {
+							if (endpoint === 'events') {
+								await client.fetchEvents();
+							} else if (endpoint === 'event-by-id') {
+								await client.fetchEventById('test-id');
+							} else {
+								await client.fetchEventBySlug('test-slug');
+							}
+						} catch (e) {
+							error = e as Error;
+						}
+
+						// Verify an error was thrown
+						expect(error).toBeDefined();
+						expect(error?.message).toBeTruthy();
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should handle network errors for event requests', async () => {
+			(global.fetch as unknown as typeof global.fetch) = vi
+				.fn()
+				.mockRejectedValue(new Error('Network error'));
+
+			await expect(client.fetchEvents()).rejects.toThrow('Network error');
+			await expect(client.fetchEventById('test-id')).rejects.toThrow('Network error');
+			await expect(client.fetchEventBySlug('test-slug')).rejects.toThrow('Network error');
+		});
+
+		it('should handle timeout errors for event requests', async () => {
+			const shortTimeoutConfig = { ...config, timeout: 100 };
+			const shortTimeoutClient = new PolymarketClient(shortTimeoutConfig);
+
+			(global.fetch as unknown as typeof global.fetch) = vi
+				.fn()
+				.mockImplementation(async (_url: string | URL | Request, init?: RequestInit) => {
+					return new Promise<Response>((resolve, reject) => {
+						const timeout = setTimeout(
+							() =>
+								resolve(
+									new Response(JSON.stringify([]), {
+										status: 200,
+										headers: { 'Content-Type': 'application/json' }
+									})
+								),
+							200
+						);
+
+						if (init?.signal) {
+							init.signal.addEventListener('abort', () => {
+								clearTimeout(timeout);
+								reject(new DOMException('The operation was aborted', 'AbortError'));
+							});
+						}
+					});
+				});
+
+			await expect(shortTimeoutClient.fetchEvents()).rejects.toThrow('Request timeout');
 		});
 	});
 

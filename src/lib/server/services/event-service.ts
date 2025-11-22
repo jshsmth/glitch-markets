@@ -1,15 +1,15 @@
 /**
- * Market Service Layer
+ * Event Service Layer
  * Coordinates between API client and server routes, handles caching and filtering
  */
 
-import type { Market } from '../api/polymarket-client.js';
+import type { Event } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
 
-export interface MarketFilters {
+export interface EventFilters {
 	category?: string;
 	active?: boolean;
 	closed?: boolean;
@@ -17,23 +17,23 @@ export interface MarketFilters {
 	offset?: number;
 }
 
-export interface MarketSearchOptions extends MarketFilters {
+export interface EventSearchOptions extends EventFilters {
 	query?: string;
 	sortBy?: 'volume' | 'liquidity' | 'createdAt';
 	sortOrder?: 'asc' | 'desc';
 }
 
 /**
- * Service layer for market operations
+ * Service layer for event operations
  * Coordinates between API client and server routes, handles caching and filtering
  *
  * @example
  * ```typescript
- * const service = new MarketService();
- * const markets = await service.getMarkets({ category: 'crypto', active: true });
+ * const service = new EventService();
+ * const events = await service.getEvents({ category: 'crypto', active: true });
  * ```
  */
-export class MarketService {
+export class EventService {
 	private client: PolymarketClient;
 	private cache: CacheManager;
 	private logger: Logger;
@@ -41,43 +41,43 @@ export class MarketService {
 	private pendingRequests: Map<string, Promise<any>>;
 
 	/**
-	 * Creates a new MarketService instance
+	 * Creates a new EventService instance
 	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 60000ms = 1 minute)
 	 */
 	constructor(cacheTtl: number = 60000) {
 		const config = loadConfig();
 		this.client = new PolymarketClient(config);
 		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'MarketService' });
+		this.logger = new Logger({ component: 'EventService' });
 		this.cacheTtl = cacheTtl;
 		this.pendingRequests = new Map();
 	}
 
 	/**
-	 * Fetches markets with optional filtering
+	 * Fetches events with optional filtering
 	 * Results are cached to improve performance
 	 *
 	 * @param filters - Optional filters to apply (category, active status, pagination, etc.)
-	 * @returns Promise resolving to an array of markets matching the filters
+	 * @returns Promise resolving to an array of events matching the filters
 	 * @throws {ApiError} When the API request fails
 	 * @throws {ValidationError} When filter parameters are invalid
 	 *
 	 * @example
 	 * ```typescript
-	 * // Get active crypto markets
-	 * const markets = await service.getMarkets({
+	 * // Get active crypto events
+	 * const events = await service.getEvents({
 	 *   category: 'crypto',
 	 *   active: true,
 	 *   limit: 50
 	 * });
 	 * ```
 	 */
-	async getMarkets(filters: MarketFilters = {}): Promise<Market[]> {
-		const cacheKey = `markets:${JSON.stringify(filters)}`;
+	async getEvents(filters: EventFilters = {}): Promise<Event[]> {
+		const cacheKey = `events:${JSON.stringify(filters)}`;
 
-		const cached = this.cache.get<Market[]>(cacheKey);
+		const cached = this.cache.get<Event[]>(cacheKey);
 		if (cached) {
-			this.logger.info('Cache hit for markets', { filters });
+			this.logger.info('Cache hit for events', { filters });
 			return cached;
 		}
 
@@ -87,10 +87,10 @@ export class MarketService {
 			return this.pendingRequests.get(cacheKey)!;
 		}
 
-		this.logger.info('Cache miss for markets, fetching from API', { filters });
+		this.logger.info('Cache miss for events, fetching from API', { filters });
 
 		// Create the promise for fetching data
-		const fetchPromise = this.fetchAndCacheMarkets(cacheKey, filters);
+		const fetchPromise = this.fetchAndCacheEvents(cacheKey, filters);
 
 		// Store the promise so concurrent requests can wait for it
 		this.pendingRequests.set(cacheKey, fetchPromise);
@@ -105,13 +105,13 @@ export class MarketService {
 	}
 
 	/**
-	 * Internal method to fetch and cache markets
+	 * Internal method to fetch and cache events
 	 * Separated for better cache stampede protection
 	 */
-	private async fetchAndCacheMarkets(
+	private async fetchAndCacheEvents(
 		cacheKey: string,
-		filters: MarketFilters
-	): Promise<Market[]> {
+		filters: EventFilters
+	): Promise<Event[]> {
 		const params: Record<string, string | number | boolean> = {};
 		if (filters.category !== undefined) params.category = filters.category;
 		if (filters.active !== undefined) params.active = filters.active;
@@ -119,36 +119,36 @@ export class MarketService {
 		if (filters.limit !== undefined) params.limit = filters.limit;
 		if (filters.offset !== undefined) params.offset = filters.offset;
 
-		const markets = await this.client.fetchMarkets({ params });
-		const filtered = this.applyFilters(markets, filters);
+		const events = await this.client.fetchEvents({ params });
+		const filtered = this.applyFilters(events, filters);
 		this.cache.set(cacheKey, filtered, this.cacheTtl);
 
 		return filtered;
 	}
 
 	/**
-	 * Fetches a specific market by its unique identifier
+	 * Fetches a specific event by its unique identifier
 	 * Results are cached to improve performance
 	 *
-	 * @param id - The unique market ID
-	 * @returns Promise resolving to the market, or null if not found
+	 * @param id - The unique event ID
+	 * @returns Promise resolving to the event, or null if not found
 	 * @throws {ApiError} When the API request fails
 	 * @throws {ValidationError} When the ID is invalid
 	 *
 	 * @example
 	 * ```typescript
-	 * const market = await service.getMarketById('0x123...');
-	 * if (market) {
-	 *   console.log(market.question);
+	 * const event = await service.getEventById('event-123');
+	 * if (event) {
+	 *   console.log(event.title);
 	 * }
 	 * ```
 	 */
-	async getMarketById(id: string): Promise<Market | null> {
-		const cacheKey = `market:id:${id}`;
+	async getEventById(id: string): Promise<Event | null> {
+		const cacheKey = `event:id:${id}`;
 
-		const cached = this.cache.get<Market>(cacheKey);
+		const cached = this.cache.get<Event>(cacheKey);
 		if (cached) {
-			this.logger.info('Cache hit for market by ID', { id });
+			this.logger.info('Cache hit for event by ID', { id });
 			return cached;
 		}
 
@@ -158,13 +158,13 @@ export class MarketService {
 			return this.pendingRequests.get(cacheKey)!;
 		}
 
-		this.logger.info('Cache miss for market by ID, fetching from API', { id });
+		this.logger.info('Cache miss for event by ID, fetching from API', { id });
 
 		const fetchPromise = (async () => {
 			try {
-				const market = await this.client.fetchMarketById(id);
-				this.cache.set(cacheKey, market, this.cacheTtl);
-				return market;
+				const event = await this.client.fetchEventById(id);
+				this.cache.set(cacheKey, event, this.cacheTtl);
+				return event;
 			} catch (error) {
 				if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
 					return null;
@@ -183,28 +183,28 @@ export class MarketService {
 	}
 
 	/**
-	 * Fetches a specific market by its URL-friendly slug
+	 * Fetches a specific event by its URL-friendly slug
 	 * Results are cached to improve performance
 	 *
-	 * @param slug - The URL-friendly market identifier
-	 * @returns Promise resolving to the market, or null if not found
+	 * @param slug - The URL-friendly event identifier
+	 * @returns Promise resolving to the event, or null if not found
 	 * @throws {ApiError} When the API request fails
 	 * @throws {ValidationError} When the slug is invalid
 	 *
 	 * @example
 	 * ```typescript
-	 * const market = await service.getMarketBySlug('bitcoin-100k-2024');
-	 * if (market) {
-	 *   console.log(market.question);
+	 * const event = await service.getEventBySlug('bitcoin-predictions-2024');
+	 * if (event) {
+	 *   console.log(event.title);
 	 * }
 	 * ```
 	 */
-	async getMarketBySlug(slug: string): Promise<Market | null> {
-		const cacheKey = `market:slug:${slug}`;
+	async getEventBySlug(slug: string): Promise<Event | null> {
+		const cacheKey = `event:slug:${slug}`;
 
-		const cached = this.cache.get<Market>(cacheKey);
+		const cached = this.cache.get<Event>(cacheKey);
 		if (cached) {
-			this.logger.info('Cache hit for market by slug', { slug });
+			this.logger.info('Cache hit for event by slug', { slug });
 			return cached;
 		}
 
@@ -214,13 +214,13 @@ export class MarketService {
 			return this.pendingRequests.get(cacheKey)!;
 		}
 
-		this.logger.info('Cache miss for market by slug, fetching from API', { slug });
+		this.logger.info('Cache miss for event by slug, fetching from API', { slug });
 
 		const fetchPromise = (async () => {
 			try {
-				const market = await this.client.fetchMarketBySlug(slug);
-				this.cache.set(cacheKey, market, this.cacheTtl);
-				return market;
+				const event = await this.client.fetchEventBySlug(slug);
+				this.cache.set(cacheKey, event, this.cacheTtl);
+				return event;
 			} catch (error) {
 				if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
 					return null;
@@ -239,18 +239,18 @@ export class MarketService {
 	}
 
 	/**
-	 * Searches markets with text query, filtering, and sorting
-	 * Performs case-insensitive partial text matching on market questions
+	 * Searches events with text query, filtering, and sorting
+	 * Performs case-insensitive partial text matching on event titles
 	 *
 	 * @param options - Search options including query, filters, and sort parameters
-	 * @returns Promise resolving to an array of markets matching the search criteria
+	 * @returns Promise resolving to an array of events matching the search criteria
 	 * @throws {ApiError} When the API request fails
 	 * @throws {ValidationError} When search parameters are invalid
 	 *
 	 * @example
 	 * ```typescript
-	 * // Search for bitcoin markets sorted by volume
-	 * const markets = await service.searchMarkets({
+	 * // Search for bitcoin events sorted by volume
+	 * const events = await service.searchEvents({
 	 *   query: 'bitcoin',
 	 *   sortBy: 'volume',
 	 *   sortOrder: 'desc',
@@ -258,46 +258,46 @@ export class MarketService {
 	 * });
 	 * ```
 	 */
-	async searchMarkets(options: MarketSearchOptions = {}): Promise<Market[]> {
-		const markets = await this.getMarkets(options);
+	async searchEvents(options: EventSearchOptions = {}): Promise<Event[]> {
+		const events = await this.getEvents(options);
 
-		let filtered = markets;
+		let filtered = events;
 		if (options.query) {
 			const queryLower = options.query.toLowerCase();
-			filtered = markets.filter((market) => market.question.toLowerCase().includes(queryLower));
+			filtered = events.filter((event) => event.title.toLowerCase().includes(queryLower));
 		}
 
 		if (options.sortBy) {
-			filtered = this.sortMarkets(filtered, options.sortBy, options.sortOrder || 'desc');
+			filtered = this.sortEvents(filtered, options.sortBy, options.sortOrder || 'desc');
 		}
 
 		return filtered;
 	}
 
-	private applyFilters(markets: Market[], filters: MarketFilters): Market[] {
-		let filtered = markets;
+	private applyFilters(events: Event[], filters: EventFilters): Event[] {
+		let filtered = events;
 
 		if (filters.category !== undefined) {
-			filtered = filtered.filter((market) => market.category === filters.category);
+			filtered = filtered.filter((event) => event.category === filters.category);
 		}
 
 		if (filters.active !== undefined) {
-			filtered = filtered.filter((market) => market.active === filters.active);
+			filtered = filtered.filter((event) => event.active === filters.active);
 		}
 
 		if (filters.closed !== undefined) {
-			filtered = filtered.filter((market) => market.closed === filters.closed);
+			filtered = filtered.filter((event) => event.closed === filters.closed);
 		}
 
 		return filtered;
 	}
 
-	private sortMarkets(
-		markets: Market[],
+	private sortEvents(
+		events: Event[],
 		sortBy: 'volume' | 'liquidity' | 'createdAt',
 		sortOrder: 'asc' | 'desc'
-	): Market[] {
-		const sorted = [...markets];
+	): Event[] {
+		const sorted = [...events];
 
 		sorted.sort((a, b) => {
 			let aValue: number;
@@ -305,17 +305,17 @@ export class MarketService {
 
 			switch (sortBy) {
 				case 'volume':
-					aValue = a.volumeNum;
-					bValue = b.volumeNum;
+					aValue = a.volume;
+					bValue = b.volume;
 					break;
 				case 'liquidity':
-					aValue = a.liquidityNum;
-					bValue = b.liquidityNum;
+					aValue = a.liquidity;
+					bValue = b.liquidity;
 					break;
 				case 'createdAt':
-					// Parse endDate as a proxy for creation date
-					aValue = new Date(a.endDate).getTime();
-					bValue = new Date(b.endDate).getTime();
+					// Parse creationDate for sorting
+					aValue = new Date(a.creationDate).getTime();
+					bValue = new Date(b.creationDate).getTime();
 					break;
 				default:
 					return 0;

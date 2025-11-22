@@ -1,0 +1,73 @@
+/**
+ * SvelteKit server route for fetching an event by ID
+ * GET /api/events/[id]
+ */
+
+import { json, type RequestEvent } from '@sveltejs/kit';
+import { EventService } from '$lib/server/services/event-service.js';
+import { formatErrorResponse, ApiError } from '$lib/server/errors/api-errors.js';
+import { Logger } from '$lib/server/utils/logger.js';
+
+const logger = new Logger({ component: 'EventByIdRoute' });
+const eventService = new EventService();
+
+/**
+ * GET handler for /api/events/[id]
+ * Fetches a specific event by its ID
+ */
+export async function GET({ params }: RequestEvent) {
+	const startTime = Date.now();
+
+	try {
+		const { id } = params;
+
+		// Validate ID parameter
+		if (!id || id.trim() === '') {
+			logger.error('Missing or empty event ID', undefined, { id });
+			return json(
+				formatErrorResponse(new ApiError('Event ID is required', 400, 'VALIDATION_ERROR')),
+				{ status: 400 }
+			);
+		}
+
+		logger.info('Fetching event by ID', { id });
+
+		// Fetch event from service
+		const event = await eventService.getEventById(id);
+
+		// Handle not found
+		if (!event) {
+			const duration = Date.now() - startTime;
+			logger.info('Event not found', { id, duration });
+			return json(formatErrorResponse(new ApiError('Event not found', 404, 'NOT_FOUND')), {
+				status: 404
+			});
+		}
+
+		const duration = Date.now() - startTime;
+		logger.info('Event fetched successfully', { id, duration });
+
+		// Return response with cache headers
+		return json(event, {
+			headers: {
+				'Cache-Control': 'public, max-age=60, s-maxage=60',
+				'CDN-Cache-Control': 'public, max-age=60',
+				'Vercel-CDN-Cache-Control': 'public, max-age=60'
+			}
+		});
+	} catch (error) {
+		const duration = Date.now() - startTime;
+
+		if (error instanceof ApiError) {
+			logger.error('API error in event by ID route', error, { duration });
+			return json(formatErrorResponse(error), { status: error.statusCode });
+		}
+
+		// Handle unexpected errors
+		logger.error('Unexpected error in event by ID route', error, { duration });
+		const errorResponse = formatErrorResponse(
+			error instanceof Error ? error : new Error('Unknown error occurred')
+		);
+		return json(errorResponse, { status: 500 });
+	}
+}

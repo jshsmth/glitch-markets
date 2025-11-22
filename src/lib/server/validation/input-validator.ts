@@ -111,3 +111,59 @@ export function validateMarketId(id: unknown): string {
 export function validateMarketSlug(slug: unknown): string {
 	return validateNonEmptyString(slug, 'market slug');
 }
+
+/**
+ * Validates query parameters for the events endpoint
+ */
+export function validateEventQueryParams(
+	params: Record<string, string | number | boolean>
+): Record<string, string | number | boolean> {
+	const validated: Record<string, string | number | boolean> = {};
+
+	for (const [key, value] of Object.entries(params)) {
+		switch (key) {
+			case 'limit':
+			case 'offset':
+				validated[key] = validateNonNegativeNumber(value, key);
+				break;
+			case 'active':
+			case 'closed':
+				validated[key] = validateBoolean(value, key);
+				break;
+			case 'category':
+				validated[key] = validateNonEmptyString(value, key);
+				break;
+			default:
+				// Allow other parameters to pass through
+				validated[key] = value;
+		}
+	}
+
+	return validated;
+}
+
+/**
+ * Validates an event ID
+ */
+export function validateEventId(id: unknown): string {
+	return validateNonEmptyString(id, 'event ID');
+}
+
+/**
+ * Validates an event slug
+ */
+export function validateEventSlug(slug: unknown): string {
+	const validated = validateNonEmptyString(slug, 'event slug');
+
+	// Check for valid URL characters (alphanumeric, hyphens, underscores)
+	if (!/^[a-zA-Z0-9_-]+$/.test(validated)) {
+		throw new ValidationError(
+			'event slug must contain only alphanumeric characters, hyphens, and underscores',
+			{
+				slug: validated
+			}
+		);
+	}
+
+	return validated;
+}

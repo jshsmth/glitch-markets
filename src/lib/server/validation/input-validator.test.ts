@@ -1,6 +1,7 @@
 /**
  * Property-based tests for input validation
  * Feature: polymarket-api-integration
+ * Feature: polymarket-events
  */
 
 import { describe, test, expect } from 'vitest';
@@ -11,7 +12,10 @@ import {
 	validateBoolean,
 	validateMarketQueryParams,
 	validateMarketId,
-	validateMarketSlug
+	validateMarketSlug,
+	validateEventQueryParams,
+	validateEventId,
+	validateEventSlug
 } from './input-validator.js';
 import { ValidationError } from '../errors/api-errors.js';
 
@@ -250,6 +254,295 @@ describe('Input Validation', () => {
 					for (const key of Object.keys(cleanParams)) {
 						expect(result).toHaveProperty(key);
 					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+});
+
+describe('Event Input Validation', () => {
+	/**
+	 * Property 12: Numeric parameters are validated
+	 * Feature: polymarket-events, Property 12: Numeric parameters are validated
+	 * Validates: Requirements 5.1, 5.2
+	 *
+	 * For any numeric parameter (limit, offset), the system should reject
+	 * negative values and non-integer values with a validation error.
+	 */
+	test('Property 12: numeric parameters reject negative and non-numeric values', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					// Invalid limit (negative or non-number)
+					fc.record({
+						limit: fc.oneof(
+							fc.integer({ max: -1 }),
+							fc.string(),
+							fc.constant(NaN),
+							fc.constant(Infinity),
+							fc.constant(-Infinity)
+						)
+					}),
+					// Invalid offset (negative or non-number)
+					fc.record({
+						offset: fc.oneof(
+							fc.integer({ max: -1 }),
+							fc.string(),
+							fc.constant(NaN),
+							fc.constant(Infinity),
+							fc.constant(-Infinity)
+						)
+					})
+				),
+				(invalidParams) => {
+					expect(() => validateEventQueryParams(invalidParams)).toThrow(ValidationError);
+
+					try {
+						validateEventQueryParams(invalidParams);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.statusCode).toBe(400);
+							expect(error.message.length).toBeGreaterThan(0);
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	/**
+	 * Property 13: Boolean parameters are validated
+	 * Feature: polymarket-events, Property 13: Boolean parameters are validated
+	 * Validates: Requirements 5.3
+	 *
+	 * For any boolean parameter (active, closed), the system should reject
+	 * non-boolean values with a validation error.
+	 */
+	test('Property 13: boolean parameters reject non-boolean values', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					// Invalid active (non-boolean)
+					fc.record({
+						active: fc.oneof(
+							fc.string(),
+							fc.integer(),
+							fc.constant('true'),
+							fc.constant('false'),
+							fc.constant(0),
+							fc.constant(1),
+							fc.constant(null),
+							fc.constant(undefined)
+						)
+					}),
+					// Invalid closed (non-boolean)
+					fc.record({
+						closed: fc.oneof(
+							fc.string(),
+							fc.integer(),
+							fc.constant('true'),
+							fc.constant('false'),
+							fc.constant(0),
+							fc.constant(1),
+							fc.constant(null),
+							fc.constant(undefined)
+						)
+					})
+				),
+				(invalidParams) => {
+					expect(() =>
+						validateEventQueryParams(invalidParams as Record<string, string | number | boolean>)
+					).toThrow(ValidationError);
+
+					try {
+						validateEventQueryParams(invalidParams as Record<string, string | number | boolean>);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.statusCode).toBe(400);
+							expect(error.message.length).toBeGreaterThan(0);
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	/**
+	 * Property 6: Invalid ID throws validation error
+	 * Property 14: ID validation rejects empty strings
+	 * Feature: polymarket-events, Property 6 & 14: Invalid ID throws validation error
+	 * Validates: Requirements 2.2, 5.4
+	 *
+	 * For any event ID that is empty or whitespace-only, the system should
+	 * throw a validation error.
+	 */
+	test('Property 6 & 14: invalid event IDs throw ValidationError', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.constant(''),
+					fc.constant('   '),
+					fc.constant('\t'),
+					fc.constant('\n'),
+					fc.constant('  \t\n  '),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.integer(),
+					fc.boolean(),
+					fc.object()
+				),
+				(invalidId) => {
+					expect(() => validateEventId(invalidId)).toThrow(ValidationError);
+
+					try {
+						validateEventId(invalidId);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.statusCode).toBe(400);
+							expect(error.message).toContain('event ID');
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	/**
+	 * Property 8: Invalid slug throws validation error
+	 * Property 15: Slug validation rejects invalid characters
+	 * Feature: polymarket-events, Property 8 & 15: Invalid slug throws validation error
+	 * Validates: Requirements 3.2, 5.5
+	 *
+	 * For any event slug with invalid URL characters, the system should
+	 * throw a validation error.
+	 */
+	test('Property 8 & 15: invalid event slugs throw ValidationError', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					// Empty or whitespace
+					fc.constant(''),
+					fc.constant('   '),
+					fc.constant('\t'),
+					fc.constant('\n'),
+					// Non-string types
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.integer(),
+					fc.boolean(),
+					fc.object(),
+					// Invalid characters (spaces, special chars)
+					fc.constant('hello world'),
+					fc.constant('hello@world'),
+					fc.constant('hello!world'),
+					fc.constant('hello#world'),
+					fc.constant('hello$world'),
+					fc.constant('hello%world'),
+					fc.constant('hello&world'),
+					fc.constant('hello*world'),
+					fc.constant('hello+world'),
+					fc.constant('hello=world'),
+					fc.constant('hello/world'),
+					fc.constant('hello\\world'),
+					fc.constant('hello.world'),
+					fc.constant('hello,world'),
+					fc.constant('hello;world'),
+					fc.constant('hello:world'),
+					fc.constant('hello?world'),
+					fc.constant('hello[world]'),
+					fc.constant('hello{world}'),
+					fc.constant('hello|world'),
+					fc.constant('hello~world'),
+					fc.constant('hello`world'),
+					fc.constant('hello"world'),
+					fc.constant("hello'world")
+				),
+				(invalidSlug) => {
+					expect(() => validateEventSlug(invalidSlug)).toThrow(ValidationError);
+
+					try {
+						validateEventSlug(invalidSlug);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.statusCode).toBe(400);
+							expect(error.message).toContain('event slug');
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	test('valid event query parameters do not throw errors', () => {
+		fc.assert(
+			fc.property(
+				fc.record({
+					limit: fc.option(fc.integer({ min: 0, max: 1000 })),
+					offset: fc.option(fc.integer({ min: 0, max: 10000 })),
+					active: fc.option(fc.boolean()),
+					closed: fc.option(fc.boolean()),
+					category: fc.option(fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0))
+				}),
+				(validParams) => {
+					// Remove undefined values
+					const cleanParams: Record<string, string | number | boolean> = {};
+					for (const [key, value] of Object.entries(validParams)) {
+						if (value !== undefined && value !== null) {
+							cleanParams[key] = value;
+						}
+					}
+
+					// Should not throw
+					expect(() => validateEventQueryParams(cleanParams)).not.toThrow();
+
+					// Validate the result
+					const result = validateEventQueryParams(cleanParams);
+					expect(result).toBeDefined();
+
+					// Verify all input keys are in the result
+					for (const key of Object.keys(cleanParams)) {
+						expect(result).toHaveProperty(key);
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	test('valid event IDs do not throw errors', () => {
+		fc.assert(
+			fc.property(
+				fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0),
+				(validId) => {
+					expect(() => validateEventId(validId)).not.toThrow();
+					const result = validateEventId(validId);
+					expect(result).toBeDefined();
+					expect(typeof result).toBe('string');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	test('valid event slugs do not throw errors', () => {
+		fc.assert(
+			fc.property(
+				fc.stringMatching(/^[a-zA-Z0-9_-]+$/).filter((s) => s.length > 0 && s.trim().length > 0),
+				(validSlug) => {
+					expect(() => validateEventSlug(validSlug)).not.toThrow();
+					const result = validateEventSlug(validSlug);
+					expect(result).toBeDefined();
+					expect(typeof result).toBe('string');
+					expect(/^[a-zA-Z0-9_-]+$/.test(result)).toBe(true);
 				}
 			),
 			{ numRuns: 100 }
