@@ -21,7 +21,13 @@ import {
 	validateTagSlug,
 	validateSeriesQueryParams,
 	validateSeriesId,
-	validateSeriesSlug
+	validateSeriesSlug,
+	validateCommentId,
+	validateParentEntityType,
+	validateParentEntityId,
+	validateOrderString,
+	validateCommentsQueryParams,
+	validateUserCommentsQueryParams
 } from './input-validator.js';
 import { ValidationError } from '../errors/api-errors.js';
 
@@ -1125,5 +1131,245 @@ describe('Series Input Validation', () => {
 			),
 			{ numRuns: 100 }
 		);
+	});
+
+	// Comment validation tests
+	describe('Comment ID validation', () => {
+		test('accepts valid non-negative integers', () => {
+			fc.assert(
+				fc.property(fc.integer({ min: 0 }), (id) => {
+					const result = validateCommentId(id);
+					expect(result).toBe(id);
+					expect(typeof result).toBe('number');
+					expect(Number.isInteger(result)).toBe(true);
+					expect(result).toBeGreaterThanOrEqual(0);
+				}),
+				{ numRuns: 100 }
+			);
+		});
+
+		test('accepts valid string representations of non-negative integers', () => {
+			fc.assert(
+				fc.property(fc.integer({ min: 0 }), (id) => {
+					const stringId = id.toString();
+					const result = validateCommentId(stringId);
+					expect(result).toBe(id);
+					expect(typeof result).toBe('number');
+					expect(Number.isInteger(result)).toBe(true);
+					expect(result).toBeGreaterThanOrEqual(0);
+				}),
+				{ numRuns: 100 }
+			);
+		});
+
+		test('rejects negative numbers', () => {
+			fc.assert(
+				fc.property(fc.integer({ max: -1 }), (id) => {
+					expect(() => validateCommentId(id)).toThrow(ValidationError);
+				}),
+				{ numRuns: 100 }
+			);
+		});
+
+		test('rejects non-integer values', () => {
+			fc.assert(
+				fc.property(
+					fc.oneof(
+						fc.constant(null),
+						fc.constant(undefined),
+						fc.boolean(),
+						fc.object(),
+						fc.array(fc.anything()),
+						fc.double({ noNaN: true, noInteger: true })
+					),
+					(invalidValue) => {
+						expect(() => validateCommentId(invalidValue)).toThrow(ValidationError);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+	});
+
+	describe('Parent entity type validation', () => {
+		test('accepts valid parent entity types', () => {
+			const validTypes = ['Event', 'Series', 'market'] as const;
+			for (const type of validTypes) {
+				const result = validateParentEntityType(type);
+				expect(result).toBe(type);
+			}
+		});
+
+		test('rejects invalid parent entity types', () => {
+			fc.assert(
+				fc.property(
+					fc.string().filter((s) => !['Event', 'Series', 'market'].includes(s)),
+					(invalidType) => {
+						expect(() => validateParentEntityType(invalidType)).toThrow(ValidationError);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+
+		test('rejects non-string values', () => {
+			fc.assert(
+				fc.property(
+					fc.oneof(
+						fc.constant(null),
+						fc.constant(undefined),
+						fc.integer(),
+						fc.boolean(),
+						fc.object(),
+						fc.array(fc.anything())
+					),
+					(invalidValue) => {
+						expect(() => validateParentEntityType(invalidValue)).toThrow(ValidationError);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+	});
+
+	describe('Parent entity ID validation', () => {
+		test('accepts valid non-negative integers', () => {
+			fc.assert(
+				fc.property(fc.integer({ min: 0 }), (id) => {
+					const result = validateParentEntityId(id);
+					expect(result).toBe(id);
+					expect(typeof result).toBe('number');
+					expect(Number.isInteger(result)).toBe(true);
+					expect(result).toBeGreaterThanOrEqual(0);
+				}),
+				{ numRuns: 100 }
+			);
+		});
+
+		test('rejects negative numbers', () => {
+			fc.assert(
+				fc.property(fc.integer({ max: -1 }), (id) => {
+					expect(() => validateParentEntityId(id)).toThrow(ValidationError);
+				}),
+				{ numRuns: 100 }
+			);
+		});
+	});
+
+	describe('Order string validation', () => {
+		test('accepts valid field names', () => {
+			const validOrders = [
+				'createdAt',
+				'updatedAt',
+				'id',
+				'field_name',
+				'_privateField',
+				'createdAt,updatedAt',
+				'id,createdAt,updatedAt'
+			];
+
+			for (const order of validOrders) {
+				const result = validateOrderString(order);
+				expect(result).toBe(order);
+			}
+		});
+
+		test('rejects invalid field names', () => {
+			const invalidOrders = [
+				'123invalid', // starts with number
+				'invalid-field', // contains hyphen
+				'invalid field', // contains space
+				'invalid.field', // contains dot
+				'', // empty string
+				'   ' // whitespace only
+			];
+
+			for (const order of invalidOrders) {
+				expect(() => validateOrderString(order)).toThrow(ValidationError);
+			}
+		});
+
+		test('rejects non-string values', () => {
+			fc.assert(
+				fc.property(
+					fc.oneof(
+						fc.constant(null),
+						fc.constant(undefined),
+						fc.integer(),
+						fc.boolean(),
+						fc.object(),
+						fc.array(fc.anything())
+					),
+					(invalidValue) => {
+						expect(() => validateOrderString(invalidValue)).toThrow(ValidationError);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+	});
+
+	describe('Comments query params validation', () => {
+		test('validates all parameters correctly', () => {
+			const params = {
+				limit: 10,
+				offset: 0,
+				parent_entity_id: 123,
+				parent_entity_type: 'Event',
+				ascending: true,
+				get_positions: false,
+				holders_only: true,
+				order: 'createdAt,id'
+			};
+
+			const result = validateCommentsQueryParams(params);
+			expect(result.limit).toBe(10);
+			expect(result.offset).toBe(0);
+			expect(result.parent_entity_id).toBe(123);
+			expect(result.parent_entity_type).toBe('Event');
+			expect(result.ascending).toBe(true);
+			expect(result.get_positions).toBe(false);
+			expect(result.holders_only).toBe(true);
+			expect(result.order).toBe('createdAt,id');
+		});
+
+		test('passes through unknown parameters', () => {
+			const params = {
+				limit: 10,
+				customParam: 'value'
+			};
+
+			const result = validateCommentsQueryParams(params);
+			expect(result.limit).toBe(10);
+			expect(result.customParam).toBe('value');
+		});
+	});
+
+	describe('User comments query params validation', () => {
+		test('validates all parameters correctly', () => {
+			const params = {
+				limit: 20,
+				offset: 5,
+				ascending: false,
+				order: 'updatedAt'
+			};
+
+			const result = validateUserCommentsQueryParams(params);
+			expect(result.limit).toBe(20);
+			expect(result.offset).toBe(5);
+			expect(result.ascending).toBe(false);
+			expect(result.order).toBe('updatedAt');
+		});
+
+		test('passes through unknown parameters', () => {
+			const params = {
+				limit: 10,
+				customParam: 'value'
+			};
+
+			const result = validateUserCommentsQueryParams(params);
+			expect(result.limit).toBe(10);
+			expect(result.customParam).toBe('value');
+		});
 	});
 });

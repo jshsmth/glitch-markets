@@ -272,7 +272,7 @@ export class EventService {
 		let filtered = events;
 		if (options.query) {
 			const queryLower = options.query.toLowerCase();
-			filtered = events.filter((event) => event.title.toLowerCase().includes(queryLower));
+			filtered = events.filter((event) => event.title?.toLowerCase().includes(queryLower) ?? false);
 		}
 
 		if (options.sortBy) {
@@ -313,17 +313,17 @@ export class EventService {
 
 			switch (sortBy) {
 				case 'volume':
-					aValue = a.volume;
-					bValue = b.volume;
+					aValue = a.volume ?? 0;
+					bValue = b.volume ?? 0;
 					break;
 				case 'liquidity':
-					aValue = a.liquidity;
-					bValue = b.liquidity;
+					aValue = a.liquidity ?? 0;
+					bValue = b.liquidity ?? 0;
 					break;
 				case 'createdAt':
 					// Parse creationDate for sorting
-					aValue = new Date(a.creationDate).getTime();
-					bValue = new Date(b.creationDate).getTime();
+					aValue = a.creationDate ? new Date(a.creationDate).getTime() : 0;
+					bValue = b.creationDate ? new Date(b.creationDate).getTime() : 0;
 					break;
 				default:
 					return 0;

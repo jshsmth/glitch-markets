@@ -5,6 +5,7 @@
 
 import type { ApiConfig } from '../config/api-config.js';
 import {
+	ApiError,
 	NetworkError,
 	TimeoutError,
 	ConnectionError,
@@ -31,7 +32,12 @@ import {
 	validateClosedPositionsParams,
 	validateSeriesQueryParams,
 	validateSeriesId,
-	validateSeriesSlug
+	validateSeriesSlug,
+	validateCommentId,
+	validateCommentsQueryParams,
+	validateUserCommentsQueryParams,
+	validateProxyWallet,
+	validateBoolean
 } from '../validation/input-validator.js';
 import {
 	validateMarket,
@@ -47,7 +53,8 @@ import {
 	validatePortfolioValues,
 	validateClosedPositions,
 	validateSeries,
-	validateSeriesList
+	validateSeriesList,
+	validateComments
 } from '../validation/response-validator.js';
 
 /**
@@ -55,29 +62,29 @@ import {
  */
 export interface Market {
 	id: string;
-	question: string;
+	question: string | null;
 	conditionId: string;
-	slug: string;
-	endDate: string;
-	category: string;
+	slug: string | null;
+	endDate: string | null;
+	category: string | null;
 	liquidity: string;
 	image: string;
 	icon: string;
 	description: string;
-	outcomes: string[];
-	outcomePrices: string[];
+	outcomes: string[] | null;
+	outcomePrices: string[] | null;
 	volume: string;
-	active: boolean;
-	marketType: 'normal' | 'scalar';
-	closed: boolean;
-	volumeNum: number;
-	liquidityNum: number;
-	volume24hr: number;
-	volume1wk: number;
-	volume1mo: number;
-	lastTradePrice: number;
-	bestBid: number;
-	bestAsk: number;
+	active: boolean | null;
+	marketType: 'normal' | 'scalar' | null;
+	closed: boolean | null;
+	volumeNum: number | null;
+	liquidityNum: number | null;
+	volume24hr: number | null;
+	volume1wk: number | null;
+	volume1mo: number | null;
+	lastTradePrice: number | null;
+	bestBid: number | null;
+	bestAsk: number | null;
 }
 
 /**
@@ -93,8 +100,16 @@ export interface Category {
  */
 export interface Tag {
 	id: string;
-	label: string;
-	slug: string;
+	label: string | null;
+	slug: string | null;
+	forceShow?: boolean | null;
+	forceHide?: boolean | null;
+	publishedAt?: string | null;
+	isCarousel?: boolean | null;
+	createdBy?: number | null;
+	updatedBy?: number | null;
+	createdAt?: string | null;
+	updatedAt?: string | null;
 }
 
 /**
@@ -103,28 +118,28 @@ export interface Tag {
 export interface Event {
 	id: string;
 	ticker: string;
-	slug: string;
-	title: string;
+	slug: string | null;
+	title: string | null;
 	subtitle: string | null;
-	description: string;
+	description: string | null;
 	resolutionSource: string | null;
-	startDate: string;
-	creationDate: string;
-	endDate: string;
+	startDate: string | null;
+	creationDate: string | null;
+	endDate: string | null;
 	image: string | null;
 	icon: string | null;
-	active: boolean;
-	closed: boolean;
+	active: boolean | null;
+	closed: boolean | null;
 	archived: boolean;
 	new: boolean;
-	featured: boolean;
+	featured: boolean | null;
 	restricted: boolean;
-	liquidity: number;
-	volume: number;
+	liquidity: number | null;
+	volume: number | null;
 	openInterest: number;
 	category: string;
 	subcategory: string | null;
-	volume24hr: number;
+	volume24hr: number | null;
 	volume1wk: number;
 	volume1mo: number;
 	volume1yr: number;
@@ -171,23 +186,23 @@ export interface Position {
 export interface Trade {
 	proxyWallet: string;
 	side: 'BUY' | 'SELL';
-	asset: string;
+	asset: string | null;
 	conditionId: string;
 	size: number;
 	price: number;
 	timestamp: number;
-	title: string;
-	slug: string;
-	icon: string;
-	eventSlug: string;
-	outcome: string;
-	outcomeIndex: number;
-	name: string;
-	pseudonym: string;
-	bio: string;
-	profileImage: string;
-	profileImageOptimized: string;
-	transactionHash: string;
+	title: string | null;
+	slug: string | null;
+	icon: string | null;
+	eventSlug: string | null;
+	outcome: string | null;
+	outcomeIndex: number | null;
+	name: string | null;
+	pseudonym: string | null;
+	bio: string | null;
+	profileImage: string | null;
+	profileImageOptimized: string | null;
+	transactionHash: string | null;
 }
 
 /**
@@ -202,22 +217,22 @@ export interface Activity {
 	usdcSize: number;
 	transactionHash: string;
 	// Trade-specific fields (when type === 'TRADE')
-	price?: number;
-	asset?: string;
-	side?: 'BUY' | 'SELL';
-	outcomeIndex?: number;
+	price?: number | null;
+	asset?: string | null;
+	side?: ('BUY' | 'SELL') | null;
+	outcomeIndex?: number | null;
 	// Market metadata
-	title: string;
-	slug: string;
-	icon: string;
-	eventSlug: string;
-	outcome: string;
+	title: string | null;
+	slug: string | null;
+	icon: string | null;
+	eventSlug: string | null;
+	outcome: string | null;
 	// User metadata
-	name: string;
-	pseudonym: string;
-	bio: string;
-	profileImage: string;
-	profileImageOptimized: string;
+	name: string | null;
+	pseudonym: string | null;
+	bio: string | null;
+	profileImage: string | null;
+	profileImageOptimized: string | null;
 }
 
 /**
@@ -225,15 +240,15 @@ export interface Activity {
  */
 export interface HolderInfo {
 	proxyWallet: string;
-	bio: string;
+	bio: string | null;
 	asset: string;
-	pseudonym: string;
+	pseudonym: string | null;
 	amount: number;
-	displayUsernamePublic: boolean;
+	displayUsernamePublic: boolean | null;
 	outcomeIndex: number;
-	name: string;
-	profileImage: string;
-	profileImageOptimized: string;
+	name: string | null;
+	profileImage: string | null;
+	profileImageOptimized: string | null;
 }
 
 /**
@@ -382,6 +397,73 @@ export interface Series {
 	categories: Category[];
 	tags: Tag[];
 	chats: Chat[];
+}
+
+/**
+ * Represents optimized image URLs at different sizes for comments
+ */
+export interface CommentImageOptimized {
+	original: string | null;
+	small: string | null;
+	medium: string | null;
+	large: string | null;
+}
+
+/**
+ * Represents a user's position in a market (for comment context)
+ */
+export interface UserPosition {
+	tokenId: string | null;
+	positionSize: number | null;
+}
+
+/**
+ * Represents a user profile associated with a comment
+ */
+export interface CommentProfile {
+	name: string | null;
+	pseudonym: string | null;
+	bio: string | null;
+	isMod: boolean | null;
+	isCreator: boolean | null;
+	walletAddress: string | null;
+	proxyWalletAddress: string | null;
+	profileImage: string | null;
+	profileImageOptimized: CommentImageOptimized | null;
+	positions: UserPosition[] | null;
+	displayUsernamePublic?: boolean | null;
+}
+
+/**
+ * Represents a reaction to a comment
+ */
+export interface Reaction {
+	id: number;
+	commentID: number | null;
+	reactionType: string | null;
+	icon: string | null;
+	userAddress: string | null;
+	createdAt: string | null;
+	profile: CommentProfile | null;
+}
+
+/**
+ * Represents a comment on a market, event, or series
+ */
+export interface Comment {
+	id: number;
+	body: string | null;
+	parentEntityType: ('Event' | 'Series' | 'market') | null;
+	parentEntityID: number | null;
+	parentCommentID: number | null;
+	userAddress: string | null;
+	replyAddress: string | null;
+	createdAt: string | null;
+	updatedAt: string | null;
+	profile: CommentProfile | null;
+	reactions: Reaction[] | null;
+	reportCount: number | null;
+	reactionCount: number | null;
 }
 
 export interface FetchOptions {
@@ -984,5 +1066,130 @@ export class PolymarketClient {
 		const url = this.buildUrl(`/series/slug/${validatedSlug}`);
 		const data = await this.request<unknown>(url);
 		return validateSeries(data);
+	}
+
+	/**
+	 * Fetches a list of comments with optional filters
+	 * Validates parameters and response structure
+	 *
+	 * @param options - Fetch options including query parameters
+	 * @returns Promise resolving to an array of comments
+	 * @throws {ValidationError} When parameters are invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error
+	 *
+	 * @example
+	 * ```typescript
+	 * const comments = await client.fetchComments({
+	 *   params: { parent_entity_type: 'Event', parent_entity_id: 123, limit: 10 }
+	 * });
+	 * ```
+	 */
+	async fetchComments(options: FetchOptions = {}): Promise<Comment[]> {
+		const { params = {} } = options;
+
+		// Validate input parameters
+		const validatedParams = validateCommentsQueryParams(params);
+
+		const url = this.buildUrl('/comments', validatedParams);
+		this.logger.info('Fetching comments', { url });
+
+		const data = await this.request<unknown>(url);
+
+		// Validate response
+		const validated = validateComments(data);
+		this.logger.info('Comments fetched successfully', { count: validated.length });
+
+		return validated;
+	}
+
+	/**
+	 * Fetches a specific comment by ID
+	 * Validates the ID and response structure
+	 *
+	 * @param id - The unique comment ID
+	 * @param options - Fetch options including query parameters
+	 * @returns Promise resolving to the comment
+	 * @throws {ValidationError} When the ID is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const comment = await client.fetchCommentById(123, { params: { get_positions: true } });
+	 * console.log(comment.body);
+	 * ```
+	 */
+	async fetchCommentById(id: number, options: FetchOptions = {}): Promise<Comment> {
+		const { params = {} } = options;
+
+		// Validate ID
+		const validatedId = validateCommentId(id);
+
+		// Build query params
+		const queryParams: Record<string, string | number | boolean> = {};
+		if (params.get_positions !== undefined) {
+			queryParams.get_positions = validateBoolean(params.get_positions, 'get_positions');
+		}
+
+		const url = this.buildUrl(`/comments/${validatedId}`, queryParams);
+		this.logger.info('Fetching comment by ID', { id: validatedId, url });
+
+		const data = await this.request<unknown>(url);
+
+		// API returns an array with a single comment
+		const comments = validateComments(data);
+		if (comments.length === 0) {
+			throw new ApiError(`Comment not found: ${validatedId}`, 404, 'NOT_FOUND');
+		}
+		this.logger.info('Comment fetched successfully', { id: validatedId });
+
+		return comments[0];
+	}
+
+	/**
+	 * Fetches comments by user address
+	 * Validates the address and response structure
+	 *
+	 * @param userAddress - The blockchain address of the user
+	 * @param options - Fetch options including query parameters
+	 * @returns Promise resolving to an array of comments
+	 * @throws {ValidationError} When the address is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error
+	 *
+	 * @example
+	 * ```typescript
+	 * const comments = await client.fetchCommentsByUser('0x1234...', {
+	 *   params: { limit: 20, ascending: false }
+	 * });
+	 * console.log(`User has ${comments.length} comments`);
+	 * ```
+	 */
+	async fetchCommentsByUser(userAddress: string, options: FetchOptions = {}): Promise<Comment[]> {
+		const { params = {} } = options;
+
+		// Validate user address
+		const validatedAddress = validateProxyWallet(userAddress);
+
+		// Validate query parameters
+		const validatedParams = validateUserCommentsQueryParams(params);
+
+		const url = this.buildUrl(`/comments/user_address/${validatedAddress}`, validatedParams);
+		this.logger.info('Fetching comments by user', { userAddress: validatedAddress, url });
+
+		const data = await this.request<unknown>(url);
+
+		// Validate response
+		const validated = validateComments(data);
+		this.logger.info('User comments fetched successfully', {
+			userAddress: validatedAddress,
+			count: validated.length
+		});
+
+		return validated;
 	}
 }

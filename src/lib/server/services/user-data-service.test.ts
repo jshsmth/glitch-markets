@@ -269,7 +269,7 @@ describe('UserDataService Property Tests', () => {
 						filtered = filtered.filter(
 							(trade) =>
 								marketSet.has(trade.conditionId.toLowerCase()) ||
-								marketSet.has(trade.slug.toLowerCase())
+								marketSet.has(trade.slug?.toLowerCase() ?? '')
 						);
 					}
 
@@ -286,7 +286,7 @@ describe('UserDataService Property Tests', () => {
 							matches =
 								matches &&
 								(marketSet.has(trade.conditionId.toLowerCase()) ||
-									marketSet.has(trade.slug.toLowerCase()));
+									marketSet.has(trade.slug?.toLowerCase() ?? ''));
 						}
 
 						expect(matches).toBe(true);
@@ -306,7 +306,7 @@ describe('UserDataService Property Tests', () => {
 							shouldBeIncluded =
 								shouldBeIncluded &&
 								(marketSet.has(trade.conditionId.toLowerCase()) ||
-									marketSet.has(trade.slug.toLowerCase()));
+									marketSet.has(trade.slug?.toLowerCase() ?? ''));
 						}
 
 						const isIncluded = filtered.includes(trade);

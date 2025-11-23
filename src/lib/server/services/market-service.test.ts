@@ -325,12 +325,12 @@ describe('MarketService', () => {
 						// Verify: All returned markets contain the query text (case-insensitive)
 						const queryLower = query.toLowerCase();
 						for (const market of result) {
-							expect(market.question.toLowerCase()).toContain(queryLower);
+							expect(market.question?.toLowerCase()).toContain(queryLower);
 						}
 
 						// Verify: All markets that match the query are included
 						const expectedMatches = markets.filter((market) =>
-							market.question.toLowerCase().includes(queryLower)
+							market.question?.toLowerCase().includes(queryLower)
 						);
 
 						expect(result).toHaveLength(expectedMatches.length);
@@ -426,16 +426,16 @@ describe('MarketService', () => {
 
 							switch (sortBy) {
 								case 'volume':
-									currentValue = current.volumeNum;
-									nextValue = next.volumeNum;
+									currentValue = current.volumeNum ?? 0;
+									nextValue = next.volumeNum ?? 0;
 									break;
 								case 'liquidity':
-									currentValue = current.liquidityNum;
-									nextValue = next.liquidityNum;
+									currentValue = current.liquidityNum ?? 0;
+									nextValue = next.liquidityNum ?? 0;
 									break;
 								case 'createdAt':
-									currentValue = new Date(current.endDate).getTime();
-									nextValue = new Date(next.endDate).getTime();
+									currentValue = current.endDate ? new Date(current.endDate).getTime() : 0;
+									nextValue = next.endDate ? new Date(next.endDate).getTime() : 0;
 									break;
 							}
 
