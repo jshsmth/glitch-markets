@@ -813,6 +813,30 @@ export class PolymarketClient {
 	}
 
 	/**
+	 * Fetches tags associated with a specific event
+	 * Validates the event ID and response structure
+	 *
+	 * @param id - The unique event ID
+	 * @returns Promise resolving to an array of tags
+	 * @throws {ValidationError} When the ID is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const tags = await client.fetchEventTags('event-123');
+	 * console.log(tags);
+	 * ```
+	 */
+	async fetchEventTags(id: string): Promise<Tag[]> {
+		const validatedId = validateEventId(id);
+		const url = this.buildUrl(`/events/${validatedId}/tags`);
+		const data = await this.request<unknown>(url);
+		return validateTags(data);
+	}
+
+	/**
 	 * Fetches a list of tags from the Gamma API
 	 * Validates response structure
 	 *

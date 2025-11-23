@@ -203,8 +203,10 @@ EVENT_SLUG=$(echo "$EVENT_DATA" | cut -d',' -f2)
 # Test event endpoints with dynamic data
 if [ -n "$EVENT_ID" ]; then
     test_endpoint "Get Event by ID" "/api/events/$EVENT_ID"
+    test_endpoint "Get Event Tags" "/api/events/$EVENT_ID/tags"
 else
     echo -e "${RED}⚠ Skipping Get Event by ID - no event ID found${NC}"
+    echo -e "${RED}⚠ Skipping Get Event Tags - no event ID found${NC}"
 fi
 
 if [ -n "$EVENT_SLUG" ]; then
@@ -298,6 +300,7 @@ echo "" >> "$OUTPUT"
 test_endpoint "Invalid Limit Parameter" "/api/markets?limit=abc" "400"
 test_endpoint "Invalid Boolean Parameter" "/api/markets?active=maybe" "400"
 test_endpoint "Invalid Event ID" "/api/events/999999999" "404"
+test_endpoint "Invalid Event ID (Tags)" "/api/events/999999999/tags" "404"
 test_endpoint "Invalid Series ID" "/api/series/999999999" "404"
 
 # Summary

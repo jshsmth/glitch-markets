@@ -123,6 +123,7 @@ Quick reference for looking up official Polymarket API documentation.
 
 - `GET /api/events` - List events
 - `GET /api/events/:id` - Get by ID
+- `GET /api/events/:id/tags` - Get event tags
 - `GET /api/events/slug/:slug` - Get by slug
 
 ### Series API
