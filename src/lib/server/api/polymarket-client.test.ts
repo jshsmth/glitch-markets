@@ -611,4 +611,374 @@ describe('PolymarketClient', () => {
 			await expect(client.fetchMarkets()).rejects.toThrow('Network error');
 		});
 	});
+
+	/**
+	 * Unit tests for Series API methods
+	 * Validates: Requirements 1.3, 1.4, 1.5, 2.4
+	 */
+	describe('Series API methods', () => {
+		const createMockSeries = (id: string, slug: string) => ({
+			id,
+			ticker: `TICKER-${id}`,
+			slug,
+			title: `Test Series ${id}`,
+			subtitle: 'Test subtitle',
+			seriesType: 'recurring',
+			recurrence: 'weekly',
+			description: 'Test description',
+			image: 'https://example.com/image.jpg',
+			icon: 'https://example.com/icon.jpg',
+			layout: 'default',
+			active: true,
+			closed: false,
+			archived: false,
+			new: false,
+			featured: false,
+			restricted: false,
+			isTemplate: false,
+			templateVariables: false,
+			publishedAt: new Date().toISOString(),
+			createdBy: 'creator-id',
+			updatedBy: 'updater-id',
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+			commentsEnabled: true,
+			competitive: 'high',
+			volume24hr: 1000,
+			volume: 5000,
+			liquidity: 2000,
+			startDate: new Date().toISOString(),
+			pythTokenID: null,
+			cgAssetName: null,
+			score: 100,
+			events: [],
+			collections: [],
+			categories: [],
+			tags: [],
+			commentCount: 10,
+			chats: []
+		});
+
+		describe('fetchSeries', () => {
+			it('should successfully fetch series with various parameters', async () => {
+				await fc.assert(
+					fc.asyncProperty(
+						fc.record({
+							limit: fc.option(fc.integer({ min: 1, max: 100 })),
+							offset: fc.option(fc.integer({ min: 0, max: 1000 })),
+							category: fc.option(
+								fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0)
+							),
+							active: fc.option(fc.boolean()),
+							closed: fc.option(fc.boolean())
+						}),
+						async (params) => {
+							// Filter out undefined values
+							const cleanParams = Object.fromEntries(
+								Object.entries(params).filter(([, v]) => v !== null)
+							) as Record<string, string | number | boolean>;
+
+							const mockSeries = [createMockSeries('series-1', 'test-series-1')];
+
+							(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
+								return new Response(JSON.stringify(mockSeries), {
+									status: 200,
+									headers: { 'Content-Type': 'application/json' }
+								});
+							});
+
+							const result = await client.fetchSeries({ params: cleanParams });
+
+							expect(Array.isArray(result)).toBe(true);
+							expect(result.length).toBe(mockSeries.length);
+							result.forEach((series) => {
+								expect(series).toHaveProperty('id');
+								expect(series).toHaveProperty('title');
+								expect(series).toHaveProperty('slug');
+								expect(series).toHaveProperty('events');
+								expect(series).toHaveProperty('collections');
+								expect(series).toHaveProperty('categories');
+								expect(series).toHaveProperty('tags');
+							});
+						}
+					),
+					{ numRuns: 100 }
+				);
+			});
+
+			it('should handle network failures', async () => {
+				(global.fetch as unknown as typeof global.fetch) = vi
+					.fn()
+					.mockRejectedValue(new Error('Network error'));
+
+				await expect(client.fetchSeries()).rejects.toThrow('Network error');
+			});
+
+			it('should handle timeout errors', async () => {
+				const shortTimeoutConfig = { ...config, timeout: 100 };
+				const shortTimeoutClient = new PolymarketClient(shortTimeoutConfig);
+
+				(global.fetch as unknown as typeof global.fetch) = vi
+					.fn()
+					.mockImplementation(async (_url: string | URL | Request, init?: RequestInit) => {
+						return new Promise<Response>((resolve, reject) => {
+							const timeout = setTimeout(
+								() =>
+									resolve(
+										new Response(JSON.stringify([]), {
+											status: 200,
+											headers: { 'Content-Type': 'application/json' }
+										})
+									),
+								200
+							);
+
+							if (init?.signal) {
+								init.signal.addEventListener('abort', () => {
+									clearTimeout(timeout);
+									reject(new DOMException('The operation was aborted', 'AbortError'));
+								});
+							}
+						});
+					});
+
+				await expect(shortTimeoutClient.fetchSeries()).rejects.toThrow('Request timeout');
+			});
+
+			it('should handle 404 errors', async () => {
+				(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
+					return new Response('Not Found', { status: 404, statusText: 'Not Found' });
+				});
+
+				await expect(client.fetchSeries()).rejects.toThrow('API request failed');
+			});
+
+			it('should construct URL with query parameters correctly', async () => {
+				let capturedUrl: string | undefined;
+				const params = { limit: 10, active: true, category: 'crypto' };
+
+				(global.fetch as unknown as typeof global.fetch) = vi.fn(
+					async (url: string | URL | Request) => {
+						capturedUrl = url.toString();
+						return new Response(JSON.stringify([]), {
+							status: 200,
+							headers: { 'Content-Type': 'application/json' }
+						});
+					}
+				);
+
+				await client.fetchSeries({ params });
+
+				expect(capturedUrl).toBeDefined();
+				const url = new URL(capturedUrl!);
+				expect(url.pathname).toBe('/series');
+				expect(url.searchParams.get('limit')).toBe('10');
+				expect(url.searchParams.get('active')).toBe('true');
+				expect(url.searchParams.get('category')).toBe('crypto');
+			});
+		});
+
+		describe('fetchSeriesById', () => {
+			it('should successfully fetch series by ID', async () => {
+				await fc.assert(
+					fc.asyncProperty(
+						fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0),
+						async (seriesId) => {
+							const mockSeries = createMockSeries(seriesId, `slug-${seriesId}`);
+
+							(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
+								return new Response(JSON.stringify(mockSeries), {
+									status: 200,
+									headers: { 'Content-Type': 'application/json' }
+								});
+							});
+
+							const result = await client.fetchSeriesById(seriesId);
+
+							expect(result).toHaveProperty('id');
+							expect(result).toHaveProperty('title');
+							expect(result).toHaveProperty('slug');
+							expect(result).toHaveProperty('events');
+							expect(result).toHaveProperty('collections');
+							expect(result.id).toBe(seriesId);
+						}
+					),
+					{ numRuns: 100 }
+				);
+			});
+
+			it('should handle network failures', async () => {
+				(global.fetch as unknown as typeof global.fetch) = vi
+					.fn()
+					.mockRejectedValue(new Error('Network error'));
+
+				await expect(client.fetchSeriesById('test-id')).rejects.toThrow('Network error');
+			});
+
+			it('should handle timeout errors', async () => {
+				const shortTimeoutConfig = { ...config, timeout: 100 };
+				const shortTimeoutClient = new PolymarketClient(shortTimeoutConfig);
+
+				(global.fetch as unknown as typeof global.fetch) = vi
+					.fn()
+					.mockImplementation(async (_url: string | URL | Request, init?: RequestInit) => {
+						return new Promise<Response>((resolve, reject) => {
+							const timeout = setTimeout(
+								() =>
+									resolve(
+										new Response(JSON.stringify({}), {
+											status: 200,
+											headers: { 'Content-Type': 'application/json' }
+										})
+									),
+								200
+							);
+
+							if (init?.signal) {
+								init.signal.addEventListener('abort', () => {
+									clearTimeout(timeout);
+									reject(new DOMException('The operation was aborted', 'AbortError'));
+								});
+							}
+						});
+					});
+
+				await expect(shortTimeoutClient.fetchSeriesById('test-id')).rejects.toThrow(
+					'Request timeout'
+				);
+			});
+
+			it('should handle 404 errors', async () => {
+				(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
+					return new Response('Not Found', { status: 404, statusText: 'Not Found' });
+				});
+
+				await expect(client.fetchSeriesById('nonexistent')).rejects.toThrow('API request failed');
+			});
+
+			it('should construct URL correctly', async () => {
+				let capturedUrl: string | undefined;
+				const seriesId = 'test-series-123';
+
+				(global.fetch as unknown as typeof global.fetch) = vi.fn(
+					async (url: string | URL | Request) => {
+						capturedUrl = url.toString();
+						return new Response(JSON.stringify(createMockSeries(seriesId, 'test-slug')), {
+							status: 200,
+							headers: { 'Content-Type': 'application/json' }
+						});
+					}
+				);
+
+				await client.fetchSeriesById(seriesId);
+
+				expect(capturedUrl).toBeDefined();
+				const url = new URL(capturedUrl!);
+				expect(url.pathname).toBe(`/series/${seriesId}`);
+			});
+		});
+
+		describe('fetchSeriesBySlug', () => {
+			it('should successfully fetch series by slug', async () => {
+				await fc.assert(
+					fc.asyncProperty(
+						fc
+							.string({ minLength: 1, maxLength: 50 })
+							.map((s) => s.toLowerCase().replace(/[^a-z0-9]/g, '-'))
+							.filter((s) => s.length > 0),
+						async (slug) => {
+							const mockSeries = createMockSeries(`id-${slug}`, slug);
+
+							(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
+								return new Response(JSON.stringify(mockSeries), {
+									status: 200,
+									headers: { 'Content-Type': 'application/json' }
+								});
+							});
+
+							const result = await client.fetchSeriesBySlug(slug);
+
+							expect(result).toHaveProperty('id');
+							expect(result).toHaveProperty('title');
+							expect(result).toHaveProperty('slug');
+							expect(result).toHaveProperty('events');
+							expect(result).toHaveProperty('collections');
+							expect(result.slug).toBe(slug);
+						}
+					),
+					{ numRuns: 100 }
+				);
+			});
+
+			it('should handle network failures', async () => {
+				(global.fetch as unknown as typeof global.fetch) = vi
+					.fn()
+					.mockRejectedValue(new Error('Network error'));
+
+				await expect(client.fetchSeriesBySlug('test-slug')).rejects.toThrow('Network error');
+			});
+
+			it('should handle timeout errors', async () => {
+				const shortTimeoutConfig = { ...config, timeout: 100 };
+				const shortTimeoutClient = new PolymarketClient(shortTimeoutConfig);
+
+				(global.fetch as unknown as typeof global.fetch) = vi
+					.fn()
+					.mockImplementation(async (_url: string | URL | Request, init?: RequestInit) => {
+						return new Promise<Response>((resolve, reject) => {
+							const timeout = setTimeout(
+								() =>
+									resolve(
+										new Response(JSON.stringify({}), {
+											status: 200,
+											headers: { 'Content-Type': 'application/json' }
+										})
+									),
+								200
+							);
+
+							if (init?.signal) {
+								init.signal.addEventListener('abort', () => {
+									clearTimeout(timeout);
+									reject(new DOMException('The operation was aborted', 'AbortError'));
+								});
+							}
+						});
+					});
+
+				await expect(shortTimeoutClient.fetchSeriesBySlug('test-slug')).rejects.toThrow(
+					'Request timeout'
+				);
+			});
+
+			it('should handle 404 errors', async () => {
+				(global.fetch as unknown as typeof global.fetch) = vi.fn(async () => {
+					return new Response('Not Found', { status: 404, statusText: 'Not Found' });
+				});
+
+				await expect(client.fetchSeriesBySlug('nonexistent')).rejects.toThrow('API request failed');
+			});
+
+			it('should construct URL correctly', async () => {
+				let capturedUrl: string | undefined;
+				const slug = 'test-series-slug';
+
+				(global.fetch as unknown as typeof global.fetch) = vi.fn(
+					async (url: string | URL | Request) => {
+						capturedUrl = url.toString();
+						return new Response(JSON.stringify(createMockSeries('test-id', slug)), {
+							status: 200,
+							headers: { 'Content-Type': 'application/json' }
+						});
+					}
+				);
+
+				await client.fetchSeriesBySlug(slug);
+
+				expect(capturedUrl).toBeDefined();
+				const url = new URL(capturedUrl!);
+				expect(url.pathname).toBe(`/series/slug/${slug}`);
+			});
+		});
+	});
 });

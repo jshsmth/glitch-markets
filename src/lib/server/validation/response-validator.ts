@@ -13,7 +13,12 @@ import type {
 	HolderInfo,
 	MarketHolders,
 	PortfolioValue,
-	ClosedPosition
+	ClosedPosition,
+	Series,
+	Collection,
+	ImageOptimized,
+	Chat,
+	Category
 } from '../api/polymarket-client.js';
 
 /**
@@ -532,7 +537,6 @@ export function validateTrade(data: unknown): Trade {
 		}
 	}
 
-	// Validate side enum
 	if (!('side' in data)) {
 		missingFields.push('side');
 	} else if (data.side !== 'BUY' && data.side !== 'SELL') {
@@ -622,7 +626,6 @@ export function validateActivity(data: unknown): Activity {
 		}
 	}
 
-	// Validate type enum
 	if (!('type' in data)) {
 		missingFields.push('type');
 	} else if (
@@ -986,6 +989,394 @@ export function validateClosedPositions(data: unknown): ClosedPosition[] {
 		} catch (error) {
 			if (error instanceof ValidationError) {
 				throw new ValidationError(`ClosedPosition at index ${index} is invalid: ${error.message}`, {
+					index,
+					originalError: error.details
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single ImageOptimized object
+ */
+function validateImageOptimized(data: unknown): ImageOptimized {
+	if (!isObject(data)) {
+		throw new ValidationError('ImageOptimized data must be an object', { data });
+	}
+
+	const requiredStringFields = [
+		'id',
+		'imageUrlSource',
+		'imageUrlOptimized',
+		'imageOptimizedLastUpdated',
+		'field',
+		'relname'
+	];
+
+	const requiredNumberFields = ['imageSizeKbSource', 'imageSizeKbOptimized', 'relID'];
+
+	const requiredBooleanFields = ['imageOptimizedComplete'];
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of requiredStringFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of requiredNumberFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isNumber(data[field])) {
+			invalidTypeFields.push(`${field} (expected number, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of requiredBooleanFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isBoolean(data[field])) {
+			invalidTypeFields.push(`${field} (expected boolean, got ${typeof data[field]})`);
+		}
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('ImageOptimized validation failed', errorDetails);
+	}
+
+	return data as unknown as ImageOptimized;
+}
+
+/**
+ * Validates a single Collection object
+ */
+export function validateCollection(data: unknown): Collection {
+	if (!isObject(data)) {
+		throw new ValidationError('Collection data must be an object', { data });
+	}
+
+	const requiredStringFields = [
+		'id',
+		'ticker',
+		'slug',
+		'title',
+		'collectionType',
+		'description',
+		'tags',
+		'layout',
+		'templateVariables',
+		'publishedAt',
+		'createdBy',
+		'updatedBy',
+		'createdAt',
+		'updatedAt'
+	];
+
+	const optionalStringFields = ['subtitle', 'image', 'icon', 'headerImage'];
+
+	const requiredBooleanFields = [
+		'active',
+		'closed',
+		'archived',
+		'new',
+		'featured',
+		'restricted',
+		'isTemplate',
+		'commentsEnabled'
+	];
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of requiredStringFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of optionalStringFields) {
+		if (field in data && data[field] !== null && !isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string or null, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of requiredBooleanFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isBoolean(data[field])) {
+			invalidTypeFields.push(`${field} (expected boolean, got ${typeof data[field]})`);
+		}
+	}
+
+	// Validate optional ImageOptimized fields
+	const imageOptimizedFields = ['imageOptimized', 'iconOptimized', 'headerImageOptimized'];
+	for (const field of imageOptimizedFields) {
+		if (field in data && data[field] !== null) {
+			try {
+				validateImageOptimized(data[field]);
+			} catch (error) {
+				if (error instanceof ValidationError) {
+					invalidTypeFields.push(`${field}: ${error.message}`);
+				}
+			}
+		}
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('Collection validation failed', errorDetails);
+	}
+
+	return data as unknown as Collection;
+}
+
+/**
+ * Validates a single Chat object
+ */
+export function validateChat(data: unknown): Chat {
+	if (!isObject(data)) {
+		throw new ValidationError('Chat data must be an object', { data });
+	}
+
+	const requiredStringFields = ['id', 'channelId', 'channelName', 'startTime', 'endTime'];
+
+	const optionalStringFields = ['channelImage'];
+
+	const requiredBooleanFields = ['live'];
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of requiredStringFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of optionalStringFields) {
+		if (field in data && data[field] !== null && !isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string or null, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of requiredBooleanFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isBoolean(data[field])) {
+			invalidTypeFields.push(`${field} (expected boolean, got ${typeof data[field]})`);
+		}
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('Chat validation failed', errorDetails);
+	}
+
+	return data as unknown as Chat;
+}
+
+/**
+ * Validates a single Category object
+ */
+export function validateCategory(data: unknown): Category {
+	if (!isObject(data)) {
+		throw new ValidationError('Category data must be an object', { data });
+	}
+
+	const requiredStringFields = ['id', 'name'];
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of requiredStringFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('Category validation failed', errorDetails);
+	}
+
+	return data as unknown as Category;
+}
+
+/**
+ * Validates a single series object
+ */
+export function validateSeries(data: unknown): Series {
+	if (!isObject(data)) {
+		throw new ValidationError('Series data must be an object', { data });
+	}
+
+	const requiredStringFields = ['id'];
+
+	const optionalStringFields = [
+		'ticker',
+		'slug',
+		'title',
+		'subtitle',
+		'seriesType',
+		'recurrence',
+		'description',
+		'image',
+		'icon',
+		'layout',
+		'publishedAt',
+		'createdBy',
+		'updatedBy',
+		'createdAt',
+		'updatedAt',
+		'competitive',
+		'startDate',
+		'pythTokenID',
+		'cgAssetName'
+	];
+
+	const optionalBooleanFields = [
+		'active',
+		'closed',
+		'archived',
+		'new',
+		'featured',
+		'restricted',
+		'isTemplate',
+		'templateVariables',
+		'commentsEnabled'
+	];
+
+	const optionalNumberFields = ['volume24hr', 'volume', 'liquidity', 'score', 'commentCount'];
+
+	const missingFields: string[] = [];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of requiredStringFields) {
+		if (!(field in data)) {
+			missingFields.push(field);
+		} else if (!isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of optionalStringFields) {
+		if (field in data && data[field] !== null && !isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string or null, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of optionalBooleanFields) {
+		if (field in data && data[field] !== null && !isBoolean(data[field])) {
+			invalidTypeFields.push(`${field} (expected boolean or null, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of optionalNumberFields) {
+		if (field in data && data[field] !== null && !isNumber(data[field])) {
+			invalidTypeFields.push(`${field} (expected number or null, got ${typeof data[field]})`);
+		}
+	}
+
+	if ('events' in data) {
+		if (!isArray(data.events)) {
+			invalidTypeFields.push(`events (expected array, got ${typeof data.events})`);
+		}
+	}
+
+	if ('collections' in data) {
+		if (!isArray(data.collections)) {
+			invalidTypeFields.push(`collections (expected array, got ${typeof data.collections})`);
+		}
+	}
+
+	if ('categories' in data) {
+		if (!isArray(data.categories)) {
+			invalidTypeFields.push(`categories (expected array, got ${typeof data.categories})`);
+		}
+	}
+
+	if ('tags' in data) {
+		if (!isArray(data.tags)) {
+			invalidTypeFields.push(`tags (expected array, got ${typeof data.tags})`);
+		}
+	}
+
+	if ('chats' in data) {
+		if (!isArray(data.chats)) {
+			invalidTypeFields.push(`chats (expected array, got ${typeof data.chats})`);
+		}
+	}
+
+	if (missingFields.length > 0 || invalidTypeFields.length > 0) {
+		const errorDetails: { missingFields?: string[]; invalidTypes?: string[] } = {};
+		if (missingFields.length > 0) {
+			errorDetails.missingFields = missingFields;
+		}
+		if (invalidTypeFields.length > 0) {
+			errorDetails.invalidTypes = invalidTypeFields;
+		}
+
+		throw new ValidationError('Series validation failed', errorDetails);
+	}
+
+	return data as unknown as Series;
+}
+
+/**
+ * Validates an array of series
+ */
+export function validateSeriesList(data: unknown): Series[] {
+	if (!isArray(data)) {
+		throw new ValidationError('Series data must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateSeries(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`Series at index ${index} is invalid: ${error.message}`, {
 					index,
 					originalError: error.details
 				});
