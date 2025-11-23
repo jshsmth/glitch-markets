@@ -19,7 +19,9 @@ import {
 	validatePortfolioValue,
 	validatePortfolioValues,
 	validateClosedPosition,
-	validateClosedPositions
+	validateClosedPositions,
+	validateSeries,
+	validateSeriesList
 } from './response-validator';
 import { ValidationError } from '../errors/api-errors';
 
@@ -1968,5 +1970,1181 @@ describe('Property 5: Response structure validation', () => {
 	it('should validate empty tag arrays successfully', () => {
 		const result = validateTags([]);
 		expect(result).toEqual([]);
+	});
+});
+
+/**
+ * Feature: polymarket-series-api, Property 3: Series response structure validation
+ * Validates: Requirements 1.2, 2.3, 10.1, 10.2, 10.5
+ *
+ * For any API response claiming to be a series object, validation should verify all required fields
+ * are present with correct types, and should recursively validate nested objects (events, collections,
+ * categories, tags).
+ */
+describe('Property 3: Series response structure validation', () => {
+	// Generator for valid ImageOptimized objects
+	const validImageOptimizedArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		imageUrlSource: fc.webUrl(),
+		imageUrlOptimized: fc.webUrl(),
+		imageSizeKbSource: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		imageSizeKbOptimized: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		imageOptimizedComplete: fc.boolean(),
+		imageOptimizedLastUpdated: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		relID: fc.integer({ min: 0 }),
+		field: fc.string({ minLength: 1 }),
+		relname: fc.string({ minLength: 1 })
+	});
+
+	// Generator for valid Collection objects
+	const validCollectionArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		ticker: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		title: fc.string({ minLength: 1 }),
+		subtitle: fc.oneof(fc.string(), fc.constant(null)),
+		collectionType: fc.string({ minLength: 1 }),
+		description: fc.string(),
+		tags: fc.string(),
+		image: fc.oneof(fc.webUrl(), fc.constant(null)),
+		icon: fc.oneof(fc.webUrl(), fc.constant(null)),
+		headerImage: fc.oneof(fc.webUrl(), fc.constant(null)),
+		layout: fc.string({ minLength: 1 }),
+		active: fc.boolean(),
+		closed: fc.boolean(),
+		archived: fc.boolean(),
+		new: fc.boolean(),
+		featured: fc.boolean(),
+		restricted: fc.boolean(),
+		isTemplate: fc.boolean(),
+		templateVariables: fc.string(),
+		publishedAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		createdBy: fc.string({ minLength: 1 }),
+		updatedBy: fc.string({ minLength: 1 }),
+		createdAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		updatedAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		commentsEnabled: fc.boolean(),
+		imageOptimized: fc.oneof(validImageOptimizedArbitrary, fc.constant(null)),
+		iconOptimized: fc.oneof(validImageOptimizedArbitrary, fc.constant(null)),
+		headerImageOptimized: fc.oneof(validImageOptimizedArbitrary, fc.constant(null))
+	});
+
+	// Generator for valid Chat objects
+	const validChatArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		channelId: fc.string({ minLength: 1 }),
+		channelName: fc.string({ minLength: 1 }),
+		channelImage: fc.oneof(fc.webUrl(), fc.constant(null)),
+		live: fc.boolean(),
+		startTime: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		endTime: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString())
+	});
+
+	// Generator for valid Category objects
+	const validCategoryArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		name: fc.string({ minLength: 1 })
+	});
+
+	// Generator for valid Tag objects (reuse from existing tests)
+	const validTagArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		label: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 })
+	});
+
+	// Generator for valid Market objects (reuse from existing tests)
+	const validMarketArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		question: fc.string({ minLength: 1 }),
+		conditionId: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		endDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		category: fc.string({ minLength: 1 }),
+		liquidity: fc.string({ minLength: 1 }),
+		image: fc.webUrl(),
+		icon: fc.webUrl(),
+		description: fc.string(),
+		outcomes: fc.array(fc.string({ minLength: 1 }), { minLength: 1 }),
+		outcomePrices: fc.array(fc.string({ minLength: 1 }), { minLength: 1 }),
+		volume: fc.string({ minLength: 1 }),
+		active: fc.boolean(),
+		marketType: fc.constantFrom('normal' as const, 'scalar' as const),
+		closed: fc.boolean(),
+		volumeNum: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		liquidityNum: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume24hr: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1wk: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1mo: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		lastTradePrice: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		bestBid: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		bestAsk: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true })
+	});
+
+	// Generator for valid Event objects (reuse from existing tests)
+	const validEventArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		ticker: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		title: fc.string({ minLength: 1 }),
+		subtitle: fc.string(),
+		description: fc.string(),
+		resolutionSource: fc.string(),
+		startDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		creationDate: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		endDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		image: fc.webUrl(),
+		icon: fc.webUrl(),
+		active: fc.boolean(),
+		closed: fc.boolean(),
+		archived: fc.boolean(),
+		new: fc.boolean(),
+		featured: fc.boolean(),
+		restricted: fc.boolean(),
+		liquidity: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		openInterest: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		category: fc.string({ minLength: 1 }),
+		subcategory: fc.string(),
+		volume24hr: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1wk: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1mo: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1yr: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		commentCount: fc.integer({ min: 0 }),
+		markets: fc.array(validMarketArbitrary, { minLength: 0, maxLength: 3 }),
+		categories: fc.array(validCategoryArbitrary, { minLength: 0, maxLength: 3 }),
+		tags: fc.array(validTagArbitrary, { minLength: 0, maxLength: 3 })
+	});
+
+	// Generator for valid Series objects
+	const validSeriesArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		ticker: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		slug: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		title: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		subtitle: fc.oneof(fc.string(), fc.constant(null)),
+		seriesType: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		recurrence: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		description: fc.oneof(fc.string(), fc.constant(null)),
+		image: fc.oneof(fc.webUrl(), fc.constant(null)),
+		icon: fc.oneof(fc.webUrl(), fc.constant(null)),
+		layout: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		active: fc.oneof(fc.boolean(), fc.constant(null)),
+		closed: fc.oneof(fc.boolean(), fc.constant(null)),
+		archived: fc.oneof(fc.boolean(), fc.constant(null)),
+		featured: fc.oneof(fc.boolean(), fc.constant(null)),
+		restricted: fc.oneof(fc.boolean(), fc.constant(null)),
+		publishedAt: fc.oneof(
+			fc.integer({ min: 0, max: Date.now() }).map((timestamp) => new Date(timestamp).toISOString()),
+			fc.constant(null)
+		),
+		createdAt: fc.oneof(
+			fc.integer({ min: 0, max: Date.now() }).map((timestamp) => new Date(timestamp).toISOString()),
+			fc.constant(null)
+		),
+		updatedAt: fc.oneof(
+			fc.integer({ min: 0, max: Date.now() }).map((timestamp) => new Date(timestamp).toISOString()),
+			fc.constant(null)
+		),
+		volume24hr: fc.oneof(
+			fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+			fc.constant(null)
+		),
+		volume: fc.oneof(fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }), fc.constant(null)),
+		liquidity: fc.oneof(
+			fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+			fc.constant(null)
+		),
+		pythTokenID: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		cgAssetName: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		score: fc.oneof(fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }), fc.constant(null)),
+		events: fc.array(validEventArbitrary, { minLength: 0, maxLength: 3 }),
+		collections: fc.array(validCollectionArbitrary, { minLength: 0, maxLength: 3 }),
+		categories: fc.array(validCategoryArbitrary, { minLength: 0, maxLength: 3 }),
+		tags: fc.array(validTagArbitrary, { minLength: 0, maxLength: 3 }),
+		chats: fc.array(validChatArbitrary, { minLength: 0, maxLength: 3 })
+	});
+
+	it('should validate valid series objects without throwing errors', () => {
+		fc.assert(
+			fc.property(validSeriesArbitrary, (seriesData) => {
+				// Should not throw for valid data
+				const result = validateSeries(seriesData);
+
+				// Result should be the same as input (validated)
+				expect(result).toEqual(seriesData);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject non-object data', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.string(),
+					fc.integer(),
+					fc.boolean(),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.array(fc.anything())
+				),
+				(invalidData) => {
+					expect(() => validateSeries(invalidData)).toThrow(ValidationError);
+					expect(() => validateSeries(invalidData)).toThrow('Series data must be an object');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject series with missing required string fields', () => {
+		const requiredStringFields = ['id'];
+
+		fc.assert(
+			fc.property(
+				validSeriesArbitrary,
+				fc.constantFrom(...requiredStringFields),
+				(seriesData, fieldToRemove) => {
+					const invalidSeries = { ...seriesData };
+					delete (invalidSeries as Record<string, unknown>)[fieldToRemove];
+
+					expect(() => validateSeries(invalidSeries)).toThrow(ValidationError);
+					expect(() => validateSeries(invalidSeries)).toThrow('Series validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should not reject series with missing optional boolean fields', () => {
+		const optionalBooleanFields = [
+			'active',
+			'closed',
+			'archived',
+			'new',
+			'featured',
+			'restricted',
+			'isTemplate',
+			'templateVariables',
+			'commentsEnabled'
+		];
+
+		fc.assert(
+			fc.property(
+				validSeriesArbitrary,
+				fc.constantFrom(...optionalBooleanFields),
+				(seriesData, fieldToRemove) => {
+					const invalidSeries = { ...seriesData };
+					delete (invalidSeries as Record<string, unknown>)[fieldToRemove];
+
+					const result = validateSeries(invalidSeries);
+					expect(result).toBeTruthy();
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should not reject series with missing optional number fields', () => {
+		const optionalNumberFields = ['volume24hr', 'volume', 'liquidity', 'score', 'commentCount'];
+
+		fc.assert(
+			fc.property(
+				validSeriesArbitrary,
+				fc.constantFrom(...optionalNumberFields),
+				(seriesData, fieldToRemove) => {
+					const invalidSeries = { ...seriesData };
+					delete (invalidSeries as Record<string, unknown>)[fieldToRemove];
+
+					const result = validateSeries(invalidSeries);
+					expect(result).toBeTruthy();
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should not reject series with missing optional array fields', () => {
+		fc.assert(
+			fc.property(
+				validSeriesArbitrary,
+				fc.constantFrom('events', 'collections', 'categories', 'tags', 'chats'),
+				(seriesData, fieldToRemove) => {
+					const invalidSeries = { ...seriesData };
+					delete (invalidSeries as Record<string, unknown>)[fieldToRemove];
+
+					const result = validateSeries(invalidSeries);
+					expect(result).toBeTruthy();
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject series with incorrect string field types', () => {
+		const requiredStringFields = ['id'];
+		const optionalStringFields = [
+			'ticker',
+			'slug',
+			'title',
+			'seriesType',
+			'recurrence',
+			'description',
+			'layout'
+		];
+
+		fc.assert(
+			fc.property(
+				validSeriesArbitrary,
+				fc.constantFrom(...requiredStringFields),
+				fc.oneof(fc.integer(), fc.boolean(), fc.array(fc.anything())),
+				(seriesData, fieldToChange, wrongValue) => {
+					const invalidSeries = { ...seriesData, [fieldToChange]: wrongValue };
+
+					expect(() => validateSeries(invalidSeries)).toThrow(ValidationError);
+					expect(() => validateSeries(invalidSeries)).toThrow('Series validation failed');
+				}
+			),
+			{ numRuns: 50 }
+		);
+
+		fc.assert(
+			fc.property(
+				validSeriesArbitrary,
+				fc.constantFrom(...optionalStringFields),
+				fc.oneof(fc.integer(), fc.boolean(), fc.array(fc.anything())),
+				(seriesData, fieldToChange, wrongValue) => {
+					const invalidSeries = { ...seriesData, [fieldToChange]: wrongValue };
+
+					expect(() => validateSeries(invalidSeries)).toThrow(ValidationError);
+					expect(() => validateSeries(invalidSeries)).toThrow('Series validation failed');
+				}
+			),
+			{ numRuns: 50 }
+		);
+	});
+
+	it('should reject series with incorrect number field types', () => {
+		const numberFields = ['volume24hr', 'volume', 'liquidity', 'score', 'commentCount'];
+
+		fc.assert(
+			fc.property(
+				validSeriesArbitrary,
+				fc.constantFrom(...numberFields),
+				fc.oneof(fc.string(), fc.boolean(), fc.constant(NaN)),
+				(seriesData, fieldToChange, wrongValue) => {
+					const invalidSeries = { ...seriesData, [fieldToChange]: wrongValue };
+
+					expect(() => validateSeries(invalidSeries)).toThrow(ValidationError);
+					expect(() => validateSeries(invalidSeries)).toThrow('Series validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject series with incorrect boolean field types', () => {
+		const booleanFields = [
+			'active',
+			'closed',
+			'archived',
+			'new',
+			'featured',
+			'restricted',
+			'isTemplate',
+			'templateVariables',
+			'commentsEnabled'
+		];
+
+		fc.assert(
+			fc.property(
+				validSeriesArbitrary,
+				fc.constantFrom(...booleanFields),
+				fc.oneof(fc.string(), fc.integer()),
+				(seriesData, fieldToChange, wrongValue) => {
+					const invalidSeries = { ...seriesData, [fieldToChange]: wrongValue };
+
+					expect(() => validateSeries(invalidSeries)).toThrow(ValidationError);
+					expect(() => validateSeries(invalidSeries)).toThrow('Series validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject series with incorrect array field types', () => {
+		fc.assert(
+			fc.property(
+				validSeriesArbitrary,
+				fc.constantFrom('events', 'collections', 'categories', 'tags', 'chats'),
+				fc.oneof(fc.string(), fc.integer(), fc.boolean(), fc.constant(null)),
+				(seriesData, fieldToChange, wrongValue) => {
+					const invalidSeries = { ...seriesData, [fieldToChange]: wrongValue };
+
+					expect(() => validateSeries(invalidSeries)).toThrow(ValidationError);
+					expect(() => validateSeries(invalidSeries)).toThrow('Series validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should accept series with null optional string fields', () => {
+		fc.assert(
+			fc.property(
+				validSeriesArbitrary,
+				fc.constantFrom('subtitle', 'image', 'icon', 'pythTokenID', 'cgAssetName'),
+				(seriesData, fieldToSetNull) => {
+					const seriesWithNull = { ...seriesData, [fieldToSetNull]: null };
+					expect(() => validateSeries(seriesWithNull)).not.toThrow();
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should accept series with events arrays without deep validation', () => {
+		fc.assert(
+			fc.property(validSeriesArbitrary, (seriesData) => {
+				const result = validateSeries(seriesData);
+				expect(result).toBeTruthy();
+				expect(result.events).toEqual(seriesData.events);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should accept series with collections arrays without deep validation', () => {
+		fc.assert(
+			fc.property(validSeriesArbitrary, (seriesData) => {
+				const result = validateSeries(seriesData);
+				expect(result).toBeTruthy();
+				expect(result.collections).toEqual(seriesData.collections);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should accept series with categories arrays without deep validation', () => {
+		fc.assert(
+			fc.property(validSeriesArbitrary, (seriesData) => {
+				const result = validateSeries(seriesData);
+				expect(result).toBeTruthy();
+				expect(result.categories).toEqual(seriesData.categories);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should accept series with tags arrays without deep validation', () => {
+		fc.assert(
+			fc.property(validSeriesArbitrary, (seriesData) => {
+				const result = validateSeries(seriesData);
+				expect(result).toBeTruthy();
+				expect(result.tags).toEqual(seriesData.tags);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should accept series with chats arrays without deep validation', () => {
+		fc.assert(
+			fc.property(validSeriesArbitrary, (seriesData) => {
+				const result = validateSeries(seriesData);
+				expect(result).toBeTruthy();
+				expect(result.chats).toEqual(seriesData.chats);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+});
+
+/**
+ * Feature: polymarket-series-api, Property 4: Series array validation
+ * Validates: Requirements 10.3
+ *
+ * For any API response claiming to be a series array, validation should verify it is an array
+ * and that each element passes series validation.
+ */
+describe('Property 4: Series array validation', () => {
+	// Reuse the series generator from Property 3
+	const validImageOptimizedArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		imageUrlSource: fc.webUrl(),
+		imageUrlOptimized: fc.webUrl(),
+		imageSizeKbSource: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		imageSizeKbOptimized: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		imageOptimizedComplete: fc.boolean(),
+		imageOptimizedLastUpdated: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		relID: fc.integer({ min: 0 }),
+		field: fc.string({ minLength: 1 }),
+		relname: fc.string({ minLength: 1 })
+	});
+
+	const validCollectionArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		ticker: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		title: fc.string({ minLength: 1 }),
+		subtitle: fc.oneof(fc.string(), fc.constant(null)),
+		collectionType: fc.string({ minLength: 1 }),
+		description: fc.string(),
+		tags: fc.string(),
+		image: fc.oneof(fc.webUrl(), fc.constant(null)),
+		icon: fc.oneof(fc.webUrl(), fc.constant(null)),
+		headerImage: fc.oneof(fc.webUrl(), fc.constant(null)),
+		layout: fc.string({ minLength: 1 }),
+		active: fc.boolean(),
+		closed: fc.boolean(),
+		archived: fc.boolean(),
+		new: fc.boolean(),
+		featured: fc.boolean(),
+		restricted: fc.boolean(),
+		isTemplate: fc.boolean(),
+		templateVariables: fc.string(),
+		publishedAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		createdBy: fc.string({ minLength: 1 }),
+		updatedBy: fc.string({ minLength: 1 }),
+		createdAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		updatedAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		commentsEnabled: fc.boolean(),
+		imageOptimized: fc.oneof(validImageOptimizedArbitrary, fc.constant(null)),
+		iconOptimized: fc.oneof(validImageOptimizedArbitrary, fc.constant(null)),
+		headerImageOptimized: fc.oneof(validImageOptimizedArbitrary, fc.constant(null))
+	});
+
+	const validChatArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		channelId: fc.string({ minLength: 1 }),
+		channelName: fc.string({ minLength: 1 }),
+		channelImage: fc.oneof(fc.webUrl(), fc.constant(null)),
+		live: fc.boolean(),
+		startTime: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		endTime: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString())
+	});
+
+	const validCategoryArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		name: fc.string({ minLength: 1 })
+	});
+
+	const validTagArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		label: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 })
+	});
+
+	const validMarketArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		question: fc.string({ minLength: 1 }),
+		conditionId: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		endDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		category: fc.string({ minLength: 1 }),
+		liquidity: fc.string({ minLength: 1 }),
+		image: fc.webUrl(),
+		icon: fc.webUrl(),
+		description: fc.string(),
+		outcomes: fc.array(fc.string({ minLength: 1 }), { minLength: 1 }),
+		outcomePrices: fc.array(fc.string({ minLength: 1 }), { minLength: 1 }),
+		volume: fc.string({ minLength: 1 }),
+		active: fc.boolean(),
+		marketType: fc.constantFrom('normal' as const, 'scalar' as const),
+		closed: fc.boolean(),
+		volumeNum: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		liquidityNum: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume24hr: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1wk: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1mo: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		lastTradePrice: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		bestBid: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		bestAsk: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true })
+	});
+
+	const validEventArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		ticker: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		title: fc.string({ minLength: 1 }),
+		subtitle: fc.string(),
+		description: fc.string(),
+		resolutionSource: fc.string(),
+		startDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		creationDate: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		endDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		image: fc.webUrl(),
+		icon: fc.webUrl(),
+		active: fc.boolean(),
+		closed: fc.boolean(),
+		archived: fc.boolean(),
+		new: fc.boolean(),
+		featured: fc.boolean(),
+		restricted: fc.boolean(),
+		liquidity: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		openInterest: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		category: fc.string({ minLength: 1 }),
+		subcategory: fc.string(),
+		volume24hr: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1wk: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1mo: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1yr: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		commentCount: fc.integer({ min: 0 }),
+		markets: fc.array(validMarketArbitrary, { minLength: 0, maxLength: 2 }),
+		categories: fc.array(validCategoryArbitrary, { minLength: 0, maxLength: 2 }),
+		tags: fc.array(validTagArbitrary, { minLength: 0, maxLength: 2 })
+	});
+
+	const validSeriesArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		ticker: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		slug: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		title: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		subtitle: fc.oneof(fc.string(), fc.constant(null)),
+		seriesType: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		recurrence: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		description: fc.oneof(fc.string(), fc.constant(null)),
+		image: fc.oneof(fc.webUrl(), fc.constant(null)),
+		icon: fc.oneof(fc.webUrl(), fc.constant(null)),
+		layout: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		active: fc.oneof(fc.boolean(), fc.constant(null)),
+		closed: fc.oneof(fc.boolean(), fc.constant(null)),
+		archived: fc.oneof(fc.boolean(), fc.constant(null)),
+		new: fc.oneof(fc.boolean(), fc.constant(null)),
+		featured: fc.oneof(fc.boolean(), fc.constant(null)),
+		restricted: fc.oneof(fc.boolean(), fc.constant(null)),
+		isTemplate: fc.oneof(fc.boolean(), fc.constant(null)),
+		templateVariables: fc.oneof(fc.boolean(), fc.constant(null)),
+		publishedAt: fc.oneof(
+			fc.integer({ min: 0, max: Date.now() }).map((timestamp) => new Date(timestamp).toISOString()),
+			fc.constant(null)
+		),
+		createdBy: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		updatedBy: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		createdAt: fc.oneof(
+			fc.integer({ min: 0, max: Date.now() }).map((timestamp) => new Date(timestamp).toISOString()),
+			fc.constant(null)
+		),
+		updatedAt: fc.oneof(
+			fc.integer({ min: 0, max: Date.now() }).map((timestamp) => new Date(timestamp).toISOString()),
+			fc.constant(null)
+		),
+		commentsEnabled: fc.oneof(fc.boolean(), fc.constant(null)),
+		competitive: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		volume24hr: fc.oneof(
+			fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+			fc.constant(null)
+		),
+		volume: fc.oneof(fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }), fc.constant(null)),
+		liquidity: fc.oneof(
+			fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+			fc.constant(null)
+		),
+		startDate: fc.oneof(
+			fc
+				.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+				.map((timestamp) => new Date(timestamp).toISOString()),
+			fc.constant(null)
+		),
+		pythTokenID: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		cgAssetName: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		score: fc.oneof(fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }), fc.constant(null)),
+		commentCount: fc.oneof(fc.integer({ min: 0 }), fc.constant(null)),
+		events: fc.array(validEventArbitrary, { minLength: 0, maxLength: 2 }),
+		collections: fc.array(validCollectionArbitrary, { minLength: 0, maxLength: 2 }),
+		categories: fc.array(validCategoryArbitrary, { minLength: 0, maxLength: 2 }),
+		tags: fc.array(validTagArbitrary, { minLength: 0, maxLength: 2 }),
+		chats: fc.array(validChatArbitrary, { minLength: 0, maxLength: 2 })
+	});
+
+	it('should validate arrays of valid series without throwing errors', () => {
+		fc.assert(
+			fc.property(fc.array(validSeriesArbitrary, { minLength: 0, maxLength: 10 }), (seriesList) => {
+				// Should not throw for valid data
+				const result = validateSeriesList(seriesList);
+
+				// Result should be the same as input (validated)
+				expect(result).toEqual(seriesList);
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject non-array data when validating series list', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.string(),
+					fc.integer(),
+					fc.boolean(),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.record({})
+				),
+				(invalidData) => {
+					expect(() => validateSeriesList(invalidData)).toThrow(ValidationError);
+					expect(() => validateSeriesList(invalidData)).toThrow('Series data must be an array');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should reject arrays containing invalid series objects', () => {
+		fc.assert(
+			fc.property(
+				fc.array(validSeriesArbitrary, { minLength: 1, maxLength: 5 }),
+				fc.integer({ min: 0, max: 4 }),
+				(seriesList, indexToCorrupt) => {
+					// Only corrupt if we have enough series
+					if (indexToCorrupt >= seriesList.length) return;
+
+					const corruptedSeriesList = [...seriesList];
+					// Remove a required field from one series
+					const corruptedSeries = { ...corruptedSeriesList[indexToCorrupt] };
+					delete (corruptedSeries as Record<string, unknown>).id;
+					corruptedSeriesList[indexToCorrupt] = corruptedSeries;
+
+					expect(() => validateSeriesList(corruptedSeriesList)).toThrow(ValidationError);
+					expect(() => validateSeriesList(corruptedSeriesList)).toThrow(
+						/Series at index \d+ is invalid/
+					);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should validate empty series arrays successfully', () => {
+		const result = validateSeriesList([]);
+		expect(result).toEqual([]);
+	});
+
+	it('should include index information in error messages for invalid series', () => {
+		fc.assert(
+			fc.property(
+				fc.array(validSeriesArbitrary, { minLength: 2, maxLength: 5 }),
+				fc.integer({ min: 0, max: 4 }),
+				(seriesList, indexToCorrupt) => {
+					if (indexToCorrupt >= seriesList.length) return;
+
+					const corruptedSeriesList = [...seriesList];
+					const corruptedSeries = { ...corruptedSeriesList[indexToCorrupt] };
+					delete (corruptedSeries as Record<string, unknown>).id;
+					corruptedSeriesList[indexToCorrupt] = corruptedSeries;
+
+					try {
+						validateSeriesList(corruptedSeriesList);
+						expect(true).toBe(false);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.message).toContain(`Series at index ${indexToCorrupt}`);
+							expect(error.details).toHaveProperty('index', indexToCorrupt);
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+});
+
+/**
+ * Feature: polymarket-series-api, Property 5: Validation error reporting
+ * Validates: Requirements 10.4
+ *
+ * For any invalid response data, validation should throw a ValidationError that includes
+ * details about which field or structure failed validation.
+ */
+describe('Property 5: Validation error reporting', () => {
+	// Reuse generators from previous tests
+	const validImageOptimizedArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		imageUrlSource: fc.webUrl(),
+		imageUrlOptimized: fc.webUrl(),
+		imageSizeKbSource: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		imageSizeKbOptimized: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		imageOptimizedComplete: fc.boolean(),
+		imageOptimizedLastUpdated: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		relID: fc.integer({ min: 0 }),
+		field: fc.string({ minLength: 1 }),
+		relname: fc.string({ minLength: 1 })
+	});
+
+	const validCollectionArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		ticker: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		title: fc.string({ minLength: 1 }),
+		subtitle: fc.oneof(fc.string(), fc.constant(null)),
+		collectionType: fc.string({ minLength: 1 }),
+		description: fc.string(),
+		tags: fc.string(),
+		image: fc.oneof(fc.webUrl(), fc.constant(null)),
+		icon: fc.oneof(fc.webUrl(), fc.constant(null)),
+		headerImage: fc.oneof(fc.webUrl(), fc.constant(null)),
+		layout: fc.string({ minLength: 1 }),
+		active: fc.boolean(),
+		closed: fc.boolean(),
+		archived: fc.boolean(),
+		new: fc.boolean(),
+		featured: fc.boolean(),
+		restricted: fc.boolean(),
+		isTemplate: fc.boolean(),
+		templateVariables: fc.string(),
+		publishedAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		createdBy: fc.string({ minLength: 1 }),
+		updatedBy: fc.string({ minLength: 1 }),
+		createdAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		updatedAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		commentsEnabled: fc.boolean(),
+		imageOptimized: fc.oneof(validImageOptimizedArbitrary, fc.constant(null)),
+		iconOptimized: fc.oneof(validImageOptimizedArbitrary, fc.constant(null)),
+		headerImageOptimized: fc.oneof(validImageOptimizedArbitrary, fc.constant(null))
+	});
+
+	const validChatArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		channelId: fc.string({ minLength: 1 }),
+		channelName: fc.string({ minLength: 1 }),
+		channelImage: fc.oneof(fc.webUrl(), fc.constant(null)),
+		live: fc.boolean(),
+		startTime: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		endTime: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString())
+	});
+
+	const validCategoryArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		name: fc.string({ minLength: 1 })
+	});
+
+	const validTagArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		label: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 })
+	});
+
+	const validMarketArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		question: fc.string({ minLength: 1 }),
+		conditionId: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		endDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		category: fc.string({ minLength: 1 }),
+		liquidity: fc.string({ minLength: 1 }),
+		image: fc.webUrl(),
+		icon: fc.webUrl(),
+		description: fc.string(),
+		outcomes: fc.array(fc.string({ minLength: 1 }), { minLength: 1 }),
+		outcomePrices: fc.array(fc.string({ minLength: 1 }), { minLength: 1 }),
+		volume: fc.string({ minLength: 1 }),
+		active: fc.boolean(),
+		marketType: fc.constantFrom('normal' as const, 'scalar' as const),
+		closed: fc.boolean(),
+		volumeNum: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		liquidityNum: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume24hr: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1wk: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1mo: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		lastTradePrice: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		bestBid: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+		bestAsk: fc.float({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true })
+	});
+
+	const validEventArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		ticker: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		title: fc.string({ minLength: 1 }),
+		subtitle: fc.string(),
+		description: fc.string(),
+		resolutionSource: fc.string(),
+		startDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		creationDate: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		endDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		image: fc.webUrl(),
+		icon: fc.webUrl(),
+		active: fc.boolean(),
+		closed: fc.boolean(),
+		archived: fc.boolean(),
+		new: fc.boolean(),
+		featured: fc.boolean(),
+		restricted: fc.boolean(),
+		liquidity: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		openInterest: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		category: fc.string({ minLength: 1 }),
+		subcategory: fc.string(),
+		volume24hr: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1wk: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1mo: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume1yr: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		commentCount: fc.integer({ min: 0 }),
+		markets: fc.array(validMarketArbitrary, { minLength: 0, maxLength: 2 }),
+		categories: fc.array(validCategoryArbitrary, { minLength: 0, maxLength: 2 }),
+		tags: fc.array(validTagArbitrary, { minLength: 0, maxLength: 2 })
+	});
+
+	const validSeriesArbitrary = fc.record({
+		id: fc.string({ minLength: 1 }),
+		ticker: fc.string({ minLength: 1 }),
+		slug: fc.string({ minLength: 1 }),
+		title: fc.string({ minLength: 1 }),
+		subtitle: fc.oneof(fc.string(), fc.constant(null)),
+		seriesType: fc.string({ minLength: 1 }),
+		recurrence: fc.string({ minLength: 1 }),
+		description: fc.string(),
+		image: fc.oneof(fc.webUrl(), fc.constant(null)),
+		icon: fc.oneof(fc.webUrl(), fc.constant(null)),
+		layout: fc.string({ minLength: 1 }),
+		active: fc.boolean(),
+		closed: fc.boolean(),
+		archived: fc.boolean(),
+		new: fc.boolean(),
+		featured: fc.boolean(),
+		restricted: fc.boolean(),
+		isTemplate: fc.boolean(),
+		templateVariables: fc.boolean(),
+		publishedAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		createdBy: fc.string({ minLength: 1 }),
+		updatedBy: fc.string({ minLength: 1 }),
+		createdAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		updatedAt: fc
+			.integer({ min: 0, max: Date.now() })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		commentsEnabled: fc.boolean(),
+		competitive: fc.string({ minLength: 1 }),
+		volume24hr: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		volume: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		liquidity: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		startDate: fc
+			.integer({ min: 0, max: Date.now() + 365 * 24 * 60 * 60 * 1000 })
+			.map((timestamp) => new Date(timestamp).toISOString()),
+		pythTokenID: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		cgAssetName: fc.oneof(fc.string({ minLength: 1 }), fc.constant(null)),
+		score: fc.float({ min: 0, noNaN: true, noDefaultInfinity: true }),
+		events: fc.array(validEventArbitrary, { minLength: 0, maxLength: 2 }),
+		collections: fc.array(validCollectionArbitrary, { minLength: 0, maxLength: 2 }),
+		categories: fc.array(validCategoryArbitrary, { minLength: 0, maxLength: 2 }),
+		tags: fc.array(validTagArbitrary, { minLength: 0, maxLength: 2 }),
+		commentCount: fc.integer({ min: 0 }),
+		chats: fc.array(validChatArbitrary, { minLength: 0, maxLength: 2 })
+	});
+
+	it('should include missing field names in error details when required fields are missing', () => {
+		fc.assert(
+			fc.property(validSeriesArbitrary, fc.constantFrom('id'), (seriesData, fieldToRemove) => {
+				const invalidSeries = { ...seriesData };
+				delete (invalidSeries as Record<string, unknown>)[fieldToRemove];
+
+				try {
+					validateSeries(invalidSeries);
+					expect(true).toBe(false);
+				} catch (error) {
+					expect(error).toBeInstanceOf(ValidationError);
+					if (error instanceof ValidationError) {
+						expect(error.message).toContain('Series validation failed');
+						expect(error.details).toHaveProperty('missingFields');
+						const details = error.details as { missingFields?: string[] };
+						expect(details.missingFields).toContain(fieldToRemove);
+					}
+				}
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should include invalid type information in error details when types are wrong', () => {
+		fc.assert(
+			fc.property(
+				validSeriesArbitrary,
+				fc.constantFrom('id', 'ticker', 'active', 'volume'),
+				fc.oneof(fc.integer(), fc.boolean()),
+				(seriesData, fieldToCorrupt, wrongValue) => {
+					const currentValue = (seriesData as Record<string, unknown>)[fieldToCorrupt];
+					if (typeof currentValue === typeof wrongValue) return;
+					if (fieldToCorrupt !== 'id' && wrongValue === null) return;
+
+					const invalidSeries = { ...seriesData, [fieldToCorrupt]: wrongValue };
+
+					try {
+						validateSeries(invalidSeries);
+						expect(true).toBe(false);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.message).toContain('Series validation failed');
+							expect(error.details).toHaveProperty('invalidTypes');
+							const details = error.details as { invalidTypes?: string[] };
+							expect(details.invalidTypes?.some((msg) => msg.includes(fieldToCorrupt))).toBe(true);
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should accept series without deep validation of nested objects', () => {
+		fc.assert(
+			fc.property(validSeriesArbitrary, (seriesData) => {
+				const result = validateSeries(seriesData);
+				expect(result).toBeTruthy();
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should throw ValidationError (not generic Error) for all validation failures', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.string(),
+					fc.integer(),
+					fc.boolean(),
+					fc.constant(null),
+					fc.record({}),
+					validSeriesArbitrary.map((s) => ({ ...s, id: 123 }))
+				),
+				(invalidData) => {
+					try {
+						validateSeries(invalidData);
+						expect(true).toBe(false);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						expect(error).toBeInstanceOf(Error);
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should include both missing fields and invalid types in error details when both exist', () => {
+		fc.assert(
+			fc.property(validSeriesArbitrary, (seriesData) => {
+				const invalidSeries = { ...seriesData };
+				delete (invalidSeries as Record<string, unknown>).id;
+				(invalidSeries as Record<string, unknown>).active = 'not-a-boolean';
+
+				try {
+					validateSeries(invalidSeries);
+					expect(true).toBe(false);
+				} catch (error) {
+					expect(error).toBeInstanceOf(ValidationError);
+					if (error instanceof ValidationError) {
+						expect(error.message).toContain('Series validation failed');
+						expect(error.details).toHaveProperty('missingFields');
+						expect(error.details).toHaveProperty('invalidTypes');
+						const details = error.details as {
+							missingFields?: string[];
+							invalidTypes?: string[];
+						};
+						expect(details.missingFields).toContain('id');
+						expect(details.invalidTypes?.some((msg) => msg.includes('active'))).toBe(true);
+					}
+				}
+			}),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should provide clear error messages for array validation failures', () => {
+		fc.assert(
+			fc.property(
+				fc.array(validSeriesArbitrary, { minLength: 1, maxLength: 3 }),
+				fc.integer({ min: 0, max: 2 }),
+				(seriesList, indexToCorrupt) => {
+					// Only corrupt if we have enough series
+					if (indexToCorrupt >= seriesList.length) return;
+
+					const corruptedSeriesList = [...seriesList];
+					const corruptedSeries = { ...corruptedSeriesList[indexToCorrupt] };
+					delete (corruptedSeries as Record<string, unknown>).id;
+					corruptedSeriesList[indexToCorrupt] = corruptedSeries;
+
+					try {
+						validateSeriesList(corruptedSeriesList);
+						// Should not reach here
+						expect(true).toBe(false);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							// Should mention the specific index
+							expect(error.message).toContain(`Series at index ${indexToCorrupt}`);
+							expect(error.details).toHaveProperty('index', indexToCorrupt);
+							expect(error.details).toHaveProperty('originalError');
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
 	});
 });

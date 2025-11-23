@@ -18,7 +18,10 @@ import {
 	validateEventSlug,
 	validateProxyWallet,
 	validateTagId,
-	validateTagSlug
+	validateTagSlug,
+	validateSeriesQueryParams,
+	validateSeriesId,
+	validateSeriesSlug
 } from './input-validator.js';
 import { ValidationError } from '../errors/api-errors.js';
 
@@ -868,6 +871,256 @@ describe('User Data Input Validation', () => {
 					expect(result).toBeDefined();
 					expect(typeof result).toBe('string');
 					expect(/^0x[0-9a-fA-F]{40}$/.test(result)).toBe(true);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+});
+
+describe('Series Input Validation', () => {
+	/**
+	 * Property 1: Query parameter validation
+	 * Feature: polymarket-series-api, Property 1: Query parameter validation
+	 * Validates: Requirements 1.1, 9.1, 9.2, 9.3, 9.4
+	 *
+	 * For any query parameters object containing limit, offset, active, or closed fields,
+	 * validation should accept valid values (non-negative integers for limit/offset,
+	 * booleans for active/closed) and reject invalid values.
+	 */
+	test('Property 1: query parameter validation rejects invalid values', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					// Invalid limit (negative or non-number)
+					fc.record({
+						limit: fc.oneof(
+							fc.integer({ max: -1 }),
+							fc.string(),
+							fc.constant(NaN),
+							fc.constant(Infinity),
+							fc.constant(-Infinity)
+						)
+					}),
+					// Invalid offset (negative or non-number)
+					fc.record({
+						offset: fc.oneof(
+							fc.integer({ max: -1 }),
+							fc.string(),
+							fc.constant(NaN),
+							fc.constant(Infinity),
+							fc.constant(-Infinity)
+						)
+					}),
+					// Invalid active (non-boolean)
+					fc.record({
+						active: fc.oneof(
+							fc.string(),
+							fc.integer(),
+							fc.constant('true'),
+							fc.constant('false'),
+							fc.constant(0),
+							fc.constant(1),
+							fc.constant(null),
+							fc.constant(undefined)
+						)
+					}),
+					// Invalid closed (non-boolean)
+					fc.record({
+						closed: fc.oneof(
+							fc.string(),
+							fc.integer(),
+							fc.constant('true'),
+							fc.constant('false'),
+							fc.constant(0),
+							fc.constant(1),
+							fc.constant(null),
+							fc.constant(undefined)
+						)
+					}),
+					// Invalid category (empty string or non-string)
+					fc.record({
+						category: fc.oneof(fc.constant(''), fc.constant('   '), fc.integer(), fc.boolean())
+					})
+				),
+				(invalidParams) => {
+					expect(() =>
+						validateSeriesQueryParams(invalidParams as Record<string, string | number | boolean>)
+					).toThrow(ValidationError);
+
+					try {
+						validateSeriesQueryParams(invalidParams as Record<string, string | number | boolean>);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.statusCode).toBe(400);
+							expect(error.message.length).toBeGreaterThan(0);
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	test('Property 1: query parameter validation accepts valid values', () => {
+		fc.assert(
+			fc.property(
+				fc.record({
+					limit: fc.option(fc.integer({ min: 0, max: 1000 })),
+					offset: fc.option(fc.integer({ min: 0, max: 10000 })),
+					active: fc.option(fc.boolean()),
+					closed: fc.option(fc.boolean()),
+					category: fc.option(fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0))
+				}),
+				(validParams) => {
+					// Remove undefined values
+					const cleanParams: Record<string, string | number | boolean> = {};
+					for (const [key, value] of Object.entries(validParams)) {
+						if (value !== undefined && value !== null) {
+							cleanParams[key] = value;
+						}
+					}
+
+					// Should not throw
+					expect(() => validateSeriesQueryParams(cleanParams)).not.toThrow();
+
+					// Validate the result
+					const result = validateSeriesQueryParams(cleanParams);
+					expect(result).toBeDefined();
+
+					// Verify all input keys are in the result
+					for (const key of Object.keys(cleanParams)) {
+						expect(result).toHaveProperty(key);
+					}
+
+					// Verify types are preserved
+					if (cleanParams.limit !== undefined) {
+						expect(typeof result.limit).toBe('number');
+						expect(result.limit).toBeGreaterThanOrEqual(0);
+					}
+					if (cleanParams.offset !== undefined) {
+						expect(typeof result.offset).toBe('number');
+						expect(result.offset).toBeGreaterThanOrEqual(0);
+					}
+					if (cleanParams.active !== undefined) {
+						expect(typeof result.active).toBe('boolean');
+					}
+					if (cleanParams.closed !== undefined) {
+						expect(typeof result.closed).toBe('boolean');
+					}
+					if (cleanParams.category !== undefined) {
+						expect(typeof result.category).toBe('string');
+						expect((result.category as string).trim().length).toBeGreaterThan(0);
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	/**
+	 * Property 2: ID and slug validation
+	 * Feature: polymarket-series-api, Property 2: ID and slug validation
+	 * Validates: Requirements 2.1, 2.2, 9.5
+	 *
+	 * For any string value, validation should accept non-empty strings as valid IDs
+	 * or slugs and reject empty strings.
+	 */
+	test('Property 2: ID validation rejects invalid values', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.constant(''),
+					fc.constant('   '),
+					fc.constant('\t'),
+					fc.constant('\n'),
+					fc.constant('  \t\n  '),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.integer(),
+					fc.boolean(),
+					fc.object(),
+					fc.array(fc.anything())
+				),
+				(invalidId) => {
+					expect(() => validateSeriesId(invalidId)).toThrow(ValidationError);
+
+					try {
+						validateSeriesId(invalidId);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.statusCode).toBe(400);
+							expect(error.message).toContain('series ID');
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	test('Property 2: slug validation rejects invalid values', () => {
+		fc.assert(
+			fc.property(
+				fc.oneof(
+					fc.constant(''),
+					fc.constant('   '),
+					fc.constant('\t'),
+					fc.constant('\n'),
+					fc.constant('  \t\n  '),
+					fc.constant(null),
+					fc.constant(undefined),
+					fc.integer(),
+					fc.boolean(),
+					fc.object(),
+					fc.array(fc.anything())
+				),
+				(invalidSlug) => {
+					expect(() => validateSeriesSlug(invalidSlug)).toThrow(ValidationError);
+
+					try {
+						validateSeriesSlug(invalidSlug);
+					} catch (error) {
+						expect(error).toBeInstanceOf(ValidationError);
+						if (error instanceof ValidationError) {
+							expect(error.statusCode).toBe(400);
+							expect(error.message).toContain('series slug');
+						}
+					}
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	test('Property 2: ID validation accepts valid non-empty strings', () => {
+		fc.assert(
+			fc.property(
+				fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0),
+				(validId) => {
+					expect(() => validateSeriesId(validId)).not.toThrow();
+					const result = validateSeriesId(validId);
+					expect(result).toBeDefined();
+					expect(typeof result).toBe('string');
+					expect(result.trim().length).toBeGreaterThan(0);
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	test('Property 2: slug validation accepts valid non-empty strings', () => {
+		fc.assert(
+			fc.property(
+				fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0),
+				(validSlug) => {
+					expect(() => validateSeriesSlug(validSlug)).not.toThrow();
+					const result = validateSeriesSlug(validSlug);
+					expect(result).toBeDefined();
+					expect(typeof result).toBe('string');
+					expect(result.trim().length).toBeGreaterThan(0);
 				}
 			),
 			{ numRuns: 100 }

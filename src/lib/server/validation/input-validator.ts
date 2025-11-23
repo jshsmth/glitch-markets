@@ -347,3 +347,46 @@ export function validateClosedPositionsParams(params: Record<string, unknown>): 
 	const user = validateProxyWallet(params.user);
 	return { user };
 }
+
+/**
+ * Validates query parameters for the series endpoint
+ */
+export function validateSeriesQueryParams(
+	params: Record<string, string | number | boolean>
+): Record<string, string | number | boolean> {
+	const validated: Record<string, string | number | boolean> = {};
+
+	for (const [key, value] of Object.entries(params)) {
+		switch (key) {
+			case 'limit':
+			case 'offset':
+				validated[key] = validateNonNegativeNumber(value, key);
+				break;
+			case 'active':
+			case 'closed':
+				validated[key] = validateBoolean(value, key);
+				break;
+			case 'category':
+				validated[key] = validateNonEmptyString(value, key);
+				break;
+			default:
+				validated[key] = value;
+		}
+	}
+
+	return validated;
+}
+
+/**
+ * Validates a series ID
+ */
+export function validateSeriesId(id: unknown): string {
+	return validateNonEmptyString(id, 'series ID');
+}
+
+/**
+ * Validates a series slug
+ */
+export function validateSeriesSlug(slug: unknown): string {
+	return validateNonEmptyString(slug, 'series slug');
+}

@@ -28,7 +28,10 @@ import {
 	validateUserActivityParams,
 	validateTopHoldersParams,
 	validatePortfolioValueParams,
-	validateClosedPositionsParams
+	validateClosedPositionsParams,
+	validateSeriesQueryParams,
+	validateSeriesId,
+	validateSeriesSlug
 } from '../validation/input-validator.js';
 import {
 	validateMarket,
@@ -42,7 +45,9 @@ import {
 	validateActivities,
 	validateMarketHoldersList,
 	validatePortfolioValues,
-	validateClosedPositions
+	validateClosedPositions,
+	validateSeries,
+	validateSeriesList
 } from '../validation/response-validator.js';
 
 /**
@@ -268,6 +273,115 @@ export interface ClosedPosition {
 	oppositeOutcome: string;
 	oppositeAsset: string;
 	endDate: string;
+}
+
+/**
+ * Represents optimized image metadata
+ */
+export interface ImageOptimized {
+	id: string;
+	imageUrlSource: string;
+	imageUrlOptimized: string;
+	imageSizeKbSource: number;
+	imageSizeKbOptimized: number;
+	imageOptimizedComplete: boolean;
+	imageOptimizedLastUpdated: string;
+	relID: number;
+	field: string;
+	relname: string;
+}
+
+/**
+ * Represents a collection of events
+ */
+export interface Collection {
+	id: string;
+	ticker: string;
+	slug: string;
+	title: string;
+	subtitle: string | null;
+	collectionType: string;
+	description: string;
+	tags: string;
+	image: string | null;
+	icon: string | null;
+	headerImage: string | null;
+	layout: string;
+	active: boolean;
+	closed: boolean;
+	archived: boolean;
+	new: boolean;
+	featured: boolean;
+	restricted: boolean;
+	isTemplate: boolean;
+	templateVariables: string;
+	publishedAt: string;
+	createdBy: string;
+	updatedBy: string;
+	createdAt: string;
+	updatedAt: string;
+	commentsEnabled: boolean;
+	imageOptimized: ImageOptimized | null;
+	iconOptimized: ImageOptimized | null;
+	headerImageOptimized: ImageOptimized | null;
+}
+
+/**
+ * Represents a chat channel associated with a series
+ */
+export interface Chat {
+	id: string;
+	channelId: string;
+	channelName: string;
+	channelImage: string | null;
+	live: boolean;
+	startTime: string;
+	endTime: string;
+}
+
+/**
+ * Represents a series - a collection of related events that follow a pattern or recurrence
+ */
+export interface Series {
+	id: string;
+	ticker: string | null;
+	slug: string | null;
+	title: string | null;
+	subtitle: string | null;
+	seriesType: string | null;
+	recurrence: string | null;
+	description: string | null;
+	image: string | null;
+	icon: string | null;
+	layout: string | null;
+	active: boolean | null;
+	closed: boolean | null;
+	archived: boolean | null;
+	new: boolean | null;
+	featured: boolean | null;
+	restricted: boolean | null;
+	isTemplate: boolean | null;
+	templateVariables: boolean | null;
+	publishedAt: string | null;
+	createdBy: string | null;
+	updatedBy: string | null;
+	createdAt: string | null;
+	updatedAt: string | null;
+	commentsEnabled: boolean | null;
+	competitive: string | null;
+	volume24hr: number | null;
+	volume: number | null;
+	liquidity: number | null;
+	startDate: string | null;
+	pythTokenID: string | null;
+	cgAssetName: string | null;
+	score: number | null;
+	commentCount: number | null;
+	events: Event[];
+	collections: Collection[];
+	categories: Category[];
+	tags: Tag[];
+	chats: Chat[];
 }
 
 export interface FetchOptions {
@@ -797,5 +911,78 @@ export class PolymarketClient {
 		const url = this.buildDataApiUrl('/closed-positions', { user: validatedParams.user });
 		const data = await this.request<unknown>(url);
 		return validateClosedPositions(data);
+	}
+
+	/**
+	 * Fetches a list of series from the Gamma API
+	 * Validates query parameters and response structure
+	 *
+	 * @param options - Optional fetch options including query parameters
+	 * @returns Promise resolving to an array of series
+	 * @throws {ValidationError} When query parameters are invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error response
+	 *
+	 * @example
+	 * ```typescript
+	 * const series = await client.fetchSeries({
+	 *   params: { limit: 50, category: 'crypto', active: true }
+	 * });
+	 * ```
+	 */
+	async fetchSeries(options?: FetchOptions): Promise<Series[]> {
+		const validatedParams = options?.params ? validateSeriesQueryParams(options.params) : undefined;
+		const url = this.buildUrl('/series', validatedParams);
+		const data = await this.request<unknown>(url, { ...options, params: validatedParams });
+		return validateSeriesList(data);
+	}
+
+	/**
+	 * Fetches a specific series by its unique identifier
+	 * Validates the ID and response structure
+	 *
+	 * @param id - The unique series ID
+	 * @returns Promise resolving to the series
+	 * @throws {ValidationError} When the ID is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const series = await client.fetchSeriesById('series-123');
+	 * console.log(series.title);
+	 * ```
+	 */
+	async fetchSeriesById(id: string): Promise<Series> {
+		const validatedId = validateSeriesId(id);
+		const url = this.buildUrl(`/series/${validatedId}`);
+		const data = await this.request<unknown>(url);
+		return validateSeries(data);
+	}
+
+	/**
+	 * Fetches a specific series by its URL-friendly slug
+	 * Validates the slug and response structure
+	 *
+	 * @param slug - The URL-friendly series identifier
+	 * @returns Promise resolving to the series
+	 * @throws {ValidationError} When the slug is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const series = await client.fetchSeriesBySlug('weekly-sports-predictions');
+	 * console.log(series.title);
+	 * ```
+	 */
+	async fetchSeriesBySlug(slug: string): Promise<Series> {
+		const validatedSlug = validateSeriesSlug(slug);
+		const url = this.buildUrl(`/series/slug/${validatedSlug}`);
+		const data = await this.request<unknown>(url);
+		return validateSeries(data);
 	}
 }
