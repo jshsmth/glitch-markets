@@ -14,21 +14,26 @@ Quick reference for looking up official Porto SDK documentation.
 ## Guides
 
 ### Account Management
+
 - **Onboard & Discover Accounts**: https://porto.sh/sdk/guides/discover-accounts
 - **Guest Mode**: https://porto.sh/sdk/guides/guest-mode
 
 ### Authentication
+
 - **SIWE (Sign-In with Ethereum)**: https://porto.sh/sdk/guides/authentication
 
 ### Payments & Fees
+
 - **Fee Sponsoring**: https://porto.sh/sdk/guides/sponsoring
 - **Payments**: https://porto.sh/sdk/guides/payments
 - **Subscriptions**: https://porto.sh/sdk/guides/subscriptions
 
 ### Permissions
+
 - **Permissions**: https://porto.sh/sdk/guides/permissions
 
 ### Customization
+
 - **Theming**: https://porto.sh/sdk/guides/theming
 
 ---
@@ -36,6 +41,7 @@ Quick reference for looking up official Porto SDK documentation.
 ## API Reference
 
 ### Porto Core
+
 - **Porto.create**: https://porto.sh/sdk/api/porto/create
 - **Chains**: https://porto.sh/sdk/api/chains
 - **Dialog**: https://porto.sh/sdk/api/dialog
@@ -44,6 +50,7 @@ Quick reference for looking up official Porto SDK documentation.
 - **Storage**: https://porto.sh/sdk/api/storage
 
 ### Route Configuration
+
 - **Route.merchant**: https://porto.sh/sdk/api/route/merchant
 
 ---
@@ -51,10 +58,12 @@ Quick reference for looking up official Porto SDK documentation.
 ## Framework Integration
 
 ### Wagmi
+
 - **Wagmi Overview**: https://porto.sh/sdk/wagmi
 - **Wagmi Connector**: https://porto.sh/sdk/wagmi/connector
 
 ### Viem
+
 - **Viem Overview**: https://porto.sh/sdk/viem
 - **Vanilla + Viem Usage** (Preferred): https://porto.sh/sdk#vanilla--viem-usage
 
@@ -63,9 +72,11 @@ Quick reference for looking up official Porto SDK documentation.
 ## Infrastructure
 
 ### Relay
+
 - **Porto Relay**: https://porto.sh/relay
 
 ### Contracts
+
 - **Porto Contracts**: https://porto.sh/contracts
 
 ---
@@ -80,41 +91,42 @@ Quick reference for looking up official Porto SDK documentation.
 
 ## Quick Reference Table
 
-| Category | Topic | URL |
-|----------|-------|-----|
-| **Getting Started** | SDK Main Page | https://porto.sh/sdk |
-| | Vanilla + Viem Usage | https://porto.sh/sdk#vanilla--viem-usage |
-| **Accounts** | Onboard & Discover Accounts | https://porto.sh/sdk/guides/discover-accounts |
-| | Guest Mode | https://porto.sh/sdk/guides/guest-mode |
-| **Auth** | SIWE Authentication | https://porto.sh/sdk/guides/authentication |
-| **Payments** | Fee Sponsoring | https://porto.sh/sdk/guides/sponsoring |
-| | Payments | https://porto.sh/sdk/guides/payments |
-| | Subscriptions | https://porto.sh/sdk/guides/subscriptions |
-| **Security** | Permissions | https://porto.sh/sdk/guides/permissions |
-| **Customization** | Theming | https://porto.sh/sdk/guides/theming |
-| **API** | Porto.create | https://porto.sh/sdk/api/porto/create |
-| | Chains | https://porto.sh/sdk/api/chains |
-| | Dialog | https://porto.sh/sdk/api/dialog |
-| | Mode | https://porto.sh/sdk/api/mode |
-| | Theme | https://porto.sh/sdk/api/theme |
-| | Storage | https://porto.sh/sdk/api/storage |
-| **Routes** | Route.merchant | https://porto.sh/sdk/api/route/merchant |
-| **Frameworks** | Wagmi Overview | https://porto.sh/sdk/wagmi |
-| | Wagmi Connector | https://porto.sh/sdk/wagmi/connector |
-| | Viem Overview | https://porto.sh/sdk/viem |
-| **Infrastructure** | Porto Relay | https://porto.sh/relay |
-| | Porto Contracts | https://porto.sh/contracts |
-| **Production** | Deploying to Production | https://porto.sh/sdk/production |
-| | FAQ | https://porto.sh/sdk/faq |
-| | Changelog | https://porto.sh/changelog |
-| **Resources** | GitHub | https://github.com/ithacaxyz/porto |
-| | DeepWiki | https://deepwiki.com/ithacaxyz/porto |
+| Category            | Topic                       | URL                                           |
+| ------------------- | --------------------------- | --------------------------------------------- |
+| **Getting Started** | SDK Main Page               | https://porto.sh/sdk                          |
+|                     | Vanilla + Viem Usage        | https://porto.sh/sdk#vanilla--viem-usage      |
+| **Accounts**        | Onboard & Discover Accounts | https://porto.sh/sdk/guides/discover-accounts |
+|                     | Guest Mode                  | https://porto.sh/sdk/guides/guest-mode        |
+| **Auth**            | SIWE Authentication         | https://porto.sh/sdk/guides/authentication    |
+| **Payments**        | Fee Sponsoring              | https://porto.sh/sdk/guides/sponsoring        |
+|                     | Payments                    | https://porto.sh/sdk/guides/payments          |
+|                     | Subscriptions               | https://porto.sh/sdk/guides/subscriptions     |
+| **Security**        | Permissions                 | https://porto.sh/sdk/guides/permissions       |
+| **Customization**   | Theming                     | https://porto.sh/sdk/guides/theming           |
+| **API**             | Porto.create                | https://porto.sh/sdk/api/porto/create         |
+|                     | Chains                      | https://porto.sh/sdk/api/chains               |
+|                     | Dialog                      | https://porto.sh/sdk/api/dialog               |
+|                     | Mode                        | https://porto.sh/sdk/api/mode                 |
+|                     | Theme                       | https://porto.sh/sdk/api/theme                |
+|                     | Storage                     | https://porto.sh/sdk/api/storage              |
+| **Routes**          | Route.merchant              | https://porto.sh/sdk/api/route/merchant       |
+| **Frameworks**      | Wagmi Overview              | https://porto.sh/sdk/wagmi                    |
+|                     | Wagmi Connector             | https://porto.sh/sdk/wagmi/connector          |
+|                     | Viem Overview               | https://porto.sh/sdk/viem                     |
+| **Infrastructure**  | Porto Relay                 | https://porto.sh/relay                        |
+|                     | Porto Contracts             | https://porto.sh/contracts                    |
+| **Production**      | Deploying to Production     | https://porto.sh/sdk/production               |
+|                     | FAQ                         | https://porto.sh/sdk/faq                      |
+|                     | Changelog                   | https://porto.sh/changelog                    |
+| **Resources**       | GitHub                      | https://github.com/ithacaxyz/porto            |
+|                     | DeepWiki                    | https://deepwiki.com/ithacaxyz/porto          |
 
 ---
 
 ## Usage Notes
 
 Porto SDK is used for:
+
 - Embedded wallet functionality
 - Sign-In with Ethereum (SIWE) authentication
 - Wallet abstraction layer
