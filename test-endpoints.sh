@@ -81,13 +81,27 @@ try:
                     output.append(f"**First Rank**: {first.get('rank')}")
 
     elif isinstance(d, dict):
+        # For health check responses
+        if 'status' in d and 'services' in d:
+            output.append(f"**Overall Status**: {d.get('status')}")
+            if 'timestamp' in d:
+                output.append(f"**Timestamp**: {d.get('timestamp')}")
+            if 'services' in d:
+                services = d['services']
+                if 'gamma' in services:
+                    gamma = services['gamma']
+                    output.append(f"**Gamma Status**: {gamma.get('status')} ({gamma.get('responseTime')}ms)")
+                if 'data' in services:
+                    data_svc = services['data']
+                    output.append(f"**Data Status**: {data_svc.get('status')} ({data_svc.get('responseTime')}ms)")
+
         # For search results
-        if 'events' in d:
+        elif 'events' in d:
             output.append(f"**Events**: {len(d['events'])} items")
             if len(d['events']) > 0 and 'id' in d['events'][0]:
                 output.append(f"**First Event ID**: {d['events'][0]['id']}")
 
-        if 'tags' in d:
+        if 'tags' in d and 'status' not in d:
             output.append(f"**Tags**: {len(d['tags'])} items")
 
         if 'profiles' in d:
@@ -163,6 +177,12 @@ echo -e "${YELLOW}Starting Polymarket API endpoint tests...${NC}"
 echo ""
 echo "---" >> "$OUTPUT"
 echo "" >> "$OUTPUT"
+
+# Health API
+echo -e "${YELLOW}Testing Health API...${NC}"
+echo "# Health API" >> "$OUTPUT"
+echo "" >> "$OUTPUT"
+test_endpoint "Health Check" "/api/health"
 
 # Markets API
 echo -e "${YELLOW}Testing Markets API...${NC}"
@@ -285,20 +305,7 @@ else
     echo -e "${RED}⚠ Skipping Get Tag by Slug - no slug found${NC}"
 fi
 
-# Test tag relationship endpoints
-if [ -n "$TAG_ID" ]; then
-    test_endpoint "Get Tag Relationships by ID" "/api/tags/$TAG_ID/relationships"
-    test_endpoint "Get Related Tags by ID" "/api/tags/$TAG_ID/related"
-else
-    echo -e "${RED}⚠ Skipping tag relationship endpoints - no tag ID found${NC}"
-fi
-
-if [ -n "$TAG_SLUG" ]; then
-    test_endpoint "Get Tag Relationships by Slug" "/api/tags/slug/$TAG_SLUG/relationships"
-    test_endpoint "Get Related Tags by Slug" "/api/tags/slug/$TAG_SLUG/related"
-else
-    echo -e "${RED}⚠ Skipping tag relationship slug endpoints - no slug found${NC}"
-fi
+# Tag relationship endpoints have been removed (not in Polymarket API)
 
 # Comments API - Use event ID from earlier
 echo -e "\n${YELLOW}Testing Comments API...${NC}"

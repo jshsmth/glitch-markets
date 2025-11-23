@@ -2,6 +2,12 @@
 
 Quick reference for looking up official Polymarket API documentation.
 
+## Glossary
+
+- **Definitions**: https://docs.polymarket.com/quickstart/introduction/definitions
+
+---
+
 ## Base URLs
 
 - **Gamma API**: `https://gamma-api.polymarket.com`
@@ -98,15 +104,54 @@ Quick reference for looking up official Polymarket API documentation.
 - **Gamma Structure**: https://docs.polymarket.com/developers/gamma-markets-api/gamma-structure
 - **Fetch Markets Guide**: https://docs.polymarket.com/developers/gamma-markets-api/fetch-markets-guide
 
-### CLOB & Data API
+### Central Limit Order Book
 
-- **CLOB Endpoints Overview**: https://docs.polymarket.com/developers/CLOB/endpoints
-- **WebSocket Documentation**: https://docs.polymarket.com/developers/CLOB/websockets
+- **CLOB Introduction**: https://docs.polymarket.com/developers/CLOB/introduction
+- **Status**: https://docs.polymarket.com/developers/CLOB/status
+- **Clients**: https://docs.polymarket.com/developers/CLOB/clients
+- **Authentication**: https://docs.polymarket.com/developers/CLOB/authentication
+
+#### Endpoints
+
+**REST**
+Used for all CLOB REST endpoints, denoted `{clob-endpoint}`.
+https://clob.polymarket.com/
+
+**Data-API**
+An additional endpoint that delivers user data, holdings, and other on-chain activities.
+https://data-api.polymarket.com/
+
+**WebSocket**
+Used for all CLOB WSS endpoints, denoted `{wss-channel}`.
+wss://ws-subscriptions-clob.polymarket.com/ws/
+
+**Real Time Data Socket (RTDS)**
+Used for real-time data streaming including crypto prices and comments, denoted `{rtds-endpoint}`.
+wss://ws-live-data.polymarket.com
 
 ### Developer Quickstart
 
 - **Introduction**: https://docs.polymarket.com/quickstart/introduction/main
 - **Showcase**: https://docs.polymarket.com/quickstart/introduction/showcase
+
+### API Rate Limits
+
+- **Rate Limits**: https://docs.polymarket.com/quickstart/introduction/rate-limits
+
+### Trade Overview
+
+- **Trades Overview**: https://docs.polymarket.com/developers/CLOB/trades/trades-overview
+- **Get Trades**: https://docs.polymarket.com/developers/CLOB/trades/trades
+
+### Proxy Wallet
+
+- **Proxy Wallet**: https://docs.polymarket.com/developers/proxy-wallet
+
+### Bridge & Swap
+
+- **Overview**: https://docs.polymarket.com/developers/misc-endpoints/bridge-overview
+- **Create Deposit**: https://docs.polymarket.com/developers/misc-endpoints/bridge-deposit
+- **Get Supported Assets**: https://docs.polymarket.com/developers/misc-endpoints/bridge-supported-assets
 
 ---
 
@@ -154,6 +199,10 @@ Quick reference for looking up official Polymarket API documentation.
 ### Search API
 
 - `GET /api/search?q=<query>` - Search markets, events, and profiles
+
+### Health API
+
+- `GET /api/health` - Check health status of upstream Polymarket APIs
 
 ---
 
@@ -293,6 +342,60 @@ GET /api/search?q=markets&cache=false
 - Array parameters support both formats: `?tag=a&tag=b` and `?tag=a,b`
 - Empty arrays are returned when entity types are disabled (e.g., `search_tags=false`)
 - Results are limited by Polymarket's upstream API constraints
+
+---
+
+### Health Check Endpoints
+
+#### GET /
+
+Basic health check endpoint to verify API service availability.
+
+**Upstream APIs**:
+
+- Gamma API: `GET https://gamma-api.polymarket.com/`
+- Data API: `GET https://data-api.polymarket.com/`
+- CLOB API: `GET https://clob.polymarket.com/`
+
+**Authentication**: None required
+
+**Request Parameters**: None
+
+**Response Format**:
+
+```json
+{
+	"data": "OK"
+}
+```
+
+**Status Codes**:
+
+- `200` - Service is operational
+- `5xx` - Service is unavailable
+
+**Example Usage**:
+
+```bash
+# Check Gamma API health
+curl https://gamma-api.polymarket.com/
+
+# Check Data API health
+curl https://data-api.polymarket.com/
+
+# Check CLOB API health
+curl https://clob.polymarket.com/
+```
+
+**Notes**:
+
+- This endpoint can be used for monitoring and uptime checks
+- No rate limiting applied to health check endpoints
+- Response time indicates API responsiveness
+
+**Our Implementation**:
+
+- `GET /api/health` - Returns aggregated health status for Gamma and Data APIs with response times
 
 ---
 
