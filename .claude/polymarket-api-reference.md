@@ -151,6 +151,149 @@ Quick reference for looking up official Polymarket API documentation.
 - `GET /api/comments/:id` - Get by ID
 - `GET /api/comments/user/:address` - Get by user
 
+### Search API
+
+- `GET /api/search?q=<query>` - Search markets, events, and profiles
+
+---
+
+## API Endpoint Details
+
+### Search API
+
+#### GET /api/search
+
+Search across markets, events, and user profiles in a single request.
+
+**Upstream API**: `GET https://gamma-api.polymarket.com/public-search`
+
+**Query Parameters**:
+
+| Parameter             | Type     | Required | Default | Description                                               |
+| --------------------- | -------- | -------- | ------- | --------------------------------------------------------- |
+| `q`                   | string   | Yes      | -       | Search query                                              |
+| `cache`               | boolean  | No       | true    | Enable/disable caching                                    |
+| `events_status`       | string   | No       | -       | Filter by event status (e.g., "active", "closed")         |
+| `limit_per_type`      | integer  | No       | -       | Maximum results per entity type                           |
+| `page`                | integer  | No       | -       | Page number for pagination                                |
+| `events_tag`          | string[] | No       | -       | Filter by event tags (supports ?tag=a&tag=b or ?tag=a,b)  |
+| `keep_closed_markets` | integer  | No       | -       | Include closed markets (0 or 1)                           |
+| `sort`                | string   | No       | -       | Sort field                                                |
+| `ascending`           | boolean  | No       | -       | Sort direction (true for ascending, false for descending) |
+| `search_tags`         | boolean  | No       | true    | Include tags in results                                   |
+| `search_profiles`     | boolean  | No       | true    | Include user profiles in results                          |
+| `recurrence`          | string   | No       | -       | Filter by recurrence type                                 |
+| `exclude_tag_id`      | number[] | No       | -       | Exclude specific tag IDs (supports ?id=1&id=2 or ?id=1,2) |
+| `optimized`           | boolean  | No       | -       | Return optimized results                                  |
+
+**Request Examples**:
+
+```bash
+# Simple search
+GET /api/search?q=bitcoin
+
+# Search with filters
+GET /api/search?q=election&events_status=active&limit_per_type=10
+
+# Search with tag filters
+GET /api/search?q=crypto&events_tag=bitcoin&events_tag=ethereum
+
+# Search with pagination
+GET /api/search?q=sports&page=2&limit_per_type=20
+
+# Search excluding tags
+GET /api/search?q=politics&exclude_tag_id=1,2,3
+
+# Disable caching
+GET /api/search?q=markets&cache=false
+```
+
+**Response Format**:
+
+```json
+{
+  "events": [
+    {
+      "id": "12345",
+      "ticker": "TICKER",
+      "title": "Event Title",
+      "description": "Event description",
+      "markets": [...],
+      "volume": 1000000,
+      "liquidity": 500000,
+      ...
+    }
+  ],
+  "tags": [
+    {
+      "id": "1",
+      "label": "Bitcoin",
+      "slug": "bitcoin",
+      "eventCount": 42
+    }
+  ],
+  "profiles": [
+    {
+      "id": "0x1234...",
+      "name": "User Name",
+      "pseudonym": "username",
+      "bio": "User bio",
+      "profileImage": "https://...",
+      "profileImageOptimized": "https://...",
+      "displayUsernamePublic": true
+    }
+  ],
+  "pagination": {
+    "hasMore": true,
+    "totalResults": 150
+  }
+}
+```
+
+**Error Responses**:
+
+```json
+// 400 - Missing or invalid parameters
+{
+  "error": {
+    "message": "q parameter is required and cannot be empty",
+    "code": "VALIDATION_ERROR",
+    "statusCode": 400,
+    "timestamp": "2025-11-23T12:00:00.000Z"
+  }
+}
+
+// 500 - Server error
+{
+  "error": {
+    "message": "Internal server error",
+    "code": "INTERNAL_ERROR",
+    "statusCode": 500,
+    "timestamp": "2025-11-23T12:00:00.000Z"
+  }
+}
+```
+
+**Caching**:
+
+- Default TTL: 60 seconds
+- Can be disabled with `cache=false`
+- Cache stampede protection for concurrent requests
+- Cache key includes all query parameters
+
+**Performance**:
+
+- Cached requests: <50ms response time
+- Uncached requests: <5s response time (depends on upstream API)
+- Supports concurrent requests efficiently
+
+**Notes**:
+
+- All response fields except pagination properties are nullable
+- Array parameters support both formats: `?tag=a&tag=b` and `?tag=a,b`
+- Empty arrays are returned when entity types are disabled (e.g., `search_tags=false`)
+- Results are limited by Polymarket's upstream API constraints
+
 ---
 
 **Last Updated**: 2025-11-23

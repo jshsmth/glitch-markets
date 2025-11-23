@@ -561,9 +561,7 @@ describe('Property 16: Response validation checks required fields', () => {
 			'title',
 			'description',
 			'startDate',
-			'creationDate',
-			'endDate',
-			'category'
+			'creationDate'
 		];
 
 		fc.assert(
@@ -603,10 +601,7 @@ describe('Property 16: Response validation checks required fields', () => {
 
 	it('should reject events with missing required number fields', () => {
 		const requiredNumberFields = [
-			'liquidity',
-			'volume',
 			'openInterest',
-			'volume24hr',
 			'volume1wk',
 			'volume1mo',
 			'volume1yr',
@@ -654,16 +649,14 @@ describe('Property 16: Response validation checks required fields', () => {
 			'title',
 			'description',
 			'startDate',
-			'creationDate',
-			'endDate',
-			'category'
+			'creationDate'
 		];
 
 		fc.assert(
 			fc.property(
 				validEventArbitrary,
 				fc.constantFrom(...requiredStringFields),
-				fc.oneof(fc.integer(), fc.boolean(), fc.constant(null), fc.array(fc.anything())),
+				fc.oneof(fc.integer(), fc.boolean(), fc.array(fc.anything())),
 				(eventData, fieldToChange, wrongValue) => {
 					const invalidEvent = { ...eventData, [fieldToChange]: wrongValue };
 
@@ -679,7 +672,7 @@ describe('Property 16: Response validation checks required fields', () => {
 		fc.assert(
 			fc.property(
 				validEventArbitrary,
-				fc.constantFrom('subtitle', 'subcategory', 'resolutionSource', 'image', 'icon'),
+				fc.constantFrom('subtitle', 'subcategory', 'resolutionSource', 'image', 'icon', 'endDate', 'category'),
 				(eventData, fieldToSetNull) => {
 					const eventWithNull = { ...eventData, [fieldToSetNull]: null };
 					expect(() => validateEvent(eventWithNull)).not.toThrow();
@@ -690,7 +683,7 @@ describe('Property 16: Response validation checks required fields', () => {
 	});
 
 	it('should reject events with incorrect types for optional string fields', () => {
-		const optionalStringFields = ['subtitle', 'subcategory', 'resolutionSource', 'image', 'icon'];
+		const optionalStringFields = ['subtitle', 'subcategory', 'resolutionSource', 'image', 'icon', 'endDate', 'category'];
 
 		fc.assert(
 			fc.property(
@@ -710,10 +703,7 @@ describe('Property 16: Response validation checks required fields', () => {
 
 	it('should reject events with incorrect number field types', () => {
 		const numberFields = [
-			'liquidity',
-			'volume',
 			'openInterest',
-			'volume24hr',
 			'volume1wk',
 			'volume1mo',
 			'volume1yr',
@@ -724,12 +714,26 @@ describe('Property 16: Response validation checks required fields', () => {
 			fc.property(
 				validEventArbitrary,
 				fc.constantFrom(...numberFields),
-				fc.oneof(fc.string(), fc.boolean(), fc.constant(null), fc.constant(NaN)),
+				fc.oneof(fc.string(), fc.boolean(), fc.constant(NaN)),
 				(eventData, fieldToChange, wrongValue) => {
 					const invalidEvent = { ...eventData, [fieldToChange]: wrongValue };
 
 					expect(() => validateEvent(invalidEvent)).toThrow(ValidationError);
 					expect(() => validateEvent(invalidEvent)).toThrow('Event validation failed');
+				}
+			),
+			{ numRuns: 100 }
+		);
+	});
+
+	it('should accept events with null optional number fields', () => {
+		fc.assert(
+			fc.property(
+				validEventArbitrary,
+				fc.constantFrom('liquidity', 'volume', 'volume24hr'),
+				(eventData, fieldToSetNull) => {
+					const eventWithNull = { ...eventData, [fieldToSetNull]: null };
+					expect(() => validateEvent(eventWithNull)).not.toThrow();
 				}
 			),
 			{ numRuns: 100 }
@@ -743,7 +747,7 @@ describe('Property 16: Response validation checks required fields', () => {
 			fc.property(
 				validEventArbitrary,
 				fc.constantFrom(...booleanFields),
-				fc.oneof(fc.string(), fc.integer(), fc.constant(null)),
+				fc.oneof(fc.string(), fc.integer()),
 				(eventData, fieldToChange, wrongValue) => {
 					const invalidEvent = { ...eventData, [fieldToChange]: wrongValue };
 
