@@ -73,6 +73,12 @@ try:
                 output.append(f"**First Slug**: {first['slug']}")
             if 'label' in first:
                 output.append(f"**First Label**: {first['label']}")
+            # Check for TagRelationship objects
+            if 'tagID' in first and 'relatedTagID' in first:
+                output.append(f"**First Tag ID**: {first.get('tagID')}")
+                output.append(f"**First Related Tag ID**: {first.get('relatedTagID')}")
+                if 'rank' in first:
+                    output.append(f"**First Rank**: {first.get('rank')}")
 
     elif isinstance(d, dict):
         # For search results
@@ -245,22 +251,48 @@ echo "# Tags API" >> "$OUTPUT"
 echo "" >> "$OUTPUT"
 test_endpoint "List Tags" "/api/tags?limit=5"
 
-# Extract tag ID
-TAG_ID=$(python3 << 'PY'
+# Extract tag ID and slug
+TAG_DATA=$(python3 << 'PY'
 import json
 try:
     with open('/tmp/response.json') as f:
         data = json.load(f)
     if isinstance(data, list) and len(data) > 0:
-        print(data[0].get('id', ''))
+        tag = data[0]
+        print(f"{tag.get('id', '')},{tag.get('slug', '')}")
 except: pass
 PY
 )
 
+TAG_ID=$(echo "$TAG_DATA" | cut -d',' -f1)
+TAG_SLUG=$(echo "$TAG_DATA" | cut -d',' -f2)
+
+# Test tag endpoints
 if [ -n "$TAG_ID" ]; then
     test_endpoint "Get Tag by ID" "/api/tags/$TAG_ID"
 else
     echo -e "${RED}⚠ Skipping Get Tag by ID - no tag ID found${NC}"
+fi
+
+if [ -n "$TAG_SLUG" ]; then
+    test_endpoint "Get Tag by Slug" "/api/tags/slug/$TAG_SLUG"
+else
+    echo -e "${RED}⚠ Skipping Get Tag by Slug - no slug found${NC}"
+fi
+
+# Test tag relationship endpoints
+if [ -n "$TAG_ID" ]; then
+    test_endpoint "Get Tag Relationships by ID" "/api/tags/$TAG_ID/relationships"
+    test_endpoint "Get Related Tags by ID" "/api/tags/$TAG_ID/related"
+else
+    echo -e "${RED}⚠ Skipping tag relationship endpoints - no tag ID found${NC}"
+fi
+
+if [ -n "$TAG_SLUG" ]; then
+    test_endpoint "Get Tag Relationships by Slug" "/api/tags/slug/$TAG_SLUG/relationships"
+    test_endpoint "Get Related Tags by Slug" "/api/tags/slug/$TAG_SLUG/related"
+else
+    echo -e "${RED}⚠ Skipping tag relationship slug endpoints - no slug found${NC}"
 fi
 
 # Comments API - Use event ID from earlier

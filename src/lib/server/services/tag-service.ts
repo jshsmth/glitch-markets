@@ -3,7 +3,7 @@
  * Coordinates between API client and server routes, handles caching
  */
 
-import type { Tag } from '../api/polymarket-client.js';
+import type { Tag, TagRelationship } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
 import { loadConfig } from '../config/api-config.js';
@@ -202,6 +202,244 @@ export class TagService {
 					error.statusCode === 404
 				) {
 					return null;
+				}
+				throw error;
+			}
+		})();
+
+		this.pendingRequests.set(cacheKey, fetchPromise);
+
+		try {
+			return await fetchPromise;
+		} finally {
+			this.pendingRequests.delete(cacheKey);
+		}
+	}
+
+	/**
+	 * Fetches tag relationships by tag ID
+	 * Results are cached to improve performance
+	 *
+	 * @param id - The unique tag ID
+	 * @returns Promise resolving to an array of tag relationships
+	 * @throws {ApiError} When the API request fails
+	 * @throws {ValidationError} When the ID is invalid
+	 *
+	 * @example
+	 * ```typescript
+	 * const relationships = await service.getTagRelationshipsById('tag-123');
+	 * relationships.forEach(rel => console.log(rel.relatedTagID));
+	 * ```
+	 */
+	async getTagRelationshipsById(id: string): Promise<TagRelationship[]> {
+		const cacheKey = `tag:relationships:id:${id}`;
+
+		const cached = this.cache.get<TagRelationship[]>(cacheKey);
+		if (cached) {
+			this.logger.info('Cache hit for tag relationships by ID', { id });
+			return cached;
+		}
+
+		// Check if request is already in-flight (cache stampede protection)
+		if (this.pendingRequests.has(cacheKey)) {
+			this.logger.info('Request already in-flight, waiting for result', { id });
+			return this.pendingRequests.get(cacheKey)!;
+		}
+
+		this.logger.info('Cache miss for tag relationships by ID, fetching from API', { id });
+
+		const fetchPromise = (async () => {
+			try {
+				const relationships = await this.client.fetchTagRelationshipsById(id);
+				this.cache.set(cacheKey, relationships, this.cacheTtl);
+				return relationships;
+			} catch (error) {
+				if (
+					error &&
+					typeof error === 'object' &&
+					'statusCode' in error &&
+					error.statusCode === 404
+				) {
+					throw error;
+				}
+				throw error;
+			}
+		})();
+
+		this.pendingRequests.set(cacheKey, fetchPromise);
+
+		try {
+			return await fetchPromise;
+		} finally {
+			this.pendingRequests.delete(cacheKey);
+		}
+	}
+
+	/**
+	 * Fetches tag relationships by tag slug
+	 * Results are cached to improve performance
+	 *
+	 * @param slug - The URL-friendly tag identifier
+	 * @returns Promise resolving to an array of tag relationships
+	 * @throws {ApiError} When the API request fails
+	 * @throws {ValidationError} When the slug is invalid
+	 *
+	 * @example
+	 * ```typescript
+	 * const relationships = await service.getTagRelationshipsBySlug('crypto');
+	 * relationships.forEach(rel => console.log(rel.relatedTagID));
+	 * ```
+	 */
+	async getTagRelationshipsBySlug(slug: string): Promise<TagRelationship[]> {
+		const cacheKey = `tag:relationships:slug:${slug}`;
+
+		const cached = this.cache.get<TagRelationship[]>(cacheKey);
+		if (cached) {
+			this.logger.info('Cache hit for tag relationships by slug', { slug });
+			return cached;
+		}
+
+		// Check if request is already in-flight (cache stampede protection)
+		if (this.pendingRequests.has(cacheKey)) {
+			this.logger.info('Request already in-flight, waiting for result', { slug });
+			return this.pendingRequests.get(cacheKey)!;
+		}
+
+		this.logger.info('Cache miss for tag relationships by slug, fetching from API', { slug });
+
+		const fetchPromise = (async () => {
+			try {
+				const relationships = await this.client.fetchTagRelationshipsBySlug(slug);
+				this.cache.set(cacheKey, relationships, this.cacheTtl);
+				return relationships;
+			} catch (error) {
+				if (
+					error &&
+					typeof error === 'object' &&
+					'statusCode' in error &&
+					error.statusCode === 404
+				) {
+					throw error;
+				}
+				throw error;
+			}
+		})();
+
+		this.pendingRequests.set(cacheKey, fetchPromise);
+
+		try {
+			return await fetchPromise;
+		} finally {
+			this.pendingRequests.delete(cacheKey);
+		}
+	}
+
+	/**
+	 * Fetches related tags by tag ID
+	 * Returns full Tag objects that are related to the specified tag
+	 * Results are cached to improve performance
+	 *
+	 * @param id - The unique tag ID
+	 * @returns Promise resolving to an array of related tags
+	 * @throws {ApiError} When the API request fails
+	 * @throws {ValidationError} When the ID is invalid
+	 *
+	 * @example
+	 * ```typescript
+	 * const relatedTags = await service.getRelatedTagsById('tag-123');
+	 * relatedTags.forEach(tag => console.log(tag.label));
+	 * ```
+	 */
+	async getRelatedTagsById(id: string): Promise<Tag[]> {
+		const cacheKey = `tag:related:id:${id}`;
+
+		const cached = this.cache.get<Tag[]>(cacheKey);
+		if (cached) {
+			this.logger.info('Cache hit for related tags by ID', { id });
+			return cached;
+		}
+
+		// Check if request is already in-flight (cache stampede protection)
+		if (this.pendingRequests.has(cacheKey)) {
+			this.logger.info('Request already in-flight, waiting for result', { id });
+			return this.pendingRequests.get(cacheKey)!;
+		}
+
+		this.logger.info('Cache miss for related tags by ID, fetching from API', { id });
+
+		const fetchPromise = (async () => {
+			try {
+				const relatedTags = await this.client.fetchRelatedTagsById(id);
+				this.cache.set(cacheKey, relatedTags, this.cacheTtl);
+				return relatedTags;
+			} catch (error) {
+				if (
+					error &&
+					typeof error === 'object' &&
+					'statusCode' in error &&
+					error.statusCode === 404
+				) {
+					throw error;
+				}
+				throw error;
+			}
+		})();
+
+		this.pendingRequests.set(cacheKey, fetchPromise);
+
+		try {
+			return await fetchPromise;
+		} finally {
+			this.pendingRequests.delete(cacheKey);
+		}
+	}
+
+	/**
+	 * Fetches related tags by tag slug
+	 * Returns full Tag objects that are related to the specified tag
+	 * Results are cached to improve performance
+	 *
+	 * @param slug - The URL-friendly tag identifier
+	 * @returns Promise resolving to an array of related tags
+	 * @throws {ApiError} When the API request fails
+	 * @throws {ValidationError} When the slug is invalid
+	 *
+	 * @example
+	 * ```typescript
+	 * const relatedTags = await service.getRelatedTagsBySlug('crypto');
+	 * relatedTags.forEach(tag => console.log(tag.label));
+	 * ```
+	 */
+	async getRelatedTagsBySlug(slug: string): Promise<Tag[]> {
+		const cacheKey = `tag:related:slug:${slug}`;
+
+		const cached = this.cache.get<Tag[]>(cacheKey);
+		if (cached) {
+			this.logger.info('Cache hit for related tags by slug', { slug });
+			return cached;
+		}
+
+		// Check if request is already in-flight (cache stampede protection)
+		if (this.pendingRequests.has(cacheKey)) {
+			this.logger.info('Request already in-flight, waiting for result', { slug });
+			return this.pendingRequests.get(cacheKey)!;
+		}
+
+		this.logger.info('Cache miss for related tags by slug, fetching from API', { slug });
+
+		const fetchPromise = (async () => {
+			try {
+				const relatedTags = await this.client.fetchRelatedTagsBySlug(slug);
+				this.cache.set(cacheKey, relatedTags, this.cacheTtl);
+				return relatedTags;
+			} catch (error) {
+				if (
+					error &&
+					typeof error === 'object' &&
+					'statusCode' in error &&
+					error.statusCode === 404
+				) {
+					throw error;
 				}
 				throw error;
 			}

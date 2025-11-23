@@ -7,6 +7,7 @@ import type {
 	Market,
 	Event,
 	Tag,
+	TagRelationship,
 	Position,
 	Trade,
 	Activity,
@@ -402,6 +403,73 @@ export function validateTags(data: unknown): Tag[] {
 					index,
 					originalError: error.details
 				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single tag relationship object
+ */
+export function validateTagRelationship(data: unknown): TagRelationship {
+	if (!isObject(data)) {
+		throw new ValidationError('TagRelationship data must be an object', { data });
+	}
+
+	// Required string field
+	if (!('id' in data)) {
+		throw new ValidationError('TagRelationship validation failed', {
+			missingFields: ['id']
+		});
+	}
+
+	if (!isString(data.id)) {
+		throw new ValidationError('TagRelationship validation failed', {
+			invalidTypes: ['id (expected string, got ' + typeof data.id + ')']
+		});
+	}
+
+	// Optional nullable number fields - no validation needed if absent
+	// TypeScript types allow null, so we only check if present and not null
+	const optionalNumberFields = ['tagID', 'relatedTagID', 'rank'];
+	const invalidTypeFields: string[] = [];
+
+	for (const field of optionalNumberFields) {
+		if (field in data && data[field] !== null && !isNumber(data[field])) {
+			invalidTypeFields.push(`${field} (expected number or null, got ${typeof data[field]})`);
+		}
+	}
+
+	if (invalidTypeFields.length > 0) {
+		throw new ValidationError('TagRelationship validation failed', {
+			invalidTypes: invalidTypeFields
+		});
+	}
+
+	return data as unknown as TagRelationship;
+}
+
+/**
+ * Validates an array of tag relationships
+ */
+export function validateTagRelationships(data: unknown): TagRelationship[] {
+	if (!isArray(data)) {
+		throw new ValidationError('TagRelationships data must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateTagRelationship(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(
+					`TagRelationship at index ${index} is invalid: ${error.message}`,
+					{
+						index,
+						originalError: error.details
+					}
+				);
 			}
 			throw error;
 		}

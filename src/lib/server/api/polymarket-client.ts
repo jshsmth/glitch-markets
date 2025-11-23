@@ -47,6 +47,7 @@ import {
 	validateEvents,
 	validateTag,
 	validateTags,
+	validateTagRelationships,
 	validatePositions,
 	validateTrades,
 	validateActivities,
@@ -112,6 +113,16 @@ export interface Tag {
 	updatedBy?: number | null;
 	createdAt?: string | null;
 	updatedAt?: string | null;
+}
+
+/**
+ * Represents a relationship between two tags
+ */
+export interface TagRelationship {
+	id: string;
+	tagID: number | null;
+	relatedTagID: number | null;
+	rank: number | null;
 }
 
 /**
@@ -903,6 +914,102 @@ export class PolymarketClient {
 		const url = this.buildUrl(`/tags/slug/${validatedSlug}`);
 		const data = await this.request<unknown>(url);
 		return validateTag(data);
+	}
+
+	/**
+	 * Fetches tag relationships by tag ID
+	 * Returns an array of TagRelationship objects representing connections between tags
+	 *
+	 * @param id - The unique tag ID
+	 * @returns Promise resolving to an array of tag relationships
+	 * @throws {ValidationError} When the ID is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const relationships = await client.fetchTagRelationshipsById('tag-123');
+	 * relationships.forEach(rel => console.log(rel.relatedTagID));
+	 * ```
+	 */
+	async fetchTagRelationshipsById(id: string): Promise<TagRelationship[]> {
+		const validatedId = validateTagId(id);
+		const url = this.buildUrl(`/tags/${validatedId}/related-tags`);
+		const data = await this.request<unknown>(url);
+		return validateTagRelationships(data);
+	}
+
+	/**
+	 * Fetches tag relationships by tag slug
+	 * Returns an array of TagRelationship objects representing connections between tags
+	 *
+	 * @param slug - The URL-friendly tag identifier
+	 * @returns Promise resolving to an array of tag relationships
+	 * @throws {ValidationError} When the slug is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const relationships = await client.fetchTagRelationshipsBySlug('crypto');
+	 * relationships.forEach(rel => console.log(rel.relatedTagID));
+	 * ```
+	 */
+	async fetchTagRelationshipsBySlug(slug: string): Promise<TagRelationship[]> {
+		const validatedSlug = validateTagSlug(slug);
+		const url = this.buildUrl(`/tags/slug/${validatedSlug}/related-tags`);
+		const data = await this.request<unknown>(url);
+		return validateTagRelationships(data);
+	}
+
+	/**
+	 * Fetches full related tag objects by tag ID
+	 * Returns an array of complete Tag objects that are related to the specified tag
+	 *
+	 * @param id - The unique tag ID
+	 * @returns Promise resolving to an array of related tags
+	 * @throws {ValidationError} When the ID is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const relatedTags = await client.fetchRelatedTagsById('tag-123');
+	 * relatedTags.forEach(tag => console.log(tag.label));
+	 * ```
+	 */
+	async fetchRelatedTagsById(id: string): Promise<Tag[]> {
+		const validatedId = validateTagId(id);
+		const url = this.buildUrl(`/tags/${validatedId}/related-tags/tags`);
+		const data = await this.request<unknown>(url);
+		return validateTags(data);
+	}
+
+	/**
+	 * Fetches full related tag objects by tag slug
+	 * Returns an array of complete Tag objects that are related to the specified tag
+	 *
+	 * @param slug - The URL-friendly tag identifier
+	 * @returns Promise resolving to an array of related tags
+	 * @throws {ValidationError} When the slug is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const relatedTags = await client.fetchRelatedTagsBySlug('crypto');
+	 * relatedTags.forEach(tag => console.log(tag.label));
+	 * ```
+	 */
+	async fetchRelatedTagsBySlug(slug: string): Promise<Tag[]> {
+		const validatedSlug = validateTagSlug(slug);
+		const url = this.buildUrl(`/tags/slug/${validatedSlug}/related-tags/tags`);
+		const data = await this.request<unknown>(url);
+		return validateTags(data);
 	}
 
 	/**
