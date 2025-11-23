@@ -23,6 +23,8 @@ This includes:
 
 For complete Polymarket API endpoint documentation, see [.claude/polymarket-api-reference.md](.claude/polymarket-api-reference.md).
 
+For Porto SDK documentation and integration guides, see [.claude/porto-api-reference.md](.claude/porto-api-reference.md).
+
 ## Design System
 
 **IMPORTANT**: Always use the established design system when building frontend components.
