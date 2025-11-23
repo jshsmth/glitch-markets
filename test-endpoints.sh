@@ -184,6 +184,11 @@ except: pass
 PY
 )
 
+# Test market tags endpoint if we have a market ID
+if [ -n "$MARKET_ID" ]; then
+    test_endpoint "Get Market Tags" "/api/markets/$MARKET_ID/tags"
+fi
+
 # Events API - Get event data first
 echo -e "\n${YELLOW}Testing Events API...${NC}"
 echo "# Events API" >> "$OUTPUT"

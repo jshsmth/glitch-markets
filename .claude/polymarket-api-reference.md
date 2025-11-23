@@ -117,6 +117,7 @@ Quick reference for looking up official Polymarket API documentation.
 
 - `GET /api/markets` - List markets
 - `GET /api/markets/:condition_id` - Get by condition ID
+- `GET /api/markets/:id/tags` - Get market tags
 - `GET /api/markets/slug/:slug` - Get by slug
 
 ### Events API

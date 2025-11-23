@@ -335,9 +335,11 @@ See [polymarket-api-reference.md](./polymarket-api-reference.md) for complete AP
 | ------------------------------ | -------------------------------------------------- |
 | `GET /api/markets`             | List all markets with filtering                    |
 | `GET /api/markets/[id]`        | Get specific market by ID                          |
+| `GET /api/markets/[id]/tags`   | Get tags for a specific market                     |
 | `GET /api/markets/slug/[slug]` | Get market by slug                                 |
 | `GET /api/events`              | List all events                                    |
 | `GET /api/events/[id]`         | Get specific event                                 |
+| `GET /api/events/[id]/tags`    | Get tags for a specific event                      |
 | `GET /api/series`              | List market series                                 |
 | `GET /api/tags`                | List all category tags                             |
 | `GET /api/search`              | Global search across markets, events, and profiles |

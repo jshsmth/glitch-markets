@@ -23,9 +23,9 @@ Prediction markets are powerful but intimidating. Complex interfaces, confusing 
 
 Glitch Markets makes prediction markets simple and accessible:
 
-- **Easy to Explore** - Browse markets like scrolling social media—no jargon, just questions
+- **Easy to Explore** - Browse markets like scrolling social media, no jargon, just questions
 - **Everything in One Place** - Real-time prices, community insights, and your portfolio all together
-- **No Passwords, No Hassle** - Passkey login with your fingerprint or face—no seed phrases to lose
+- **No Passwords, No Hassle** - Passkey login with your fingerprint or face, no seed phrases to lose
 - **Fast & Reliable** - Instant loads and real-time updates so you can make quick decisions
 
 ## Vision
@@ -72,7 +72,7 @@ Glitch Markets aims to democratize access to prediction markets by:
 
 - What's trending right now
 - What the community thinks
-- Your wins and losses—all in one place
+- Your wins and losses, all in one place
 
 **Secure by Default**
 

@@ -751,6 +751,30 @@ export class PolymarketClient {
 	}
 
 	/**
+	 * Fetches tags associated with a specific market
+	 * Validates the market ID and response structure
+	 *
+	 * @param id - The unique market ID
+	 * @returns Promise resolving to an array of tags
+	 * @throws {ValidationError} When the ID is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
+	 *
+	 * @example
+	 * ```typescript
+	 * const tags = await client.fetchMarketTags('0x12345678');
+	 * console.log(tags);
+	 * ```
+	 */
+	async fetchMarketTags(id: string): Promise<Tag[]> {
+		const validatedId = validateMarketId(id);
+		const url = this.buildUrl(`/markets/${validatedId}/tags`);
+		const data = await this.request<unknown>(url);
+		return validateTags(data);
+	}
+
+	/**
 	 * Fetches a list of events from the Gamma API
 	 * Validates query parameters and response structure
 	 *
