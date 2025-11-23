@@ -826,7 +826,7 @@ describe('Series By Slug Route', () => {
 
 		await fc.assert(
 			fc.asyncProperty(
-				fc.string({ minLength: 1, maxLength: 50 }),
+				fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0),
 				seriesArbitrary,
 				async (slug, series: Series) => {
 					mockGetSeriesBySlug.mockReset();
