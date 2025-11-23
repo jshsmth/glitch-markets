@@ -32,7 +32,6 @@ import {
 	validateClosedPositionsParams,
 	validateSeriesQueryParams,
 	validateSeriesId,
-	validateSeriesSlug,
 	validateCommentId,
 	validateCommentsQueryParams,
 	validateUserCommentsQueryParams,
@@ -1238,30 +1237,6 @@ export class PolymarketClient {
 	async fetchSeriesById(id: string): Promise<Series> {
 		const validatedId = validateSeriesId(id);
 		const url = this.buildUrl(`/series/${validatedId}`);
-		const data = await this.request<unknown>(url);
-		return validateSeries(data);
-	}
-
-	/**
-	 * Fetches a specific series by its URL-friendly slug
-	 * Validates the slug and response structure
-	 *
-	 * @param slug - The URL-friendly series identifier
-	 * @returns Promise resolving to the series
-	 * @throws {ValidationError} When the slug is invalid
-	 * @throws {TimeoutError} When the request times out
-	 * @throws {NetworkError} When network connection fails
-	 * @throws {ApiResponseError} When the API returns an error (including 404 for not found)
-	 *
-	 * @example
-	 * ```typescript
-	 * const series = await client.fetchSeriesBySlug('weekly-sports-predictions');
-	 * console.log(series.title);
-	 * ```
-	 */
-	async fetchSeriesBySlug(slug: string): Promise<Series> {
-		const validatedSlug = validateSeriesSlug(slug);
-		const url = this.buildUrl(`/series/slug/${validatedSlug}`);
 		const data = await this.request<unknown>(url);
 		return validateSeries(data);
 	}

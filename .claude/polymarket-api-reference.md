@@ -18,7 +18,8 @@ Quick reference for looking up official Polymarket API documentation.
 
 ### Sports
 
-- **Get Sports Metadata**: https://docs.polymarket.com/api-reference/sports/get-sports-metadata-information
+- **List Teams**: https://docs.polymarket.com/api-reference/sports/list-teams
+- **Get Sports Matadata Information**: https://docs.polymarket.com/api-reference/sports/get-sports-metadata-information
 
 ### Tags
 
@@ -52,10 +53,8 @@ Quick reference for looking up official Polymarket API documentation.
 ### Comments
 
 - **List Comments**: https://docs.polymarket.com/api-reference/comments/list-comments
-- **Get Comment by ID**: https://docs.polymarket.com/api-reference/comments/get-comment-by-id
-- **Get Comments by Event ID**: https://docs.polymarket.com/api-reference/comments/get-comments-by-event-id
-- **Get Comments by Market ID**: https://docs.polymarket.com/api-reference/comments/get-comments-by-market-id
-- **Get Replies to a Comment**: https://docs.polymarket.com/api-reference/comments/get-comment-replies
+- **Get Comment by ID**: https://docs.polymarket.com/api-reference/comments/get-comments-by-comment-id
+- **Get Comments by User Address**: https://docs.polymarket.com/api-reference/comments/get-comments-by-user-address
 
 ### Search
 
@@ -131,7 +130,6 @@ Quick reference for looking up official Polymarket API documentation.
 
 - `GET /api/series` - List series
 - `GET /api/series/:id` - Get by ID
-- `GET /api/series/slug/:slug` - Get by slug
 
 ### Users API (Core)
 
@@ -151,7 +149,7 @@ Quick reference for looking up official Polymarket API documentation.
 
 - `GET /api/comments?parent_entity_type=<type>&parent_entity_id=<id>` - List comments
 - `GET /api/comments/:id` - Get by ID
-- `GET /api/comments/user/:address` - Get by user
+- `GET /api/comments/user/:address` - Get comments by user address
 
 ### Search API
 

@@ -200,68 +200,6 @@ export class SeriesService {
 	}
 
 	/**
-	 * Fetches a specific series by slug
-	 * Results are cached to improve performance
-	 *
-	 * @param slug - The URL-friendly series identifier
-	 * @returns Promise resolving to the series or null if not found
-	 * @throws {ApiError} When the API request fails (except 404)
-	 * @throws {ValidationError} When the slug is invalid
-	 *
-	 * @example
-	 * ```typescript
-	 * const series = await service.getSeriesBySlug('weekly-sports-predictions');
-	 * if (series) {
-	 *   console.log(series.title);
-	 * }
-	 * ```
-	 */
-	async getSeriesBySlug(slug: string): Promise<Series | null> {
-		const cacheKey = `series:slug:${slug}`;
-
-		const cached = this.cache.get<Series>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for series by slug', { slug });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { slug });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for series by slug, fetching from API', { slug });
-
-		const fetchPromise = this.fetchAndCacheSeriesBySlug(cacheKey, slug);
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
-	}
-
-	/**
-	 * Internal method to fetch and cache series by slug
-	 * Separated for better cache stampede protection
-	 */
-	private async fetchAndCacheSeriesBySlug(cacheKey: string, slug: string): Promise<Series | null> {
-		try {
-			const series = await this.client.fetchSeriesBySlug(slug);
-			this.cache.set(cacheKey, series, this.cacheTtl);
-			return series;
-		} catch (error) {
-			if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
-				this.logger.info('Series not found', { slug });
-				return null;
-			}
-			throw error;
-		}
-	}
-
-	/**
 	 * Searches series with advanced filtering, text search, and sorting
 	 * Results are cached based on the filter parameters
 	 *

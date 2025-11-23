@@ -1,6 +1,6 @@
 /**
  * SvelteKit server route for fetching comments by user address
- * GET /api/comments/user/[user_address]
+ * GET /api/comments/user/[address]
  */
 
 import { json, type RequestEvent } from '@sveltejs/kit';
@@ -13,22 +13,30 @@ const logger = new Logger({ component: 'CommentsByUserRoute' });
 const commentService = new CommentService();
 
 /**
- * GET handler for /api/comments/user/[user_address]
- * Fetches all comments by a specific user
+ * GET handler for /api/comments/user/[address]
+ * Fetches all comments by a specific user address
  */
 export async function GET({ params, url }: RequestEvent) {
 	const startTime = Date.now();
 
 	try {
-		const { user_address } = params;
+		const { address } = params;
 
-		// Validate user address (Ethereum address format: 0x + 40 hex chars)
-		if (!user_address || !/^0x[0-9a-fA-F]{40}$/.test(user_address)) {
-			logger.error('Invalid user address', undefined, { user_address });
+		if (!address) {
+			logger.error('Missing user address', undefined, { address });
+			return json(
+				formatErrorResponse(new ApiError('User address is required', 400, 'VALIDATION_ERROR')),
+				{ status: 400 }
+			);
+		}
+
+		// Basic validation for Ethereum address format (0x followed by 40 hex characters)
+		if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+			logger.error('Invalid user address format', undefined, { address });
 			return json(
 				formatErrorResponse(
 					new ApiError(
-						'User address must be a valid Ethereum address (0x followed by 40 hexadecimal characters)',
+						'Invalid user address format. Expected Ethereum address (0x...)',
 						400,
 						'VALIDATION_ERROR'
 					)
@@ -46,6 +54,7 @@ export async function GET({ params, url }: RequestEvent) {
 		// Build filters object with validation
 		const filters: UserCommentFilters = {};
 
+		// Validate and parse numeric parameters
 		if (limit !== null) {
 			const parsedLimit = parseInt(limit, 10);
 			if (isNaN(parsedLimit) || parsedLimit < 0) {
@@ -70,10 +79,12 @@ export async function GET({ params, url }: RequestEvent) {
 			filters.offset = parsedOffset;
 		}
 
+		// Validate string parameters
 		if (order !== null) {
 			filters.order = order;
 		}
 
+		// Validate boolean parameters
 		if (ascending !== null) {
 			if (ascending !== 'true' && ascending !== 'false') {
 				logger.error('Invalid ascending parameter', undefined, { ascending });
@@ -85,14 +96,14 @@ export async function GET({ params, url }: RequestEvent) {
 			filters.ascending = ascending === 'true';
 		}
 
-		logger.info('Fetching comments by user', { user_address, filters });
+		logger.info('Fetching comments by user address', { address, filters });
 
 		// Fetch comments from service
-		const comments = await commentService.getCommentsByUser(user_address, filters);
+		const comments = await commentService.getCommentsByUser(address, filters);
 
 		const duration = Date.now() - startTime;
-		logger.info('User comments fetched successfully', {
-			user_address,
+		logger.info('Comments by user fetched successfully', {
+			address,
 			count: comments.length,
 			duration
 		});
