@@ -324,108 +324,6 @@ describe('API Integration Tests', () => {
 		});
 	});
 
-	describe('/api/markets/search endpoint', () => {
-		it('should search markets with query parameter', async () => {
-			const markets = [
-				createMockMarket({ id: '1', question: 'Bitcoin price prediction' }),
-				createMockMarket({ id: '2', question: 'Bitcoin adoption rate' })
-			];
-
-			const mockSearchMarkets = vi.fn().mockResolvedValue(markets);
-			vi.doMock('$lib/server/services/market-service', () => ({
-				MarketService: class {
-					searchMarkets = mockSearchMarkets;
-				}
-			}));
-
-			const { GET } = await import('../../routes/api/markets/search/+server');
-
-			const url = new URL('http://localhost/api/markets/search?query=bitcoin');
-			const response = await GET({ url } as never);
-
-			expect(response.status).toBe(200);
-			const data = await response.json();
-			expect(Array.isArray(data)).toBe(true);
-		});
-
-		it('should handle sorting parameters', async () => {
-			const markets = [createMockMarket()];
-			const mockSearchMarkets = vi.fn().mockResolvedValue(markets);
-			vi.doMock('$lib/server/services/market-service', () => ({
-				MarketService: class {
-					searchMarkets = mockSearchMarkets;
-				}
-			}));
-
-			const { GET } = await import('../../routes/api/markets/search/+server');
-
-			const url = new URL('http://localhost/api/markets/search?sortBy=volume&sortOrder=desc');
-			const response = await GET({ url } as never);
-
-			expect(response.status).toBe(200);
-		});
-
-		it('should return error for invalid sortBy parameter', async () => {
-			const { GET } = await import('../../routes/api/markets/search/+server');
-
-			const url = new URL('http://localhost/api/markets/search?sortBy=invalid');
-			const response = await GET({ url } as never);
-
-			expect(response.status).toBe(400);
-			const data = await response.json();
-			expect(data.error).toBe('VALIDATION_ERROR');
-			expect(data.message).toContain('sortBy');
-		});
-
-		it('should return error for invalid sortOrder parameter', async () => {
-			const { GET } = await import('../../routes/api/markets/search/+server');
-
-			const url = new URL('http://localhost/api/markets/search?sortOrder=invalid');
-			const response = await GET({ url } as never);
-
-			expect(response.status).toBe(400);
-			const data = await response.json();
-			expect(data.error).toBe('VALIDATION_ERROR');
-			expect(data.message).toContain('sortOrder');
-		});
-
-		it('should handle combined filters and sorting', async () => {
-			const markets = [createMockMarket()];
-			const mockSearchMarkets = vi.fn().mockResolvedValue(markets);
-			vi.doMock('$lib/server/services/market-service', () => ({
-				MarketService: class {
-					searchMarkets = mockSearchMarkets;
-				}
-			}));
-
-			const { GET } = await import('../../routes/api/markets/search/+server');
-
-			const url = new URL(
-				'http://localhost/api/markets/search?query=crypto&category=crypto&active=true&sortBy=volume&sortOrder=desc'
-			);
-			const response = await GET({ url } as never);
-
-			expect(response.status).toBe(200);
-		});
-
-		it('should include cache headers in response', async () => {
-			const mockSearchMarkets = vi.fn().mockResolvedValue([]);
-			vi.doMock('$lib/server/services/market-service', () => ({
-				MarketService: class {
-					searchMarkets = mockSearchMarkets;
-				}
-			}));
-
-			const { GET } = await import('../../routes/api/markets/search/+server');
-
-			const url = new URL('http://localhost/api/markets/search');
-			const response = await GET({ url } as never);
-
-			expect(response.status).toBe(200);
-			expect(response.headers.get('Cache-Control')).toContain('max-age=60');
-		});
-	});
-
 	describe('Error scenarios across routes', () => {
 		it('should handle API errors consistently across all routes', async () => {
 			const apiError = new Error('API unavailable');
@@ -455,14 +353,14 @@ describe('API Integration Tests', () => {
 		it('should handle validation errors consistently', async () => {
 			// Test invalid parameters across different routes
 			const { GET: getMarkets } = await import('../../routes/api/markets/+server');
-			const { GET: getSearch } = await import('../../routes/api/markets/search/+server');
+			const { GET: getEvents } = await import('../../routes/api/events/+server');
 
 			const response1 = await getMarkets({
 				url: new URL('http://localhost/api/markets?limit=invalid')
 			} as never);
 
-			const response2 = await getSearch({
-				url: new URL('http://localhost/api/markets/search?sortBy=invalid')
+			const response2 = await getEvents({
+				url: new URL('http://localhost/api/events?limit=invalid')
 			} as never);
 
 			expect(response1.status).toBe(400);
@@ -483,18 +381,15 @@ describe('API Integration Tests', () => {
 			const market = createMockMarket();
 
 			const mockGetMarketById = vi.fn().mockResolvedValue(market);
-			const mockSearchMarkets = vi.fn().mockResolvedValue([]);
 
 			vi.doMock('$lib/server/services/market-service', () => ({
 				MarketService: class {
 					getMarketById = mockGetMarketById;
-					searchMarkets = mockSearchMarkets;
 				}
 			}));
 
 			const { GET: getMarkets } = await import('../../routes/api/markets/+server');
 			const { GET: getMarketById } = await import('../../routes/api/markets/[id]/+server');
-			const { GET: getSearch } = await import('../../routes/api/markets/search/+server');
 
 			// Markets list - 60 second cache
 			const response1 = await getMarkets({
@@ -508,12 +403,6 @@ describe('API Integration Tests', () => {
 				url: new URL('http://localhost/api/markets/test-123')
 			} as never);
 			expect(response2.headers.get('Cache-Control')).toContain('max-age=30');
-
-			// Search - 60 second cache
-			const response3 = await getSearch({
-				url: new URL('http://localhost/api/markets/search')
-			} as never);
-			expect(response3.headers.get('Cache-Control')).toContain('max-age=60');
 		});
 
 		it('should include CDN cache headers', async () => {

@@ -665,11 +665,11 @@ describe('SeriesService', () => {
 	});
 
 	/**
-	 * Feature: polymarket-series-api, Property 14: ID and slug lookup
-	 * Validates: Requirements 6.2, 6.3
+	 * Feature: polymarket-series-api, Property 14: ID lookup
+	 * Validates: Requirements 6.2
 	 */
-	describe('Property 14: ID and slug lookup', () => {
-		it('for any valid ID or slug, the respective methods should return the matching series or null if not found', async () => {
+	describe('Property 14: ID lookup', () => {
+		it('for any valid ID, getSeriesById should return the matching series or null if not found', async () => {
 			// Generator for series data
 			const seriesArb = fc.record({
 				id: fc.string({ minLength: 1 }),
@@ -753,36 +753,17 @@ describe('SeriesService', () => {
 						seriesData,
 						60000
 					);
-
-					// Reset mocks
-					vi.clearAllMocks();
-					mockCacheInstance.get = vi.fn().mockReturnValue(null);
-					mockCacheInstance.set = vi.fn();
-
-					// Test getSeriesBySlug - successful case
-					mockClientInstance.fetchSeriesBySlug = vi.fn().mockResolvedValue(seriesData);
-					const resultBySlug = await service.getSeriesBySlug(seriesData.slug);
-
-					// Verify: Result matches the series data
-					expect(resultBySlug).toEqual(seriesData);
-					expect(mockClientInstance.fetchSeriesBySlug).toHaveBeenCalledWith(seriesData.slug);
-					expect(mockCacheInstance.set).toHaveBeenCalledWith(
-						`series:slug:${seriesData.slug}`,
-						seriesData,
-						60000
-					);
 				}),
 				{ numRuns: 100 }
 			);
 		});
 
 		it('should return null when series is not found (404)', async () => {
-			// Generator for IDs and slugs
+			// Generator for IDs
 			const idArb = fc.string({ minLength: 1 });
-			const slugArb = fc.string({ minLength: 1 });
 
 			await fc.assert(
-				fc.asyncProperty(idArb, slugArb, async (id, slug) => {
+				fc.asyncProperty(idArb, async (id) => {
 					// Get the mocked instances
 					const mockClientInstance = vi.mocked(service['client']);
 					const mockCacheInstance = vi.mocked(service['cache']);
@@ -801,21 +782,6 @@ describe('SeriesService', () => {
 					// Verify: Returns null for 404
 					expect(resultById).toBeNull();
 					expect(mockClientInstance.fetchSeriesById).toHaveBeenCalledWith(id);
-					expect(mockCacheInstance.set).not.toHaveBeenCalled();
-
-					// Reset mocks
-					vi.clearAllMocks();
-					mockCacheInstance.get = vi.fn().mockReturnValue(null);
-					mockCacheInstance.set = vi.fn();
-
-					// Test getSeriesBySlug - 404 case
-					mockClientInstance.fetchSeriesBySlug = vi.fn().mockRejectedValue(error404);
-
-					const resultBySlug = await service.getSeriesBySlug(slug);
-
-					// Verify: Returns null for 404
-					expect(resultBySlug).toBeNull();
-					expect(mockClientInstance.fetchSeriesBySlug).toHaveBeenCalledWith(slug);
 					expect(mockCacheInstance.set).not.toHaveBeenCalled();
 				}),
 				{ numRuns: 100 }
@@ -899,25 +865,12 @@ describe('SeriesService', () => {
 					// Verify: Returns cached data without calling API
 					expect(resultById).toEqual(seriesData);
 					expect(mockClientInstance.fetchSeriesById).not.toHaveBeenCalled();
-
-					// Reset mocks
-					vi.clearAllMocks();
-
-					// Test getSeriesBySlug with cache
-					mockCacheInstance.get = vi.fn().mockReturnValue(seriesData);
-					mockClientInstance.fetchSeriesBySlug = vi.fn();
-
-					const resultBySlug = await service.getSeriesBySlug(seriesData.slug);
-
-					// Verify: Returns cached data without calling API
-					expect(resultBySlug).toEqual(seriesData);
-					expect(mockClientInstance.fetchSeriesBySlug).not.toHaveBeenCalled();
 				}),
 				{ numRuns: 100 }
 			);
 		});
 
-		it('should implement cache stampede protection for ID and slug lookups', async () => {
+		it('should implement cache stampede protection for ID lookups', async () => {
 			// Generator for series data
 			const seriesArb = fc.record({
 				id: fc.string({ minLength: 1 }),
@@ -1006,30 +959,6 @@ describe('SeriesService', () => {
 					// Verify: All requests received the same result
 					for (let i = 1; i < resultsById.length; i++) {
 						expect(resultsById[i]).toEqual(resultsById[0]);
-					}
-
-					// Reset mocks
-					vi.clearAllMocks();
-
-					// Test cache stampede protection for getSeriesBySlug
-					mockCacheInstance.get = vi.fn().mockReturnValue(null);
-					mockCacheInstance.set = vi.fn();
-					mockClientInstance.fetchSeriesBySlug = vi.fn().mockImplementation(async () => {
-						await new Promise((resolve) => setTimeout(resolve, 10));
-						return seriesData;
-					});
-
-					const promisesBySlug = Array.from({ length: numRequests }, () =>
-						service.getSeriesBySlug(seriesData.slug)
-					);
-					const resultsBySlug = await Promise.all(promisesBySlug);
-
-					// Verify: API was called only once
-					expect(mockClientInstance.fetchSeriesBySlug).toHaveBeenCalledTimes(1);
-
-					// Verify: All requests received the same result
-					for (let i = 1; i < resultsBySlug.length; i++) {
-						expect(resultsBySlug[i]).toEqual(resultsBySlug[0]);
 					}
 				}),
 				{ numRuns: 100 }

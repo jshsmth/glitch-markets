@@ -131,7 +131,6 @@ Quick reference for looking up official Polymarket API documentation.
 
 - `GET /api/series` - List series
 - `GET /api/series/:id` - Get by ID
-- `GET /api/series/slug/:slug` - Get by slug
 
 ### Users API (Core)
 
@@ -151,7 +150,6 @@ Quick reference for looking up official Polymarket API documentation.
 
 - `GET /api/comments?parent_entity_type=<type>&parent_entity_id=<id>` - List comments
 - `GET /api/comments/:id` - Get by ID
-- `GET /api/comments/user/:address` - Get by user
 
 ### Search API
 
