@@ -37,7 +37,8 @@ import {
 	validateCommentsQueryParams,
 	validateUserCommentsQueryParams,
 	validateProxyWallet,
-	validateBoolean
+	validateBoolean,
+	validateSearchQueryParams
 } from '../validation/input-validator.js';
 import {
 	validateMarket,
@@ -54,7 +55,8 @@ import {
 	validateClosedPositions,
 	validateSeries,
 	validateSeriesList,
-	validateComments
+	validateComments,
+	validateSearchResults
 } from '../validation/response-validator.js';
 
 /**
@@ -120,12 +122,12 @@ export interface Event {
 	ticker: string;
 	slug: string | null;
 	title: string | null;
-	subtitle: string | null;
+	subtitle?: string | null;
 	description: string | null;
-	resolutionSource: string | null;
+	resolutionSource?: string | null;
 	startDate: string | null;
 	creationDate: string | null;
-	endDate: string | null;
+	endDate?: string | null;
 	image: string | null;
 	icon: string | null;
 	active: boolean | null;
@@ -134,18 +136,18 @@ export interface Event {
 	new: boolean;
 	featured: boolean | null;
 	restricted: boolean;
-	liquidity: number | null;
-	volume: number | null;
+	liquidity?: number | null;
+	volume?: number | null;
 	openInterest: number;
-	category: string;
-	subcategory: string | null;
-	volume24hr: number | null;
+	category?: string;
+	subcategory?: string | null;
+	volume24hr?: number | null;
 	volume1wk: number;
 	volume1mo: number;
 	volume1yr: number;
 	commentCount: number;
 	markets: Market[];
-	categories: Category[] | null;
+	categories?: Category[] | null;
 	tags: Tag[];
 }
 
@@ -464,6 +466,47 @@ export interface Comment {
 	reactions: Reaction[] | null;
 	reportCount: number | null;
 	reactionCount: number | null;
+}
+
+/**
+ * Represents a search tag result with event count
+ */
+export interface SearchTag {
+	id: string;
+	label: string | null;
+	slug: string | null;
+	eventCount?: number | null;
+}
+
+/**
+ * Represents a user profile in search results
+ */
+export interface Profile {
+	id?: string;
+	name: string | null;
+	pseudonym: string | null;
+	bio: string | null;
+	profileImage: string | null;
+	profileImageOptimized: string | null;
+	displayUsernamePublic: boolean | null;
+}
+
+/**
+ * Pagination metadata for search results
+ */
+export interface SearchPagination {
+	hasMore: boolean;
+	totalResults: number;
+}
+
+/**
+ * Complete search results response containing events, tags, profiles, and pagination
+ */
+export interface SearchResults {
+	events: Event[];
+	tags: SearchTag[];
+	profiles: Profile[];
+	pagination: SearchPagination;
 }
 
 export interface FetchOptions {
@@ -1188,6 +1231,79 @@ export class PolymarketClient {
 		this.logger.info('User comments fetched successfully', {
 			userAddress: validatedAddress,
 			count: validated.length
+		});
+
+		return validated;
+	}
+
+	/**
+	 * Helper to build URL with support for array parameters
+	 */
+	private buildSearchUrl(
+		endpoint: string,
+		params?: Record<string, string | number | boolean | string[] | number[]>
+	): string {
+		const url = new URL(endpoint, this.baseUrl);
+
+		if (params) {
+			Object.entries(params).forEach(([key, value]) => {
+				if (Array.isArray(value)) {
+					// For arrays, append each value separately
+					value.forEach((v) => url.searchParams.append(key, String(v)));
+				} else {
+					url.searchParams.append(key, String(value));
+				}
+			});
+		}
+
+		return url.toString();
+	}
+
+	/**
+	 * Fetches search results for markets, events, and profiles
+	 * Validates parameters and response structure
+	 *
+	 * @param options - Fetch options including query parameters
+	 * @returns Promise resolving to search results
+	 * @throws {ValidationError} When parameters are invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error
+	 *
+	 * @example
+	 * ```typescript
+	 * const results = await client.fetchSearch({
+	 *   params: {
+	 *     q: 'bitcoin',
+	 *     limit_per_type: 10,
+	 *     search_tags: true,
+	 *     search_profiles: true
+	 *   }
+	 * });
+	 * console.log(`Found ${results.events.length} events`);
+	 * ```
+	 */
+	async fetchSearch(options: {
+		params: Record<string, string | number | boolean | string[] | number[]>;
+		signal?: AbortSignal;
+	}): Promise<SearchResults> {
+		const { params = {}, signal } = options;
+
+		// Validate query parameters
+		const validatedParams = validateSearchQueryParams(params);
+
+		const url = this.buildSearchUrl('/public-search', validatedParams);
+		this.logger.info('Fetching search results', { params: validatedParams, url });
+
+		const data = await this.request<unknown>(url, signal ? { signal } : undefined);
+
+		// Validate response
+		const validated = validateSearchResults(data);
+		this.logger.info('Search results fetched successfully', {
+			eventsCount: validated.events.length,
+			tagsCount: validated.tags.length,
+			profilesCount: validated.profiles.length,
+			totalResults: validated.pagination.totalResults
 		});
 
 		return validated;

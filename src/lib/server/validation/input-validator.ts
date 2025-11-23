@@ -528,3 +528,91 @@ export function validateUserCommentsQueryParams(
 
 	return validated;
 }
+
+/**
+ * Validates query parameters for the search endpoint
+ */
+export function validateSearchQueryParams(
+	params: Record<string, string | number | boolean | string[] | number[]>
+): Record<string, string | number | boolean | string[] | number[]> {
+	const validated: Record<string, string | number | boolean | string[] | number[]> = {};
+
+	for (const [key, value] of Object.entries(params)) {
+		switch (key) {
+			case 'q':
+				// Required parameter - must be non-empty string
+				validated[key] = validateNonEmptyString(value, key);
+				break;
+			case 'limit_per_type':
+			case 'page':
+				// Numeric parameters - must be non-negative integers
+				validated[key] = validateNonNegativeNumber(value, key);
+				break;
+			case 'keep_closed_markets':
+				// Must be 0 or 1
+				if (typeof value !== 'number' || (value !== 0 && value !== 1)) {
+					throw new ValidationError('keep_closed_markets must be 0 or 1', {
+						keep_closed_markets: value
+					});
+				}
+				validated[key] = value;
+				break;
+			case 'cache':
+			case 'ascending':
+			case 'search_tags':
+			case 'search_profiles':
+			case 'optimized':
+				// Boolean parameters
+				validated[key] = validateBoolean(value, key);
+				break;
+			case 'events_status':
+			case 'sort':
+			case 'recurrence':
+				// String parameters - can be empty
+				if (typeof value !== 'string') {
+					throw new ValidationError(`${key} must be a string`, { [key]: value });
+				}
+				validated[key] = value;
+				break;
+			case 'events_tag':
+				// Array of strings
+				if (!Array.isArray(value)) {
+					throw new ValidationError('events_tag must be an array', { events_tag: value });
+				}
+				for (let i = 0; i < value.length; i++) {
+					if (typeof value[i] !== 'string') {
+						throw new ValidationError(`events_tag at index ${i} must be a string`, {
+							events_tag: value,
+							index: i
+						});
+					}
+				}
+				validated[key] = value;
+				break;
+			case 'exclude_tag_id':
+				// Array of numbers
+				if (!Array.isArray(value)) {
+					throw new ValidationError('exclude_tag_id must be an array', { exclude_tag_id: value });
+				}
+				for (let i = 0; i < value.length; i++) {
+					if (typeof value[i] !== 'number' || !Number.isInteger(value[i])) {
+						throw new ValidationError(`exclude_tag_id at index ${i} must be an integer`, {
+							exclude_tag_id: value,
+							index: i
+						});
+					}
+				}
+				validated[key] = value;
+				break;
+			default:
+				validated[key] = value;
+		}
+	}
+
+	// Ensure required parameter 'q' is present
+	if (!validated.q) {
+		throw new ValidationError('q parameter is required', { params });
+	}
+
+	return validated;
+}

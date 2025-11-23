@@ -23,7 +23,11 @@ import type {
 	Reaction,
 	UserPosition,
 	CommentImageOptimized,
-	Category
+	Category,
+	SearchTag,
+	Profile,
+	SearchPagination,
+	SearchResults
 } from '../api/polymarket-client.js';
 
 /**
@@ -228,12 +232,18 @@ export function validateEvent(data: unknown): Event {
 		'title',
 		'description',
 		'startDate',
-		'creationDate',
-		'endDate',
-		'category'
+		'creationDate'
 	];
 
-	const optionalStringFields = ['subtitle', 'subcategory', 'resolutionSource', 'image', 'icon'];
+	const optionalStringFields = [
+		'endDate',
+		'subtitle',
+		'category',
+		'subcategory',
+		'resolutionSource',
+		'image',
+		'icon'
+	];
 
 	const missingFields: string[] = [];
 	const invalidTypeFields: string[] = [];
@@ -241,8 +251,8 @@ export function validateEvent(data: unknown): Event {
 	for (const field of requiredStringFields) {
 		if (!(field in data)) {
 			missingFields.push(field);
-		} else if (!isString(data[field])) {
-			invalidTypeFields.push(`${field} (expected string, got ${typeof data[field]})`);
+		} else if (data[field] !== null && !isString(data[field])) {
+			invalidTypeFields.push(`${field} (expected string or null, got ${typeof data[field]})`);
 		}
 	}
 
@@ -256,27 +266,32 @@ export function validateEvent(data: unknown): Event {
 	for (const field of requiredBooleanFields) {
 		if (!(field in data)) {
 			missingFields.push(field);
-		} else if (!isBoolean(data[field])) {
-			invalidTypeFields.push(`${field} (expected boolean, got ${typeof data[field]})`);
+		} else if (data[field] !== null && !isBoolean(data[field])) {
+			invalidTypeFields.push(`${field} (expected boolean or null, got ${typeof data[field]})`);
 		}
 	}
 
 	const requiredNumberFields = [
-		'liquidity',
-		'volume',
 		'openInterest',
-		'volume24hr',
 		'volume1wk',
 		'volume1mo',
 		'volume1yr',
 		'commentCount'
 	];
 
+	const optionalNumberFields = ['liquidity', 'volume', 'volume24hr'];
+
 	for (const field of requiredNumberFields) {
 		if (!(field in data)) {
 			missingFields.push(field);
-		} else if (!isNumber(data[field])) {
-			invalidTypeFields.push(`${field} (expected number, got ${typeof data[field]})`);
+		} else if (data[field] !== null && !isNumber(data[field])) {
+			invalidTypeFields.push(`${field} (expected number or null, got ${typeof data[field]})`);
+		}
+	}
+
+	for (const field of optionalNumberFields) {
+		if (field in data && data[field] !== null && !isNumber(data[field])) {
+			invalidTypeFields.push(`${field} (expected number or null, got ${typeof data[field]})`);
 		}
 	}
 
@@ -1748,4 +1763,202 @@ export function validateComments(data: unknown): Comment[] {
 			throw error;
 		}
 	});
+}
+
+/**
+ * Validates a SearchTag object
+ */
+export function validateSearchTag(data: unknown): SearchTag {
+	if (!isObject(data)) {
+		throw new ValidationError('SearchTag data must be an object', { data });
+	}
+
+	const tag = data as Record<string, unknown>;
+
+	// id is required
+	if (typeof tag.id !== 'string') {
+		throw new ValidationError('SearchTag id must be a string', { tag });
+	}
+
+	// label is nullable
+	if (tag.label !== null && tag.label !== undefined && typeof tag.label !== 'string') {
+		throw new ValidationError('SearchTag label must be a string or null', { tag });
+	}
+
+	// slug is nullable
+	if (tag.slug !== null && tag.slug !== undefined && typeof tag.slug !== 'string') {
+		throw new ValidationError('SearchTag slug must be a string or null', { tag });
+	}
+
+	// eventCount is optional and nullable
+	if (
+		tag.eventCount !== null &&
+		tag.eventCount !== undefined &&
+		typeof tag.eventCount !== 'number'
+	) {
+		throw new ValidationError('SearchTag eventCount must be a number or null', { tag });
+	}
+
+	return {
+		id: tag.id,
+		label: tag.label ?? null,
+		slug: tag.slug ?? null,
+		eventCount: tag.eventCount ?? null
+	} as unknown as SearchTag;
+}
+
+/**
+ * Validates a Profile object
+ */
+export function validateProfile(data: unknown): Profile {
+	if (!isObject(data)) {
+		throw new ValidationError('Profile data must be an object', { data });
+	}
+
+	const profile = data as Record<string, unknown>;
+
+	// id is optional
+	if (profile.id !== undefined && profile.id !== null && typeof profile.id !== 'string') {
+		throw new ValidationError('Profile id must be a string or null', { profile });
+	}
+
+	// All other fields are nullable
+	const nullableStringFields = [
+		'name',
+		'pseudonym',
+		'bio',
+		'profileImage',
+		'profileImageOptimized'
+	];
+
+	for (const field of nullableStringFields) {
+		if (
+			profile[field] !== null &&
+			profile[field] !== undefined &&
+			typeof profile[field] !== 'string'
+		) {
+			throw new ValidationError(`Profile ${field} must be a string or null`, { profile, field });
+		}
+	}
+
+	// displayUsernamePublic is nullable boolean
+	if (
+		profile.displayUsernamePublic !== null &&
+		profile.displayUsernamePublic !== undefined &&
+		typeof profile.displayUsernamePublic !== 'boolean'
+	) {
+		throw new ValidationError('Profile displayUsernamePublic must be a boolean or null', {
+			profile
+		});
+	}
+
+	return {
+		id: profile.id,
+		name: profile.name ?? null,
+		pseudonym: profile.pseudonym ?? null,
+		bio: profile.bio ?? null,
+		profileImage: profile.profileImage ?? null,
+		profileImageOptimized: profile.profileImageOptimized ?? null,
+		displayUsernamePublic: profile.displayUsernamePublic ?? null
+	} as unknown as Profile;
+}
+
+/**
+ * Validates SearchPagination object
+ */
+export function validateSearchPagination(data: unknown): SearchPagination {
+	if (!isObject(data)) {
+		throw new ValidationError('SearchPagination data must be an object', { data });
+	}
+
+	const pagination = data as Record<string, unknown>;
+
+	// hasMore is required and must be boolean
+	if (typeof pagination.hasMore !== 'boolean') {
+		throw new ValidationError('SearchPagination hasMore must be a boolean', { pagination });
+	}
+
+	// totalResults is required and must be number
+	if (typeof pagination.totalResults !== 'number') {
+		throw new ValidationError('SearchPagination totalResults must be a number', { pagination });
+	}
+
+	return {
+		hasMore: pagination.hasMore,
+		totalResults: pagination.totalResults
+	} as unknown as SearchPagination;
+}
+
+/**
+ * Validates SearchResults object containing events, tags, profiles, and pagination
+ */
+export function validateSearchResults(data: unknown): SearchResults {
+	if (!isObject(data)) {
+		throw new ValidationError('SearchResults data must be an object', { data });
+	}
+
+	const results = data as Record<string, unknown>;
+
+	// Validate events array
+	if (!isArray(results.events)) {
+		throw new ValidationError('SearchResults events must be an array', { results });
+	}
+	const events = validateEvents(results.events);
+
+	// Validate tags array (can be missing, null, or array)
+	let tags: SearchTag[] = [];
+	if (results.tags === undefined || results.tags === null) {
+		tags = [];
+	} else if (!isArray(results.tags)) {
+		throw new ValidationError('SearchResults tags must be an array or null', { results });
+	} else {
+		tags = results.tags.map((tag, index) => {
+			try {
+				return validateSearchTag(tag);
+			} catch (error) {
+				if (error instanceof ValidationError) {
+					throw new ValidationError(`SearchTag at index ${index} is invalid: ${error.message}`, {
+						index,
+						originalError: error.details
+					});
+				}
+				throw error;
+			}
+		});
+	}
+
+	// Validate profiles array (can be missing, null, or array)
+	let profiles: Profile[] = [];
+	if (results.profiles === undefined || results.profiles === null) {
+		profiles = [];
+	} else if (!isArray(results.profiles)) {
+		throw new ValidationError('SearchResults profiles must be an array or null', { results });
+	} else {
+		profiles = results.profiles.map((profile, index) => {
+			try {
+				return validateProfile(profile);
+			} catch (error) {
+				if (error instanceof ValidationError) {
+					throw new ValidationError(`Profile at index ${index} is invalid: ${error.message}`, {
+						index,
+						originalError: error.details
+					});
+				}
+				throw error;
+			}
+		});
+	}
+
+	// Validate pagination
+	if (!isObject(results.pagination)) {
+		throw new ValidationError('SearchResults pagination must be an object', { results });
+	}
+	const pagination = validateSearchPagination(results.pagination);
+
+	return {
+		events,
+		tags,
+		profiles,
+		pagination
+	} as unknown as SearchResults;
 }
