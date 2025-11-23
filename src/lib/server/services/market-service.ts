@@ -272,7 +272,9 @@ export class MarketService {
 		let filtered = markets;
 		if (options.query) {
 			const queryLower = options.query.toLowerCase();
-			filtered = markets.filter((market) => market.question.toLowerCase().includes(queryLower));
+			filtered = markets.filter(
+				(market) => market.question?.toLowerCase().includes(queryLower) ?? false
+			);
 		}
 
 		if (options.sortBy) {
@@ -313,17 +315,17 @@ export class MarketService {
 
 			switch (sortBy) {
 				case 'volume':
-					aValue = a.volumeNum;
-					bValue = b.volumeNum;
+					aValue = a.volumeNum ?? 0;
+					bValue = b.volumeNum ?? 0;
 					break;
 				case 'liquidity':
-					aValue = a.liquidityNum;
-					bValue = b.liquidityNum;
+					aValue = a.liquidityNum ?? 0;
+					bValue = b.liquidityNum ?? 0;
 					break;
 				case 'createdAt':
 					// Parse endDate as a proxy for creation date
-					aValue = new Date(a.endDate).getTime();
-					bValue = new Date(b.endDate).getTime();
+					aValue = a.endDate ? new Date(a.endDate).getTime() : 0;
+					bValue = b.endDate ? new Date(b.endDate).getTime() : 0;
 					break;
 				default:
 					return 0;

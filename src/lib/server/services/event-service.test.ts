@@ -207,12 +207,12 @@ describe('EventService', () => {
 						// Verify: All returned events contain the query text (case-insensitive)
 						const queryLower = query.toLowerCase();
 						for (const event of result) {
-							expect(event.title.toLowerCase()).toContain(queryLower);
+							expect(event.title?.toLowerCase()).toContain(queryLower);
 						}
 
 						// Verify: All events that match the query are included
 						const expectedMatches = events.filter((event) =>
-							event.title.toLowerCase().includes(queryLower)
+							event.title?.toLowerCase().includes(queryLower)
 						);
 
 						expect(result).toHaveLength(expectedMatches.length);
@@ -316,16 +316,16 @@ describe('EventService', () => {
 
 							switch (sortBy) {
 								case 'volume':
-									currentValue = current.volume;
-									nextValue = next.volume;
+									currentValue = current.volume ?? 0;
+									nextValue = next.volume ?? 0;
 									break;
 								case 'liquidity':
-									currentValue = current.liquidity;
-									nextValue = next.liquidity;
+									currentValue = current.liquidity ?? 0;
+									nextValue = next.liquidity ?? 0;
 									break;
 								case 'createdAt':
-									currentValue = new Date(current.creationDate).getTime();
-									nextValue = new Date(next.creationDate).getTime();
+									currentValue = current.creationDate ? new Date(current.creationDate).getTime() : 0;
+									nextValue = next.creationDate ? new Date(next.creationDate).getTime() : 0;
 									break;
 							}
 

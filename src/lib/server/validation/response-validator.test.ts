@@ -21,7 +21,13 @@ import {
 	validateClosedPosition,
 	validateClosedPositions,
 	validateSeries,
-	validateSeriesList
+	validateSeriesList,
+	validateCommentImageOptimized,
+	validateUserPosition,
+	validateCommentProfile,
+	validateReaction,
+	validateComment,
+	validateComments
 } from './response-validator';
 import { ValidationError } from '../errors/api-errors';
 
@@ -3146,5 +3152,294 @@ describe('Property 5: Validation error reporting', () => {
 			),
 			{ numRuns: 100 }
 		);
+	});
+
+	describe('Comment validation', () => {
+		// Valid comment arbitraries
+		const validCommentImageOptimizedArbitrary = fc.record({
+			original: fc.oneof(fc.constant(null), fc.webUrl()),
+			small: fc.oneof(fc.constant(null), fc.webUrl()),
+			medium: fc.oneof(fc.constant(null), fc.webUrl()),
+			large: fc.oneof(fc.constant(null), fc.webUrl())
+		});
+
+		const validUserPositionArbitrary = fc.record({
+			tokenId: fc.string({ minLength: 1 }),
+			positionSize: fc.double({ min: 0, noNaN: true })
+		});
+
+		const validCommentProfileArbitrary = fc.record({
+			name: fc.oneof(fc.constant(null), fc.string()),
+			pseudonym: fc.oneof(fc.constant(null), fc.string()),
+			bio: fc.oneof(fc.constant(null), fc.string()),
+			isMod: fc.boolean(),
+			isCreator: fc.boolean(),
+			walletAddress: fc.constant('0x' + 'a'.repeat(40)),
+			proxyWalletAddress: fc.oneof(fc.constant(null), fc.constant('0x' + 'a'.repeat(40))),
+			profileImage: fc.oneof(fc.constant(null), fc.webUrl()),
+			profileImageOptimized: fc.oneof(fc.constant(null), validCommentImageOptimizedArbitrary),
+			positions: fc.array(validUserPositionArbitrary, { maxLength: 5 })
+		});
+
+		const validReactionArbitrary = fc.record({
+			id: fc.integer({ min: 0 }),
+			commentID: fc.integer({ min: 0 }),
+			reactionType: fc.constantFrom('like', 'love', 'haha', 'wow', 'sad', 'angry'),
+			icon: fc.string({ minLength: 1 }),
+			userAddress: fc.constant('0x' + 'a'.repeat(40)),
+			createdAt: fc
+				.integer({ min: 0, max: Date.now() })
+				.map((timestamp) => new Date(timestamp).toISOString()),
+			profile: validCommentProfileArbitrary
+		});
+
+		const validCommentArbitrary = fc.record({
+			id: fc.integer({ min: 0 }),
+			body: fc.string({ minLength: 1 }),
+			parentEntityType: fc.constantFrom('Event', 'Series', 'market'),
+			parentEntityID: fc.integer({ min: 0 }),
+			parentCommentID: fc.oneof(fc.constant(null), fc.integer({ min: 0 })),
+			userAddress: fc.constant('0x' + 'a'.repeat(40)),
+			replyAddress: fc.oneof(fc.constant(null), fc.constant('0x' + 'a'.repeat(40))),
+			createdAt: fc
+				.integer({ min: 0, max: Date.now() })
+				.map((timestamp) => new Date(timestamp).toISOString()),
+			updatedAt: fc
+				.integer({ min: 0, max: Date.now() })
+				.map((timestamp) => new Date(timestamp).toISOString()),
+			profile: validCommentProfileArbitrary,
+			reactions: fc.array(validReactionArbitrary, { maxLength: 5 }),
+			reportCount: fc.integer({ min: 0 }),
+			reactionCount: fc.integer({ min: 0 })
+		});
+
+		it('should validate valid CommentImageOptimized', () => {
+			fc.assert(
+				fc.property(validCommentImageOptimizedArbitrary, (imageOpt) => {
+					expect(() => validateCommentImageOptimized(imageOpt)).not.toThrow();
+					const result = validateCommentImageOptimized(imageOpt);
+					expect(result).toBeDefined();
+					expect(typeof result).toBe('object');
+				}),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should reject invalid CommentImageOptimized', () => {
+			fc.assert(
+				fc.property(
+					fc.oneof(
+						fc.constant(null),
+						fc.string(),
+						fc.integer(),
+						fc.boolean(),
+						fc.array(fc.anything())
+					),
+					(invalidImageOpt) => {
+						expect(() => validateCommentImageOptimized(invalidImageOpt)).toThrow(ValidationError);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should validate valid UserPosition', () => {
+			fc.assert(
+				fc.property(validUserPositionArbitrary, (position) => {
+					expect(() => validateUserPosition(position)).not.toThrow();
+					const result = validateUserPosition(position);
+					expect(result).toBeDefined();
+					expect(typeof result.tokenId).toBe('string');
+					expect(typeof result.positionSize).toBe('number');
+				}),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should reject invalid UserPosition', () => {
+			const invalidPosition = {
+				tokenId: 123, // should be string
+				positionSize: 1.5
+			};
+			expect(() => validateUserPosition(invalidPosition)).toThrow(ValidationError);
+		});
+
+		it('should validate valid CommentProfile', () => {
+			fc.assert(
+				fc.property(validCommentProfileArbitrary, (profile) => {
+					expect(() => validateCommentProfile(profile)).not.toThrow();
+					const result = validateCommentProfile(profile);
+					expect(result).toBeDefined();
+					expect(typeof result.isMod).toBe('boolean');
+					expect(typeof result.isCreator).toBe('boolean');
+					expect(typeof result.walletAddress).toBe('string');
+					expect(Array.isArray(result.positions)).toBe(true);
+				}),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should reject CommentProfile with invalid required fields', () => {
+			const invalidProfile = {
+				name: null,
+				pseudonym: null,
+				bio: null,
+				isMod: 'not-a-boolean', // should be boolean
+				isCreator: true,
+				walletAddress: '0x1234567890123456789012345678901234567890',
+				proxyWalletAddress: null,
+				profileImage: null,
+				profileImageOptimized: null,
+				positions: []
+			};
+			expect(() => validateCommentProfile(invalidProfile)).toThrow(ValidationError);
+		});
+
+		it('should validate valid Reaction', () => {
+			fc.assert(
+				fc.property(validReactionArbitrary, (reaction) => {
+					expect(() => validateReaction(reaction)).not.toThrow();
+					const result = validateReaction(reaction);
+					expect(result).toBeDefined();
+					expect(typeof result.id).toBe('number');
+					expect(typeof result.commentID).toBe('number');
+					expect(typeof result.reactionType).toBe('string');
+				}),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should reject invalid Reaction', () => {
+			const invalidReaction = {
+				id: 'not-a-number', // should be number or numeric string
+				commentID: 456,
+				reactionType: 'like',
+				icon: 'emoji',
+				userAddress: '0x1234567890123456789012345678901234567890',
+				createdAt: new Date().toISOString(),
+				profile: {
+					name: null,
+					pseudonym: null,
+					bio: null,
+					isMod: true,
+					isCreator: false,
+					walletAddress: '0x1234567890123456789012345678901234567890',
+					proxyWalletAddress: null,
+					profileImage: null,
+					profileImageOptimized: null,
+					positions: []
+				}
+			};
+			expect(() => validateReaction(invalidReaction)).toThrow(ValidationError);
+		});
+
+		it('should validate valid Comment', () => {
+			fc.assert(
+				fc.property(validCommentArbitrary, (comment) => {
+					expect(() => validateComment(comment)).not.toThrow();
+					const result = validateComment(comment);
+					expect(result).toBeDefined();
+					expect(typeof result.id).toBe('number');
+					expect(typeof result.body).toBe('string');
+					expect(['Event', 'Series', 'market']).toContain(result.parentEntityType);
+					expect(typeof result.parentEntityID).toBe('number');
+					expect(Array.isArray(result.reactions)).toBe(true);
+				}),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should reject Comment with invalid parentEntityType', () => {
+			const invalidComment = {
+				id: 1,
+				body: 'Test comment',
+				parentEntityType: 'InvalidType', // should be Event, Series, or market
+				parentEntityID: 123,
+				parentCommentID: null,
+				userAddress: '0x1234567890123456789012345678901234567890',
+				replyAddress: null,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				profile: {
+					name: null,
+					pseudonym: null,
+					bio: null,
+					isMod: false,
+					isCreator: false,
+					walletAddress: '0x1234567890123456789012345678901234567890',
+					proxyWalletAddress: null,
+					profileImage: null,
+					profileImageOptimized: null,
+					positions: []
+				},
+				reactions: [],
+				reportCount: 0,
+				reactionCount: 0
+			};
+			expect(() => validateComment(invalidComment)).toThrow(ValidationError);
+		});
+
+		it('should reject Comment with missing required fields', () => {
+			const invalidComment = {
+				id: 1,
+				body: 'Test comment'
+				// missing other required fields
+			};
+			expect(() => validateComment(invalidComment)).toThrow(ValidationError);
+		});
+
+		it('should validate valid Comments array', () => {
+			fc.assert(
+				fc.property(fc.array(validCommentArbitrary, { maxLength: 5 }), (comments) => {
+					expect(() => validateComments(comments)).not.toThrow();
+					const result = validateComments(comments);
+					expect(Array.isArray(result)).toBe(true);
+					expect(result.length).toBe(comments.length);
+				}),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should reject non-array Comments data', () => {
+			fc.assert(
+				fc.property(
+					fc.oneof(fc.constant(null), fc.string(), fc.integer(), fc.boolean(), fc.object()),
+					(invalidData) => {
+						expect(() => validateComments(invalidData)).toThrow(ValidationError);
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
+
+		it('should provide clear error messages for array validation failures', () => {
+			fc.assert(
+				fc.property(
+					fc.array(validCommentArbitrary, { minLength: 1, maxLength: 3 }),
+					fc.integer({ min: 0, max: 2 }),
+					(comments, indexToCorrupt) => {
+						if (indexToCorrupt >= comments.length) return;
+
+						const corruptedComments = [...comments];
+						const corruptedComment = { ...corruptedComments[indexToCorrupt] };
+						delete (corruptedComment as Record<string, unknown>).id;
+						corruptedComments[indexToCorrupt] = corruptedComment;
+
+						try {
+							validateComments(corruptedComments);
+							expect(true).toBe(false);
+						} catch (error) {
+							expect(error).toBeInstanceOf(ValidationError);
+							if (error instanceof ValidationError) {
+								expect(error.message).toContain(`Comment at index ${indexToCorrupt}`);
+								expect(error.details).toHaveProperty('index', indexToCorrupt);
+								expect(error.details).toHaveProperty('originalError');
+							}
+						}
+					}
+				),
+				{ numRuns: 100 }
+			);
+		});
 	});
 });

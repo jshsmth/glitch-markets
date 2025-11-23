@@ -390,3 +390,141 @@ export function validateSeriesId(id: unknown): string {
 export function validateSeriesSlug(slug: unknown): string {
 	return validateNonEmptyString(slug, 'series slug');
 }
+
+/**
+ * Validates a comment ID (non-negative integer)
+ */
+export function validateCommentId(id: unknown): number {
+	if (typeof id !== 'number' && typeof id !== 'string') {
+		throw new ValidationError('comment ID must be a number or string', { id });
+	}
+
+	const parsed = typeof id === 'string' ? parseInt(id, 10) : id;
+
+	if (!Number.isInteger(parsed) || parsed < 0) {
+		throw new ValidationError('comment ID must be a non-negative integer', { id, parsed });
+	}
+
+	return parsed;
+}
+
+/**
+ * Validates parent entity type
+ */
+export function validateParentEntityType(type: unknown): 'Event' | 'Series' | 'market' {
+	if (typeof type !== 'string') {
+		throw new ValidationError('parent entity type must be a string', { type });
+	}
+
+	const validTypes = ['Event', 'Series', 'market'] as const;
+	if (!validTypes.includes(type as 'Event' | 'Series' | 'market')) {
+		throw new ValidationError(`parent entity type must be one of: ${validTypes.join(', ')}`, {
+			type,
+			validTypes
+		});
+	}
+
+	return type as 'Event' | 'Series' | 'market';
+}
+
+/**
+ * Validates parent entity ID (non-negative integer)
+ */
+export function validateParentEntityId(id: unknown): number {
+	if (typeof id !== 'number' && typeof id !== 'string') {
+		throw new ValidationError('parent entity ID must be a number or string', { id });
+	}
+
+	const parsed = typeof id === 'string' ? parseInt(id, 10) : id;
+
+	if (!Number.isInteger(parsed) || parsed < 0) {
+		throw new ValidationError('parent entity ID must be a non-negative integer', { id, parsed });
+	}
+
+	return parsed;
+}
+
+/**
+ * Validates an order string (comma-separated field names)
+ */
+export function validateOrderString(order: unknown): string {
+	if (typeof order !== 'string') {
+		throw new ValidationError('order must be a string', { order });
+	}
+
+	if (order.trim().length === 0) {
+		throw new ValidationError('order cannot be empty', { order });
+	}
+
+	// Validate format: comma-separated field names
+	const fields = order.split(',').map((f) => f.trim());
+	for (const field of fields) {
+		if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field)) {
+			throw new ValidationError(`invalid field name in order: ${field}`, { order, field });
+		}
+	}
+
+	return order;
+}
+
+/**
+ * Validates query parameters for the comments list endpoint
+ */
+export function validateCommentsQueryParams(
+	params: Record<string, string | number | boolean>
+): Record<string, string | number | boolean> {
+	const validated: Record<string, string | number | boolean> = {};
+
+	for (const [key, value] of Object.entries(params)) {
+		switch (key) {
+			case 'limit':
+			case 'offset':
+			case 'parent_entity_id':
+				validated[key] = validateNonNegativeNumber(value, key);
+				break;
+			case 'ascending':
+			case 'get_positions':
+			case 'holders_only':
+				validated[key] = validateBoolean(value, key);
+				break;
+			case 'order':
+				validated[key] = validateOrderString(value);
+				break;
+			case 'parent_entity_type':
+				validated[key] = validateParentEntityType(value);
+				break;
+			default:
+				validated[key] = value;
+		}
+	}
+
+	return validated;
+}
+
+/**
+ * Validates query parameters for the comments by user endpoint
+ */
+export function validateUserCommentsQueryParams(
+	params: Record<string, string | number | boolean>
+): Record<string, string | number | boolean> {
+	const validated: Record<string, string | number | boolean> = {};
+
+	for (const [key, value] of Object.entries(params)) {
+		switch (key) {
+			case 'limit':
+			case 'offset':
+				validated[key] = validateNonNegativeNumber(value, key);
+				break;
+			case 'ascending':
+				validated[key] = validateBoolean(value, key);
+				break;
+			case 'order':
+				validated[key] = validateOrderString(value);
+				break;
+			default:
+				validated[key] = value;
+		}
+	}
+
+	return validated;
+}
