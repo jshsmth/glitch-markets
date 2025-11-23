@@ -1,51 +1,26 @@
-## Polymarket API Reference
+# Claude Code Instructions for Glitch Markets
 
-When working with Polymarket APIs, refer to `.claude/polymarket-api-reference.md` for:
+## Project Overview
 
-- Complete endpoint documentation for all implemented APIs
-- Request/response formats
-- Query parameters and validation rules
-- Error handling patterns
-- Common use cases and examples
+Glitch Markets is a modern prediction market platform built with SvelteKit and TypeScript. The platform provides an alternative interface for Polymarket data with a focus on speed, usability, and advanced features.
 
-**Quick Reference**:
+## Key Documentation
 
-- Markets API: `/api/markets`
-- Events API: `/api/events`
-- Series API: `/api/series`
-- Users API: `/api/users/*`
-- Tags API: `/api/tags`
-- Comments API: `/api/comments`
+For comprehensive technical documentation, see [.claude/TECHNICAL.md](.claude/TECHNICAL.md).
 
-All endpoints implement caching, validation, and error handling. See the reference doc for full details.
+This includes:
+- Quick start guide
+- Tech stack and architecture
+- Development workflows
+- Testing guidelines
+- Configuration and deployment
+- API documentation
+- Security best practices
+- Roadmap and contributing guidelines
 
----
+## API Reference
 
-## Svelte MCP Server
-
-You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
-
-## Available MCP Tools:
-
-### 1. list-sections
-
-Use this FIRST to discover all available documentation sections. Returns a structured list with titles, use_cases, and paths.
-When asked about Svelte or SvelteKit topics, ALWAYS use this tool at the start of the chat to find relevant sections.
-
-### 2. get-documentation
-
-Retrieves full documentation content for specific sections. Accepts single or multiple sections.
-After calling the list-sections tool, you MUST analyze the returned documentation sections (especially the use_cases field) and then use the get-documentation tool to fetch ALL documentation sections that are relevant for the user's task.
-
-### 3. svelte-autofixer
-
-Analyzes Svelte code and returns issues and suggestions.
-You MUST use this tool whenever writing Svelte code before sending it to the user. Keep calling it until no issues or suggestions are returned.
-
-### 4. playground-link
-
-Generates a Svelte Playground link with the provided code.
-After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
+For complete Polymarket API endpoint documentation, see [.claude/polymarket-api-reference.md](.claude/polymarket-api-reference.md).
 
 ## Mode Selection
 
@@ -141,6 +116,34 @@ When the user selects Vibe Mode, proceed with normal Claude Code behavior:
 - Ask clarifying questions as needed during implementation
 - Focus on getting working code quickly
 - No formal documentation phases required
+
+---
+
+## Svelte MCP Server
+
+You have access to the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
+
+### Available MCP Tools:
+
+#### 1. list-sections
+
+Use this FIRST to discover all available documentation sections. Returns a structured list with titles, use_cases, and paths.
+When asked about Svelte or SvelteKit topics, ALWAYS use this tool at the start of the chat to find relevant sections.
+
+#### 2. get-documentation
+
+Retrieves full documentation content for specific sections. Accepts single or multiple sections.
+After calling the list-sections tool, you MUST analyze the returned documentation sections (especially the use_cases field) and then use the get-documentation tool to fetch ALL documentation sections that are relevant for the user's task.
+
+#### 3. svelte-autofixer
+
+Analyzes Svelte code and returns issues and suggestions.
+You MUST use this tool whenever writing Svelte code before sending it to the user. Keep calling it until no issues or suggestions are returned.
+
+#### 4. playground-link
+
+Generates a Svelte Playground link with the provided code.
+After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
 
 ---
 
