@@ -324,7 +324,9 @@ describe('EventService', () => {
 									nextValue = next.liquidity ?? 0;
 									break;
 								case 'createdAt':
-									currentValue = current.creationDate ? new Date(current.creationDate).getTime() : 0;
+									currentValue = current.creationDate
+										? new Date(current.creationDate).getTime()
+										: 0;
 									nextValue = next.creationDate ? new Date(next.creationDate).getTime() : 0;
 									break;
 							}

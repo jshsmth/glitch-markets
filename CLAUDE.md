@@ -1,6 +1,7 @@
 ## Polymarket API Reference
 
 When working with Polymarket APIs, refer to `.claude/polymarket-api-reference.md` for:
+
 - Complete endpoint documentation for all implemented APIs
 - Request/response formats
 - Query parameters and validation rules
@@ -8,6 +9,7 @@ When working with Polymarket APIs, refer to `.claude/polymarket-api-reference.md
 - Common use cases and examples
 
 **Quick Reference**:
+
 - Markets API: `/api/markets`
 - Events API: `/api/events`
 - Series API: `/api/series`

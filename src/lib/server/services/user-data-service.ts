@@ -174,7 +174,8 @@ export class UserDataService {
 			const marketSet = new Set(markets.map((m) => m.toLowerCase()));
 			filtered = filtered.filter(
 				(trade) =>
-					marketSet.has(trade.conditionId.toLowerCase()) || marketSet.has(trade.slug?.toLowerCase() ?? "")
+					marketSet.has(trade.conditionId.toLowerCase()) ||
+					marketSet.has(trade.slug?.toLowerCase() ?? '')
 			);
 		}
 

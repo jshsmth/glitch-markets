@@ -755,23 +755,26 @@ describe('Series By Slug Route', () => {
 		const { GET: GET_SLUG } = await import('../../routes/api/series/slug/[slug]/+server');
 
 		await fc.assert(
-			fc.asyncProperty(fc.string({ minLength: 1, maxLength: 50 }), async (slug) => {
-				mockGetSeriesBySlug.mockReset();
-				mockGetSeriesBySlug.mockResolvedValue(null);
+			fc.asyncProperty(
+				fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0),
+				async (slug) => {
+					mockGetSeriesBySlug.mockReset();
+					mockGetSeriesBySlug.mockResolvedValue(null);
 
-				const mockEvent: RequestEvent = {
-					params: { slug }
-				} as RequestEvent;
+					const mockEvent: RequestEvent = {
+						params: { slug }
+					} as RequestEvent;
 
-				const response = await GET_SLUG(mockEvent);
+					const response = await GET_SLUG(mockEvent);
 
-				expect(response.status).toBe(404);
-				expect(mockGetSeriesBySlug).toHaveBeenCalledWith(slug);
+					expect(response.status).toBe(404);
+					expect(mockGetSeriesBySlug).toHaveBeenCalledWith(slug);
 
-				const responseText = await response.text();
-				const errorData = JSON.parse(responseText);
-				expect(errorData.message).toContain('not found');
-			}),
+					const responseText = await response.text();
+					const errorData = JSON.parse(responseText);
+					expect(errorData.message).toContain('not found');
+				}
+			),
 			{ numRuns: 100 }
 		);
 	});

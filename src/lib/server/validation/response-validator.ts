@@ -1480,11 +1480,7 @@ export function validateCommentProfile(data: unknown): CommentProfile {
 	}
 
 	// Validate nullable boolean fields
-	if (
-		profile.isMod !== null &&
-		profile.isMod !== undefined &&
-		typeof profile.isMod !== 'boolean'
-	) {
+	if (profile.isMod !== null && profile.isMod !== undefined && typeof profile.isMod !== 'boolean') {
 		throw new ValidationError('CommentProfile isMod must be a boolean or null', {
 			profile,
 			field: 'isMod'
@@ -1505,10 +1501,7 @@ export function validateCommentProfile(data: unknown): CommentProfile {
 	const isCreator = profile.isCreator ?? null;
 
 	// Validate nullable profileImageOptimized (optional)
-	if (
-		profile.profileImageOptimized !== null &&
-		profile.profileImageOptimized !== undefined
-	) {
+	if (profile.profileImageOptimized !== null && profile.profileImageOptimized !== undefined) {
 		validateCommentImageOptimized(profile.profileImageOptimized);
 	}
 
@@ -1563,7 +1556,10 @@ export function validateReaction(data: unknown, index?: number): Reaction {
 	} else if (typeof reaction.id === 'number') {
 		id = reaction.id;
 	} else {
-		throw new ValidationError('Reaction id must be a number or numeric string', { reaction, index });
+		throw new ValidationError('Reaction id must be a number or numeric string', {
+			reaction,
+			index
+		});
 	}
 
 	// Convert string commentID to number if needed

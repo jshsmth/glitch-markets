@@ -54,7 +54,6 @@ import {
 	validateClosedPositions,
 	validateSeries,
 	validateSeriesList,
-	validateComment,
 	validateComments
 } from '../validation/response-validator.js';
 
