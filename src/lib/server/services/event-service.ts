@@ -247,6 +247,66 @@ export class EventService {
 	}
 
 	/**
+	 * Fetches tags associated with a specific event
+	 * Results are cached to improve performance
+	 *
+	 * @param id - The unique event ID
+	 * @returns Promise resolving to an array of tags, or null if event not found
+	 * @throws {ApiError} When the API request fails
+	 * @throws {ValidationError} When the ID is invalid
+	 *
+	 * @example
+	 * ```typescript
+	 * const tags = await service.getEventTags('event-123');
+	 * if (tags) {
+	 *   console.log(tags.map(t => t.label));
+	 * }
+	 * ```
+	 */
+	async getEventTags(id: string): Promise<import('../api/polymarket-client.js').Tag[] | null> {
+		const cacheKey = `event:tags:${id}`;
+
+		const cached = this.cache.get<import('../api/polymarket-client.js').Tag[]>(cacheKey);
+		if (cached) {
+			this.logger.info('Cache hit for event tags', { id });
+			return cached;
+		}
+
+		if (this.pendingRequests.has(cacheKey)) {
+			this.logger.info('Request already in-flight, waiting for result', { id });
+			return this.pendingRequests.get(cacheKey)!;
+		}
+
+		this.logger.info('Cache miss for event tags, fetching from API', { id });
+
+		const fetchPromise = (async () => {
+			try {
+				const tags = await this.client.fetchEventTags(id);
+				this.cache.set(cacheKey, tags, this.cacheTtl);
+				return tags;
+			} catch (error) {
+				if (
+					error &&
+					typeof error === 'object' &&
+					'statusCode' in error &&
+					error.statusCode === 404
+				) {
+					return null;
+				}
+				throw error;
+			}
+		})();
+
+		this.pendingRequests.set(cacheKey, fetchPromise);
+
+		try {
+			return await fetchPromise;
+		} finally {
+			this.pendingRequests.delete(cacheKey);
+		}
+	}
+
+	/**
 	 * Searches events with text query, filtering, and sorting
 	 * Performs case-insensitive partial text matching on event titles
 	 *
