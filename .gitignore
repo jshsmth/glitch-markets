@@ -24,3 +24,6 @@ vite.config.ts.timestamp-*
 
 # Test reports
 /reports
+
+# Documentation
+/docs

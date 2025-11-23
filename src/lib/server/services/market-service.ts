@@ -247,6 +247,66 @@ export class MarketService {
 	}
 
 	/**
+	 * Fetches tags associated with a specific market
+	 * Results are cached to improve performance
+	 *
+	 * @param id - The unique market ID
+	 * @returns Promise resolving to an array of tags, or null if market not found
+	 * @throws {ApiError} When the API request fails
+	 * @throws {ValidationError} When the ID is invalid
+	 *
+	 * @example
+	 * ```typescript
+	 * const tags = await service.getMarketTags('12');
+	 * if (tags) {
+	 *   console.log(tags.map(t => t.label));
+	 * }
+	 * ```
+	 */
+	async getMarketTags(id: string): Promise<import('../api/polymarket-client.js').Tag[] | null> {
+		const cacheKey = `market:tags:${id}`;
+
+		const cached = this.cache.get<import('../api/polymarket-client.js').Tag[]>(cacheKey);
+		if (cached) {
+			this.logger.info('Cache hit for market tags', { id });
+			return cached;
+		}
+
+		if (this.pendingRequests.has(cacheKey)) {
+			this.logger.info('Request already in-flight, waiting for result', { id });
+			return this.pendingRequests.get(cacheKey)!;
+		}
+
+		this.logger.info('Cache miss for market tags, fetching from API', { id });
+
+		const fetchPromise = (async () => {
+			try {
+				const tags = await this.client.fetchMarketTags(id);
+				this.cache.set(cacheKey, tags, this.cacheTtl);
+				return tags;
+			} catch (error) {
+				if (
+					error &&
+					typeof error === 'object' &&
+					'statusCode' in error &&
+					error.statusCode === 404
+				) {
+					return null;
+				}
+				throw error;
+			}
+		})();
+
+		this.pendingRequests.set(cacheKey, fetchPromise);
+
+		try {
+			return await fetchPromise;
+		} finally {
+			this.pendingRequests.delete(cacheKey);
+		}
+	}
+
+	/**
 	 * Searches markets with text query, filtering, and sorting
 	 * Performs case-insensitive partial text matching on market questions
 	 *
