@@ -9,6 +9,7 @@ Glitch Markets is a modern prediction market platform built with SvelteKit and T
 For comprehensive technical documentation, see [.claude/TECHNICAL.md](.claude/TECHNICAL.md).
 
 This includes:
+
 - Quick start guide
 - Tech stack and architecture
 - Development workflows
@@ -21,6 +22,86 @@ This includes:
 ## API Reference
 
 For complete Polymarket API endpoint documentation, see [.claude/polymarket-api-reference.md](.claude/polymarket-api-reference.md).
+
+## Design System
+
+**IMPORTANT**: Always use the established design system when building frontend components.
+
+For complete design system documentation, see [.claude/BRAND_COLORS.md](.claude/BRAND_COLORS.md).
+
+### Color Usage
+
+#### CSS Variables (Always Use These)
+
+**Backgrounds** (for cards, panels, elevation):
+
+- `var(--bg-0)` - Main background
+- `var(--bg-1)` - Cards/panels
+- `var(--bg-2)` - Elevated cards
+- `var(--bg-3)` - Hover states
+- `var(--bg-4)` - Borders
+
+**Text** (for hierarchy):
+
+- `var(--text-0)` - Primary text
+- `var(--text-1)` - Secondary text
+- `var(--text-2)` - Tertiary text
+- `var(--text-3)` - Muted text
+- `var(--text-4)` - Disabled text
+
+**Brand Color** (for CTAs and actions):
+
+- `var(--primary)` - Primary actions (#00d9ff Electric Cyan)
+- `var(--primary-hover)` - Hover states
+- `var(--primary-active)` - Active states
+
+**Trading Indicators** (ONLY for market data):
+
+- `var(--success)` - Profit/gains (green)
+- `var(--warning)` - Neutral (amber)
+- `var(--danger)` - Loss/risk (red)
+
+### Component Styling Guidelines
+
+1. **NEVER use hard-coded colors** - Always use CSS variables
+2. **Test both themes** - Verify components work in light and dark modes
+3. **Use color-test page** - Visit `/color-test` to see all available colors
+4. **Follow hierarchy** - Use background and text shades for elevation and importance
+5. **Reserve primary color** - Only use `var(--primary)` for CTAs and key actions
+6. **Trading colors** - Only use success/danger for actual market data, not UI chrome
+
+### Example Component
+
+```svelte
+<style>
+	.card {
+		background-color: var(--bg-1);
+		border: 1px solid var(--bg-4);
+		color: var(--text-0);
+	}
+
+	.card-title {
+		color: var(--text-0);
+	}
+
+	.card-description {
+		color: var(--text-2);
+	}
+
+	.primary-button {
+		background-color: var(--primary);
+		color: #111111;
+	}
+
+	.primary-button:hover {
+		background-color: var(--primary-hover);
+	}
+
+	.profit {
+		color: var(--success); /* Only for actual market data */
+	}
+</style>
+```
 
 ## Mode Selection
 

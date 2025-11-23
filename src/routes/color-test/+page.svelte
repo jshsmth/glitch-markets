@@ -163,8 +163,8 @@
 			<div class="example-group">
 				<h3>Links</h3>
 				<p>
-					This is a paragraph with <a href="#test">a link</a> that uses the primary color and
-					changes on hover.
+					This is a paragraph with <a href="#test">a link</a> that uses the primary color and changes
+					on hover.
 				</p>
 			</div>
 		</div>
@@ -259,7 +259,6 @@
 	.primary-900 .primary-text {
 		color: #ffffff;
 	}
-
 
 	/* Background variants */
 	.bg-0 {

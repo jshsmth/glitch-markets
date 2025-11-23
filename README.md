@@ -5,9 +5,10 @@
     <img src="src/lib/assets/logo-dark.svg" alt="Glitch Markets" height="60">
   </picture>
 
-  #
+#
 
-  **Experience the infinite money glitch.**
+**Experience the infinite money glitch.**
+
 </div>
 
 Glitch Markets is a modern prediction market platform that makes it easy to profit from your knowledge. Trade on real-world events across politics, sports, crypto, and culture with a sleek, simple interface anyone can use.
@@ -62,21 +63,25 @@ Glitch Markets aims to democratize access to prediction markets by:
 ## Why Glitch Markets?
 
 **Actually Simple**
+
 - Clean interface that makes sense
 - No crypto wallet complexity
 - Browse like TikTok, trade like a pro
 
 **See Everything**
+
 - What's trending right now
 - What the community thinks
 - Your wins and losses—all in one place
 
 **Secure by Default**
+
 - No passwords to remember or lose
 - Your fingerprint is your login
 - Built to keep your money safe
 
 **Actually Fast**
+
 - Instant page loads
 - Real-time price updates
 - Never miss a move

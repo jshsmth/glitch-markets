@@ -261,13 +261,13 @@ POLYMARKET_CACHE_TTL="60"
 POLYMARKET_CACHE_ENABLED="true"
 ```
 
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| `DATABASE_URL` | string | *required* | PostgreSQL connection string |
-| `POLYMARKET_API_URL` | string | `https://gamma-api.polymarket.com` | Polymarket API base URL |
-| `POLYMARKET_API_TIMEOUT` | number | `10000` | Request timeout (milliseconds) |
-| `POLYMARKET_CACHE_TTL` | number | `60` | Cache TTL (seconds) |
-| `POLYMARKET_CACHE_ENABLED` | boolean | `true` | Enable/disable caching |
+| Variable                   | Type    | Default                            | Description                    |
+| -------------------------- | ------- | ---------------------------------- | ------------------------------ |
+| `DATABASE_URL`             | string  | _required_                         | PostgreSQL connection string   |
+| `POLYMARKET_API_URL`       | string  | `https://gamma-api.polymarket.com` | Polymarket API base URL        |
+| `POLYMARKET_API_TIMEOUT`   | number  | `10000`                            | Request timeout (milliseconds) |
+| `POLYMARKET_CACHE_TTL`     | number  | `60`                               | Cache TTL (seconds)            |
+| `POLYMARKET_CACHE_ENABLED` | boolean | `true`                             | Enable/disable caching         |
 
 ### Caching Strategy
 
@@ -331,20 +331,20 @@ See [polymarket-api-reference.md](./polymarket-api-reference.md) for complete AP
 
 ### Quick Reference
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/markets` | List all markets with filtering |
-| `GET /api/markets/[id]` | Get specific market by ID |
-| `GET /api/markets/slug/[slug]` | Get market by slug |
-| `GET /api/events` | List all events |
-| `GET /api/events/[id]` | Get specific event |
-| `GET /api/series` | List market series |
-| `GET /api/tags` | List all category tags |
-| `GET /api/search` | Global search across markets, events, and profiles |
-| `GET /api/comments` | Get market comments |
-| `GET /api/users/positions` | Get user positions |
-| `GET /api/users/trades` | Get user trade history |
-| `GET /api/users/activity` | Get user activity |
+| Endpoint                       | Description                                        |
+| ------------------------------ | -------------------------------------------------- |
+| `GET /api/markets`             | List all markets with filtering                    |
+| `GET /api/markets/[id]`        | Get specific market by ID                          |
+| `GET /api/markets/slug/[slug]` | Get market by slug                                 |
+| `GET /api/events`              | List all events                                    |
+| `GET /api/events/[id]`         | Get specific event                                 |
+| `GET /api/series`              | List market series                                 |
+| `GET /api/tags`                | List all category tags                             |
+| `GET /api/search`              | Global search across markets, events, and profiles |
+| `GET /api/comments`            | Get market comments                                |
+| `GET /api/users/positions`     | Get user positions                                 |
+| `GET /api/users/trades`        | Get user trade history                             |
+| `GET /api/users/activity`      | Get user activity                                  |
 
 ### Rate Limiting
 
@@ -383,12 +383,14 @@ Glitch Markets takes security seriously. See [SECURITY_AUDIT_REPORT.md](../SECUR
 ### Before Making Repository Public
 
 1. **Remove `.env` from git tracking**:
+
    ```bash
    git rm --cached .env
    git commit -m "Remove .env from version control"
    ```
 
 2. **Check git history for secrets**:
+
    ```bash
    git log --all --full-history -- .env
    ```
@@ -462,6 +464,7 @@ type(scope): description
 ```
 
 Types:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -471,6 +474,7 @@ Types:
 - `chore`: Maintenance tasks
 
 Example:
+
 ```
 feat(auth): add passkey authentication
 

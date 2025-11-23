@@ -9,93 +9,93 @@
  */
 
 :root {
-  /* ============================================
+	/* ============================================
      LIGHT THEME (default)
      ============================================ */
 
-  /* Backgrounds - cyan-tinted whites */
-  --bg-0: #fcfeff;   /* almost white with tiny cyan tint */
-  --bg-1: #f8fcfd;
-  --bg-2: #f0f9fb;
-  --bg-3: #e8f6f9;
-  --bg-4: #d8f0f5;
+	/* Backgrounds - cyan-tinted whites */
+	--bg-0: #fcfeff; /* almost white with tiny cyan tint */
+	--bg-1: #f8fcfd;
+	--bg-2: #f0f9fb;
+	--bg-3: #e8f6f9;
+	--bg-4: #d8f0f5;
 
-  /* Text - cyan-tinted blacks */
-  --text-0: #111314;  /* almost black with tiny cyan tint */
-  --text-1: #1a1e1f;
-  --text-2: #2a3133;
-  --text-3: #3a4447;
-  --text-4: #5a6c70;
+	/* Text - cyan-tinted blacks */
+	--text-0: #111314; /* almost black with tiny cyan tint */
+	--text-1: #1a1e1f;
+	--text-2: #2a3133;
+	--text-3: #3a4447;
+	--text-4: #5a6c70;
 
-  /* Primary Brand Color - Electric Cyan */
-  --primary-50:  #e6f9ff;
-  --primary-100: #ccf3ff;
-  --primary-200: #99e7ff;
-  --primary-300: #66dbff;
-  --primary-400: #33cfff;
-  --primary-500: #00d9ff;  /* Main brand color */
-  --primary-600: #00aed9;
-  --primary-700: #0083a3;
-  --primary-800: #00586d;
-  --primary-900: #002d36;
+	/* Primary Brand Color - Electric Cyan */
+	--primary-50: #e6f9ff;
+	--primary-100: #ccf3ff;
+	--primary-200: #99e7ff;
+	--primary-300: #66dbff;
+	--primary-400: #33cfff;
+	--primary-500: #00d9ff; /* Main brand color */
+	--primary-600: #00aed9;
+	--primary-700: #0083a3;
+	--primary-800: #00586d;
+	--primary-900: #002d36;
 
-  /* Convenient aliases */
-  --primary: var(--primary-500);
-  --primary-hover: var(--primary-600);
-  --primary-active: var(--primary-700);
+	/* Convenient aliases */
+	--primary: var(--primary-500);
+	--primary-hover: var(--primary-600);
+	--primary-active: var(--primary-700);
 
-  /* Trading Indicators */
-  --success: #00ff88;   /* profit/gains */
-  --warning: #ffb800;   /* caution/neutral */
-  --danger: #ff3366;    /* loss/risk */
+	/* Trading Indicators */
+	--success: #00ff88; /* profit/gains */
+	--warning: #ffb800; /* caution/neutral */
+	--danger: #ff3366; /* loss/risk */
 
-  /* Logo Colors */
-  --logo: #111111;      /* dark logo for light theme */
+	/* Logo Colors */
+	--logo: #111111; /* dark logo for light theme */
 }
 
-[data-theme="dark"] {
-  /* ============================================
+[data-theme='dark'] {
+	/* ============================================
      DARK THEME
      ============================================ */
 
-  /* Backgrounds - cyan-tinted blacks */
-  --bg-0: #0d1214;   /* almost black with tiny cyan tint */
-  --bg-1: #131719;
-  --bg-2: #1a2023;
-  --bg-3: #212a2e;
-  --bg-4: #2a3539;
+	/* Backgrounds - cyan-tinted blacks */
+	--bg-0: #0d1214; /* almost black with tiny cyan tint */
+	--bg-1: #131719;
+	--bg-2: #1a2023;
+	--bg-3: #212a2e;
+	--bg-4: #2a3539;
 
-  /* Text - cyan-tinted whites */
-  --text-0: #fcfeff;  /* almost white with tiny cyan tint */
-  --text-1: #f0f7f9;
-  --text-2: #d8eef3;
-  --text-3: #c0e5ed;
-  --text-4: #a8dce7;
+	/* Text - cyan-tinted whites */
+	--text-0: #fcfeff; /* almost white with tiny cyan tint */
+	--text-1: #f0f7f9;
+	--text-2: #d8eef3;
+	--text-3: #c0e5ed;
+	--text-4: #a8dce7;
 
-  /* Primary Brand Color - Electric Cyan (adjusted for dark) */
-  --primary-50:  #002d36;
-  --primary-100: #00586d;
-  --primary-200: #0083a3;
-  --primary-300: #00aed9;
-  --primary-400: #00c4f0;
-  --primary-500: #00d9ff;  /* Main brand color */
-  --primary-600: #33dfff;
-  --primary-700: #66e5ff;
-  --primary-800: #99ebff;
-  --primary-900: #ccf3ff;
+	/* Primary Brand Color - Electric Cyan (adjusted for dark) */
+	--primary-50: #002d36;
+	--primary-100: #00586d;
+	--primary-200: #0083a3;
+	--primary-300: #00aed9;
+	--primary-400: #00c4f0;
+	--primary-500: #00d9ff; /* Main brand color */
+	--primary-600: #33dfff;
+	--primary-700: #66e5ff;
+	--primary-800: #99ebff;
+	--primary-900: #ccf3ff;
 
-  /* Convenient aliases */
-  --primary: var(--primary-500);
-  --primary-hover: var(--primary-600);
-  --primary-active: var(--primary-700);
+	/* Convenient aliases */
+	--primary: var(--primary-500);
+	--primary-hover: var(--primary-600);
+	--primary-active: var(--primary-700);
 
-  /* Trading Indicators (slightly brighter for dark theme) */
-  --success: #00ff88;
-  --warning: #ffc233;
-  --danger: #ff4477;
+	/* Trading Indicators (slightly brighter for dark theme) */
+	--success: #00ff88;
+	--warning: #ffc233;
+	--danger: #ff4477;
 
-  /* Logo Colors */
-  --logo: #fcfcfc;   /* light logo for dark theme */
+	/* Logo Colors */
+	--logo: #fcfcfc; /* light logo for dark theme */
 }
 
 /* ============================================
@@ -103,41 +103,41 @@
    ============================================ */
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    /* Backgrounds - cyan-tinted blacks */
-    --bg-0: #0d1214;
-    --bg-1: #131719;
-    --bg-2: #1a2023;
-    --bg-3: #212a2e;
-    --bg-4: #2a3539;
+	:root:not([data-theme='light']) {
+		/* Backgrounds - cyan-tinted blacks */
+		--bg-0: #0d1214;
+		--bg-1: #131719;
+		--bg-2: #1a2023;
+		--bg-3: #212a2e;
+		--bg-4: #2a3539;
 
-    /* Text - cyan-tinted whites */
-    --text-0: #fcfeff;
-    --text-1: #f0f7f9;
-    --text-2: #d8eef3;
-    --text-3: #c0e5ed;
-    --text-4: #a8dce7;
+		/* Text - cyan-tinted whites */
+		--text-0: #fcfeff;
+		--text-1: #f0f7f9;
+		--text-2: #d8eef3;
+		--text-3: #c0e5ed;
+		--text-4: #a8dce7;
 
-    /* Primary Brand Color - Electric Cyan (adjusted for dark) */
-    --primary-50:  #002d36;
-    --primary-100: #00586d;
-    --primary-200: #0083a3;
-    --primary-300: #00aed9;
-    --primary-400: #00c4f0;
-    --primary-500: #00d9ff;
-    --primary-600: #33dfff;
-    --primary-700: #66e5ff;
-    --primary-800: #99ebff;
-    --primary-900: #ccf3ff;
+		/* Primary Brand Color - Electric Cyan (adjusted for dark) */
+		--primary-50: #002d36;
+		--primary-100: #00586d;
+		--primary-200: #0083a3;
+		--primary-300: #00aed9;
+		--primary-400: #00c4f0;
+		--primary-500: #00d9ff;
+		--primary-600: #33dfff;
+		--primary-700: #66e5ff;
+		--primary-800: #99ebff;
+		--primary-900: #ccf3ff;
 
-    /* Trading Indicators */
-    --success: #00ff88;
-    --warning: #ffc233;
-    --danger: #ff4477;
+		/* Trading Indicators */
+		--success: #00ff88;
+		--warning: #ffc233;
+		--danger: #ff4477;
 
-    /* Logo */
-    --logo: #fcfcfc;
-  }
+		/* Logo */
+		--logo: #fcfcfc;
+	}
 }
 
 /* ============================================
