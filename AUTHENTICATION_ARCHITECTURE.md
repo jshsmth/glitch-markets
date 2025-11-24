@@ -1,10 +1,15 @@
 # Authentication System Architecture
 
 **Project**: Glitch Markets
-**Last Updated**: 2025-11-24
+**Last Updated**: 2025-11-25
 **Approach**: Simplified Polymarket Integration
 
 This document describes the authentication system integrating Dynamic Wallet SDK with Polymarket CLOB API authentication.
+
+> **⚠️ Important Update (2025-11-25):**
+> - Added `@dynamic-labs-sdk/evm` package requirement (needed for Viem wallet client)
+> - Fixed JWKS endpoint URL to include environment ID: `https://app.dynamic.xyz/api/v0/sdk/${ENV_ID}/.well-known/jwks`
+> - All code examples updated with correct implementation details
 
 ---
 
@@ -282,13 +287,19 @@ The authentication system uses Dynamic.xyz for user authentication and embedded 
 
 ```bash
 # Client-side
-npm install @dynamic-labs-sdk/client
+npm install @dynamic-labs-sdk/client @dynamic-labs-sdk/evm
 
-# Server-side (NO node-evm package needed!)
+# Server-side JWT verification (NO node-evm package needed!)
 npm install jose
 
 # Already have viem for wallet client operations
 ```
+
+**Packages explained:**
+- `@dynamic-labs-sdk/client` - Main SDK for authentication, user management, wallet accounts
+- `@dynamic-labs-sdk/evm` - Viem wallet client integration (provides `createWalletClientForWalletAccount`)
+- `jose` - Modern JWT verification library (alternative to jsonwebtoken + jwks-rsa)
+- `viem` - Already installed for blockchain operations
 
 ### 2. Frontend Setup
 
@@ -332,8 +343,9 @@ Create Dynamic provider wrapper in `src/routes/+layout.svelte`:
 import { jwtVerify, createRemoteJWKSet } from 'jose';
 
 // Create JWKS client that automatically fetches and caches public keys
+// IMPORTANT: Replace ${DYNAMIC_ENVIRONMENT_ID} with your actual environment ID
 const JWKS = createRemoteJWKSet(
-  new URL('https://app.dynamic.xyz/.well-known/jwks')
+  new URL(`https://app.dynamic.xyz/api/v0/sdk/${process.env.DYNAMIC_ENVIRONMENT_ID}/.well-known/jwks`)
 );
 
 export async function handle({ event, resolve }) {
@@ -1018,9 +1030,10 @@ async function validateCredentials(userId: string): Promise<boolean> {
 ### Phase 1: Setup
 
 - [ ] Install Dynamic client SDK: `@dynamic-labs-sdk/client`
+- [ ] Install Dynamic EVM extensions: `@dynamic-labs-sdk/evm`
 - [ ] Install JWT library: `jose`
 - [ ] Create Dynamic account and get environment ID
-- [ ] Set up environment variables
+- [ ] Set up environment variables (including `DYNAMIC_ENVIRONMENT_ID`)
 - [ ] Enable embedded wallets in Dynamic dashboard
 - [ ] Enable "Create on Sign up" option
 - [ ] Configure supported networks (Polygon for Polymarket)
