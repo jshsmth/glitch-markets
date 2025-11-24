@@ -1,12 +1,20 @@
 /**
  * Server-side hooks for SvelteKit
- * Includes rate limiting to protect against abuse
+ * Includes rate limiting and JWT authentication
  */
 
 import type { Handle } from '@sveltejs/kit';
 import { Logger } from '$lib/server/utils/logger';
+import { jwtVerify, createRemoteJWKSet } from 'jose';
+import { DYNAMIC_ENVIRONMENT_ID } from '$env/static/private';
 
 const logger = new Logger({ component: 'ServerHooks' });
+
+// Create JWKS client for Dynamic JWT verification
+// This automatically fetches and caches public keys from Dynamic
+const JWKS = createRemoteJWKSet(
+	new URL(`https://app.dynamic.xyz/api/v0/sdk/${DYNAMIC_ENVIRONMENT_ID}/.well-known/jwks`)
+);
 
 // Rate limiting configuration
 interface RateLimitConfig {
@@ -113,10 +121,53 @@ function cleanupRateLimitStore(): void {
 setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
 
 /**
- * Main request handler with rate limiting
+ * Verify JWT token from Authorization header
+ * Extracts user info and stores in event.locals
+ */
+async function verifyJWT(request: Request): Promise<{
+	userId: string;
+	walletAddress: string;
+	email: string;
+} | null> {
+	const authHeader = request.headers.get('authorization');
+
+	if (!authHeader?.startsWith('Bearer ')) {
+		return null;
+	}
+
+	const token = authHeader.slice(7);
+
+	try {
+		// Verify JWT with Dynamic's public key
+		const { payload } = await jwtVerify(token, JWKS, {
+			algorithms: ['RS256']
+		});
+
+		return {
+			userId: payload.sub as string,
+			walletAddress: (payload.verified_credentials?.[0]?.address ||
+				payload.wallet_address) as string,
+			email: payload.email as string
+		};
+	} catch (error) {
+		logger.warn('JWT verification failed', { error });
+		return null;
+	}
+}
+
+/**
+ * Main request handler with rate limiting and JWT verification
  */
 export const handle: Handle = async ({ event, resolve }) => {
 	const { url, request } = event;
+
+	// Verify JWT for authentication endpoints
+	if (url.pathname.startsWith('/api/auth/') || url.pathname.startsWith('/api/polymarket/')) {
+		const user = await verifyJWT(request);
+		if (user) {
+			event.locals.user = user;
+		}
+	}
 
 	// Only rate limit API routes
 	if (url.pathname.startsWith('/api/')) {
@@ -143,5 +194,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const response = await resolve(event);
+
+	// Add security headers including CSP for Dynamic iframe and API
+	response.headers.set(
+		'Content-Security-Policy',
+		"default-src 'self'; " +
+			"script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+			"style-src 'self' 'unsafe-inline'; " +
+			"img-src 'self' data: https:; " +
+			"font-src 'self' data:; " +
+			"connect-src 'self' https://gamma-api.polymarket.com https://data-api.polymarket.com https://clob.polymarket.com https://app.dynamic.xyz https://app.dynamicauth.com wss://ws-subscriptions-clob.polymarket.com; " +
+			"frame-src 'self' https://app.dynamicauth.com; " +
+			"object-src 'none'; " +
+			"base-uri 'self';"
+	);
+
 	return response;
 };
