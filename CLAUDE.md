@@ -8,15 +8,16 @@ This is the main documentation hub for Claude Code. All detailed documentation l
 
 ### Core Documentation
 
-- **[Technical Guide](.claude/TECHNICAL.md)** - Tech stack, architecture, development workflows, testing, deployment
-- **[Development Modes](.claude/MODES.md)** - Spec Mode vs Vibe Mode workflows
-- **[Code Style Guide](.claude/CODE_STYLE.md)** - TypeScript, Svelte, CSS conventions and best practices
-- **[Design System](.claude/BRAND_COLORS.md)** - Color palette, CSS variables, component styling guidelines
+- **[Technical Guide](.claude/technical.md)** - Tech stack, architecture, development workflows, testing, deployment
+- **[Development Modes](.claude/modes.md)** - Spec Mode vs Vibe Mode workflows
+- **[Code Style Guide](.claude/code-style.md)** - TypeScript, Svelte, CSS conventions and best practices
+- **[Design System](.claude/brand-colors.md)** - Color palette, CSS variables, component styling guidelines
 
 ### API References
 
 - **[Polymarket API](.claude/polymarket-api-reference.md)** - Complete Polymarket API endpoint documentation
 - **[Porto SDK](.claude/porto-api-reference.md)** - Porto SDK integration guides
+- **[Dynamic Wallet](.claude/dynamic-wallet-reference.md)** - Dynamic.xyz wallet integration and authentication
 
 ---
 
@@ -31,15 +32,15 @@ Glitch Markets is a modern prediction market platform built with SvelteKit and T
 ### For New Features
 
 1. **Choose your mode**: Claude will ask if you want Spec Mode (structured planning) or Vibe Mode (rapid implementation)
-2. **Follow the workflow**: See [MODES.md](.claude/MODES.md) for details on each mode
-3. **Use the design system**: Always use CSS variables from [BRAND_COLORS.md](.claude/BRAND_COLORS.md)
-4. **Follow code style**: Check [CODE_STYLE.md](.claude/CODE_STYLE.md) for conventions
+2. **Follow the workflow**: See [modes.md](.claude/modes.md) for details on each mode
+3. **Use the design system**: Always use CSS variables from [brand-colors.md](.claude/brand-colors.md)
+4. **Follow code style**: Check [code-style.md](.claude/code-style.md) for conventions
 
 ### For Technical Questions
 
-- **Architecture & Setup**: See [TECHNICAL.md](.claude/TECHNICAL.md)
+- **Architecture & Setup**: See [technical.md](.claude/technical.md)
 - **API Integration**: See API reference docs in `.claude/`
-- **Code Patterns**: See [CODE_STYLE.md](.claude/CODE_STYLE.md)
+- **Code Patterns**: See [code-style.md](.claude/code-style.md)
 
 ---
 
@@ -80,20 +81,21 @@ You have access to the Svelte MCP server with comprehensive Svelte 5 and SvelteK
 
 ```
 .claude/
-├── TECHNICAL.md              # Tech stack, architecture, workflows
-├── MODES.md                  # Spec Mode & Vibe Mode documentation
-├── CODE_STYLE.md             # Code style guide and best practices
-├── BRAND_COLORS.md           # Design system and color palette
+├── technical.md              # Tech stack, architecture, workflows
+├── modes.md                  # Spec Mode & Vibe Mode documentation
+├── code-style.md             # Code style guide and best practices
+├── brand-colors.md           # Design system and color palette
 ├── polymarket-api-reference.md  # Polymarket API docs
-└── porto-api-reference.md    # Porto SDK docs
+├── porto-api-reference.md    # Porto SDK docs
+└── dynamic-wallet-reference.md # Dynamic.xyz wallet integration
 ```
 
 ---
 
 ## Need Help?
 
-- **Feature Planning**: See [MODES.md](.claude/MODES.md)
-- **Code Style Questions**: See [CODE_STYLE.md](.claude/CODE_STYLE.md)
-- **Design/Styling**: See [BRAND_COLORS.md](.claude/BRAND_COLORS.md)
-- **Architecture**: See [TECHNICAL.md](.claude/TECHNICAL.md)
+- **Feature Planning**: See [modes.md](.claude/modes.md)
+- **Code Style Questions**: See [code-style.md](.claude/code-style.md)
+- **Design/Styling**: See [brand-colors.md](.claude/brand-colors.md)
+- **Architecture**: See [technical.md](.claude/technical.md)
 - **API Integration**: See API reference docs in `.claude/`
