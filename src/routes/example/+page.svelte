@@ -4,13 +4,6 @@
 
 	const queryClient = useQueryClient();
 
-	/**
-	 * Example 1: Basic query with prefetched data
-	 *
-	 * CRITICAL: In v6, arguments to createQuery must be wrapped in a function for reactivity!
-	 * Note: No $ prefix needed - v6 uses runes, not stores
-	 * This query will use the prefetched data from +page.ts, preventing loading states.
-	 */
 	const marketsQuery = createQuery(() => ({
 		queryKey: queryKeys.markets.list({ limit: 10 }),
 		queryFn: async () => {
@@ -22,28 +15,6 @@
 		}
 	}));
 
-	/**
-	 * Example 2: Query with reactive parameter
-	 *
-	 * This demonstrates how to create a query that depends on reactive state.
-	 * Uncomment to see reactive queries in action.
-	 */
-	// let selectedMarketId = $state('some-market-id');
-	//
-	// const marketDetailQuery = createQuery(() => ({
-	//   queryKey: queryKeys.markets.detail(selectedMarketId),
-	//   queryFn: async () => {
-	//     const response = await fetch(`/api/markets/${selectedMarketId}`);
-	//     if (!response.ok) throw new Error('Failed to fetch market');
-	//     return response.json();
-	//   },
-	//   // Only run query if we have a valid ID
-	//   enabled: !!selectedMarketId
-	// }));
-
-	/**
-	 * Example 3: Manual cache invalidation
-	 */
 	function refreshMarkets() {
 		queryClient.invalidateQueries({ queryKey: queryKeys.markets.all });
 	}
@@ -53,7 +24,7 @@
 	<h1>TanStack Query Example</h1>
 
 	<section class="section">
-		<h2>Example 1: Basic Query with Prefetching</h2>
+		<h2>Basic Query with Prefetching</h2>
 
 		{#if marketsQuery.isPending}
 			<p class="loading">Loading markets...</p>
@@ -68,21 +39,19 @@
 			</div>
 		{/if}
 
-		<button onclick={refreshMarkets} class="refresh-btn">
-			Invalidate & Refetch Markets
-		</button>
+		<button onclick={refreshMarkets} class="refresh-btn"> Invalidate & Refetch Markets </button>
 	</section>
 
 	<section class="section">
 		<h2>Key Concepts</h2>
 		<ul class="concepts">
 			<li>
-				<strong>Prefetching:</strong> Data is fetched on the server in +page.ts before rendering,
-				preventing loading states
+				<strong>Prefetching:</strong> Data is fetched on the server in +page.ts before rendering, preventing
+				loading states
 			</li>
 			<li>
-				<strong>Cache:</strong> The QueryClient maintains a cache keyed by queryKey, preventing
-				duplicate requests
+				<strong>Cache:</strong> The QueryClient maintains a cache keyed by queryKey, preventing duplicate
+				requests
 			</li>
 			<li>
 				<strong>Reactivity:</strong> Query options must be wrapped in a function (() => ({'{ ... }'}))
@@ -135,7 +104,10 @@
 		max-width: 1200px;
 		margin: 0 auto;
 		padding: 2rem;
-		font-family: system-ui, -apple-system, sans-serif;
+		font-family:
+			system-ui,
+			-apple-system,
+			sans-serif;
 	}
 
 	h1 {

@@ -8,7 +8,6 @@
 
 	let { children, data } = $props();
 
-	// Use QueryClient from load function if available, otherwise create new one
 	const queryClient = data?.queryClient || createQueryClient();
 </script>
 

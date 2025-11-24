@@ -3,35 +3,23 @@ import { browser } from '$app/environment';
 
 /**
  * Creates a new QueryClient instance with SSR-safe defaults for SvelteKit.
- *
- * Key configurations:
- * - Queries are disabled on the server to prevent async execution after HTML is sent
- * - Sensible defaults for stale time, cache time, and retry logic
- * - Optimized for production use with minimal refetching
+ * Queries are disabled on the server to prevent async execution after HTML is sent.
  */
 export function createQueryClient(): QueryClient {
 	return new QueryClient({
 		defaultOptions: {
 			queries: {
-				// Disable queries on server to prevent SSR issues
 				enabled: browser,
-				// Data is considered fresh for 1 minute
 				staleTime: 60 * 1000,
-				// Unused data is garbage collected after 5 minutes
 				gcTime: 5 * 60 * 1000,
-				// Retry failed requests once
 				retry: 1,
-				// Don't refetch on window focus (can be noisy)
 				refetchOnWindowFocus: false
 			}
 		}
 	});
 }
 
-/**
- * Query key factories for consistent cache keys across the app.
- * Using factories ensures type safety and prevents typos.
- */
+/** Query key factories for consistent cache keys across the app. */
 export const queryKeys = {
 	markets: {
 		all: ['markets'] as const,
