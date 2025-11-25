@@ -5,6 +5,7 @@
 	 */
 	import AuthButton from '$lib/components/Auth/AuthButton.svelte';
 	import UserRegistration from '$lib/components/Auth/UserRegistration.svelte';
+	import WalletCreation from '$lib/components/Auth/WalletCreation.svelte';
 	import PolymarketAuth from '$lib/components/Auth/PolymarketAuth.svelte';
 	import { isAuthenticated, user, walletAccounts } from '$lib/stores/auth';
 </script>
@@ -64,6 +65,20 @@
 					status.
 				</p>
 				<UserRegistration />
+			</section>
+
+			<!-- Step 2.5: Create Embedded Wallet -->
+			<section class="test-section">
+				<div class="section-header">
+					<h2>Step 2.5: Create Embedded Wallet</h2>
+					<span class="status-badge info">○ Action Required</span>
+				</div>
+				<p class="description">
+					Create an embedded wallet for your account using Dynamic's WaaS (Wallet-as-a-Service) API.
+					This wallet will be used for Polymarket trading. The wallet is non-custodial and controlled
+					by you through MPC (Multi-Party Computation).
+				</p>
+				<WalletCreation chains={['EVM']} />
 			</section>
 
 			<!-- Step 3: Polymarket Authorization -->

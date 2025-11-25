@@ -166,7 +166,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const { url, request } = event;
 
 	// Verify JWT for authentication endpoints
-	if (url.pathname.startsWith('/api/auth/') || url.pathname.startsWith('/api/polymarket/')) {
+	if (
+		url.pathname.startsWith('/api/auth/') ||
+		url.pathname.startsWith('/api/polymarket/') ||
+		url.pathname.startsWith('/api/wallet/')
+	) {
 		const user = await verifyJWT(request);
 		if (user) {
 			event.locals.user = user;
