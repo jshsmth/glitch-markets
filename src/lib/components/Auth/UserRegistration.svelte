@@ -9,7 +9,8 @@
 	interface RegisteredUser {
 		userId: string;
 		email?: string;
-		walletAddress?: string;
+		serverWalletAddress?: string;
+		hasServerWallet?: boolean;
 	}
 
 	// Local state
@@ -18,7 +19,6 @@
 	let error = $state<string | null>(null);
 	let registeredUser = $state<RegisteredUser | null>(null);
 	let lastRegisteredUserId = $state<string | null>(null);
-	let hasCheckedWallet = $state(false);
 
 	/**
 	 * Register user in our database
@@ -59,62 +59,11 @@
 			isRegistered = true;
 			registeredUser = data.user;
 			console.log('User registered successfully:', data.user);
-
-			// Check if wallet address needs to be updated after registration
-			checkAndUpdateWallet();
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to register user';
 			console.error('User registration error:', err);
 		} finally {
 			isRegistering = false;
-		}
-	}
-
-	/**
-	 * Check if wallet address is available and update user record if needed
-	 * Called after registration to capture embedded wallet address
-	 */
-	async function checkAndUpdateWallet() {
-		if (!$dynamicClient || hasCheckedWallet) {
-			return;
-		}
-
-		// Wait a bit for Dynamic to fully initialize the wallet
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-
-		try {
-			// Get wallet address from user's verified credentials
-			const user = $dynamicClient.user;
-			const verifiedCredentials = user?.verifiedCredentials;
-
-			if (verifiedCredentials && verifiedCredentials.length > 0) {
-				const walletAddress = verifiedCredentials[0].address;
-
-				// Only update if we don't already have a wallet address
-				if (walletAddress && registeredUser?.walletAddress !== walletAddress) {
-					const response = await fetch('/api/auth/update-wallet', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							Authorization: `Bearer ${$dynamicClient.token}`
-						},
-						body: JSON.stringify({ walletAddress })
-					});
-
-					if (response.ok) {
-						await response.json();
-						if (registeredUser) {
-							registeredUser = { ...registeredUser, walletAddress };
-						}
-						console.log('Wallet address updated:', walletAddress);
-					}
-				}
-			}
-		} catch (err) {
-			console.error('Failed to update wallet address:', err);
-			// Don't throw - this is a non-critical update
-		} finally {
-			hasCheckedWallet = true;
 		}
 	}
 
@@ -149,12 +98,14 @@
 				<dd>{registeredUser.email}</dd>
 			{/if}
 
-			<dt>Wallet Address:</dt>
+			<dt>Server Wallet Address:</dt>
 			<dd class="mono">
-				{#if registeredUser.walletAddress}
-					{registeredUser.walletAddress}
+				{#if registeredUser.serverWalletAddress}
+					{registeredUser.serverWalletAddress}
+				{:else if registeredUser.hasServerWallet === false}
+					<span class="pending">Creating server wallet...</span>
 				{:else}
-					<span class="pending">Initializing wallet...</span>
+					<span class="pending">N/A</span>
 				{/if}
 			</dd>
 		</dl>

@@ -56,6 +56,7 @@
 	"dependencies": {
 		"@dynamic-labs-sdk/client": "^0.1.0-alpha.28",
 		"@dynamic-labs-sdk/evm": "^0.0.1-alpha.25",
+		"@dynamic-labs-wallet/node-evm": "^0.0.211",
 		"@tanstack/svelte-query": "^6.0.8",
 		"jose": "^6.1.2",
 		"postgres": "^3.4.7",

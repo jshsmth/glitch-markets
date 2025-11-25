@@ -211,8 +211,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 			"style-src 'self' 'unsafe-inline'; " +
 			"img-src 'self' data: https:; " +
 			"font-src 'self' data:; " +
-			"connect-src 'self' https://gamma-api.polymarket.com https://data-api.polymarket.com https://clob.polymarket.com https://app.dynamic.xyz https://app.dynamicauth.com wss://ws-subscriptions-clob.polymarket.com; " +
-			"frame-src 'self' https://app.dynamicauth.com; " +
+			"connect-src 'self' https://gamma-api.polymarket.com https://data-api.polymarket.com https://clob.polymarket.com https://app.dynamic.xyz https://app.dynamicauth.com https://*.dynamic.xyz https://*.dynamicauth.com wss://ws-subscriptions-clob.polymarket.com; " +
+			"frame-src 'self' https://app.dynamicauth.com https://*.dynamicauth.com; " +
 			"object-src 'none'; " +
 			"base-uri 'self';"
 	);

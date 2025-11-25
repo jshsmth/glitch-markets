@@ -146,7 +146,7 @@
 			{#if walletData.wallets && walletData.wallets.length > 0}
 				<div class="wallets-list">
 					<h4>Wallet Addresses:</h4>
-					{#each walletData.wallets as wallet}
+					{#each walletData.wallets as wallet (wallet.address)}
 						<div class="wallet-item">
 							<span class="chain-badge">{wallet.chain}</span>
 							<code class="address">{wallet.address}</code>

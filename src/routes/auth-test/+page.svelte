@@ -5,9 +5,8 @@
 	 */
 	import AuthButton from '$lib/components/Auth/AuthButton.svelte';
 	import UserRegistration from '$lib/components/Auth/UserRegistration.svelte';
-	import WalletCreation from '$lib/components/Auth/WalletCreation.svelte';
 	import PolymarketAuth from '$lib/components/Auth/PolymarketAuth.svelte';
-	import { isAuthenticated, user, walletAccounts } from '$lib/stores/auth';
+	import { isAuthenticated, user } from '$lib/stores/auth';
 </script>
 
 <div class="auth-test-page">
@@ -27,7 +26,7 @@
 			</div>
 			<p class="description">
 				Click "Sign In" to authenticate with Dynamic. You can use email + OTP or social login
-				(Google, Twitter). An embedded wallet will be automatically created for you.
+				(Google, Twitter).
 			</p>
 			<AuthButton />
 
@@ -40,45 +39,24 @@
 
 						<dt>User ID:</dt>
 						<dd class="mono">{$user.id || 'N/A'}</dd>
-
-						<dt>Wallet Accounts:</dt>
-						<dd>{$walletAccounts.length} connected</dd>
-
-						{#if $walletAccounts.length > 0}
-							<dt>Primary Wallet:</dt>
-							<dd class="mono">{$walletAccounts[0].address}</dd>
-						{/if}
 					</dl>
 				</div>
 			{/if}
 		</section>
 
-		<!-- Step 2: User Registration (happens automatically) -->
+		<!-- Step 2: User Registration & Server Wallet Creation (happens automatically) -->
 		{#if $isAuthenticated}
 			<section class="test-section">
 				<div class="section-header">
-					<h2>Step 2: User Registration</h2>
-					<span class="status-badge active">✓ Auto-registering</span>
+					<h2>Step 2: User Registration & Server Wallet</h2>
+					<span class="status-badge active">✓ Auto-creating</span>
 				</div>
 				<p class="description">
-					This happens automatically in the background. Check the browser console for registration
-					status.
+					Your account and server wallet are created automatically in the background. The server
+					wallet is a backend-controlled MPC wallet that will be used for automated Polymarket
+					trading without requiring transaction approvals.
 				</p>
 				<UserRegistration />
-			</section>
-
-			<!-- Step 2.5: Create Embedded Wallet -->
-			<section class="test-section">
-				<div class="section-header">
-					<h2>Step 2.5: Create Embedded Wallet</h2>
-					<span class="status-badge info">○ Action Required</span>
-				</div>
-				<p class="description">
-					Create an embedded wallet for your account using Dynamic's WaaS (Wallet-as-a-Service) API.
-					This wallet will be used for Polymarket trading. The wallet is non-custodial and controlled
-					by you through MPC (Multi-Party Computation).
-				</p>
-				<WalletCreation chains={['EVM']} />
 			</section>
 
 			<!-- Step 3: Polymarket Authorization -->
@@ -104,8 +82,7 @@
 					<pre>{JSON.stringify(
 							{
 								isAuthenticated: $isAuthenticated,
-								user: $user,
-								walletAccounts: $walletAccounts
+								user: $user
 							},
 							null,
 							2

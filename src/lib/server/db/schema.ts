@@ -12,7 +12,13 @@ import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
 export const users = pgTable('users', {
 	id: text('id').primaryKey(), // Dynamic user ID
 	email: text('email'),
-	walletAddress: text('wallet_address'), // Nullable - users can sign in without wallet via social auth
+
+	// Server Wallet (Backend MPC Wallet) - for automated Polymarket trading
+	serverWalletAddress: text('server_wallet_address'), // Address of the server-controlled wallet
+	serverWalletId: text('server_wallet_id'), // Dynamic wallet ID
+	encryptedServerKeyShares: text('encrypted_server_key_shares'), // Encrypted external key shares (JSON)
+	serverWalletPublicKey: text('server_wallet_public_key'), // Public key hex
+
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	lastLoginAt: timestamp('last_login_at').notNull().defaultNow()
 });

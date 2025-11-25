@@ -1,6 +1,7 @@
 /**
  * User Registration Endpoint
  * Creates or updates user in database after Dynamic authentication
+ * Also creates a server-side wallet for automated Polymarket trading
  */
 
 import { json } from '@sveltejs/kit';
@@ -8,6 +9,10 @@ import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { createServerWallet } from '$lib/server/wallet/server-wallet';
+import { Logger } from '$lib/server/utils/logger';
+
+const logger = new Logger({ component: 'UserRegistration' });
 
 export const POST: RequestHandler = async ({ locals }) => {
 	// Check authentication
@@ -15,7 +20,7 @@ export const POST: RequestHandler = async ({ locals }) => {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	const { userId, email, walletAddress } = locals.user;
+	const { userId, email } = locals.user;
 
 	try {
 		// Check if user already exists
@@ -32,19 +37,46 @@ export const POST: RequestHandler = async ({ locals }) => {
 				user: {
 					userId,
 					email,
-					walletAddress
+					serverWalletAddress: existingUser.serverWalletAddress,
+					hasServerWallet: !!existingUser.serverWalletAddress
 				},
 				message: 'User login updated'
 			});
 		}
 
-		// Create new user
+		// Create server wallet for the new user
+		logger.info('Creating server wallet for new user', { userId });
+		let serverWallet;
+		try {
+			serverWallet = await createServerWallet(userId);
+			logger.info('Server wallet created successfully', {
+				userId,
+				address: serverWallet.accountAddress
+			});
+		} catch (walletError) {
+			logger.error('Server wallet creation failed', {
+				userId,
+				error: walletError instanceof Error ? walletError.message : 'Unknown error',
+				stack: walletError instanceof Error ? walletError.stack : undefined
+			});
+			throw walletError;
+		}
+
+		// Create new user with server wallet
 		await db.insert(users).values({
 			id: userId,
 			email,
-			walletAddress,
+			serverWalletAddress: serverWallet.accountAddress,
+			serverWalletId: serverWallet.walletId,
+			encryptedServerKeyShares: serverWallet.encryptedKeyShares,
+			serverWalletPublicKey: serverWallet.publicKeyHex,
 			createdAt: new Date(),
 			lastLoginAt: new Date()
+		});
+
+		logger.info('User created with server wallet', {
+			userId,
+			serverWalletAddress: serverWallet.accountAddress
 		});
 
 		return json({
@@ -52,12 +84,16 @@ export const POST: RequestHandler = async ({ locals }) => {
 			user: {
 				userId,
 				email,
-				walletAddress
+				serverWalletAddress: serverWallet.accountAddress,
+				hasServerWallet: true
 			},
-			message: 'User created successfully'
+			message: 'User created successfully with server wallet'
 		});
 	} catch (error) {
-		console.error('User registration error:', error);
+		logger.error('User registration error', {
+			userId,
+			error: error instanceof Error ? error.message : 'Unknown error'
+		});
 
 		return json(
 			{
