@@ -108,6 +108,58 @@ export async function signMessageWithServerWallet(
 	}
 }
 
+export async function signTypedDataWithServerWallet(
+	accountAddress: string,
+	domain: any,
+	types: any,
+	message: any,
+	encryptedKeyShares?: string
+): Promise<string> {
+	try {
+		logger.info('Signing typed data with server wallet', { accountAddress, domain, types, message });
+
+		const evmClient = await getAuthenticatedEvmClient();
+
+		let externalServerKeyShares;
+		if (encryptedKeyShares) {
+			const decrypted = decryptData(encryptedKeyShares);
+			externalServerKeyShares = JSON.parse(decrypted);
+		}
+
+		const typedData: any = {
+			domain,
+			types: {
+				EIP712Domain: [
+					{ name: 'name', type: 'string' },
+					{ name: 'version', type: 'string' },
+					{ name: 'chainId', type: 'uint256' }
+				],
+				...types
+			},
+			primaryType: 'ClobAuth',
+			message
+		};
+
+		logger.info('Prepared typed data for signing', { typedData });
+
+		const signature = await evmClient.signTypedData({
+			accountAddress,
+			typedData,
+			externalServerKeyShares
+		});
+
+		logger.info('Typed data signed successfully', { accountAddress, signature });
+		return signature;
+	} catch (error) {
+		logger.error('Failed to sign typed data', {
+			accountAddress,
+			error: error instanceof Error ? error.message : 'Unknown error',
+			stack: error instanceof Error ? error.stack : undefined
+		});
+		throw new Error('Failed to sign typed data with server wallet');
+	}
+}
+
 export async function getServerWalletClient(
 	accountAddress: string,
 	chainId: number,

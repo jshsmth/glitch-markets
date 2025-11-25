@@ -34,7 +34,8 @@ export const polymarketCredentials = pgTable('polymarket_credentials', {
 		.notNull()
 		.unique()
 		.references(() => users.id),
-	walletAddress: text('wallet_address').notNull(),
+	walletAddress: text('wallet_address').notNull(), // Server wallet address
+	proxyWalletAddress: text('proxy_wallet_address').notNull(), // Polymarket proxy wallet (CREATE2 derived)
 	encryptedApiKey: text('encrypted_api_key').notNull(),
 	encryptedSecret: text('encrypted_secret').notNull(),
 	encryptedPassphrase: text('encrypted_passphrase').notNull(),

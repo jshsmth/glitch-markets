@@ -1,9 +1,9 @@
 <script lang="ts">
 	/**
 	 * Polymarket Authorization Component
-	 * Handles one-time signature for Polymarket CLOB API credentials
+	 * Registers server wallet with Polymarket for automated trading
 	 */
-	import { isSignedIn, getWalletAccounts, signMessage } from '@dynamic-labs-sdk/client';
+	import { isSignedIn } from '@dynamic-labs-sdk/client';
 	import { authState, isAuthenticated } from '$lib/stores/auth.svelte';
 	import { onMount } from 'svelte';
 	import { dev } from '$app/environment';
@@ -40,7 +40,7 @@
 
 	/**
 	 * Register with Polymarket
-	 * Signs authorization message and sends to backend
+	 * Backend signs with server wallet and registers with CLOB
 	 */
 	async function registerWithPolymarket() {
 		if (!authState.client) {
@@ -52,36 +52,24 @@
 		error = null;
 
 		try {
-			const walletAccounts = getWalletAccounts();
-			if (!walletAccounts || walletAccounts.length === 0) {
-				throw new Error('No wallet found. Please connect a wallet first.');
-			}
-
-			const walletAccount = walletAccounts[0];
-			const walletAddress = walletAccount.address;
-
-			const timestamp = Date.now();
-			const messageText = `I authorize Glitch Markets to trade on my behalf.\nWallet: ${walletAddress}\nTimestamp: ${timestamp}`;
-
-			const signature = await signMessage({ walletAccount, message: messageText });
-
 			const response = await fetch('/api/polymarket/register', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 					Authorization: `Bearer ${authState.client.token}`
-				},
-				body: JSON.stringify({
-					signature,
-					walletAddress,
-					timestamp,
-					message: messageText
-				})
+				}
 			});
 
 			if (!response.ok) {
 				const data = await response.json();
 				throw new Error(data.error || 'Registration failed');
+			}
+
+			const data = await response.json();
+			if (dev) {
+				console.log('Polymarket registration successful', {
+					proxyWalletAddress: data.proxyWalletAddress
+				});
 			}
 
 			isRegistered = true;
@@ -125,11 +113,11 @@
 		</div>
 	{:else}
 		<button class="enable-trading-btn" onclick={registerWithPolymarket} disabled={isRegistering}>
-			{isRegistering ? 'Authorizing...' : 'Enable Polymarket Trading'}
+			{isRegistering ? 'Enabling Trading...' : 'Enable Polymarket Trading'}
 		</button>
 		<p class="info-text">
-			Sign a one-time message to authorize trading. Your credentials are encrypted and stored
-			securely.
+			Registers your server wallet with Polymarket for automated trading. Your credentials are
+			encrypted and stored securely.
 		</p>
 	{/if}
 
