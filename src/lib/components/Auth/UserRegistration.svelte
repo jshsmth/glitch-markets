@@ -21,8 +21,8 @@
 	let isRegistered = $state(false);
 	let error = $state<string | null>(null);
 	let registeredUser = $state<RegisteredUser | null>(null);
-	// Use Set to track registration attempts and prevent race conditions
-	let registrationAttempts = new Set<string>();
+	// Use SvelteSet to track registration attempts and prevent race conditions
+	let registrationAttempts = $state(new Set<string>());
 
 	/**
 	 * Register user in our database

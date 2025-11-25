@@ -14,7 +14,7 @@ import { signTypedDataWithServerWallet } from '$lib/server/wallet/server-wallet'
 import { deriveProxyWalletAddress } from '$lib/server/utils/proxy-wallet';
 import { getAddress } from 'viem';
 
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ locals }) => {
 	if (!locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}

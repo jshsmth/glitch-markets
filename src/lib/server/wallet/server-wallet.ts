@@ -125,13 +125,18 @@ export async function signMessageWithServerWallet(
 
 export async function signTypedDataWithServerWallet(
 	accountAddress: string,
-	domain: any,
-	types: any,
-	message: any,
+	domain: Record<string, string | number>,
+	types: Record<string, Array<{ name: string; type: string }>>,
+	message: Record<string, string | number>,
 	encryptedKeyShares?: string
 ): Promise<string> {
 	try {
-		logger.info('Signing typed data with server wallet', { accountAddress, domain, types, message });
+		logger.info('Signing typed data with server wallet', {
+			accountAddress,
+			domain,
+			types,
+			message
+		});
 
 		const evmClient = await getAuthenticatedEvmClient();
 
@@ -141,7 +146,7 @@ export async function signTypedDataWithServerWallet(
 			externalServerKeyShares = JSON.parse(decrypted);
 		}
 
-		const typedData: any = {
+		const typedData = {
 			domain,
 			types: {
 				EIP712Domain: [
@@ -153,7 +158,7 @@ export async function signTypedDataWithServerWallet(
 			},
 			primaryType: 'ClobAuth',
 			message
-		};
+		} as const;
 
 		logger.info('Prepared typed data for signing', { typedData });
 

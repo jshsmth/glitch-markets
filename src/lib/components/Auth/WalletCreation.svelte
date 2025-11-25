@@ -5,7 +5,6 @@
 	 */
 	import { authState } from '$lib/stores/auth.svelte';
 	import { refreshUser } from '@dynamic-labs-sdk/client';
-	import { onMount } from 'svelte';
 	import { dev } from '$app/environment';
 
 	interface WalletInfo {
@@ -122,7 +121,13 @@
 
 	// Use $effect for cleaner reactive auto-create logic
 	$effect(() => {
-		if (autoCreate && authState.client?.token && !autoCreateTriggered && !isCreating && !hasCreated) {
+		if (
+			autoCreate &&
+			authState.client?.token &&
+			!autoCreateTriggered &&
+			!isCreating &&
+			!hasCreated
+		) {
 			autoCreateTriggered = true;
 			setTimeout(() => createWallet(), 500);
 		}
