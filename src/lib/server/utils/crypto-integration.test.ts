@@ -8,15 +8,19 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import crypto from 'node:crypto';
 
-describe('Crypto Integration Tests', () => {
-	// Generate mock encryption keys for testing
-	const MOCK_POLYMARKET_KEY = crypto.randomBytes(32).toString('hex');
-	const MOCK_SERVER_WALLET_KEY = crypto.randomBytes(32).toString('hex');
+// Generate mock encryption keys for testing
+const MOCK_POLYMARKET_KEY = crypto.randomBytes(32).toString('hex');
+const MOCK_SERVER_WALLET_KEY = crypto.randomBytes(32).toString('hex');
 
+// Mock the environment modules BEFORE importing crypto.ts and encryption.ts
+vi.mock('$env/static/private', () => ({
+	POLYMARKET_ENCRYPTION_KEY: MOCK_POLYMARKET_KEY,
+	DYNAMIC_SERVER_WALLET_ENCRYPTION_KEY: MOCK_SERVER_WALLET_KEY
+}));
+
+describe('Crypto Integration Tests', () => {
 	beforeAll(() => {
-		// Mock environment variables
-		vi.stubEnv('POLYMARKET_ENCRYPTION_KEY', MOCK_POLYMARKET_KEY);
-		vi.stubEnv('DYNAMIC_SERVER_WALLET_ENCRYPTION_KEY', MOCK_SERVER_WALLET_KEY);
+		// Environment variables are already mocked via vi.mock above
 	});
 
 	describe('Polymarket Credential Encryption (crypto.ts)', () => {
