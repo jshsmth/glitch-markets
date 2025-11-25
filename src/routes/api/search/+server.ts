@@ -64,7 +64,6 @@ export async function GET({ url }: RequestEvent) {
 	const startTime = Date.now();
 
 	try {
-		// Parse query parameters
 		const q = url.searchParams.get('q');
 		const cache = url.searchParams.get('cache');
 		const eventsStatus = url.searchParams.get('events_status');
@@ -82,7 +81,6 @@ export async function GET({ url }: RequestEvent) {
 		const eventsTagsParam = url.searchParams.getAll('events_tag');
 		const excludeTagIdParam = url.searchParams.getAll('exclude_tag_id');
 
-		// Validate required parameter
 		if (q === null || q.trim().length === 0) {
 			logger.error('Missing or empty q parameter', undefined, { q });
 			return json(
@@ -284,7 +282,6 @@ export async function GET({ url }: RequestEvent) {
 			duration
 		});
 
-		// Return response with cache headers
 		return json(results, {
 			headers: {
 				'Cache-Control': 'public, max-age=60, s-maxage=60',
@@ -300,7 +297,6 @@ export async function GET({ url }: RequestEvent) {
 			return json(formatErrorResponse(error), { status: error.statusCode });
 		}
 
-		// Handle unexpected errors
 		logger.error('Unexpected error in search route', error, { duration });
 		const errorResponse = formatErrorResponse(
 			error instanceof Error ? error : new Error('Unknown error occurred')

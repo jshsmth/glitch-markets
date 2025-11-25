@@ -19,14 +19,12 @@ export async function GET({ url }: RequestEvent) {
 	const startTime = Date.now();
 
 	try {
-		// Parse query parameters
 		const limit = url.searchParams.get('limit');
 		const offset = url.searchParams.get('offset');
 		const category = url.searchParams.get('category');
 		const active = url.searchParams.get('active');
 		const closed = url.searchParams.get('closed');
 
-		// Build filters object
 		const filters: {
 			limit?: number;
 			offset?: number;
@@ -87,13 +85,11 @@ export async function GET({ url }: RequestEvent) {
 
 		logger.info('Fetching events', { filters });
 
-		// Fetch events from service
 		const events = await eventService.getEvents(filters);
 
 		const duration = Date.now() - startTime;
 		logger.info('Events fetched successfully', { count: events.length, duration });
 
-		// Return response with cache headers
 		return json(events, {
 			headers: {
 				'Cache-Control': 'public, max-age=60, s-maxage=60',
@@ -109,7 +105,6 @@ export async function GET({ url }: RequestEvent) {
 			return json(formatErrorResponse(error), { status: error.statusCode });
 		}
 
-		// Handle unexpected errors
 		logger.error('Unexpected error in events route', error, { duration });
 		const errorResponse = formatErrorResponse(
 			error instanceof Error ? error : new Error('Unknown error occurred')

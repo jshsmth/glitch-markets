@@ -21,7 +21,6 @@ export async function GET({ params }: RequestEvent) {
 	try {
 		const { id } = params;
 
-		// Validate ID parameter
 		if (!id || id.trim() === '') {
 			logger.error('Missing or empty event ID', undefined, { id });
 			return json(
@@ -32,10 +31,8 @@ export async function GET({ params }: RequestEvent) {
 
 		logger.info('Fetching event by ID', { id });
 
-		// Fetch event from service
 		const event = await eventService.getEventById(id);
 
-		// Handle not found
 		if (!event) {
 			const duration = Date.now() - startTime;
 			logger.info('Event not found', { id, duration });
@@ -47,7 +44,6 @@ export async function GET({ params }: RequestEvent) {
 		const duration = Date.now() - startTime;
 		logger.info('Event fetched successfully', { id, duration });
 
-		// Return response with cache headers
 		return json(event, {
 			headers: {
 				'Cache-Control': 'public, max-age=60, s-maxage=60',
@@ -63,7 +59,6 @@ export async function GET({ params }: RequestEvent) {
 			return json(formatErrorResponse(error), { status: error.statusCode });
 		}
 
-		// Handle unexpected errors
 		logger.error('Unexpected error in event by ID route', error, { duration });
 		const errorResponse = formatErrorResponse(
 			error instanceof Error ? error : new Error('Unknown error occurred')

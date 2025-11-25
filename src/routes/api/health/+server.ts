@@ -60,7 +60,6 @@ async function checkService(url: string, name: string): Promise<ServiceHealth> {
 		clearTimeout(timeoutId);
 		const responseTime = Date.now() - startTime;
 
-		// Check if response is successful and contains valid data
 		if (response.ok) {
 			const data = await response.json();
 			// Data API returns {"data":"OK"}, Gamma API returns array of markets
@@ -93,13 +92,11 @@ export async function GET() {
 	const startTime = Date.now();
 
 	try {
-		// Check both services in parallel
 		const [gammaHealth, dataHealth] = await Promise.all([
 			checkService(GAMMA_API_URL, 'gamma'),
 			checkService(DATA_API_URL, 'data')
 		]);
 
-		// Determine overall status
 		const allOk = gammaHealth.status === 'ok' && dataHealth.status === 'ok';
 		const allDown = gammaHealth.status === 'down' && dataHealth.status === 'down';
 
@@ -123,7 +120,6 @@ export async function GET() {
 			data: dataHealth.responseTime
 		});
 
-		// Return 200 for ok, 503 for degraded or down
 		const statusCode = overallStatus === 'ok' ? 200 : 503;
 
 		return json(response, {

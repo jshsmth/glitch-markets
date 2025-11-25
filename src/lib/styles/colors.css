@@ -51,6 +51,10 @@
 
 	/* Logo Colors */
 	--logo: #111111; /* dark logo for light theme */
+
+	/* Third-party brand colors */
+	--google-blue: #4285f4;
+	--twitter-blue: #1da1f2;
 }
 
 [data-theme='dark'] {
@@ -96,6 +100,10 @@
 
 	/* Logo Colors */
 	--logo: #fcfcfc; /* light logo for dark theme */
+
+	/* Third-party brand colors */
+	--google-blue: #4285f4;
+	--twitter-blue: #1da1f2;
 }
 
 /* ============================================
@@ -137,6 +145,10 @@
 
 		/* Logo */
 		--logo: #fcfcfc;
+
+		/* Third-party brand colors */
+		--google-blue: #4285f4;
+		--twitter-blue: #1da1f2;
 	}
 }
 

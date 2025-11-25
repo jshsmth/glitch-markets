@@ -20,7 +20,6 @@ export async function GET({ url }: RequestEvent) {
 	const startTime = Date.now();
 
 	try {
-		// Parse query parameters
 		const limit = url.searchParams.get('limit');
 		const offset = url.searchParams.get('offset');
 		const order = url.searchParams.get('order');
@@ -30,7 +29,6 @@ export async function GET({ url }: RequestEvent) {
 		const get_positions = url.searchParams.get('get_positions');
 		const holders_only = url.searchParams.get('holders_only');
 
-		// Build filters object with validation
 		const filters: CommentFilters = {};
 
 		// Validate and parse numeric parameters
@@ -135,13 +133,11 @@ export async function GET({ url }: RequestEvent) {
 
 		logger.info('Fetching comments', { filters });
 
-		// Fetch comments from service
 		const comments = await commentService.getComments(filters);
 
 		const duration = Date.now() - startTime;
 		logger.info('Comments fetched successfully', { count: comments.length, duration });
 
-		// Return response with cache headers
 		return json(comments, {
 			headers: {
 				'Cache-Control': 'public, max-age=60, s-maxage=60',
@@ -157,7 +153,6 @@ export async function GET({ url }: RequestEvent) {
 			return json(formatErrorResponse(error), { status: error.statusCode });
 		}
 
-		// Handle unexpected errors
 		logger.error('Unexpected error in comments route', error, { duration });
 		const errorResponse = formatErrorResponse(
 			error instanceof Error ? error : new Error('Unknown error occurred')

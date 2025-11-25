@@ -18,7 +18,6 @@ vi.mock('$lib/server/api/polymarket-client', () => {
 	};
 });
 
-// Import after mocking
 const { GET } = await import('../../routes/api/markets/+server');
 
 // Helper to generate valid market data

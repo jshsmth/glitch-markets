@@ -29,7 +29,6 @@ export async function GET({ params, url }: RequestEvent) {
 			);
 		}
 
-		// Validate ID parameter
 		const parsedId = parseInt(id, 10);
 		if (isNaN(parsedId) || parsedId < 0) {
 			logger.error('Invalid comment ID', undefined, { id });
@@ -60,10 +59,8 @@ export async function GET({ params, url }: RequestEvent) {
 
 		logger.info('Fetching comment by ID', { id: parsedId, includePositions });
 
-		// Fetch comment from service
 		const comment = await commentService.getCommentById(parsedId, includePositions);
 
-		// Handle not found
 		if (!comment) {
 			const duration = Date.now() - startTime;
 			logger.info('Comment not found', { id: parsedId, duration });
@@ -75,7 +72,6 @@ export async function GET({ params, url }: RequestEvent) {
 		const duration = Date.now() - startTime;
 		logger.info('Comment fetched successfully', { id: parsedId, duration });
 
-		// Return response with cache headers
 		return json(comment, {
 			headers: {
 				'Cache-Control': 'public, max-age=30, s-maxage=30',
@@ -91,7 +87,6 @@ export async function GET({ params, url }: RequestEvent) {
 			return json(formatErrorResponse(error), { status: error.statusCode });
 		}
 
-		// Handle unexpected errors
 		logger.error('Unexpected error in comment by ID route', error, { duration });
 		const errorResponse = formatErrorResponse(
 			error instanceof Error ? error : new Error('Unknown error occurred')

@@ -18,7 +18,6 @@ vi.mock('$lib/server/services/series-service', () => {
 	};
 });
 
-// Import after mocking
 const { GET } = await import('../../routes/api/series/+server');
 
 // Helper to generate valid series data

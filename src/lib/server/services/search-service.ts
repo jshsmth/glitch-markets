@@ -92,7 +92,6 @@ export class SearchService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { query: options.q });
 			return this.pendingRequests.get(cacheKey)!;
@@ -100,17 +99,14 @@ export class SearchService {
 
 		this.logger.info('Cache miss for search, fetching from API', { query: options.q });
 
-		// Create the promise for fetching data
 		const fetchPromise = this.fetchAndCacheSearch(cacheKey, options);
 
-		// Store the promise so concurrent requests can wait for it
 		this.pendingRequests.set(cacheKey, fetchPromise);
 
 		try {
 			const result = await fetchPromise;
 			return result;
 		} finally {
-			// Clean up the pending request
 			this.pendingRequests.delete(cacheKey);
 		}
 	}

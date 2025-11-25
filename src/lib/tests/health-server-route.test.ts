@@ -5,7 +5,6 @@
 
 import { describe, it, expect } from 'vitest';
 
-// Import the GET handler
 const { GET } = await import('../../routes/api/health/+server');
 
 describe('GET /api/health', () => {

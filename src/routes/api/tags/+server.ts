@@ -21,13 +21,11 @@ export async function GET() {
 	try {
 		logger.info('Fetching tags');
 
-		// Fetch tags from service
 		const tags = await tagService.getTags();
 
 		const duration = Date.now() - startTime;
 		logger.info('Tags fetched successfully', { count: tags.length, duration });
 
-		// Return response with cache headers
 		return json(tags, {
 			headers: {
 				'Cache-Control': 'public, max-age=60, s-maxage=60',
@@ -43,7 +41,6 @@ export async function GET() {
 			return json(formatErrorResponse(error), { status: error.statusCode });
 		}
 
-		// Handle unexpected errors
 		logger.error('Unexpected error in tags route', error, { duration });
 		const errorResponse = formatErrorResponse(
 			error instanceof Error ? error : new Error('Unknown error occurred')

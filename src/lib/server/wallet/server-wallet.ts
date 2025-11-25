@@ -1,0 +1,216 @@
+/**
+ * Server Wallet Utilities
+ * Creates and manages backend-controlled MPC wallets using Dynamic's Node SDK
+ */
+
+import { DynamicEvmWalletClient } from '@dynamic-labs-wallet/node-evm';
+import { ThresholdSignatureScheme } from '@dynamic-labs-wallet/node';
+import { DYNAMIC_ENVIRONMENT_ID, DYNAMIC_API_TOKEN } from '$env/static/private';
+import { Logger } from '$lib/server/utils/logger';
+import { encryptData, decryptData } from '$lib/server/utils/encryption';
+
+const logger = new Logger({ component: 'ServerWallet' });
+
+let evmClientInstance: DynamicEvmWalletClient | null = null;
+let instanceCreationTime: number = 0;
+// Refresh client after 1 hour to prevent stale connections
+const CLIENT_MAX_AGE = 3600000; // 1 hour in milliseconds
+
+async function getAuthenticatedEvmClient(): Promise<DynamicEvmWalletClient> {
+	const now = Date.now();
+
+	if (evmClientInstance && now - instanceCreationTime < CLIENT_MAX_AGE) {
+		return evmClientInstance;
+	}
+
+	if (evmClientInstance) {
+		logger.info('Recreating Dynamic EVM client due to age', {
+			age: now - instanceCreationTime,
+			maxAge: CLIENT_MAX_AGE
+		});
+	}
+
+	const client = new DynamicEvmWalletClient({
+		environmentId: DYNAMIC_ENVIRONMENT_ID,
+		enableMPCAccelerator: false
+	});
+
+	await client.authenticateApiToken(DYNAMIC_API_TOKEN);
+	evmClientInstance = client;
+	instanceCreationTime = now;
+
+	logger.info('Authenticated Dynamic EVM client', { timestamp: new Date(now).toISOString() });
+	return client;
+}
+
+export interface ServerWalletData {
+	accountAddress: string;
+	walletId: string;
+	publicKeyHex: string;
+	encryptedKeyShares: string; // Encrypted JSON string of external key shares
+}
+
+export async function createServerWallet(userId: string): Promise<ServerWalletData> {
+	try {
+		logger.info('Creating server wallet', { userId });
+
+		const evmClient = await getAuthenticatedEvmClient();
+
+		const { accountAddress, walletId, publicKeyHex, externalServerKeyShares } =
+			await evmClient.createWalletAccount({
+				thresholdSignatureScheme: ThresholdSignatureScheme.TWO_OF_TWO,
+				backUpToClientShareService: true,
+				onError: (error: Error) => {
+					logger.error('Server wallet creation error', { error: error.message, userId });
+				}
+			});
+
+		logger.info('Server wallet created', {
+			userId,
+			accountAddress,
+			walletId
+		});
+
+		const encryptedKeyShares = encryptData(JSON.stringify(externalServerKeyShares));
+
+		return {
+			accountAddress,
+			walletId,
+			publicKeyHex,
+			encryptedKeyShares
+		};
+	} catch (error) {
+		logger.error('Failed to create server wallet', {
+			userId,
+			error: error instanceof Error ? error.message : 'Unknown error'
+		});
+		throw new Error('Failed to create server wallet');
+	}
+}
+
+export async function signMessageWithServerWallet(
+	accountAddress: string,
+	message: string,
+	encryptedKeyShares?: string
+): Promise<string> {
+	try {
+		logger.info('Signing message with server wallet', { accountAddress });
+
+		const evmClient = await getAuthenticatedEvmClient();
+
+		let externalServerKeyShares;
+		if (encryptedKeyShares) {
+			const decrypted = decryptData(encryptedKeyShares);
+			externalServerKeyShares = JSON.parse(decrypted);
+		}
+
+		const signature = await evmClient.signMessage({
+			message,
+			accountAddress,
+			externalServerKeyShares
+		});
+
+		logger.info('Message signed successfully', { accountAddress });
+		return signature;
+	} catch (error) {
+		logger.error('Failed to sign message', {
+			accountAddress,
+			error: error instanceof Error ? error.message : 'Unknown error'
+		});
+		throw new Error('Failed to sign message with server wallet');
+	}
+}
+
+export async function signTypedDataWithServerWallet(
+	accountAddress: string,
+	domain: Record<string, string | number>,
+	types: Record<string, Array<{ name: string; type: string }>>,
+	message: Record<string, string | number>,
+	encryptedKeyShares?: string
+): Promise<string> {
+	try {
+		logger.info('Signing typed data with server wallet', {
+			accountAddress,
+			domain,
+			types,
+			message
+		});
+
+		const evmClient = await getAuthenticatedEvmClient();
+
+		let externalServerKeyShares;
+		if (encryptedKeyShares) {
+			const decrypted = decryptData(encryptedKeyShares);
+			externalServerKeyShares = JSON.parse(decrypted);
+		}
+
+		// Note: Dynamic SDK's type definition incorrectly expects only TypedData (types object),
+		// but it actually needs the full TypedDataDefinition structure (domain, types, primaryType, message)
+		// because it passes it to viem.hashTypedData() internally. We use 'as any' to work around the incorrect types.
+		const typedData = {
+			domain,
+			types: {
+				EIP712Domain: [
+					{ name: 'name', type: 'string' },
+					{ name: 'version', type: 'string' },
+					{ name: 'chainId', type: 'uint256' }
+				],
+				...types
+			},
+			primaryType: 'ClobAuth',
+			message
+		};
+
+		logger.info('Prepared typed data for signing', { typedData });
+
+		const signature = await evmClient.signTypedData({
+			accountAddress,
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			typedData: typedData as any,
+			externalServerKeyShares
+		});
+
+		logger.info('Typed data signed successfully', { accountAddress, signature });
+		return signature;
+	} catch (error) {
+		logger.error('Failed to sign typed data', {
+			accountAddress,
+			error: error instanceof Error ? error.message : 'Unknown error',
+			stack: error instanceof Error ? error.stack : undefined
+		});
+		throw new Error('Failed to sign typed data with server wallet');
+	}
+}
+
+export async function getServerWalletClient(
+	accountAddress: string,
+	chainId: number,
+	rpcUrl: string,
+	encryptedKeyShares?: string
+) {
+	try {
+		const evmClient = await getAuthenticatedEvmClient();
+
+		let externalServerKeyShares;
+		if (encryptedKeyShares) {
+			const decrypted = decryptData(encryptedKeyShares);
+			externalServerKeyShares = JSON.parse(decrypted);
+		}
+
+		const walletClient = await evmClient.getWalletClient({
+			accountAddress,
+			chainId,
+			rpcUrl,
+			externalServerKeyShares
+		});
+
+		logger.info('Viem wallet client created', { accountAddress, chainId });
+		return walletClient;
+	} catch (error) {
+		logger.error('Failed to create wallet client', {
+			accountAddress,
+			error: error instanceof Error ? error.message : 'Unknown error'
+		});
+		throw new Error('Failed to create wallet client');
+	}
+}

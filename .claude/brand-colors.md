@@ -238,6 +238,10 @@ text: #111111 (dark logo color for contrast)
 	--success: #00ff88;
 	--warning: #ffb800;
 	--danger: #ff3366;
+
+	/* Third-party brand colors */
+	--google-blue: #4285f4;
+	--twitter-blue: #1da1f2;
 }
 
 [data-theme='dark'] {
@@ -260,6 +264,10 @@ text: #111111 (dark logo color for contrast)
 	--success: #00ff88;
 	--warning: #ffc233;
 	--danger: #ff4477;
+
+	/* Third-party brand colors */
+	--google-blue: #4285f4;
+	--twitter-blue: #1da1f2;
 }
 ```
 

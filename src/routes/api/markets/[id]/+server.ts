@@ -21,7 +21,6 @@ export async function GET({ params }: RequestEvent) {
 	try {
 		const { id } = params;
 
-		// Validate ID parameter
 		if (!id || id.trim() === '') {
 			logger.error('Missing or empty market ID', undefined, { id });
 			return json(
@@ -32,10 +31,8 @@ export async function GET({ params }: RequestEvent) {
 
 		logger.info('Fetching market by ID', { id });
 
-		// Fetch market from service
 		const market = await marketService.getMarketById(id);
 
-		// Handle not found
 		if (!market) {
 			const duration = Date.now() - startTime;
 			logger.info('Market not found', { id, duration });
@@ -47,7 +44,6 @@ export async function GET({ params }: RequestEvent) {
 		const duration = Date.now() - startTime;
 		logger.info('Market fetched successfully', { id, duration });
 
-		// Return response with cache headers
 		return json(market, {
 			headers: {
 				'Cache-Control': 'public, max-age=30, s-maxage=30',
@@ -63,7 +59,6 @@ export async function GET({ params }: RequestEvent) {
 			return json(formatErrorResponse(error), { status: error.statusCode });
 		}
 
-		// Handle unexpected errors
 		logger.error('Unexpected error in market by ID route', error, { duration });
 		const errorResponse = formatErrorResponse(
 			error instanceof Error ? error : new Error('Unknown error occurred')
