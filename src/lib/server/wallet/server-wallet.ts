@@ -146,6 +146,9 @@ export async function signTypedDataWithServerWallet(
 			externalServerKeyShares = JSON.parse(decrypted);
 		}
 
+		// Note: Dynamic SDK's type definition incorrectly expects only TypedData (types object),
+		// but it actually needs the full TypedDataDefinition structure (domain, types, primaryType, message)
+		// because it passes it to viem.hashTypedData() internally. We use 'as any' to work around the incorrect types.
 		const typedData = {
 			domain,
 			types: {
@@ -158,13 +161,14 @@ export async function signTypedDataWithServerWallet(
 			},
 			primaryType: 'ClobAuth',
 			message
-		} as const;
+		};
 
 		logger.info('Prepared typed data for signing', { typedData });
 
 		const signature = await evmClient.signTypedData({
 			accountAddress,
-			typedData,
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			typedData: typedData as any,
 			externalServerKeyShares
 		});
 
