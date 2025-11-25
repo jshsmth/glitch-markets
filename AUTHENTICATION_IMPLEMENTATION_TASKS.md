@@ -12,22 +12,26 @@
 All tasks have been verified against official Dynamic.xyz documentation. Key findings:
 
 ### Packages Required (Task #1)
+
 - ✅ `@dynamic-labs-sdk/client` - Main SDK for authentication
 - ✅ `@dynamic-labs-sdk/evm` - Viem wallet client integration
 - ✅ `jose` - JWT verification (modern alternative to jsonwebtoken)
 - ❌ **NO Node SDK packages needed** - Not using server wallets or delegation
 
 ### Dashboard Configuration
+
 - **Email Auth:** Navigate to `https://app.dynamic.xyz/dashboard/log-in-user-profile`
 - **Embedded Wallets:** Enable "Create on Sign up" toggle for automatic wallet creation
 - **CSP Headers:** Must whitelist `https://app.dynamicauth.com` in `frame-src` directive
 
 ### JWT Verification (Task #16)
+
 - **JWKS Endpoint:** `https://app.dynamic.xyz/api/v0/sdk/${ENV_ID}/.well-known/jwks`
 - **Algorithm:** RS256 (asymmetric)
 - **Library:** Using `jose` (more modern than jsonwebtoken + jwks-rsa)
 
 ### Key Documentation Links Added
+
 - Task #1: [JavaScript SDK Quickstart](https://www.dynamic.xyz/docs/javascript-sdk/quickstart)
 - Task #5: [Creating Wallets](https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/creating-wallets)
 - Task #6: [Email Auth](https://www.dynamic.xyz/docs/authentication-methods/email), [Social Auth](https://www.dynamic.xyz/docs/authentication-methods/social)
@@ -145,6 +149,7 @@ Task #24 ──> Task #26 (Fix Issues) ──> Task #27 (Production Config)
   - **Dependencies:** Task #2 (Dynamic account), Task #4 (encryption key)
   - **Files:** `.env` (create/update)
   - **Variables to Add:**
+
     ```bash
     # Dynamic Configuration (Client)
     PUBLIC_DYNAMIC_ENVIRONMENT_ID="<from-task-2>"
@@ -159,6 +164,7 @@ Task #24 ──> Task #26 (Fix Issues) ──> Task #27 (Production Config)
     POLYMARKET_CLOB_URL="https://clob.polymarket.com"
     POLYMARKET_GAMMA_API_URL="https://gamma-api.polymarket.com"
     ```
+
   - **Completion Criteria:**
     - [ ] `.env` file created/updated
     - [ ] All variables added
@@ -255,8 +261,7 @@ Task #24 ──> Task #26 (Fix Issues) ──> Task #27 (Production Config)
     ```typescript
     // Add to hooks.server.ts handle function
     event.setHeaders({
-      'Content-Security-Policy':
-        "default-src 'self'; frame-src https://app.dynamicauth.com 'self';"
+    	'Content-Security-Policy': "default-src 'self'; frame-src https://app.dynamicauth.com 'self';"
     });
     ```
   - **Completion Criteria:**
@@ -348,20 +353,19 @@ Task #24 ──> Task #26 (Fix Issues) ──> Task #27 (Production Config)
   - **Dependencies:** Task #8 (Dynamic client)
   - **Files:** `src/lib/stores/auth.ts`
   - **Implementation:**
+
     ```typescript
     import { writable, derived } from 'svelte/store';
     import type { DynamicClient } from '@dynamic-labs-sdk/client';
 
     export const dynamicClient = writable<DynamicClient | null>(null);
     export const isAuthenticated = derived(
-      dynamicClient,
-      $client => $client?.isSignedIn() ?? false
+    	dynamicClient,
+    	($client) => $client?.isSignedIn() ?? false
     );
-    export const user = derived(
-      dynamicClient,
-      $client => $client?.user ?? null
-    );
+    export const user = derived(dynamicClient, ($client) => $client?.user ?? null);
     ```
+
   - **Completion Criteria:**
     - [ ] Store created with TypeScript types
     - [ ] `dynamicClient` store exports client instance
@@ -377,18 +381,20 @@ Task #24 ──> Task #26 (Fix Issues) ──> Task #27 (Production Config)
   - **Dependencies:** None (vite-plugin-mkcert already installed)
   - **Files:** `vite.config.ts`
   - **Implementation:**
+
     ```typescript
     import { defineConfig } from 'vite';
     import { sveltekit } from '@sveltejs/kit/vite';
     import mkcert from 'vite-plugin-mkcert';
 
     export default defineConfig({
-      plugins: [sveltekit(), mkcert()],
-      server: {
-        https: true
-      }
+    	plugins: [sveltekit(), mkcert()],
+    	server: {
+    		https: true
+    	}
     });
     ```
+
   - **Completion Criteria:**
     - [ ] `mkcert` plugin added to vite.config.ts
     - [ ] HTTPS enabled for dev server
@@ -560,19 +566,21 @@ Task #24 ──> Task #26 (Fix Issues) ──> Task #27 (Production Config)
   - **Dependencies:** Task #14 (schema), Task #16 (JWT verification)
   - **Files:** `src/routes/api/polymarket/status/+server.ts`
   - **Implementation:**
+
     ```typescript
     export async function GET({ locals }) {
-      if (!locals.user) {
-        return json({ error: 'Unauthorized' }, { status: 401 });
-      }
+    	if (!locals.user) {
+    		return json({ error: 'Unauthorized' }, { status: 401 });
+    	}
 
-      const creds = await db.query.polymarketCredentials.findFirst({
-        where: eq(polymarketCredentials.userId, locals.user.userId)
-      });
+    	const creds = await db.query.polymarketCredentials.findFirst({
+    		where: eq(polymarketCredentials.userId, locals.user.userId)
+    	});
 
-      return json({ registered: !!creds });
+    	return json({ registered: !!creds });
     }
     ```
+
   - **Completion Criteria:**
     - [ ] GET endpoint created
     - [ ] Requires authentication
@@ -813,12 +821,14 @@ Task #24 ──> Task #26 (Fix Issues) ──> Task #27 (Production Config)
 ## Change Log
 
 ### 2025-11-25 (Update 2)
+
 - Removed Task #21 (Polymarket Trading Service) - not part of auth flow
 - Updated task count: 30 → 29 tasks
 - Renumbered all subsequent tasks (22→21, 23→22, etc.)
 - Updated Phase 3 count: 8 → 7 tasks
 
 ### 2025-11-25 (Update 1)
+
 - Added documentation verification summary
 - Updated Task #1: Added `@dynamic-labs-sdk/evm` package
 - Updated Task #5: Confirmed "Create on Sign up" toggle
@@ -829,6 +839,7 @@ Task #24 ──> Task #26 (Fix Issues) ──> Task #27 (Production Config)
 - Added official Dynamic documentation links to all relevant tasks
 
 ### 2025-11-25 00:00
+
 - Initial task breakdown created
 - 29 tasks identified across 5 phases
 - Task dependencies mapped

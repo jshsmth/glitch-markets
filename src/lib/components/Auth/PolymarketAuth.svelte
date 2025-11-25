@@ -3,7 +3,7 @@
 	 * Polymarket Authorization Component
 	 * Handles one-time signature for Polymarket CLOB API credentials
 	 */
-	import { isSignedIn } from '@dynamic-labs-sdk/client';
+	import { isSignedIn, getWalletAccounts, signMessage } from '@dynamic-labs-sdk/client';
 	import { dynamicClient } from '$lib/stores/auth';
 
 	// Local state
@@ -51,7 +51,7 @@
 
 		try {
 			// Get the user's wallet account
-			const walletAccounts = $dynamicClient.getWalletAccounts();
+			const walletAccounts = getWalletAccounts();
 			if (!walletAccounts || walletAccounts.length === 0) {
 				throw new Error('No wallet found. Please connect a wallet first.');
 			}
@@ -61,10 +61,10 @@
 
 			// Create authorization message
 			const timestamp = Date.now();
-			const message = `I authorize Glitch Markets to trade on my behalf.\nWallet: ${walletAddress}\nTimestamp: ${timestamp}`;
+			const messageText = `I authorize Glitch Markets to trade on my behalf.\nWallet: ${walletAddress}\nTimestamp: ${timestamp}`;
 
-			// Request user signature using the wallet connector
-			const signature = await walletAccount.connector.signMessage(message);
+			// Request user signature using the Dynamic SDK
+			const signature = await signMessage({ walletAccount, message: messageText });
 
 			// Send to backend
 			const response = await fetch('/api/polymarket/register', {
@@ -77,7 +77,7 @@
 					signature,
 					walletAddress,
 					timestamp,
-					message
+					message: messageText
 				})
 			});
 

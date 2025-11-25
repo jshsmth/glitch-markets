@@ -22,6 +22,7 @@ export const isInitializing = writable<boolean>(true);
 /**
  * Reactive user store that updates when authentication state changes
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const user = readable<any>(null, (set) => {
 	if (!browser) return;
 

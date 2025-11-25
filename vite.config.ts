@@ -4,9 +4,7 @@ import mkcert from 'vite-plugin-mkcert';
 
 export default defineConfig({
 	plugins: [sveltekit(), mkcert()],
-	server: {
-		https: true
-	},
+	// mkcert plugin automatically configures HTTPS, no need for server.https option
 	test: {
 		environment: 'jsdom',
 		globals: true,

@@ -66,10 +66,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const { apiKey, secret, passphrase } = await response.json();
 
 		if (!apiKey || !secret || !passphrase) {
-			return json(
-				{ error: 'Invalid response from Polymarket API' },
-				{ status: 500 }
-			);
+			return json({ error: 'Invalid response from Polymarket API' }, { status: 500 });
 		}
 
 		// Encrypt credentials before storing

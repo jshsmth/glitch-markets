@@ -7,6 +7,7 @@
 This document describes the authentication system integrating Dynamic Wallet SDK with Polymarket CLOB API authentication.
 
 > **⚠️ Important Update (2025-11-25):**
+>
 > - Added `@dynamic-labs-sdk/evm` package requirement (needed for Viem wallet client)
 > - Fixed JWKS endpoint URL to include environment ID: `https://app.dynamic.xyz/api/v0/sdk/${ENV_ID}/.well-known/jwks`
 > - All code examples updated with correct implementation details
@@ -32,6 +33,7 @@ This document describes the authentication system integrating Dynamic Wallet SDK
 The authentication system uses Dynamic.xyz for user authentication and embedded MPC wallets. Users sign a one-time message to authorize their Polymarket proxy wallet, which generates CLOB API credentials that are stored for future trades.
 
 **Key Features**:
+
 - Multiple authentication methods (email + OTP, social login)
 - Non-custodial MPC wallets for users (auto-created)
 - One-time Polymarket authorization signature
@@ -42,6 +44,7 @@ The authentication system uses Dynamic.xyz for user authentication and embedded 
 **Note**: Branded wallets (MetaMask, Phantom, etc.) disabled for now - can be added later.
 
 **Why This Approach**:
+
 - ✅ Much simpler than wallet delegation
 - ✅ Standard Polymarket authentication flow
 - ✅ User signs once, trades forever
@@ -296,6 +299,7 @@ npm install jose
 ```
 
 **Packages explained:**
+
 - `@dynamic-labs-sdk/client` - Main SDK for authentication, user management, wallet accounts
 - `@dynamic-labs-sdk/evm` - Viem wallet client integration (provides `createWalletClientForWalletAccount`)
 - `jose` - Modern JWT verification library (alternative to jsonwebtoken + jwks-rsa)
@@ -309,29 +313,29 @@ Create Dynamic provider wrapper in `src/routes/+layout.svelte`:
 
 ```svelte
 <script lang="ts">
-  import { createDynamicClient } from '@dynamic-labs-sdk/client';
-  import { browser } from '$app/environment';
+	import { createDynamicClient } from '@dynamic-labs-sdk/client';
+	import { browser } from '$app/environment';
 
-  let dynamicClient;
+	let dynamicClient;
 
-  if (browser) {
-    dynamicClient = createDynamicClient({
-      environmentId: import.meta.env.PUBLIC_DYNAMIC_ENVIRONMENT_ID,
-      metadata: {
-        name: 'Glitch Markets',
-        url: 'https://glitch-markets.com',
-        iconUrl: 'https://glitch-markets.com/icon.png'
-      }
-    });
-  }
+	if (browser) {
+		dynamicClient = createDynamicClient({
+			environmentId: import.meta.env.PUBLIC_DYNAMIC_ENVIRONMENT_ID,
+			metadata: {
+				name: 'Glitch Markets',
+				url: 'https://glitch-markets.com',
+				iconUrl: 'https://glitch-markets.com/icon.png'
+			}
+		});
+	}
 </script>
 
 {#if browser && dynamicClient}
-  <DynamicProvider client={dynamicClient}>
-    <slot />
-  </DynamicProvider>
+	<DynamicProvider client={dynamicClient}>
+		<slot />
+	</DynamicProvider>
 {:else}
-  <slot />
+	<slot />
 {/if}
 ```
 
@@ -345,34 +349,36 @@ import { jwtVerify, createRemoteJWKSet } from 'jose';
 // Create JWKS client that automatically fetches and caches public keys
 // IMPORTANT: Replace ${DYNAMIC_ENVIRONMENT_ID} with your actual environment ID
 const JWKS = createRemoteJWKSet(
-  new URL(`https://app.dynamic.xyz/api/v0/sdk/${process.env.DYNAMIC_ENVIRONMENT_ID}/.well-known/jwks`)
+	new URL(
+		`https://app.dynamic.xyz/api/v0/sdk/${process.env.DYNAMIC_ENVIRONMENT_ID}/.well-known/jwks`
+	)
 );
 
 export async function handle({ event, resolve }) {
-  // Extract JWT from Authorization header
-  const authHeader = event.request.headers.get('authorization');
+	// Extract JWT from Authorization header
+	const authHeader = event.request.headers.get('authorization');
 
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.slice(7);
+	if (authHeader?.startsWith('Bearer ')) {
+		const token = authHeader.slice(7);
 
-    try {
-      // Verify JWT with jose (handles key fetching, caching, and verification)
-      const { payload } = await jwtVerify(token, JWKS, {
-        algorithms: ['RS256']
-      });
+		try {
+			// Verify JWT with jose (handles key fetching, caching, and verification)
+			const { payload } = await jwtVerify(token, JWKS, {
+				algorithms: ['RS256']
+			});
 
-      // Store user info in locals
-      event.locals.user = {
-        userId: payload.sub as string,
-        walletAddress: payload.wallet_address as string,
-        email: payload.email as string
-      };
-    } catch (error) {
-      console.error('JWT verification failed:', error);
-    }
-  }
+			// Store user info in locals
+			event.locals.user = {
+				userId: payload.sub as string,
+				walletAddress: payload.wallet_address as string,
+				email: payload.email as string
+			};
+		} catch (error) {
+			console.error('JWT verification failed:', error);
+		}
+	}
 
-  return resolve(event);
+	return resolve(event);
 }
 ```
 
@@ -387,37 +393,35 @@ import { users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function POST({ locals }) {
-  if (!locals.user) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+	if (!locals.user) {
+		return json({ error: 'Unauthorized' }, { status: 401 });
+	}
 
-  const { userId, email, walletAddress } = locals.user;
+	const { userId, email, walletAddress } = locals.user;
 
-  // Create or update user in your database
-  const existingUser = await db.query.users.findFirst({
-    where: eq(users.id, userId)
-  });
+	// Create or update user in your database
+	const existingUser = await db.query.users.findFirst({
+		where: eq(users.id, userId)
+	});
 
-  if (existingUser) {
-    // Update last login
-    await db.update(users)
-      .set({ lastLoginAt: new Date() })
-      .where(eq(users.id, userId));
-  } else {
-    // Create new user
-    await db.insert(users).values({
-      id: userId,
-      email,
-      walletAddress,
-      createdAt: new Date(),
-      lastLoginAt: new Date()
-    });
-  }
+	if (existingUser) {
+		// Update last login
+		await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, userId));
+	} else {
+		// Create new user
+		await db.insert(users).values({
+			id: userId,
+			email,
+			walletAddress,
+			createdAt: new Date(),
+			lastLoginAt: new Date()
+		});
+	}
 
-  return json({
-    success: true,
-    user: { userId, email, walletAddress }
-  });
+	return json({
+		success: true,
+		user: { userId, email, walletAddress }
+	});
 }
 ```
 
@@ -432,53 +436,50 @@ import { polymarketCredentials } from '$lib/server/db/schema';
 import { encryptWithAES } from '$lib/server/utils/crypto';
 
 export async function POST({ request, locals }) {
-  if (!locals.user) {
-    return json({ error: 'Unauthorized' }, { status: 401 });
-  }
+	if (!locals.user) {
+		return json({ error: 'Unauthorized' }, { status: 401 });
+	}
 
-  const { signature, walletAddress } = await request.json();
-  const userId = locals.user.userId;
+	const { signature, walletAddress } = await request.json();
+	const userId = locals.user.userId;
 
-  // Check if already registered
-  const existing = await db.query.polymarketCredentials.findFirst({
-    where: eq(polymarketCredentials.userId, userId)
-  });
+	// Check if already registered
+	const existing = await db.query.polymarketCredentials.findFirst({
+		where: eq(polymarketCredentials.userId, userId)
+	});
 
-  if (existing) {
-    return json({ error: 'Already registered' }, { status: 400 });
-  }
+	if (existing) {
+		return json({ error: 'Already registered' }, { status: 400 });
+	}
 
-  // Register with Polymarket CLOB
-  const response = await fetch(
-    `${process.env.POLYMARKET_CLOB_URL}/auth/api-key`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        address: walletAddress,
-        signature: signature,
-        timestamp: Date.now()
-      })
-    }
-  );
+	// Register with Polymarket CLOB
+	const response = await fetch(`${process.env.POLYMARKET_CLOB_URL}/auth/api-key`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			address: walletAddress,
+			signature: signature,
+			timestamp: Date.now()
+		})
+	});
 
-  if (!response.ok) {
-    return json({ error: 'Failed to register with Polymarket' }, { status: 500 });
-  }
+	if (!response.ok) {
+		return json({ error: 'Failed to register with Polymarket' }, { status: 500 });
+	}
 
-  const { apiKey, secret, passphrase } = await response.json();
+	const { apiKey, secret, passphrase } = await response.json();
 
-  // Store encrypted credentials
-  await db.insert(polymarketCredentials).values({
-    userId,
-    walletAddress,
-    encryptedApiKey: encryptWithAES(apiKey),
-    encryptedSecret: encryptWithAES(secret),
-    encryptedPassphrase: encryptWithAES(passphrase),
-    createdAt: new Date()
-  });
+	// Store encrypted credentials
+	await db.insert(polymarketCredentials).values({
+		userId,
+		walletAddress,
+		encryptedApiKey: encryptWithAES(apiKey),
+		encryptedSecret: encryptWithAES(secret),
+		encryptedPassphrase: encryptWithAES(passphrase),
+		createdAt: new Date()
+	});
 
-  return json({ success: true });
+	return json({ success: true });
 }
 ```
 
@@ -492,130 +493,128 @@ Create `src/lib/components/PolymarketAuth.svelte`:
 
 ```svelte
 <script lang="ts">
-  import { createWalletClientForWalletAccount } from '@dynamic-labs-sdk/evm/viem';
-  import { dynamicClient } from '$lib/stores/auth'; // Your Dynamic client store
+	import { createWalletClientForWalletAccount } from '@dynamic-labs-sdk/evm/viem';
+	import { dynamicClient } from '$lib/stores/auth'; // Your Dynamic client store
 
-  let isRegistering = $state(false);
-  let isRegistered = $state(false);
-  let error = $state<string | null>(null);
+	let isRegistering = $state(false);
+	let isRegistered = $state(false);
+	let error = $state<string | null>(null);
 
-  async function registerWithPolymarket() {
-    isRegistering = true;
-    error = null;
+	async function registerWithPolymarket() {
+		isRegistering = true;
+		error = null;
 
-    try {
-      // Get the user's wallet account
-      const walletAccounts = dynamicClient.getWalletAccounts();
-      if (!walletAccounts.length) {
-        throw new Error('No wallet found');
-      }
+		try {
+			// Get the user's wallet account
+			const walletAccounts = dynamicClient.getWalletAccounts();
+			if (!walletAccounts.length) {
+				throw new Error('No wallet found');
+			}
 
-      const walletAccount = walletAccounts[0];
-      const walletAddress = walletAccount.address;
+			const walletAccount = walletAccounts[0];
+			const walletAddress = walletAccount.address;
 
-      // Create Viem wallet client
-      const walletClient = await createWalletClientForWalletAccount({
-        walletAccount
-      });
+			// Create Viem wallet client
+			const walletClient = await createWalletClientForWalletAccount({
+				walletAccount
+			});
 
-      // Create authorization message
-      const message = `I authorize Glitch Markets to trade on my behalf.\nWallet: ${walletAddress}\nTimestamp: ${Date.now()}`;
+			// Create authorization message
+			const message = `I authorize Glitch Markets to trade on my behalf.\nWallet: ${walletAddress}\nTimestamp: ${Date.now()}`;
 
-      // Request user signature
-      const signature = await walletClient.signMessage({ message });
+			// Request user signature
+			const signature = await walletClient.signMessage({ message });
 
-      // Send to backend
-      const response = await fetch('/api/polymarket/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${dynamicClient.token}`
-        },
-        body: JSON.stringify({ signature, walletAddress })
-      });
+			// Send to backend
+			const response = await fetch('/api/polymarket/register', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${dynamicClient.token}`
+				},
+				body: JSON.stringify({ signature, walletAddress })
+			});
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Registration failed');
-      }
+			if (!response.ok) {
+				const data = await response.json();
+				throw new Error(data.error || 'Registration failed');
+			}
 
-      isRegistered = true;
-    } catch (err) {
-      error = err.message;
-    } finally {
-      isRegistering = false;
-    }
-  }
+			isRegistered = true;
+		} catch (err) {
+			error = err.message;
+		} finally {
+			isRegistering = false;
+		}
+	}
 
-  // Check if already registered on mount
-  async function checkRegistration() {
-    try {
-      const response = await fetch('/api/polymarket/status', {
-        headers: {
-          'Authorization': `Bearer ${dynamicClient.token}`
-        }
-      });
+	// Check if already registered on mount
+	async function checkRegistration() {
+		try {
+			const response = await fetch('/api/polymarket/status', {
+				headers: {
+					Authorization: `Bearer ${dynamicClient.token}`
+				}
+			});
 
-      if (response.ok) {
-        const data = await response.json();
-        isRegistered = data.registered;
-      }
-    } catch (err) {
-      console.error('Failed to check registration status:', err);
-    }
-  }
+			if (response.ok) {
+				const data = await response.json();
+				isRegistered = data.registered;
+			}
+		} catch (err) {
+			console.error('Failed to check registration status:', err);
+		}
+	}
 
-  $effect(() => {
-    if (dynamicClient.isSignedIn()) {
-      checkRegistration();
-    }
-  });
+	$effect(() => {
+		if (dynamicClient.isSignedIn()) {
+			checkRegistration();
+		}
+	});
 </script>
 
 <div class="polymarket-auth">
-  {#if isRegistered}
-    <div class="success">
-      ✓ Ready to trade on Polymarket
-    </div>
-  {:else}
-    <button onclick={registerWithPolymarket} disabled={isRegistering}>
-      {isRegistering ? 'Authorizing...' : 'Enable Polymarket Trading'}
-    </button>
-  {/if}
+	{#if isRegistered}
+		<div class="success">✓ Ready to trade on Polymarket</div>
+	{:else}
+		<button onclick={registerWithPolymarket} disabled={isRegistering}>
+			{isRegistering ? 'Authorizing...' : 'Enable Polymarket Trading'}
+		</button>
+	{/if}
 
-  {#if error}
-    <div class="error">{error}</div>
-  {/if}
+	{#if error}
+		<div class="error">{error}</div>
+	{/if}
 </div>
 
 <style>
-  .polymarket-auth {
-    padding: 1rem;
-  }
+	.polymarket-auth {
+		padding: 1rem;
+	}
 
-  button {
-    background: var(--color-primary);
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 0.5rem;
-    cursor: pointer;
-  }
+	button {
+		background: var(--color-primary);
+		color: white;
+		padding: 0.75rem 1.5rem;
+		border: none;
+		border-radius: 0.5rem;
+		cursor: pointer;
+	}
 
-  button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+	button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
 
-  .success {
-    color: var(--color-success);
-    font-weight: 500;
-  }
+	.success {
+		color: var(--color-success);
+		font-weight: 500;
+	}
 
-  .error {
-    color: var(--color-error);
-    margin-top: 0.5rem;
-  }
+	.error {
+		color: var(--color-error);
+		margin-top: 0.5rem;
+	}
 </style>
 ```
 
@@ -642,163 +641,151 @@ import { decryptWithAES } from '$lib/server/utils/crypto';
 import crypto from 'node:crypto';
 
 interface OrderParams {
-  tokenID: string;
-  price: number;
-  side: 'BUY' | 'SELL';
-  size: number;
+	tokenID: string;
+	price: number;
+	side: 'BUY' | 'SELL';
+	size: number;
 }
 
 /**
  * Create HMAC signature for Polymarket CLOB API
  */
 function createClobSignature(params: {
-  secret: string;
-  timestamp: number;
-  method: string;
-  path: string;
-  body?: unknown;
+	secret: string;
+	timestamp: number;
+	method: string;
+	path: string;
+	body?: unknown;
 }): string {
-  const { secret, timestamp, method, path, body } = params;
+	const { secret, timestamp, method, path, body } = params;
 
-  const bodyStr = body ? JSON.stringify(body) : '';
-  const message = `${timestamp}${method}${path}${bodyStr}`;
+	const bodyStr = body ? JSON.stringify(body) : '';
+	const message = `${timestamp}${method}${path}${bodyStr}`;
 
-  return crypto
-    .createHmac('sha256', Buffer.from(secret, 'base64'))
-    .update(message)
-    .digest('base64');
+	return crypto
+		.createHmac('sha256', Buffer.from(secret, 'base64'))
+		.update(message)
+		.digest('base64');
 }
 
 /**
  * Get user's Polymarket credentials from database
  */
 async function getUserCredentials(userId: string) {
-  const creds = await db.query.polymarketCredentials.findFirst({
-    where: eq(polymarketCredentials.userId, userId)
-  });
+	const creds = await db.query.polymarketCredentials.findFirst({
+		where: eq(polymarketCredentials.userId, userId)
+	});
 
-  if (!creds) {
-    throw new Error('User not registered with Polymarket');
-  }
+	if (!creds) {
+		throw new Error('User not registered with Polymarket');
+	}
 
-  return {
-    apiKey: decryptWithAES(creds.encryptedApiKey),
-    secret: decryptWithAES(creds.encryptedSecret),
-    passphrase: decryptWithAES(creds.encryptedPassphrase),
-    walletAddress: creds.walletAddress
-  };
+	return {
+		apiKey: decryptWithAES(creds.encryptedApiKey),
+		secret: decryptWithAES(creds.encryptedSecret),
+		passphrase: decryptWithAES(creds.encryptedPassphrase),
+		walletAddress: creds.walletAddress
+	};
 }
 
 /**
  * Create an order on Polymarket
  */
-export async function createOrder(
-  userId: string,
-  orderParams: OrderParams
-) {
-  const credentials = await getUserCredentials(userId);
+export async function createOrder(userId: string, orderParams: OrderParams) {
+	const credentials = await getUserCredentials(userId);
 
-  const timestamp = Date.now();
-  const path = '/order';
-  const signature = createClobSignature({
-    secret: credentials.secret,
-    timestamp,
-    method: 'POST',
-    path,
-    body: orderParams
-  });
+	const timestamp = Date.now();
+	const path = '/order';
+	const signature = createClobSignature({
+		secret: credentials.secret,
+		timestamp,
+		method: 'POST',
+		path,
+		body: orderParams
+	});
 
-  const response = await fetch(
-    `${process.env.POLYMARKET_CLOB_URL}${path}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'POLY-API-KEY': credentials.apiKey,
-        'POLY-SIGNATURE': signature,
-        'POLY-TIMESTAMP': timestamp.toString(),
-        'POLY-PASSPHRASE': credentials.passphrase
-      },
-      body: JSON.stringify(orderParams)
-    }
-  );
+	const response = await fetch(`${process.env.POLYMARKET_CLOB_URL}${path}`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'POLY-API-KEY': credentials.apiKey,
+			'POLY-SIGNATURE': signature,
+			'POLY-TIMESTAMP': timestamp.toString(),
+			'POLY-PASSPHRASE': credentials.passphrase
+		},
+		body: JSON.stringify(orderParams)
+	});
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Order creation failed: ${error.message}`);
-  }
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(`Order creation failed: ${error.message}`);
+	}
 
-  return response.json();
+	return response.json();
 }
 
 /**
  * Get user's open orders
  */
 export async function getOpenOrders(userId: string) {
-  const credentials = await getUserCredentials(userId);
+	const credentials = await getUserCredentials(userId);
 
-  const timestamp = Date.now();
-  const path = '/orders';
-  const signature = createClobSignature({
-    secret: credentials.secret,
-    timestamp,
-    method: 'GET',
-    path
-  });
+	const timestamp = Date.now();
+	const path = '/orders';
+	const signature = createClobSignature({
+		secret: credentials.secret,
+		timestamp,
+		method: 'GET',
+		path
+	});
 
-  const response = await fetch(
-    `${process.env.POLYMARKET_CLOB_URL}${path}`,
-    {
-      method: 'GET',
-      headers: {
-        'POLY-API-KEY': credentials.apiKey,
-        'POLY-SIGNATURE': signature,
-        'POLY-TIMESTAMP': timestamp.toString(),
-        'POLY-PASSPHRASE': credentials.passphrase
-      }
-    }
-  );
+	const response = await fetch(`${process.env.POLYMARKET_CLOB_URL}${path}`, {
+		method: 'GET',
+		headers: {
+			'POLY-API-KEY': credentials.apiKey,
+			'POLY-SIGNATURE': signature,
+			'POLY-TIMESTAMP': timestamp.toString(),
+			'POLY-PASSPHRASE': credentials.passphrase
+		}
+	});
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch orders');
-  }
+	if (!response.ok) {
+		throw new Error('Failed to fetch orders');
+	}
 
-  return response.json();
+	return response.json();
 }
 
 /**
  * Cancel an order
  */
 export async function cancelOrder(userId: string, orderId: string) {
-  const credentials = await getUserCredentials(userId);
+	const credentials = await getUserCredentials(userId);
 
-  const timestamp = Date.now();
-  const path = `/order/${orderId}`;
-  const signature = createClobSignature({
-    secret: credentials.secret,
-    timestamp,
-    method: 'DELETE',
-    path
-  });
+	const timestamp = Date.now();
+	const path = `/order/${orderId}`;
+	const signature = createClobSignature({
+		secret: credentials.secret,
+		timestamp,
+		method: 'DELETE',
+		path
+	});
 
-  const response = await fetch(
-    `${process.env.POLYMARKET_CLOB_URL}${path}`,
-    {
-      method: 'DELETE',
-      headers: {
-        'POLY-API-KEY': credentials.apiKey,
-        'POLY-SIGNATURE': signature,
-        'POLY-TIMESTAMP': timestamp.toString(),
-        'POLY-PASSPHRASE': credentials.passphrase
-      }
-    }
-  );
+	const response = await fetch(`${process.env.POLYMARKET_CLOB_URL}${path}`, {
+		method: 'DELETE',
+		headers: {
+			'POLY-API-KEY': credentials.apiKey,
+			'POLY-SIGNATURE': signature,
+			'POLY-TIMESTAMP': timestamp.toString(),
+			'POLY-PASSPHRASE': credentials.passphrase
+		}
+	});
 
-  if (!response.ok) {
-    throw new Error('Failed to cancel order');
-  }
+	if (!response.ok) {
+		throw new Error('Failed to cancel order');
+	}
 
-  return response.json();
+	return response.json();
 }
 ```
 
@@ -815,30 +802,30 @@ const ALGORITHM = 'aes-256-gcm';
 const KEY = Buffer.from(process.env.POLYMARKET_ENCRYPTION_KEY!, 'hex');
 
 export function encryptWithAES(text: string): string {
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(ALGORITHM, KEY, iv);
+	const iv = crypto.randomBytes(16);
+	const cipher = crypto.createCipheriv(ALGORITHM, KEY, iv);
 
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
+	let encrypted = cipher.update(text, 'utf8', 'hex');
+	encrypted += cipher.final('hex');
 
-  const authTag = cipher.getAuthTag();
+	const authTag = cipher.getAuthTag();
 
-  return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
+	return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
 }
 
 export function decryptWithAES(encrypted: string): string {
-  const [ivHex, authTagHex, encryptedText] = encrypted.split(':');
+	const [ivHex, authTagHex, encryptedText] = encrypted.split(':');
 
-  const iv = Buffer.from(ivHex, 'hex');
-  const authTag = Buffer.from(authTagHex, 'hex');
-  const decipher = crypto.createDecipheriv(ALGORITHM, KEY, iv);
+	const iv = Buffer.from(ivHex, 'hex');
+	const authTag = Buffer.from(authTagHex, 'hex');
+	const decipher = crypto.createDecipheriv(ALGORITHM, KEY, iv);
 
-  decipher.setAuthTag(authTag);
+	decipher.setAuthTag(authTag);
 
-  let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
+	let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+	decrypted += decipher.final('utf8');
 
-  return decrypted;
+	return decrypted;
 }
 ```
 
@@ -853,23 +840,26 @@ import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
 
 // Main users table - created BEFORE Polymarket registration
 export const users = pgTable('users', {
-  id: text('id').primaryKey(), // Dynamic user ID
-  email: text('email'),
-  walletAddress: text('wallet_address').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  lastLoginAt: timestamp('last_login_at').notNull().defaultNow()
+	id: text('id').primaryKey(), // Dynamic user ID
+	email: text('email'),
+	walletAddress: text('wallet_address').notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	lastLoginAt: timestamp('last_login_at').notNull().defaultNow()
 });
 
 // Polymarket credentials - requires user to exist first
 export const polymarketCredentials = pgTable('polymarket_credentials', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: text('user_id').notNull().unique().references(() => users.id),
-  walletAddress: text('wallet_address').notNull(),
-  encryptedApiKey: text('encrypted_api_key').notNull(),
-  encryptedSecret: text('encrypted_secret').notNull(),
-  encryptedPassphrase: text('encrypted_passphrase').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  lastUsedAt: timestamp('last_used_at')
+	id: uuid('id').defaultRandom().primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.unique()
+		.references(() => users.id),
+	walletAddress: text('wallet_address').notNull(),
+	encryptedApiKey: text('encrypted_api_key').notNull(),
+	encryptedSecret: text('encrypted_secret').notNull(),
+	encryptedPassphrase: text('encrypted_passphrase').notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	lastUsedAt: timestamp('last_used_at')
 });
 ```
 
@@ -1006,14 +996,14 @@ Before using credentials, verify they're still valid:
 
 ```typescript
 async function validateCredentials(userId: string): Promise<boolean> {
-  try {
-    // Make a simple authenticated request to Polymarket
-    const orders = await getOpenOrders(userId);
-    return true;
-  } catch (error) {
-    // Credentials may be invalid or expired
-    return false;
-  }
+	try {
+		// Make a simple authenticated request to Polymarket
+		const orders = await getOpenOrders(userId);
+		return true;
+	} catch (error) {
+		// Credentials may be invalid or expired
+		return false;
+	}
 }
 ```
 
@@ -1128,6 +1118,7 @@ async function validateCredentials(userId: string): Promise<boolean> {
 ### Why User Creation Comes First:
 
 **Dynamic manages their users**, but YOU need your own user records for:
+
 - Associating Polymarket credentials with users
 - Storing user preferences and settings
 - Foreign key relationships in your database

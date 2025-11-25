@@ -21,11 +21,13 @@
 ## Quick Start
 
 ### JavaScript SDK Overview
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/quickstart
 
 **When to use**: Client-side integration, web applications, interactive wallet connections
 
 **Key capabilities**:
+
 - Install SDK: `npm install @dynamic-labs-sdk/client`
 - Initialize with `DynamicContextProvider` wrapper component
 - Test accounts available in Sandbox mode for quick testing
@@ -36,17 +38,20 @@
 ---
 
 ### Node SDK Overview
+
 **URL**: https://www.dynamic.xyz/docs/node-sdk/quickstart
 
 **When to use**: Server-side wallet operations, automated blockchain interactions, backend services
 
 **Key capabilities**:
+
 - Server-controlled non-custodial wallets via MPC
 - Multi-chain support: Ethereum (EVM) and Solana (SVM)
 - Multiple threshold schemes: 2-of-2, 2-of-3, 3-of-5
 - Full TypeScript support
 
 **Requirements**:
+
 - Node.js 16+
 - Environment variables: `DYNAMIC_AUTH_TOKEN`, `DYNAMIC_ENVIRONMENT_ID`
 - Enable embedded wallets and networks in dashboard
@@ -58,6 +63,7 @@
 ## Authentication Methods
 
 ### Email Authentication
+
 **URL**: https://www.dynamic.xyz/docs/authentication-methods/email
 
 **When to use**: Password-less authentication, simple user onboarding, email-based access
@@ -65,12 +71,14 @@
 **Setup**: Enable in dashboard → Log in & User Profile → Toggle "Email"
 
 **Implementation options**:
+
 - **React**: `useConnectWithOtp` hook → `connectWithEmail()`, `verifyOneTimePassword()`
 - **React Native**: `dynamicClient.auth.email` → `sendOTP()`, `resendOTP()`, `verifyOTP()`
 - **JavaScript**: Import `sendEmailOTP`, `verifyOTP` functions
 - **Swift/Flutter**: Native SDK OTP methods
 
 **Flow**:
+
 1. User submits email
 2. System sends OTP code
 3. User enters code to verify
@@ -82,6 +90,7 @@
 ---
 
 ### Social Authentication
+
 **URL**: https://www.dynamic.xyz/docs/authentication-methods/social
 
 **When to use**: Social login, OAuth providers, familiar authentication flows
@@ -91,6 +100,7 @@
 **Setup**: Configure via dashboard → Social Providers → Toggle individual providers
 
 **Implementation options**:
+
 - **React**: `useSocialAccounts` hook → `signInWithSocialAccount()` (supports redirect vs popup)
 - **React Native**: Requires deeplink URL configuration
 - **JavaScript**: `authenticateWithSocial()` → redirect → `completeSocialAuthentication()`
@@ -103,6 +113,7 @@
 ---
 
 ### Passkey Authentication
+
 **URL**: https://www.dynamic.xyz/docs/authentication-methods/passkey
 
 **When to use**: WebAuthn-based authentication, biometric login, hardware security keys
@@ -112,10 +123,11 @@
 **Setup**: Enable in dashboard → Log in & User Profile → Toggle "Passkey"
 
 **Implementation**:
+
 - **React**:
   ```tsx
   const signInWithPasskey = useSignInWithPasskey();
-  <button onClick={() => signInWithPasskey()}>Sign in</button>
+  <button onClick={() => signInWithPasskey()}>Sign in</button>;
   ```
 - **JavaScript**: Import `signInWithPasskey()` function
 - **React Native**: Supports primary sign-in, registration, MFA, cross-origin
@@ -127,6 +139,7 @@
 ---
 
 ### Branded Wallets
+
 **URL**: https://www.dynamic.xyz/docs/authentication-methods/branded-wallets
 
 **When to use**: Crypto wallet connections, MetaMask/Phantom integration, blockchain-native auth
@@ -134,22 +147,26 @@
 **Supported chains**: Ethereum, all EVM chains, Solana, Eclipse, Flow, Bitcoin, Algorand, Starknet, Cosmos Hub, Axelar, Noble, Osmosis, Sei, Sui
 
 **Key features**:
+
 - Multi-wallet support per account
 - Wallet switching without re-authentication
 - Smart labels: "Last Used", "Multichain", "Recommended"
 
 **Setup steps**:
+
 1. Enable chains and connectors via chains configuration
 2. Configure RPC endpoints (default or custom)
 3. Activate in dashboard → Log in & User Profile → Branded Wallets
 
 **Customization**:
+
 - Hide network switching UI
 - WalletConnect configuration
 - Wallet sorting/filtering
 - Authentication modes: connect-and-sign vs connected-only
 
 **Implementation**:
+
 - **React**: `useWalletOptions` → fetch wallets, `WalletIcon` component, `selectWalletOption()`
 - **JavaScript**: `connectAndVerifyWithWalletProvider()`
 
@@ -158,11 +175,13 @@
 ---
 
 ### Server-Side Verification
+
 **URL**: https://www.dynamic.xyz/docs/authentication-methods/how-to-validate-users-on-the-backend
 
 **When to use**: Backend authentication, API security, JWT validation, user verification
 
 **JWT Details**:
+
 - Signed with RS256 algorithm
 - Unique private key per environment
 - Verify with public key from JWKS endpoint
@@ -179,6 +198,7 @@
    - Verify token signature
 
 **Security best practices**:
+
 - Verify signatures before trusting claims
 - Check `requiresAdditionalAuth` scope for MFA
 - Validate expiration: `ignoreExpiration: false`
@@ -191,6 +211,7 @@
 ## Wallet Management
 
 ### Available Wallets
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/get-available-wallets-to-connect
 
 **Function**: `getAvailableWalletProvidersData()`
@@ -198,6 +219,7 @@
 **Key concept**: Each chain + wallet = separate entity (e.g., MetaMask on EVM = `metamaskevm`, MetaMask on Solana = `metamasksol`)
 
 **Useful fields**:
+
 - `groupKey`: Group by wallet application
 - `chain`: Filter by blockchain
 - `metadata.displayName`: Human-readable name
@@ -208,6 +230,7 @@
 ---
 
 ### Connect and Verify Wallets
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/connect-and-verify-wallet
 
 **Three connection methods**:
@@ -225,6 +248,7 @@
 ---
 
 ### Get Wallet Accounts
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/get-wallet-accounts
 
 **Function**: `getWalletAccounts()`
@@ -234,6 +258,7 @@
 **Key concept**: Multiple accounts if same wallet connected to different chains (e.g., MetaMask on EVM + SOL = 2 accounts)
 
 **Use cases**:
+
 - Display connected accounts
 - Retrieve balances
 - Manage multi-network connections
@@ -243,6 +268,7 @@
 ---
 
 ### Network Switching
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/switch-active-network
 
 **Function**: `switchActiveNetwork()`
@@ -254,6 +280,7 @@
 ---
 
 ### Get Balance
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/get-balance
 
 **Function**: `getBalance()`
@@ -265,6 +292,7 @@
 ---
 
 ### Sign Message
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/sign-message
 
 **Function**: `signMessage()`
@@ -276,6 +304,7 @@
 ---
 
 ### Remove Wallet Account
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/remove-wallet-account
 
 **Function**: `removeWalletAccount()`
@@ -289,23 +318,28 @@
 ## Embedded Wallets (MPC)
 
 ### Setup Overview
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/setup
 
 **When to use**: User-controlled MPC wallets, embedded wallet infrastructure, non-custodial solutions
 
 **Prerequisites**:
+
 - Dynamic Dashboard → Developer → Enable Embedded Wallets
 - Select supported blockchain networks
 
 **SDK Requirements**:
+
 - React SDK v4.20.0+ with chain-specific connectors
 - Only install connectors for needed chains
 
 **Security - CSP Configuration**:
+
 - Whitelist `https://app.dynamicauth.com` in `frame-src` directive
 - Configure via HTTP headers, meta tags, NGINX, or Vercel
 
 **Implementation**:
+
 1. Configure provider with wallet connectors (Ethereum, Solana, Sui)
 2. Users auto-receive wallets upon authentication
 3. Access via standard client methods
@@ -318,14 +352,17 @@
 ---
 
 ### Creating Wallets
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/creating-wallets
 
 **Automatic creation**:
+
 - Enable "Create on Sign up" in dashboard
 - Creates one wallet per enabled chain
 - Optional: "Embedded Wallet for Third-Party Wallets" for users with MetaMask etc.
 
 **Manual creation**:
+
 - **React**:
   ```javascript
   const { createWalletAccount } = useDynamicWaas();
@@ -343,17 +380,20 @@
 ---
 
 ### Pre-generating Wallets
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/create-pregen-wallet
 
 **When to use**: Create wallets before authentication, mass wallet creation, server-side preparation
 
 **Use cases**:
+
 - Establish wallets for prospective users
 - Bulk wallet generation
 - Link wallets to identifiers (email)
 - Server-side processes
 
 **Implementation**:
+
 1. Get credentials: Environment ID + API key from dashboard
 2. POST to wallet creation endpoint
 3. Provide identifier (email), type, desired chains
@@ -367,6 +407,7 @@
 ---
 
 ### Global Identity
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/global-identity
 
 **When to use**: Personalized subdomains, ENS-like identities, user identifiers
@@ -374,6 +415,7 @@
 **Feature**: Users claim subdomains tied to embedded wallets (format: `custom.domain.eth`)
 
 **Setup**:
+
 1. Dashboard → Embedded Wallets → Toggle "Personalized Subdomains"
 2. Configure ENS domain (pre-populated or manual)
 3. Verify ownership via Namestone (sign message)
@@ -388,19 +430,23 @@
 ---
 
 ### Transactions with Embedded Wallets
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/transactions
 
 **Key concept**: MPC signing between user's key share + Dynamic's key share
 
 **Custom UI implementation**:
+
 - **EVM chains**: Sign messages, typed data, execute transactions, Wagmi integration, query balances
 - **Solana**: Legacy transactions, versioned transactions
 
 **Dynamic's UI**:
+
 - Default transaction confirmation screen
 - Customization: Toggle on/off, customize titles, enable simulation
 
 **Transaction simulation**:
+
 - Previews asset transfers before confirmation
 - Example: SOL→USDC swap shows outgoing + incoming assets
 
@@ -409,11 +455,13 @@
 ---
 
 ### Delegated Access - Triggering
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/delegated-access/triggering-delegation
 
 **What it is**: Grant application permission to access user's embedded wallet
 
 **Triggering methods**:
+
 1. **Automatic**: Configured during setup, prompt on sign-in
 2. **Manual (React)**: `useWalletDelegation` hook → check status, trigger UI
 3. **Manual (JavaScript)**: `hasDelegatedAccess()` → `delegateWaasKeyShares()`
@@ -426,16 +474,19 @@
 ---
 
 ### Delegated Access - Receiving
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/delegated-access/receiving-delegation
 
 **Webhook**: `wallet.delegation.created` event delivers encrypted materials
 
 **Process**:
+
 1. **Verify webhook signature** (ensure authenticity)
 2. **Decrypt materials**: RSA-OAEP + AES-256-GCM hybrid encryption
 3. **Store securely**: userId, walletId, decrypted secrets (use envelope encryption/KMS)
 
 **Encryption structure**:
+
 - `alg`: Algorithm specification
 - `iv`: Initialization vector
 - `ct`: Ciphertext
@@ -443,6 +494,7 @@
 - `ek`: Encrypted content-encryption key
 
 **Decryption steps**:
+
 1. RSA-OAEP decrypt the encrypted key (SHA-256 hash)
 2. AES-GCM decrypt delegated materials
 
@@ -453,22 +505,26 @@
 ---
 
 ### Delegated Access - Developer Actions
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/delegated-access/developer-actions
 
 **What it enables**: Server-side wallet operations on behalf of users
 
 **Available operations**:
+
 - Message signing across blockchains
 - Transaction execution
 - Gas sponsorship (EVM)
 
 **Security boundaries**:
+
 - Actions scoped to specific wallet
 - Requires `walletApiKey` + `keyShare`
 - Server-side execution only
 - User-revocable access
 
 **Implementation**:
+
 - **EVM**: `createDelegatedEvmWalletClient` → `delegatedSignMessage(walletId, apiKey, keyShare, message)`
 - **SVM**: `createDelegatedSvmWalletClient` → similar pattern for Solana
 
@@ -477,6 +533,7 @@
 ---
 
 ### Delegated Access - Revoking
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/delegated-access/revoking-delegation
 
 **What it does**: Removes delegated server access, prevents further operations
@@ -484,16 +541,19 @@
 **Who can revoke**: Users control revocation (individual wallets or all at once)
 
 **Process**:
+
 1. User initiates revocation
 2. Dynamic performs reshare ceremony
 3. Developer's external share becomes invalid
 4. Operations immediately blocked
 
 **Implementation**:
+
 - **React**: `useWalletDelegation` → `revokeDelegation([wallets])`
 - **JavaScript**: `revokeWaasDelegation()` for specific wallet, `hasDelegatedAccess()` to check
 
 **Server requirements** (on `wallet.delegation.revoked` webhook):
+
 - Invalidate cached materials
 - Stop delegated jobs/agents
 - Remove/rotate stored shares and keys
@@ -504,6 +564,7 @@
 ---
 
 ### Raw Signing
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/raw-signing
 
 **When to use**: Custom protocols, non-standard data structures, specific encoding requirements, full hash control
@@ -511,14 +572,17 @@
 **When NOT to use**: Standard message signing, well-established patterns (use standard methods instead)
 
 **Supported formats**:
+
 - **Hexadecimal**: Most common for blockchain (encoded as hex string)
 - **UTF-8 Text**: Plain text without hex conversion
 
 **Hash functions**:
+
 - **Keccak256**: Standard for Ethereum/EVM chains
 - **SHA256**: General-purpose cryptographic alternative
 
 **Implementation**:
+
 1. Instantiate `DynamicWaasEVMConnector` from wallet
 2. Process message (encoding + hash function)
 3. Call `signRawMessage(accountAddress, hashedMessage)`
@@ -530,26 +594,33 @@
 ---
 
 ### Sign Typed Data (EIP-712)
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/sign-typed-data
 
 **What it is**: Signing structured, human-readable data per EIP-712 standard
 
 **Use cases**:
+
 - Permit transactions (gasless token approvals)
 - Meta-transactions (abstracted gas payment)
 - Complex multi-field authorization
 
 **Required structure**:
+
 1. **Domain**: App context (name, version, chainId, verifyingContract)
 2. **Types**: Field definitions (including nested types)
 3. **Message**: Actual data matching types
 4. **Primary Type**: Which type definition message conforms to
 
 **Implementation**:
+
 ```javascript
 const walletClient = await getWalletClient();
 const signature = await walletClient.signTypedData({
-  domain, types, message, primaryType
+	domain,
+	types,
+	message,
+	primaryType
 });
 ```
 
@@ -558,6 +629,7 @@ const signature = await walletClient.signTypedData({
 ---
 
 ### How MPC Shares Work
+
 **URL**: https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/how-shares-work
 
 **Security model**: Threshold signature schemes, distributed cryptography, no complete private key
@@ -569,6 +641,7 @@ const signature = await walletClient.signTypedData({
 3. **Communication**: Encrypted channels via MPC relay (manages ceremony without storing data)
 
 **Key advantages**:
+
 - No single point of private key exposure
 - Isolated, stateless signing operations
 - Zero-knowledge proof security
@@ -582,16 +655,19 @@ const signature = await walletClient.signTypedData({
 ## Server Wallets
 
 ### Server Wallets Overview
+
 **URL**: https://www.dynamic.xyz/docs/wallets/server-wallets/overview
 
 **What they are**: Backend-controlled cryptocurrency wallets via MPC for automated operations
 
 **Key differences from embedded wallets**:
+
 - Backend operation vs user-facing
 - No user authentication required
 - Programmatic automation focus
 
 **Use cases**:
+
 - Automated transaction execution
 - Contract interactions without user involvement
 - Complex workflow orchestration
@@ -600,6 +676,7 @@ const signature = await walletClient.signTypedData({
 **Security model**: Threshold schemes (2-of-2, 2-of-3, 3-of-5), distributed key shares, optional backup to Dynamic
 
 **Setup steps**:
+
 1. Enable multiple embedded wallets per chain in dashboard
 2. Generate API token
 3. Install Node SDKs (EVM/SVM)
@@ -612,30 +689,34 @@ const signature = await walletClient.signTypedData({
 ---
 
 ### Viem Wallet Client (Server Wallets)
+
 **URL**: https://www.dynamic.xyz/docs/wallets/server-wallets/viem-wallet-client
 
 **When to use**: EVM operations with server wallets, Viem integration, transaction automation
 
 **Setup**:
+
 ```typescript
 const evmClient = new DynamicEvmWalletClient({
-  environmentId: 'your-id'
+	environmentId: 'your-id'
 });
 await evmClient.authenticateApiToken('your-token');
 
 const walletClient = await evmClient.getWalletClient({
-  accountAddress: '0x...',
-  chainId: 11155111,
-  rpcUrl: 'https://...'
+	accountAddress: '0x...',
+	chainId: 11155111,
+	rpcUrl: 'https://...'
 });
 ```
 
 **Configuration options**:
+
 - Pass Viem chain object OR chainId + rpcUrl
 - `password` for password-protected wallets
 - `externalServerKeyShares` for externally-stored wallets
 
 **Available operations**:
+
 - Message signing: `walletClient.signMessage({ message })`
 - Typed data: `walletClient.signTypedData({ domain, types, message })`
 - Transactions: `walletClient.sendTransaction({ to, value })`
@@ -647,11 +728,13 @@ const walletClient = await evmClient.getWalletClient({
 ---
 
 ### Gas Sponsorship (EVM)
+
 **URL**: https://www.dynamic.xyz/docs/wallets/server-wallets/gas-sponsorship
 
 **What it is**: Server covers transaction fees using ZeroDev paymaster/bundler
 
 **Setup requirements**:
+
 1. ZeroDev project IDs + gas policies per network
 2. Dashboard → "Sponsor Gas" → Add ZeroDev project IDs
 3. Environment variables for credentials
@@ -661,6 +744,7 @@ const walletClient = await evmClient.getWalletClient({
 **Implementation**:
 
 **Node EVM (Server Wallets)**:
+
 ```javascript
 // Create authenticated EVM client
 // Create ZeroDev client with withSponsorship: true
@@ -668,6 +752,7 @@ const walletClient = await evmClient.getWalletClient({
 ```
 
 **Delegated Access**:
+
 ```javascript
 // Create delegated EVM client with wallet credentials
 // Create kernel client with delegated params
@@ -681,22 +766,26 @@ const walletClient = await evmClient.getWalletClient({
 ---
 
 ### Gas Sponsorship (Solana)
+
 **URL**: https://www.dynamic.xyz/docs/wallets/server-wallets/gas-sponsorship-svm
 
 **What it is**: Server pays SOL gas fees while user's delegated wallet signs instructions
 
 **Requirements**:
+
 - Funded Solana wallet (fee payer)
 - Server API credentials
 - `@dynamic-labs-wallet/node-svm` package
 - Webhook infrastructure for delegation
 
 **Key differences from EVM**:
+
 - **Multi-signature approach**: Dual signatures required (delegated user signs instructions, fee payer signs complete transaction)
 - **Credential management**: User delegation via webhooks, decrypt key shares
 - **No account abstraction**: Explicit dual-signature model vs EVM contract-based delegation
 
 **Implementation flow**:
+
 1. Initialize delegated client with environment ID + API key
 2. Decrypt delegation credentials (wallet ID, API key, key share)
 3. Build transaction instructions
@@ -712,6 +801,7 @@ const walletClient = await evmClient.getWalletClient({
 ## SDK Reference
 
 ### Create Dynamic Client
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/client/create-dynamic-client
 
 **Purpose**: Foundational setup for JavaScript SDK (required before all other methods)
@@ -719,20 +809,22 @@ const walletClient = await evmClient.getWalletClient({
 **Installation**: `npm install @dynamic-labs-sdk/client`
 
 **Configuration**:
+
 ```javascript
 import { createDynamicClient } from '@dynamic-labs-sdk/client';
 
 const dynamicClient = createDynamicClient({
-  environmentId: 'YOUR_ENVIRONMENT_ID',
-  metadata: {
-    name: 'YOUR_APP_NAME',
-    url: 'YOUR_APP_URL',
-    iconUrl: 'YOUR_APP_ICON_URL',
-  },
+	environmentId: 'YOUR_ENVIRONMENT_ID',
+	metadata: {
+		name: 'YOUR_APP_NAME',
+		url: 'YOUR_APP_URL',
+		iconUrl: 'YOUR_APP_ICON_URL'
+	}
 });
 ```
 
 **Parameters**:
+
 - `environmentId`: From Dynamic dashboard → Developer → API
 - `metadata.name`: Application display name
 - `metadata.url`: Application web address
@@ -743,15 +835,18 @@ const dynamicClient = createDynamicClient({
 ---
 
 ### Initialize Dynamic Client
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/client/initialize-dynamic-client
 
 **Modes**:
+
 - **Automatic** (default): Initializes on creation
 - **Manual**: Set `autoInitialize: false`, call `initializeClient()` manually
 
 **When to use manual**: Delay setup for user auth, config loading, or component coordination
 
 **Lifecycle states**:
+
 1. Uninitialized
 2. In-progress
 3. Finished
@@ -760,6 +855,7 @@ const dynamicClient = createDynamicClient({
 **Monitoring**: Listen to `initStatusChanged` event for state transitions
 
 **Best practices**:
+
 - Monitor events for UI updates
 - Handle "failed" state gracefully
 - Use automatic for simplicity, manual for precise control
@@ -769,25 +865,31 @@ const dynamicClient = createDynamicClient({
 ---
 
 ### User and Session Management
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/auth/user-and-session-management
 
 **Authentication state**:
+
 - `isSignedIn()`: Returns true if authenticated Dynamic user OR connected wallet exists
 
 **Session tokens**:
+
 - JWT access: `dynamicClient.token` (for non-cookie auth)
 
 **User data**:
+
 - User object: `dynamicClient.user`
 - Incomplete onboarding: `user.missingFields` (array of required/optional fields)
 - Refresh data: `refreshUser()` (fetches latest from server)
 
 **User updates**:
+
 - `updateUser()`: Modify user information
 - Sensitive fields (email/phone): Returns `OTPVerification` object
 - Verification: `sendEmailOTP()` → `verifyOTP()`
 
 **Logout**:
+
 - `logout()`: Clears session data, user object, connected wallets
 
 **Search keywords**: `user session`, `authentication state`, `user data`, `logout`, `JWT token`
@@ -795,6 +897,7 @@ const dynamicClient = createDynamicClient({
 ---
 
 ### EVM - Add Extensions
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/evm/adding-evm-extensions
 
 **When to use**: Enable EVM-specific functionality, Ethereum integration
@@ -804,6 +907,7 @@ const dynamicClient = createDynamicClient({
 ---
 
 ### EVM - Get Viem Wallet Client
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/evm/getting-viem-wallet-client
 
 **Purpose**: Create Viem WalletClient for embedded wallets
@@ -811,15 +915,17 @@ const dynamicClient = createDynamicClient({
 **Setup**: `import { createWalletClientForWalletAccount } from '@dynamic-labs-sdk/evm/viem'`
 
 **Usage**:
+
 ```javascript
 const walletClient = await createWalletClientForWalletAccount({
-  walletAccount,
+	walletAccount
 });
 ```
 
 **Operations**: Retrieve accounts, execute transactions, sign messages
 
 **Example**:
+
 ```javascript
 const result = await walletClient.sendTransaction(transaction);
 ```
@@ -829,6 +935,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### EVM - Get Viem Public Client
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/evm/getting-viem-public-client
 
 **When to use**: Read-only blockchain operations, query data without wallet
@@ -838,6 +945,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### WaaS - Check if Enabled
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/waas/checking-if-waas-is-enabled
 
 **When to use**: Verify embedded wallet feature availability
@@ -847,6 +955,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### WaaS - Check Account Type
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/waas/checking-waas-wallet-account-type
 
 **When to use**: Determine if wallet is embedded vs external
@@ -856,6 +965,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### WaaS - Create Wallet Accounts
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/waas/creating-waas-wallet-accounts
 
 **Function**: `createWalletAccount()`
@@ -869,6 +979,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### WaaS - Export Private Key
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/waas/exporting-waas-private-key
 
 **When to use**: Export embedded wallet private key, wallet migration, backup
@@ -882,6 +993,7 @@ const result = await walletClient.sendTransaction(transaction);
 ## API Reference
 
 ### API Overview
+
 **URL**: https://www.dynamic.xyz/docs/api-reference/overview
 
 **Purpose**: Secure dashboard data access, programmatic settings management
@@ -889,21 +1001,25 @@ const result = await walletClient.sendTransaction(transaction);
 **Authentication methods**:
 
 **Admin (Non-SDK)**:
+
 - Generate API tokens via Developer Dashboard
 - Format: `dyn_` prefix + 56 alphanumeric characters
 - Header: `Authorization: Bearer <token>`
 
 **User (SDK)**:
+
 - Use JWTs from `getAuthToken()`
 - Header: `Authorization: Bearer <jwt>`
 
 **HTTP error codes**:
+
 - **400**: Request format issues
 - **401**: Missing credentials
 - **403**: Insufficient permissions
 - **404**: Resource not found
 
 **Security considerations**:
+
 - Tokens shown once only (cannot recover lost tokens)
 - Scoped access permissions
 - Rate limiting applies
@@ -916,6 +1032,7 @@ const result = await walletClient.sendTransaction(transaction);
 ## Additional SDK Methods
 
 ### Get Connected Addresses
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/get-connected-addresses
 
 **Function**: `getConnectedAddresses()`
@@ -927,6 +1044,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### Get Wallet Account from Address
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/get-wallet-account-from-address
 
 **Function**: `getWalletAccountFromAddress(address)`
@@ -938,6 +1056,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### Get Networks Data
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/get-networks-data
 
 **Function**: `getNetworksData()`
@@ -949,6 +1068,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### Get Active Network
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/get-active-network
 
 **Function**: `getActiveNetwork()`
@@ -960,6 +1080,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### Get Multichain Balances
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/get-multichain-balances
 
 **Function**: `getMultichainBalances()`
@@ -971,6 +1092,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### Check Wallet Account Availability
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/check-wallet-account-availability
 
 **Function**: `checkWalletAccountAvailability()`
@@ -982,6 +1104,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### Wallet Provider Events
+
 **URL**: https://www.dynamic.xyz/docs/javascript-sdk/wallets/wallet-provider-events
 
 **When to use**: Listen to wallet events, react to connection changes, monitor account switches
@@ -993,6 +1116,7 @@ const result = await walletClient.sendTransaction(transaction);
 ## UI Customization
 
 ### Customizing UI
+
 **URL**: https://www.dynamic.xyz/docs/using-our-ui/design-customizations/customizing-ui
 
 **Three customization approaches**:
@@ -1015,6 +1139,7 @@ const result = await walletClient.sendTransaction(transaction);
 ## Implementation Checklist
 
 ### For Client-Side Integration
+
 - [ ] Install JavaScript SDK: `@dynamic-labs-sdk/client`
 - [ ] Get environment ID from dashboard
 - [ ] Create Dynamic client with metadata
@@ -1026,6 +1151,7 @@ const result = await walletClient.sendTransaction(transaction);
 - [ ] Access user data and session tokens
 
 ### For Server-Side Integration
+
 - [ ] Install Node SDK: `@dynamic-labs-wallet/node-evm` or `node-svm`
 - [ ] Generate API token from dashboard
 - [ ] Set environment variables: `DYNAMIC_AUTH_TOKEN`, `DYNAMIC_ENVIRONMENT_ID`
@@ -1037,6 +1163,7 @@ const result = await walletClient.sendTransaction(transaction);
 - [ ] Implement server wallet operations
 
 ### For Embedded Wallets
+
 - [ ] Enable embedded wallets in dashboard
 - [ ] Configure CSP to whitelist `https://app.dynamicauth.com`
 - [ ] Install chain-specific connectors
@@ -1047,6 +1174,7 @@ const result = await walletClient.sendTransaction(transaction);
 - [ ] Test MPC signing operations
 
 ### For Gas Sponsorship
+
 - [ ] Set up ZeroDev account (EVM) or funded fee payer (Solana)
 - [ ] Configure project IDs in Dynamic dashboard
 - [ ] Implement delegation webhooks (if using delegated access)
@@ -1059,6 +1187,7 @@ const result = await walletClient.sendTransaction(transaction);
 ## Common Patterns
 
 ### Pattern: Email + Embedded Wallet
+
 **Use case**: Simple onboarding with non-custodial wallet
 
 1. Enable email auth in dashboard
@@ -1073,6 +1202,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### Pattern: Social + Branded Wallet + Embedded Wallet
+
 **Use case**: Flexible authentication with wallet options
 
 1. Enable social providers + branded wallets + embedded wallets
@@ -1087,6 +1217,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### Pattern: Passkey + Embedded Wallet
+
 **Use case**: Biometric authentication with seamless transactions
 
 1. User signs in via email/social first
@@ -1100,6 +1231,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### Pattern: Server Wallet Automation
+
 **Use case**: Backend transaction processing, automated operations
 
 1. Generate server wallet with Node SDK
@@ -1113,6 +1245,7 @@ const result = await walletClient.sendTransaction(transaction);
 ---
 
 ### Pattern: Delegated Access with Gas Sponsorship
+
 **Use case**: User wallet control with app-sponsored transactions
 
 1. User authenticates, embedded wallet created
@@ -1130,30 +1263,35 @@ const result = await walletClient.sendTransaction(transaction);
 ## Troubleshooting Index
 
 ### Authentication Issues
+
 - **Token validation fails**: Check JWKS endpoint, verify RS256 signature, check expiration
 - **Email OTP not received**: Check rate limits (3 per 10 min), verify email configuration
 - **Social auth redirect fails**: Verify deeplink configuration (React Native), check callback URLs
 - **Passkey registration fails**: Ensure prior authentication via another method
 
 ### Wallet Issues
+
 - **Wallet not appearing**: Verify chain enabled in dashboard, check connector installation
 - **Connection fails**: Check RPC endpoint, verify network configuration
 - **Multiple accounts unexpected**: Remember each chain creates separate account
 - **Balance not updating**: Call `refreshUser()` or re-fetch wallet data
 
 ### Embedded Wallet Issues
+
 - **CSP errors**: Whitelist `https://app.dynamicauth.com` in frame-src
 - **Wallet creation fails**: Check SDK version (4.20.6+), verify enabled networks
 - **MPC signing timeout**: Check network connectivity, verify key shares not corrupted
 - **Transaction fails**: Verify gas funds, check network status, validate transaction data
 
 ### Delegation Issues
+
 - **Delegation webhook not received**: Check webhook configuration, verify endpoint reachability
 - **Decryption fails**: Verify private key matches public key, check encryption format
 - **Delegated operations fail**: Verify credentials not revoked, check stored key shares valid
 - **Revocation not working**: Verify webhook handler invalidates credentials
 
 ### Gas Sponsorship Issues
+
 - **EVM sponsorship fails**: Check ZeroDev project ID, verify gas policy, confirm bundler status
 - **Solana sponsorship fails**: Verify fee payer funded, check dual signatures applied
 - **Policy rejection**: Review ZeroDev policies, implement fallback without sponsorship
@@ -1187,11 +1325,11 @@ await signInWithPasskey();
 
 // Wallets
 import {
-  getAvailableWalletProvidersData,
-  connectAndVerifyWithWalletProvider,
-  getWalletAccounts,
-  getBalance,
-  signMessage
+	getAvailableWalletProvidersData,
+	connectAndVerifyWithWalletProvider,
+	getWalletAccounts,
+	getBalance,
+	signMessage
 } from '@dynamic-labs-sdk/client';
 
 const wallets = getAvailableWalletProvidersData();
@@ -1268,15 +1406,18 @@ await delegatedClient.delegatedSignMessage({ walletId, walletApiKey, keyShare, m
 ## Additional Resources
 
 ### Official Documentation
+
 - Main docs: https://www.dynamic.xyz/docs
 - API reference: https://www.dynamic.xyz/docs/api-reference/overview
 - Dashboard: https://app.dynamic.xyz/dashboard
 
 ### Development Tools
+
 - Dynamic Dashboard: Environment configuration, API tokens, webhook management
 - Test Accounts: Available in Sandbox mode for quick testing
 
 ### Support Channels
+
 - Check official documentation for support options
 - Review API reference for endpoint details
 - Consult dashboard for configuration guidance
@@ -1286,6 +1427,7 @@ await delegatedClient.delegatedSignMessage({ walletId, walletApiKey, keyShare, m
 ## Document Metadata
 
 **AI Optimization Notes**:
+
 - Each section includes URL, use case, keywords for search
 - Structured with clear headers for navigation
 - Technical details preserved for implementation

@@ -4,14 +4,19 @@
 	 * Automatically registers user in our database after Dynamic authentication
 	 */
 	import { isSignedIn } from '@dynamic-labs-sdk/client';
-	import { onMount } from 'svelte';
 	import { dynamicClient } from '$lib/stores/auth';
+
+	interface RegisteredUser {
+		userId: string;
+		email?: string;
+		walletAddress?: string;
+	}
 
 	// Local state
 	let isRegistering = $state(false);
 	let isRegistered = $state(false);
 	let error = $state<string | null>(null);
-	let registeredUser = $state<any>(null);
+	let registeredUser = $state<RegisteredUser | null>(null);
 	let lastRegisteredUserId = $state<string | null>(null);
 	let hasCheckedWallet = $state(false);
 
@@ -97,8 +102,10 @@
 					});
 
 					if (response.ok) {
-						const data = await response.json();
-						registeredUser = { ...registeredUser, walletAddress };
+						await response.json();
+						if (registeredUser) {
+							registeredUser = { ...registeredUser, walletAddress };
+						}
 						console.log('Wallet address updated:', walletAddress);
 					}
 				}

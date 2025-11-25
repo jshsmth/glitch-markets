@@ -25,10 +25,7 @@ export const POST: RequestHandler = async ({ locals }) => {
 
 		if (existingUser) {
 			// Update last login time
-			await db
-				.update(users)
-				.set({ lastLoginAt: new Date() })
-				.where(eq(users.id, userId));
+			await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, userId));
 
 			return json({
 				success: true,

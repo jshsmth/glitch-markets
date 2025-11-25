@@ -15,7 +15,8 @@
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 
-	const displayLabel = label || (provider === 'google' ? 'Sign in with Google' : 'Sign in with Twitter');
+	const displayLabel =
+		label || (provider === 'google' ? 'Sign in with Google' : 'Sign in with Twitter');
 
 	async function handleClick() {
 		if (!browser) return;

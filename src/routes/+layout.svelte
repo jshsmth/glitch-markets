@@ -3,7 +3,7 @@
 	import '$lib/styles/app.css';
 	import { QueryClientProvider } from '@tanstack/svelte-query';
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
-	import { dev, browser } from '$app/environment';
+	import { dev } from '$app/environment';
 	import { createQueryClient } from '$lib/query/client';
 	import { createDynamicClient } from '@dynamic-labs-sdk/client';
 	import { PUBLIC_DYNAMIC_ENVIRONMENT_ID } from '$env/static/public';
@@ -20,14 +20,29 @@
 			'@dynamic-labs-sdk/client'
 		);
 
+		// Import EVM extension functions
+		const { addEvmExtension } = await import('@dynamic-labs-sdk/evm');
+
 		const client = createDynamicClient({
-			environmentId: PUBLIC_DYNAMIC_ENVIRONMENT_ID
+			environmentId: PUBLIC_DYNAMIC_ENVIRONMENT_ID,
+			metadata: {
+				name: 'Glitch Markets',
+				url: window.location.origin,
+				iconUrl: `${window.location.origin}/favicon.png`
+			}
 		});
+
+		// Add EVM extension for embedded wallets and external EVM wallets
+		addEvmExtension(client);
 
 		// Set the client in the store (initializes automatically)
 		dynamicClient.set(client);
 
-		console.log('Dynamic client created:', client);
+		console.log('Dynamic client created with EVM extension:', client);
+		console.log('Client configuration:', {
+			environmentId: PUBLIC_DYNAMIC_ENVIRONMENT_ID,
+			hasMetadata: true
+		});
 
 		// Wait a bit for initialization
 		await new Promise((resolve) => setTimeout(resolve, 500));

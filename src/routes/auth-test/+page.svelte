@@ -3,11 +3,10 @@
 	 * Authentication Test Page
 	 * Tests Dynamic wallet authentication and Polymarket registration
 	 */
-	import { browser } from '$app/environment';
 	import AuthButton from '$lib/components/Auth/AuthButton.svelte';
 	import UserRegistration from '$lib/components/Auth/UserRegistration.svelte';
 	import PolymarketAuth from '$lib/components/Auth/PolymarketAuth.svelte';
-	import { isAuthenticated, user, walletAccounts, dynamicClient } from '$lib/stores/auth';
+	import { isAuthenticated, user, walletAccounts } from '$lib/stores/auth';
 </script>
 
 <div class="auth-test-page">
@@ -74,8 +73,8 @@
 					<span class="status-badge info">○ Action Required</span>
 				</div>
 				<p class="description">
-					Sign a one-time message to authorize Polymarket trading. Your credentials will be encrypted
-					and stored securely.
+					Sign a one-time message to authorize Polymarket trading. Your credentials will be
+					encrypted and stored securely.
 				</p>
 				<PolymarketAuth />
 			</section>

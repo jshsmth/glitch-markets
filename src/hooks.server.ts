@@ -143,10 +143,14 @@ async function verifyJWT(request: Request): Promise<{
 			algorithms: ['RS256']
 		});
 
+		// Type assertion for verified_credentials
+		const verifiedCredentials = payload.verified_credentials as
+			| Array<{ address?: string }>
+			| undefined;
+
 		return {
 			userId: payload.sub as string,
-			walletAddress: (payload.verified_credentials?.[0]?.address ||
-				payload.wallet_address) as string,
+			walletAddress: (verifiedCredentials?.[0]?.address || payload.wallet_address) as string,
 			email: payload.email as string
 		};
 	} catch (error) {

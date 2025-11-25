@@ -24,10 +24,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
 	try {
 		// Update user's wallet address
-		await db
-			.update(users)
-			.set({ walletAddress })
-			.where(eq(users.id, userId));
+		await db.update(users).set({ walletAddress }).where(eq(users.id, userId));
 
 		return json({
 			success: true,

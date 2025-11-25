@@ -40,9 +40,7 @@
 					{currentUser.email || currentUser.verifiedCredentials?.[0]?.address || 'User'}
 				</span>
 			</div>
-			<button class="logout-btn" onclick={handleLogout}>
-				Logout
-			</button>
+			<button class="logout-btn" onclick={handleLogout}> Logout </button>
 		</div>
 	{:else}
 		<!-- User is not logged in - show social login options -->
