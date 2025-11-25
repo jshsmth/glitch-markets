@@ -138,11 +138,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			{ status: waasResponse.status }
 		);
 	} catch (error) {
-		console.error('Wallet creation error:', error);
+		const errorId = crypto.randomUUID();
+		console.error('Wallet creation error:', {
+			error: error instanceof Error ? error.message : 'Unknown error',
+			stack: error instanceof Error ? error.stack : undefined,
+			timestamp: new Date().toISOString(),
+			errorCode: 'WALLET_CREATION_FAILED',
+			errorId
+		});
 		return json(
 			{
 				error: 'Internal server error',
-				details: error instanceof Error ? error.message : 'Unknown error'
+				details: error instanceof Error ? error.message : 'Unknown error',
+				errorId
 			},
 			{ status: 500 }
 		);

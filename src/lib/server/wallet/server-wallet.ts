@@ -12,10 +12,24 @@ import { encryptData, decryptData } from '$lib/server/utils/encryption';
 const logger = new Logger({ component: 'ServerWallet' });
 
 let evmClientInstance: DynamicEvmWalletClient | null = null;
+let instanceCreationTime: number = 0;
+// Refresh client after 1 hour to prevent stale connections
+const CLIENT_MAX_AGE = 3600000; // 1 hour in milliseconds
 
 async function getAuthenticatedEvmClient(): Promise<DynamicEvmWalletClient> {
-	if (evmClientInstance) {
+	const now = Date.now();
+
+	// Return existing client if it's still fresh
+	if (evmClientInstance && now - instanceCreationTime < CLIENT_MAX_AGE) {
 		return evmClientInstance;
+	}
+
+	// Log if we're recreating an old client
+	if (evmClientInstance) {
+		logger.info('Recreating Dynamic EVM client due to age', {
+			age: now - instanceCreationTime,
+			maxAge: CLIENT_MAX_AGE
+		});
 	}
 
 	const client = new DynamicEvmWalletClient({
@@ -25,8 +39,9 @@ async function getAuthenticatedEvmClient(): Promise<DynamicEvmWalletClient> {
 
 	await client.authenticateApiToken(DYNAMIC_API_TOKEN);
 	evmClientInstance = client;
+	instanceCreationTime = now;
 
-	logger.info('Authenticated Dynamic EVM client');
+	logger.info('Authenticated Dynamic EVM client', { timestamp: new Date(now).toISOString() });
 	return client;
 }
 

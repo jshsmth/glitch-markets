@@ -21,6 +21,9 @@ interface RateLimitConfig {
 
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
+// Prevent memory exhaustion by limiting the number of rate limit entries
+const MAX_RATE_LIMIT_ENTRIES = 10000;
+
 const RATE_LIMITS: Record<string, RateLimitConfig> = {
 	'/api/markets': { windowMs: 60000, maxRequests: 100 },
 	'/api/events': { windowMs: 60000, maxRequests: 100 },
@@ -52,6 +55,12 @@ function getRateLimitConfig(pathname: string): RateLimitConfig {
 }
 
 function isRateLimited(clientId: string, pathname: string): boolean {
+	// Trigger cleanup if store gets too large
+	if (rateLimitStore.size > MAX_RATE_LIMIT_ENTRIES) {
+		logger.warn(`Rate limit store exceeded ${MAX_RATE_LIMIT_ENTRIES} entries, forcing cleanup`);
+		cleanupRateLimitStore();
+	}
+
 	const config = getRateLimitConfig(pathname);
 	const key = `${clientId}:${pathname}`;
 	const now = Date.now();

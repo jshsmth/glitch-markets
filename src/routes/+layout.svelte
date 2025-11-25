@@ -19,11 +19,12 @@
 	const queryClient = data?.queryClient || createQueryClient();
 
 	onMount(async () => {
-		const { detectOAuthRedirect, completeSocialAuthentication } = await import(
-			'@dynamic-labs-sdk/client'
-		);
+		try {
+			const { detectOAuthRedirect, completeSocialAuthentication } = await import(
+				'@dynamic-labs-sdk/client'
+			);
 
-		const { addEvmExtension } = await import('@dynamic-labs-sdk/evm');
+			const { addEvmExtension } = await import('@dynamic-labs-sdk/evm');
 
 		const client = createDynamicClient({
 			environmentId: PUBLIC_DYNAMIC_ENVIRONMENT_ID,
@@ -83,6 +84,15 @@
 				}
 			} catch (err) {
 				console.error('Failed to complete authentication:', err);
+			}
+		}
+		} catch (importError) {
+			console.error('Failed to load Dynamic SDK modules:', importError);
+			// Set initialization complete to prevent infinite loading state
+			setInitializationComplete();
+			// Optionally notify user of initialization failure
+			if (dev) {
+				console.error('Critical: Dynamic SDK failed to load. Authentication features unavailable.');
 			}
 		}
 	});

@@ -4,11 +4,11 @@
 	 * Shows social login buttons or user info based on auth state
 	 */
 	import { logout } from '@dynamic-labs-sdk/client';
-	import { authState, isAuthenticated } from '$lib/stores/auth.svelte';
+	import { authState } from '$lib/stores/auth.svelte';
 	import SocialLoginButton from './SocialLoginButton.svelte';
 
-	// Derive authenticated state locally
-	const authenticated = $derived(isAuthenticated());
+	// Derive authenticated state directly from authState.user for better performance
+	const authenticated = $derived(!!authState.user);
 
 	/**
 	 * Handle logout button click

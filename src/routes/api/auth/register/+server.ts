@@ -85,15 +85,21 @@ export const POST: RequestHandler = async ({ locals }) => {
 			message: 'User created successfully with server wallet'
 		});
 	} catch (error) {
+		const errorId = crypto.randomUUID();
 		logger.error('User registration error', {
 			userId,
-			error: error instanceof Error ? error.message : 'Unknown error'
+			error: error instanceof Error ? error.message : 'Unknown error',
+			stack: error instanceof Error ? error.stack : undefined,
+			timestamp: new Date().toISOString(),
+			errorCode: 'USER_REGISTRATION_FAILED',
+			errorId
 		});
 
 		return json(
 			{
 				error: 'Failed to register user',
-				message: error instanceof Error ? error.message : 'Unknown error'
+				message: error instanceof Error ? error.message : 'Unknown error',
+				errorId // Include error ID for support tickets
 			},
 			{ status: 500 }
 		);

@@ -33,7 +33,7 @@
 	let hasCreated = $state(false);
 	let error = $state<string | null>(null);
 	let walletData = $state<WalletCreationResponse | null>(null);
-	let hasAttemptedAutoCreate = false;
+	let autoCreateTriggered = $state(false);
 
 	/**
 	 * Create embedded wallet via API
@@ -120,12 +120,11 @@
 		}
 	}
 
-	onMount(() => {
-		if (autoCreate && authState.client && authState.client.token && !hasAttemptedAutoCreate) {
-			hasAttemptedAutoCreate = true;
-			setTimeout(() => {
-				createWallet();
-			}, 500);
+	// Use $effect for cleaner reactive auto-create logic
+	$effect(() => {
+		if (autoCreate && authState.client?.token && !autoCreateTriggered && !isCreating && !hasCreated) {
+			autoCreateTriggered = true;
+			setTimeout(() => createWallet(), 500);
 		}
 	});
 </script>

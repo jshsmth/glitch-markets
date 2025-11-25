@@ -4,11 +4,11 @@
 	 * Automatically registers user in our database after Dynamic authentication
 	 */
 	import { isSignedIn } from '@dynamic-labs-sdk/client';
-	import { authState, isAuthenticated } from '$lib/stores/auth.svelte';
+	import { authState } from '$lib/stores/auth.svelte';
 	import { onMount } from 'svelte';
 	import { dev } from '$app/environment';
 
-	const authenticated = $derived(isAuthenticated());
+	const authenticated = $derived(!!authState.user);
 
 	interface RegisteredUser {
 		userId: string;
@@ -21,7 +21,8 @@
 	let isRegistered = $state(false);
 	let error = $state<string | null>(null);
 	let registeredUser = $state<RegisteredUser | null>(null);
-	let lastRegisteredUserId: string | null = null;
+	// Use Set to track registration attempts and prevent race conditions
+	let registrationAttempts = new Set<string>();
 
 	/**
 	 * Register user in our database
@@ -38,11 +39,13 @@
 
 		const currentUserId = authState.client.user?.id;
 
-		if (!currentUserId || currentUserId === lastRegisteredUserId || isRegistering || isRegistered) {
+		// Check if already registered or registration in progress
+		if (!currentUserId || registrationAttempts.has(currentUserId) || isRegistering) {
 			return;
 		}
 
-		lastRegisteredUserId = currentUserId;
+		// Mark this user ID as having a registration attempt
+		registrationAttempts.add(currentUserId);
 		isRegistering = true;
 		error = null;
 

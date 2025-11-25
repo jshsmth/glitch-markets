@@ -110,10 +110,31 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			);
 		}
 
-		const { apiKey, secret, passphrase } = await response.json();
+		const responseData = await response.json();
+		const { apiKey, secret, passphrase } = responseData;
 
+		// Validate response has required fields
 		if (!apiKey || !secret || !passphrase) {
+			console.error('Missing credentials in Polymarket response:', {
+				hasApiKey: !!apiKey,
+				hasSecret: !!secret,
+				hasPassphrase: !!passphrase
+			});
 			return json({ error: 'Invalid response from Polymarket API' }, { status: 500 });
+		}
+
+		// Type guard: Ensure credentials are strings
+		if (
+			typeof apiKey !== 'string' ||
+			typeof secret !== 'string' ||
+			typeof passphrase !== 'string'
+		) {
+			console.error('Invalid credential types from Polymarket API:', {
+				apiKeyType: typeof apiKey,
+				secretType: typeof secret,
+				passphraseType: typeof passphrase
+			});
+			return json({ error: 'Invalid credential types from Polymarket API' }, { status: 500 });
 		}
 
 		const encryptedApiKey = encryptWithAES(apiKey);
@@ -136,12 +157,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			proxyWalletAddress
 		});
 	} catch (error) {
-		console.error('Polymarket registration error:', error);
+		const errorId = crypto.randomUUID();
+		console.error('Polymarket registration error:', {
+			userId,
+			error: error instanceof Error ? error.message : 'Unknown error',
+			stack: error instanceof Error ? error.stack : undefined,
+			timestamp: new Date().toISOString(),
+			errorCode: 'POLYMARKET_REGISTRATION_FAILED',
+			errorId
+		});
 
 		return json(
 			{
 				error: 'Failed to register with Polymarket',
-				message: error instanceof Error ? error.message : 'Unknown error'
+				message: error instanceof Error ? error.message : 'Unknown error',
+				errorId
 			},
 			{ status: 500 }
 		);
