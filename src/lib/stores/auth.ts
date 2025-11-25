@@ -5,6 +5,7 @@
 
 import { writable, derived, readable } from 'svelte/store';
 import type { DynamicClient } from '@dynamic-labs-sdk/client';
+import { onEvent } from '@dynamic-labs-sdk/client';
 import { browser } from '$app/environment';
 
 /**
@@ -21,6 +22,7 @@ export const isInitializing = writable<boolean>(true);
 
 /**
  * Reactive user store that updates when authentication state changes
+ * Uses Dynamic SDK events instead of polling for better performance
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const user = readable<any>(null, (set) => {
@@ -28,21 +30,37 @@ export const user = readable<any>(null, (set) => {
 
 	let client: DynamicClient | null = null;
 	let unsubscribeClient: (() => void) | null = null;
-	let intervalId: number | null = null;
+	let unsubscribeEvents: Array<() => void> = [];
 
 	// Subscribe to client changes
 	unsubscribeClient = dynamicClient.subscribe(($client) => {
+		// Clean up previous event listeners
+		unsubscribeEvents.forEach((unsubscribe) => unsubscribe());
+		unsubscribeEvents = [];
+
 		client = $client;
 		if (client) {
 			// Set initial user
 			set(client.user);
 
-			// Poll for user changes (SDK doesn't provide reactive updates)
-			intervalId = window.setInterval(() => {
-				if (client) {
-					set(client.user);
+			// Listen to user state changes for reactive updates
+			// userChanged event fires whenever user state changes (sign in, sign out, profile updates, wallet changes)
+			const unsubscribeUserChanged = onEvent({
+				event: 'userChanged',
+				listener: ({ user }) => {
+					set(user);
 				}
-			}, 1000);
+			});
+
+			// Listen to logout event specifically
+			const unsubscribeLogout = onEvent({
+				event: 'logout',
+				listener: () => {
+					set(null);
+				}
+			});
+
+			unsubscribeEvents = [unsubscribeUserChanged, unsubscribeLogout];
 		} else {
 			set(null);
 		}
@@ -50,7 +68,7 @@ export const user = readable<any>(null, (set) => {
 
 	return () => {
 		if (unsubscribeClient) unsubscribeClient();
-		if (intervalId) clearInterval(intervalId);
+		unsubscribeEvents.forEach((unsubscribe) => unsubscribe());
 	};
 });
 
