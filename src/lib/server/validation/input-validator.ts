@@ -616,3 +616,38 @@ export function validateSearchQueryParams(
 
 	return validated;
 }
+
+/**
+ * Validates an Ethereum wallet address
+ * Ethereum addresses must be 0x followed by 40 hexadecimal characters
+ *
+ * @param address - The address to validate
+ * @returns The validated address in lowercase
+ * @throws {ValidationError} When the address is invalid
+ *
+ * @example
+ * ```typescript
+ * const address = validateEthereumAddress('0x56687bf447db6ffa42ffe2204a05edaa20f55839');
+ * // Returns: '0x56687bf447db6ffa42ffe2204a05edaa20f55839'
+ * ```
+ */
+export function validateEthereumAddress(address: unknown): string {
+	if (typeof address !== 'string') {
+		throw new ValidationError('address must be a string', { address });
+	}
+
+	const trimmed = address.trim();
+	if (trimmed.length === 0) {
+		throw new ValidationError('address cannot be empty', { address });
+	}
+
+	const pattern = /^0x[a-fA-F0-9]{40}$/;
+	if (!pattern.test(trimmed)) {
+		throw new ValidationError('Invalid Ethereum address format', {
+			address,
+			expected: '0x followed by 40 hexadecimal characters'
+		});
+	}
+
+	return trimmed.toLowerCase();
+}

@@ -12,6 +12,7 @@ describe('PolymarketClient', () => {
 		config = {
 			baseUrl: 'https://gamma-api.polymarket.com',
 			dataApiUrl: 'https://data-api.polymarket.com',
+			bridgeApiUrl: 'https://bridge.polymarket.com',
 			timeout: 10000,
 			cacheTtl: 60,
 			enableCache: true

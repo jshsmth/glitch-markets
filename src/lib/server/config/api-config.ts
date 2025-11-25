@@ -1,6 +1,7 @@
 export interface ApiConfig {
 	baseUrl: string;
 	dataApiUrl: string;
+	bridgeApiUrl: string;
 	timeout: number;
 	cacheTtl: number;
 	enableCache: boolean;
@@ -9,6 +10,7 @@ export interface ApiConfig {
 const DEFAULT_CONFIG: ApiConfig = {
 	baseUrl: 'https://gamma-api.polymarket.com',
 	dataApiUrl: 'https://data-api.polymarket.com',
+	bridgeApiUrl: 'https://bridge.polymarket.com',
 	timeout: 10000,
 	cacheTtl: 60,
 	enableCache: true
@@ -68,6 +70,14 @@ export function validateConfig(config: ApiConfig): void {
 		throw new ConfigurationError('dataApiUrl must be a valid URL');
 	}
 
+	if (!config.bridgeApiUrl || typeof config.bridgeApiUrl !== 'string') {
+		throw new ConfigurationError('bridgeApiUrl must be a non-empty string');
+	}
+
+	if (!isValidUrl(config.bridgeApiUrl)) {
+		throw new ConfigurationError('bridgeApiUrl must be a valid URL');
+	}
+
 	if (typeof config.timeout !== 'number' || config.timeout <= 0) {
 		throw new ConfigurationError('timeout must be a positive number');
 	}
@@ -88,6 +98,7 @@ export function validateConfig(config: ApiConfig): void {
  * Environment variables:
  * - POLYMARKET_API_URL: Base URL for the Gamma API
  * - POLYMARKET_DATA_API_URL: Base URL for the Data API
+ * - POLYMARKET_BRIDGE_API_URL: Base URL for the Bridge API
  * - POLYMARKET_API_TIMEOUT: Request timeout in milliseconds
  * - POLYMARKET_CACHE_TTL: Cache TTL in seconds
  * - POLYMARKET_CACHE_ENABLED: Enable/disable caching ("true" or "false")
@@ -100,12 +111,14 @@ export function validateConfig(config: ApiConfig): void {
  * const config = loadConfig();
  * console.log(config.baseUrl); // https://gamma-api.polymarket.com
  * console.log(config.dataApiUrl); // https://data-api.polymarket.com
+ * console.log(config.bridgeApiUrl); // https://bridge.polymarket.com
  * ```
  */
 export function loadConfig(): ApiConfig {
 	const config: ApiConfig = {
 		baseUrl: process.env.POLYMARKET_API_URL || DEFAULT_CONFIG.baseUrl,
 		dataApiUrl: process.env.POLYMARKET_DATA_API_URL || DEFAULT_CONFIG.dataApiUrl,
+		bridgeApiUrl: process.env.POLYMARKET_BRIDGE_API_URL || DEFAULT_CONFIG.bridgeApiUrl,
 		timeout: process.env.POLYMARKET_API_TIMEOUT
 			? parseInt(process.env.POLYMARKET_API_TIMEOUT, 10)
 			: DEFAULT_CONFIG.timeout,
