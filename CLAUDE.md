@@ -17,7 +17,7 @@ This is the main documentation hub for Claude Code. All detailed documentation l
 
 - **[Polymarket API](.claude/polymarket-api-reference.md)** - Complete Polymarket API endpoint documentation
 - **[Porto SDK](.claude/porto-api-reference.md)** - Porto SDK integration guides
-- **[Dynamic Wallet](.claude/dynamic-wallet-reference.md)** - Dynamic.xyz wallet integration and authentication
+- **[Dynamic Docs](.claude/dynamic.txt)** - Comprehensive Dynamic.xyz documentation with all API endpoints and guides
 
 ---
 
@@ -87,7 +87,7 @@ You have access to the Svelte MCP server with comprehensive Svelte 5 and SvelteK
 ├── brand-colors.md           # Design system and color palette
 ├── polymarket-api-reference.md  # Polymarket API docs
 ├── porto-api-reference.md    # Porto SDK docs
-└── dynamic-wallet-reference.md # Dynamic.xyz wallet integration
+└── dynamic.txt               # Complete Dynamic.xyz documentation
 ```
 
 ---
