@@ -200,6 +200,11 @@ wss://ws-live-data.polymarket.com
 
 - `GET /api/search?q=<query>` - Search markets, events, and profiles
 
+### Bridge API
+
+- `POST /api/bridge/deposit` - Create deposit addresses for cross-chain transfers
+- `GET /api/bridge/supported-assets` - Get supported chains and tokens
+
 ### Health API
 
 - `GET /api/health` - Check health status of upstream Polymarket APIs
@@ -399,4 +404,162 @@ curl https://clob.polymarket.com/
 
 ---
 
-**Last Updated**: 2025-11-23
+---
+
+## Bridge API Endpoints
+
+### POST /api/bridge/deposit
+
+Creates unique deposit addresses for cross-chain deposits to Polymarket.
+
+**Upstream API**: `POST https://bridge.polymarket.com/deposit`
+
+**Request Body** (application/json):
+
+```json
+{
+	"address": "0x56687bf447db6ffa42ffe2204a05edaa20f55839"
+}
+```
+
+**Success Response (201 Created)**:
+
+```json
+{
+	"address": "0x56687bf447db6ffa42ffe2204a05edaa20f55839",
+	"depositAddresses": [
+		{
+			"chainId": "1",
+			"chainName": "Ethereum",
+			"tokenAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+			"tokenSymbol": "USDC",
+			"depositAddress": "0x1234567890abcdef1234567890abcdef12345678"
+		}
+	]
+}
+```
+
+**Error Responses**:
+
+```json
+// 400 - Invalid Address Format
+{
+  "error": {
+    "message": "Invalid Ethereum address format",
+    "code": "VALIDATION_ERROR",
+    "statusCode": 400,
+    "timestamp": "2025-01-25T12:00:00.000Z"
+  }
+}
+
+// 400 - Missing Address
+{
+  "error": {
+    "message": "address field is required",
+    "code": "VALIDATION_ERROR",
+    "statusCode": 400,
+    "timestamp": "2025-01-25T12:00:00.000Z"
+  }
+}
+
+// 503 - Bridge API Unavailable
+{
+  "error": {
+    "message": "Upstream API error",
+    "code": "SERVICE_UNAVAILABLE",
+    "statusCode": 503,
+    "timestamp": "2025-01-25T12:00:00.000Z"
+  }
+}
+```
+
+**Example Usage**:
+
+```bash
+curl -X POST http://localhost:5173/api/bridge/deposit \
+  -H "Content-Type: application/json" \
+  -d '{"address":"0x56687bf447db6ffa42ffe2204a05edaa20f55839"}'
+```
+
+---
+
+### GET /api/bridge/supported-assets
+
+Gets all supported chains and tokens for bridging to Polymarket.
+
+**Upstream API**: `GET https://bridge.polymarket.com/supported-assets`
+
+**Query Parameters**: None
+
+**Success Response (200 OK)**:
+
+```json
+{
+	"supportedAssets": [
+		{
+			"chainId": "1",
+			"chainName": "Ethereum",
+			"token": {
+				"name": "USD Coin",
+				"symbol": "USDC",
+				"address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+				"decimals": 6
+			},
+			"minCheckoutUsd": 45
+		},
+		{
+			"chainId": "42161",
+			"chainName": "Arbitrum",
+			"token": {
+				"name": "USD Coin",
+				"symbol": "USDC",
+				"address": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+				"decimals": 6
+			},
+			"minCheckoutUsd": 45
+		}
+	]
+}
+```
+
+**Response Headers**:
+
+```
+Cache-Control: public, max-age=300, s-maxage=300
+CDN-Cache-Control: public, max-age=300
+```
+
+**Caching**:
+
+- Server-side cache: 5 minutes
+- CDN cache: 5 minutes
+- Cache stampede protection enabled
+
+**Error Responses**:
+
+```json
+// 503 - Bridge API Unavailable
+{
+	"error": {
+		"message": "Upstream API error",
+		"code": "SERVICE_UNAVAILABLE",
+		"statusCode": 503,
+		"timestamp": "2025-01-25T12:00:00.000Z"
+	}
+}
+```
+
+**Example Usage**:
+
+```bash
+curl http://localhost:5173/api/bridge/supported-assets
+```
+
+**Performance**:
+
+- Cached requests: < 50ms
+- Uncached requests: < 2s
+
+---
+
+**Last Updated**: 2025-01-25

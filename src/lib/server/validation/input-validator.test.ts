@@ -27,7 +27,8 @@ import {
 	validateParentEntityId,
 	validateOrderString,
 	validateCommentsQueryParams,
-	validateUserCommentsQueryParams
+	validateUserCommentsQueryParams,
+	validateEthereumAddress
 } from './input-validator.js';
 import { ValidationError } from '../errors/api-errors.js';
 
@@ -1370,6 +1371,121 @@ describe('Series Input Validation', () => {
 			const result = validateUserCommentsQueryParams(params);
 			expect(result.limit).toBe(10);
 			expect(result.customParam).toBe('value');
+		});
+	});
+
+	describe('Ethereum address validation', () => {
+		test('accepts valid Ethereum addresses', () => {
+			const validAddresses = [
+				'0x56687bf447db6ffa42ffe2204a05edaa20f55839',
+				'0xABCDEF1234567890ABCDef1234567890abcdef12',
+				'0x0000000000000000000000000000000000000000',
+				'0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+			];
+
+			validAddresses.forEach((address) => {
+				const result = validateEthereumAddress(address);
+				expect(result).toBe(address.toLowerCase());
+			});
+		});
+
+		test('normalizes addresses to lowercase', () => {
+			const address = '0xABCDEF1234567890ABCDef1234567890abcdef12';
+			const result = validateEthereumAddress(address);
+			expect(result).toBe(address.toLowerCase());
+		});
+
+		test('accepts addresses with whitespace (trims)', () => {
+			const address = '  0x56687bf447db6ffa42ffe2204a05edaa20f55839  ';
+			const result = validateEthereumAddress(address);
+			expect(result).toBe('0x56687bf447db6ffa42ffe2204a05edaa20f55839');
+		});
+
+		test('rejects non-string addresses', () => {
+			const invalidInputs = [null, undefined, 123, true, {}, []];
+
+			invalidInputs.forEach((input) => {
+				expect(() => validateEthereumAddress(input)).toThrow(ValidationError);
+				expect(() => validateEthereumAddress(input)).toThrow('address must be a string');
+			});
+		});
+
+		test('rejects empty string', () => {
+			expect(() => validateEthereumAddress('')).toThrow(ValidationError);
+			expect(() => validateEthereumAddress('')).toThrow('address cannot be empty');
+		});
+
+		test('rejects addresses without 0x prefix', () => {
+			const invalidAddress = '56687bf447db6ffa42ffe2204a05edaa20f55839';
+			expect(() => validateEthereumAddress(invalidAddress)).toThrow(ValidationError);
+			expect(() => validateEthereumAddress(invalidAddress)).toThrow(
+				'Invalid Ethereum address format'
+			);
+		});
+
+		test('rejects addresses with wrong length', () => {
+			const invalidAddresses = [
+				'0x123', // too short
+				'0x56687bf447db6ffa42ffe2204a05edaa20f5583900' // too long
+			];
+
+			invalidAddresses.forEach((address) => {
+				expect(() => validateEthereumAddress(address)).toThrow(ValidationError);
+				expect(() => validateEthereumAddress(address)).toThrow('Invalid Ethereum address format');
+			});
+		});
+
+		test('rejects addresses with invalid characters', () => {
+			const invalidAddresses = [
+				'0x56687bf447db6ffa42ffe2204a05edaa20f5583g', // 'g' is not hex
+				'0x56687bf447db6ffa42ffe2204a05edaa20f5583!', // special character
+				'0x56687bf447db6ffa42ffe2204a05edaa20f5583 ' // space at end (before trim)
+			];
+
+			invalidAddresses.forEach((address) => {
+				expect(() => validateEthereumAddress(address.trim())).toThrow(ValidationError);
+			});
+		});
+
+		test('Property: any valid hex address passes validation', () => {
+			fc.assert(
+				fc.property(
+					fc.array(
+						fc.constantFrom(
+							'0',
+							'1',
+							'2',
+							'3',
+							'4',
+							'5',
+							'6',
+							'7',
+							'8',
+							'9',
+							'a',
+							'b',
+							'c',
+							'd',
+							'e',
+							'f',
+							'A',
+							'B',
+							'C',
+							'D',
+							'E',
+							'F'
+						),
+						{ minLength: 40, maxLength: 40 }
+					),
+					(hexChars) => {
+						const hexString = hexChars.join('');
+						const address = '0x' + hexString;
+						const result = validateEthereumAddress(address);
+						expect(result).toBe(address.toLowerCase());
+						expect(result).toMatch(/^0x[a-f0-9]{40}$/);
+					}
+				)
+			);
 		});
 	});
 });

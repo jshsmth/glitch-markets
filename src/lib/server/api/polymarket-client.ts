@@ -56,7 +56,9 @@ import {
 	validateSeries,
 	validateSeriesList,
 	validateComments,
-	validateSearchResults
+	validateSearchResults,
+	validateSupportedAssets,
+	validateDepositAddresses
 } from '../validation/response-validator.js';
 
 /**
@@ -519,9 +521,74 @@ export interface SearchResults {
 	pagination: SearchPagination;
 }
 
+/**
+ * Token information for a supported bridge asset
+ */
+export interface BridgeToken {
+	name: string;
+	symbol: string;
+	address: string;
+	decimals: number;
+}
+
+/**
+ * A single supported asset for bridging from a specific chain
+ */
+export interface SupportedAsset {
+	chainId: string;
+	chainName: string;
+	token: BridgeToken;
+	minCheckoutUsd: number;
+}
+
+/**
+ * Response from GET /supported-assets endpoint
+ * Contains all supported chains and tokens for cross-chain deposits
+ */
+export interface SupportedAssets {
+	supportedAssets: SupportedAsset[];
+}
+
+/**
+ * A single deposit address for a specific chain and token
+ * Users send assets to this address to bridge to Polymarket
+ */
+/**
+ * Deposit addresses grouped by chain type
+ * Note: The actual API response differs from the documented format
+ */
+export interface DepositAddressMap {
+	evm?: string; // Ethereum Virtual Machine address (Ethereum, Polygon, etc.)
+	svm?: string; // Solana Virtual Machine address
+	btc?: string; // Bitcoin address
+}
+
+/**
+ * Response from POST /deposit endpoint
+ * Note: Actual API format differs from documentation
+ * - Documented: {address: string, depositAddresses: Array}
+ * - Actual: {address: {evm, svm, btc}, note: string}
+ */
+export interface DepositAddresses {
+	address: DepositAddressMap;
+	note?: string;
+}
+
+// Legacy interface kept for backwards compatibility
+export interface DepositAddress {
+	chainId: string;
+	chainName: string;
+	tokenAddress: string;
+	tokenSymbol: string;
+	depositAddress: string;
+}
+
 export interface FetchOptions {
 	params?: Record<string, string | number | boolean>;
 	signal?: AbortSignal;
+	method?: string;
+	body?: string;
+	headers?: Record<string, string>;
 }
 
 /**
@@ -540,6 +607,7 @@ export interface FetchOptions {
 export class PolymarketClient {
 	private baseUrl: string;
 	private dataApiBaseUrl: string;
+	private bridgeApiBaseUrl: string;
 	private timeout: number;
 	private logger: Logger;
 
@@ -550,6 +618,7 @@ export class PolymarketClient {
 	constructor(config: ApiConfig) {
 		this.baseUrl = config.baseUrl;
 		this.dataApiBaseUrl = config.dataApiUrl;
+		this.bridgeApiBaseUrl = config.bridgeApiUrl;
 		this.timeout = config.timeout;
 		this.logger = new Logger({ component: 'PolymarketClient' });
 	}
@@ -587,14 +656,17 @@ export class PolymarketClient {
 		const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 		const startTime = Date.now();
 
-		this.logger.info('Making API request', { url });
+		this.logger.info('Making API request', { url, method: options?.method || 'GET' });
 
 		try {
 			const response = await fetch(url, {
+				method: options?.method || 'GET',
 				signal: options?.signal || controller.signal,
 				headers: {
-					'Content-Type': 'application/json'
-				}
+					'Content-Type': 'application/json',
+					...(options?.headers || {})
+				},
+				body: options?.body
 			});
 
 			clearTimeout(timeoutId);
@@ -1434,6 +1506,74 @@ export class PolymarketClient {
 			tagsCount: validated.tags.length,
 			profilesCount: validated.profiles.length,
 			totalResults: validated.pagination.totalResults
+		});
+
+		return validated;
+	}
+
+	/**
+	 * Creates deposit addresses for cross-chain deposits to Polymarket
+	 * Generates unique addresses for each supported chain/token combination
+	 *
+	 * @param address - The Ethereum wallet address (0x + 40 hex characters)
+	 * @returns Promise resolving to deposit addresses for all supported chains
+	 * @throws {ValidationError} When the address format is invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error
+	 *
+	 * @example
+	 * ```typescript
+	 * const result = await client.createBridgeDeposit('0x56687bf447db6ffa42ffe2204a05edaa20f55839');
+	 * console.log(result.depositAddresses); // Array of deposit addresses
+	 * ```
+	 */
+	async createBridgeDeposit(address: string): Promise<DepositAddresses> {
+		const url = new URL('/deposit', this.bridgeApiBaseUrl).toString();
+		this.logger.info('Creating bridge deposit addresses', { address, url });
+
+		const data = await this.request<unknown>(url, {
+			method: 'POST',
+			body: JSON.stringify({ address })
+		});
+
+		const validated = validateDepositAddresses(data);
+		const addressTypes = Object.keys(validated.address).length;
+		this.logger.info('Bridge deposit addresses created successfully', {
+			address,
+			addressTypes,
+			hasEvm: !!validated.address.evm,
+			hasSvm: !!validated.address.svm,
+			hasBtc: !!validated.address.btc
+		});
+
+		return validated;
+	}
+
+	/**
+	 * Fetches supported assets for bridging to Polymarket
+	 * Returns all chains and tokens that can be deposited
+	 *
+	 * @returns Promise resolving to supported assets list
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error
+	 *
+	 * @example
+	 * ```typescript
+	 * const assets = await client.fetchSupportedBridgeAssets();
+	 * console.log(assets.supportedAssets); // Array of supported chains/tokens
+	 * ```
+	 */
+	async fetchSupportedBridgeAssets(): Promise<SupportedAssets> {
+		const url = new URL('/supported-assets', this.bridgeApiBaseUrl).toString();
+		this.logger.info('Fetching supported bridge assets', { url });
+
+		const data = await this.request<unknown>(url);
+
+		const validated = validateSupportedAssets(data);
+		this.logger.info('Supported bridge assets fetched successfully', {
+			assetCount: validated.supportedAssets.length
 		});
 
 		return validated;

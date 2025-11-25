@@ -28,7 +28,12 @@ import type {
 	SearchTag,
 	Profile,
 	SearchPagination,
-	SearchResults
+	SearchResults,
+	BridgeToken,
+	SupportedAsset,
+	SupportedAssets,
+	DepositAddresses,
+	DepositAddressMap
 } from '../api/polymarket-client.js';
 
 /**
@@ -119,7 +124,7 @@ export function validateMarket(data: unknown): Market {
 			invalidTypeFields.push(
 				`outcomes (expected array or JSON array string, got ${typeof data.outcomes})`
 			);
-		} else if (outcomes !== undefined && !outcomes.every(isString)) {
+		} else if (outcomes !== undefined && isArray(outcomes) && !outcomes.every(isString)) {
 			invalidTypeFields.push('outcomes (array must contain only strings)');
 		}
 	}
@@ -143,7 +148,11 @@ export function validateMarket(data: unknown): Market {
 			invalidTypeFields.push(
 				`outcomePrices (expected array or JSON array string, got ${typeof data.outcomePrices})`
 			);
-		} else if (outcomePrices !== undefined && !outcomePrices.every(isString)) {
+		} else if (
+			outcomePrices !== undefined &&
+			isArray(outcomePrices) &&
+			!outcomePrices.every(isString)
+		) {
 			invalidTypeFields.push('outcomePrices (array must contain only strings)');
 		}
 	}
@@ -2029,4 +2038,178 @@ export function validateSearchResults(data: unknown): SearchResults {
 		profiles,
 		pagination
 	} as unknown as SearchResults;
+}
+
+/**
+ * Validates a BridgeToken object from the Bridge API
+ */
+function validateBridgeToken(token: unknown): BridgeToken {
+	if (!isObject(token)) {
+		throw new ValidationError('BridgeToken must be an object', { token });
+	}
+
+	if (!isString(token.name)) {
+		throw new ValidationError('BridgeToken.name must be a string', { token });
+	}
+
+	if (!isString(token.symbol)) {
+		throw new ValidationError('BridgeToken.symbol must be a string', { token });
+	}
+
+	if (!isString(token.address)) {
+		throw new ValidationError('BridgeToken.address must be a string', { token });
+	}
+
+	if (!isNumber(token.decimals)) {
+		throw new ValidationError('BridgeToken.decimals must be a number', { token });
+	}
+
+	return token as unknown as BridgeToken;
+}
+
+/**
+ * Validates a SupportedAsset object from the Bridge API
+ */
+function validateSupportedAsset(asset: unknown): SupportedAsset {
+	if (!isObject(asset)) {
+		throw new ValidationError('SupportedAsset must be an object', { asset });
+	}
+
+	if (!isString(asset.chainId)) {
+		throw new ValidationError('SupportedAsset.chainId must be a string', { asset });
+	}
+
+	if (!isString(asset.chainName)) {
+		throw new ValidationError('SupportedAsset.chainName must be a string', { asset });
+	}
+
+	if (!isObject(asset.token)) {
+		throw new ValidationError('SupportedAsset.token must be an object', { asset });
+	}
+
+	if (!isNumber(asset.minCheckoutUsd)) {
+		throw new ValidationError('SupportedAsset.minCheckoutUsd must be a number', { asset });
+	}
+
+	const token = validateBridgeToken(asset.token);
+
+	return {
+		chainId: asset.chainId,
+		chainName: asset.chainName,
+		token,
+		minCheckoutUsd: asset.minCheckoutUsd
+	} as SupportedAsset;
+}
+
+/**
+ * Validates the response from GET /supported-assets endpoint
+ *
+ * @param data - The response data to validate
+ * @returns Validated SupportedAssets object
+ * @throws {ValidationError} When the response structure is invalid
+ *
+ * @example
+ * ```typescript
+ * const data = await fetch('/supported-assets').then(r => r.json());
+ * const validated = validateSupportedAssets(data);
+ * ```
+ */
+export function validateSupportedAssets(data: unknown): SupportedAssets {
+	if (!isObject(data)) {
+		throw new ValidationError('SupportedAssets response must be an object', { data });
+	}
+
+	if (!Array.isArray(data.supportedAssets)) {
+		throw new ValidationError('SupportedAssets.supportedAssets must be an array', { data });
+	}
+
+	const supportedAssets = data.supportedAssets.map((asset, index) => {
+		try {
+			return validateSupportedAsset(asset);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`SupportedAsset at index ${index} is invalid: ${error.message}`, {
+					index,
+					originalError: error.details
+				});
+			}
+			throw error;
+		}
+	});
+
+	return { supportedAssets } as SupportedAssets;
+}
+
+/**
+ * Validates a DepositAddressMap object from the Bridge API
+ * The actual API returns addresses grouped by chain type (evm, svm, btc)
+ */
+function validateDepositAddressMap(addressMap: unknown): DepositAddressMap {
+	if (!isObject(addressMap)) {
+		throw new ValidationError('DepositAddressMap must be an object', { addressMap });
+	}
+
+	// At least one address type should be present
+	const hasEvm = 'evm' in addressMap;
+	const hasSvm = 'svm' in addressMap;
+	const hasBtc = 'btc' in addressMap;
+
+	if (!hasEvm && !hasSvm && !hasBtc) {
+		throw new ValidationError(
+			'DepositAddressMap must contain at least one address (evm, svm, or btc)',
+			{ addressMap }
+		);
+	}
+
+	// Validate that present addresses are strings
+	if (hasEvm && !isString(addressMap.evm)) {
+		throw new ValidationError('DepositAddressMap.evm must be a string', { addressMap });
+	}
+
+	if (hasSvm && !isString(addressMap.svm)) {
+		throw new ValidationError('DepositAddressMap.svm must be a string', { addressMap });
+	}
+
+	if (hasBtc && !isString(addressMap.btc)) {
+		throw new ValidationError('DepositAddressMap.btc must be a string', { addressMap });
+	}
+
+	return addressMap as unknown as DepositAddressMap;
+}
+
+/**
+ * Validates the response from POST /deposit endpoint
+ * Note: Actual API format differs from documentation
+ *
+ * @param data - The response data to validate
+ * @returns Validated DepositAddresses object
+ * @throws {ValidationError} When the response structure is invalid
+ *
+ * @example
+ * ```typescript
+ * const data = await fetch('/deposit', { method: 'POST', body: ... }).then(r => r.json());
+ * const validated = validateDepositAddresses(data);
+ * // Result: { address: { evm: "0x...", svm: "...", btc: "bc1..." }, note: "..." }
+ * ```
+ */
+export function validateDepositAddresses(data: unknown): DepositAddresses {
+	if (!isObject(data)) {
+		throw new ValidationError('DepositAddresses response must be an object', { data });
+	}
+
+	if (!isObject(data.address)) {
+		throw new ValidationError('DepositAddresses.address must be an object', { data });
+	}
+
+	const address = validateDepositAddressMap(data.address);
+
+	// Note field is optional
+	if ('note' in data && data.note !== undefined && !isString(data.note)) {
+		throw new ValidationError('DepositAddresses.note must be a string if present', { data });
+	}
+
+	return {
+		address,
+		note: data.note as string | undefined
+	} as DepositAddresses;
 }

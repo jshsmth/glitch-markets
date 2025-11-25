@@ -26,6 +26,7 @@ describe('API Configuration', () => {
 			const validConfig: ApiConfig = {
 				baseUrl: 'https://api.example.com',
 				dataApiUrl: 'https://data-api.example.com',
+				bridgeApiUrl: 'https://bridge.polymarket.com',
 				timeout: 5000,
 				cacheTtl: 60,
 				enableCache: true
@@ -38,6 +39,7 @@ describe('API Configuration', () => {
 			const invalidConfig: ApiConfig = {
 				baseUrl: '',
 				dataApiUrl: 'https://data-api.example.com',
+				bridgeApiUrl: 'https://bridge.polymarket.com',
 				timeout: 5000,
 				cacheTtl: 60,
 				enableCache: true
@@ -51,6 +53,7 @@ describe('API Configuration', () => {
 			const invalidConfig: ApiConfig = {
 				baseUrl: 'not-a-valid-url',
 				dataApiUrl: 'https://data-api.example.com',
+				bridgeApiUrl: 'https://bridge.polymarket.com',
 				timeout: 5000,
 				cacheTtl: 60,
 				enableCache: true
@@ -64,6 +67,7 @@ describe('API Configuration', () => {
 			const invalidConfig: ApiConfig = {
 				baseUrl: 'https://api.example.com',
 				dataApiUrl: 'https://data-api.example.com',
+				bridgeApiUrl: 'https://bridge.polymarket.com',
 				timeout: -1,
 				cacheTtl: 60,
 				enableCache: true
@@ -77,6 +81,7 @@ describe('API Configuration', () => {
 			const invalidConfig: ApiConfig = {
 				baseUrl: 'https://api.example.com',
 				dataApiUrl: 'https://data-api.example.com',
+				bridgeApiUrl: 'https://bridge.polymarket.com',
 				timeout: 0,
 				cacheTtl: 60,
 				enableCache: true
@@ -89,6 +94,7 @@ describe('API Configuration', () => {
 			const invalidConfig: ApiConfig = {
 				baseUrl: 'https://api.example.com',
 				dataApiUrl: 'https://data-api.example.com',
+				bridgeApiUrl: 'https://bridge.polymarket.com',
 				timeout: 5000,
 				cacheTtl: -1,
 				enableCache: true
@@ -177,6 +183,7 @@ describe('API Configuration', () => {
 					fc.record({
 						baseUrl: fc.webUrl(), // valid URLs
 						dataApiUrl: fc.webUrl(), // valid URLs
+						bridgeApiUrl: fc.webUrl(), // valid URLs
 						timeout: fc.integer({ min: 1, max: 60000 }), // positive timeout
 						cacheTtl: fc.integer({ min: 0, max: 3600 }), // non-negative TTL
 						enableCache: fc.boolean()
