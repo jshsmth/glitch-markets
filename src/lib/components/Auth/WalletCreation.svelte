@@ -4,6 +4,7 @@
 	 * Creates an embedded wallet for the user using Dynamic's WaaS API
 	 */
 	import { dynamicClient } from '$lib/stores/auth';
+	import { refreshUser } from '@dynamic-labs-sdk/client';
 
 	interface WalletInfo {
 		address: string;
@@ -50,6 +51,7 @@
 		error = null;
 
 		try {
+			// 1. Create the wallet via API
 			const response = await fetch('/api/wallet/create', {
 				method: 'POST',
 				headers: {
@@ -68,11 +70,51 @@
 			hasCreated = true;
 			walletData = data;
 			console.log('Wallet creation response:', data);
+
+			// 2. Refresh the Dynamic client to fetch the new wallet
+			// This updates the user object with the new verified credentials
+			await refreshUser();
+			console.log('Dynamic user refreshed after wallet creation');
+
+			// 3. Update the database with the new wallet address
+			if (data.wallets && data.wallets.length > 0) {
+				const walletAddress = data.wallets[0].address;
+				await updateWalletInDatabase(walletAddress);
+			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to create wallet';
 			console.error('Wallet creation error:', err);
 		} finally {
 			isCreating = false;
+		}
+	}
+
+	/**
+	 * Update wallet address in database
+	 */
+	async function updateWalletInDatabase(walletAddress: string) {
+		if (!$dynamicClient || !$dynamicClient.token) {
+			return;
+		}
+
+		try {
+			const response = await fetch('/api/auth/update-wallet', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${$dynamicClient.token}`
+				},
+				body: JSON.stringify({ walletAddress })
+			});
+
+			if (response.ok) {
+				console.log('Wallet address updated in database:', walletAddress);
+			} else {
+				console.warn('Failed to update wallet in database');
+			}
+		} catch (err) {
+			console.error('Failed to update wallet address:', err);
+			// Don't throw - this is a non-critical update
 		}
 	}
 
