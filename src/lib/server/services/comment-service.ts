@@ -86,7 +86,6 @@ export class CommentService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { filters });
 			return this.pendingRequests.get(cacheKey)!;
@@ -94,17 +93,14 @@ export class CommentService {
 
 		this.logger.info('Cache miss for comments list, fetching from API', { filters });
 
-		// Create the promise for fetching data
 		const fetchPromise = this.fetchAndCacheComments(cacheKey, filters);
 
-		// Store the promise so concurrent requests can wait for it
 		this.pendingRequests.set(cacheKey, fetchPromise);
 
 		try {
 			const result = await fetchPromise;
 			return result;
 		} finally {
-			// Clean up the pending request
 			this.pendingRequests.delete(cacheKey);
 		}
 	}
@@ -162,7 +158,6 @@ export class CommentService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { id, getPositions });
 			return this.pendingRequests.get(cacheKey)!;
@@ -231,7 +226,6 @@ export class CommentService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { userAddress, filters });
 			return this.pendingRequests.get(cacheKey)!;
@@ -242,17 +236,14 @@ export class CommentService {
 			filters
 		});
 
-		// Create the promise for fetching data
 		const fetchPromise = this.fetchAndCacheUserComments(cacheKey, userAddress, filters);
 
-		// Store the promise so concurrent requests can wait for it
 		this.pendingRequests.set(cacheKey, fetchPromise);
 
 		try {
 			const result = await fetchPromise;
 			return result;
 		} finally {
-			// Clean up the pending request
 			this.pendingRequests.delete(cacheKey);
 		}
 	}

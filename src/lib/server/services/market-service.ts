@@ -82,7 +82,6 @@ export class MarketService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { filters });
 			return this.pendingRequests.get(cacheKey)!;
@@ -90,17 +89,14 @@ export class MarketService {
 
 		this.logger.info('Cache miss for markets, fetching from API', { filters });
 
-		// Create the promise for fetching data
 		const fetchPromise = this.fetchAndCacheMarkets(cacheKey, filters);
 
-		// Store the promise so concurrent requests can wait for it
 		this.pendingRequests.set(cacheKey, fetchPromise);
 
 		try {
 			const result = await fetchPromise;
 			return result;
 		} finally {
-			// Clean up the pending request
 			this.pendingRequests.delete(cacheKey);
 		}
 	}
@@ -150,7 +146,6 @@ export class MarketService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { id });
 			return this.pendingRequests.get(cacheKey)!;
@@ -211,7 +206,6 @@ export class MarketService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { slug });
 			return this.pendingRequests.get(cacheKey)!;

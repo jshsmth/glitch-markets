@@ -21,7 +21,6 @@ export async function GET({ params }: RequestEvent) {
 	try {
 		const slug = params.slug as string;
 
-		// Validate slug parameter
 		if (!slug || slug.trim() === '') {
 			logger.error('Missing or empty event slug', undefined, { slug });
 			return json(
@@ -32,10 +31,8 @@ export async function GET({ params }: RequestEvent) {
 
 		logger.info('Fetching event by slug', { slug });
 
-		// Fetch event from service
 		const event = await eventService.getEventBySlug(slug);
 
-		// Handle not found
 		if (!event) {
 			const duration = Date.now() - startTime;
 			logger.info('Event not found', { slug, duration });
@@ -47,7 +44,6 @@ export async function GET({ params }: RequestEvent) {
 		const duration = Date.now() - startTime;
 		logger.info('Event fetched successfully', { slug, duration });
 
-		// Return response with cache headers
 		return json(event, {
 			headers: {
 				'Cache-Control': 'public, max-age=60, s-maxage=60',
@@ -63,7 +59,6 @@ export async function GET({ params }: RequestEvent) {
 			return json(formatErrorResponse(error), { status: error.statusCode });
 		}
 
-		// Handle unexpected errors
 		logger.error('Unexpected error in event by slug route', error, { duration });
 		const errorResponse = formatErrorResponse(
 			error instanceof Error ? error : new Error('Unknown error occurred')

@@ -84,7 +84,6 @@
 			}
 		} catch (importError) {
 			console.error('Failed to load Dynamic SDK modules:', importError);
-			// Set initialization complete to prevent infinite loading state
 			setInitializationComplete();
 			// Optionally notify user of initialization failure
 			if (dev) {

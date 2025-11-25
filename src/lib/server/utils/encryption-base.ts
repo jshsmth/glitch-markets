@@ -41,10 +41,8 @@ export function createEncryptor(keyHex: string): Encryptor {
 		let encrypted = cipher.update(data, 'utf8', 'hex');
 		encrypted += cipher.final('hex');
 
-		// Get authentication tag
 		const authTag = cipher.getAuthTag();
 
-		// Return format: iv:authTag:encrypted
 		return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
 	}
 

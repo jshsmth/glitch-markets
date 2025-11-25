@@ -19,12 +19,10 @@ const CLIENT_MAX_AGE = 3600000; // 1 hour in milliseconds
 async function getAuthenticatedEvmClient(): Promise<DynamicEvmWalletClient> {
 	const now = Date.now();
 
-	// Return existing client if it's still fresh
 	if (evmClientInstance && now - instanceCreationTime < CLIENT_MAX_AGE) {
 		return evmClientInstance;
 	}
 
-	// Log if we're recreating an old client
 	if (evmClientInstance) {
 		logger.info('Recreating Dynamic EVM client due to age', {
 			age: now - instanceCreationTime,

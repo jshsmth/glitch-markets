@@ -6,7 +6,6 @@
 import { createEncryptor } from './encryption-base';
 import { DYNAMIC_SERVER_WALLET_ENCRYPTION_KEY } from '$env/static/private';
 
-// Create encryptor instance with server wallet encryption key
 const { encrypt, decrypt } = createEncryptor(DYNAMIC_SERVER_WALLET_ENCRYPTION_KEY);
 
 /**

@@ -65,7 +65,6 @@ export function initializeAuthListeners(client: DynamicClient) {
 		}
 	});
 
-	// Return cleanup function
 	return () => {
 		unsubscribeUserChanged();
 		unsubscribeLogout();

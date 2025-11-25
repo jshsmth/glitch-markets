@@ -21,7 +21,6 @@ export async function GET({ params }: RequestEvent) {
 	try {
 		const slug = params.slug as string;
 
-		// Validate slug parameter
 		if (!slug || slug.trim() === '') {
 			logger.error('Missing or empty market slug', undefined, { slug });
 			return json(
@@ -32,10 +31,8 @@ export async function GET({ params }: RequestEvent) {
 
 		logger.info('Fetching market by slug', { slug });
 
-		// Fetch market from service
 		const market = await marketService.getMarketBySlug(slug);
 
-		// Handle not found
 		if (!market) {
 			const duration = Date.now() - startTime;
 			logger.info('Market not found', { slug, duration });
@@ -47,7 +44,6 @@ export async function GET({ params }: RequestEvent) {
 		const duration = Date.now() - startTime;
 		logger.info('Market fetched successfully', { slug, duration });
 
-		// Return response with cache headers
 		return json(market, {
 			headers: {
 				'Cache-Control': 'public, max-age=30, s-maxage=30',
@@ -63,7 +59,6 @@ export async function GET({ params }: RequestEvent) {
 			return json(formatErrorResponse(error), { status: error.statusCode });
 		}
 
-		// Handle unexpected errors
 		logger.error('Unexpected error in market by slug route', error, { duration });
 		const errorResponse = formatErrorResponse(
 			error instanceof Error ? error : new Error('Unknown error occurred')

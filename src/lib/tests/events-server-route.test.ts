@@ -22,7 +22,6 @@ vi.mock('$lib/server/api/polymarket-client', () => {
 	};
 });
 
-// Import after mocking
 const eventsRoute = await import('../../routes/api/events/+server');
 const eventByIdRoute = await import('../../routes/api/events/[id]/+server');
 const eventBySlugRoute = await import('../../routes/api/events/slug/[slug]/+server');

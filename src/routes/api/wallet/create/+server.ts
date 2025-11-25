@@ -39,28 +39,24 @@ interface CreateWalletResponse {
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
-		// 1. Check authentication (JWT verified in hooks.server.ts)
+		// JWT verified in hooks.server.ts
 		if (!locals.user) {
 			return json({ error: 'Unauthorized' }, { status: 401 });
 		}
 
-		// 2. Extract user info from locals
 		const { userId, email } = locals.user;
 
 		if (!userId) {
 			return json({ error: 'User ID not found' }, { status: 400 });
 		}
 
-		// 3. Parse request body
 		const body = (await request.json()) as CreateWalletRequest;
 		const chains = body.chains || ['EVM']; // Default to EVM if not specified
 
-		// 4. Determine identifier type and value
 		// Priority: email > user ID
 		const identifier = email || userId;
 		const identifierType = email ? 'email' : 'id';
 
-		// 5. Call Dynamic WaaS API to create wallet
 		const waasResponse = await fetch(
 			`${DYNAMIC_API_BASE}/environments/${DYNAMIC_ENVIRONMENT_ID}/waas/create`,
 			{
@@ -77,7 +73,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			}
 		);
 
-		// 6. Handle API errors
 		if (!waasResponse.ok) {
 			const errorData = await waasResponse.json().catch(() => ({}));
 			console.error('Dynamic WaaS API error:', {
@@ -86,7 +81,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				error: errorData
 			});
 
-			// Return specific error messages
 			if (waasResponse.status === 401) {
 				return json({ error: 'Invalid API credentials' }, { status: 500 });
 			} else if (waasResponse.status === 403) {
@@ -104,13 +98,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			);
 		}
 
-		// 7. Parse successful response
 		const walletData = (await waasResponse.json()) as { user: CreateWalletResponse['user'] };
 
-		// 8. Determine if wallet was newly created or already existed
 		const status = waasResponse.status === 201 ? 'created' : 'existing';
 
-		// 9. Extract wallet addresses from verified credentials
 		const wallets = walletData.user.verifiedCredentials
 			.filter((cred) => cred.walletProvider === 'dynamicWaas')
 			.map((cred) => ({
@@ -119,7 +110,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				walletName: cred.walletName
 			}));
 
-		// 10. Return success response
 		const response: CreateWalletResponse = {
 			user: walletData.user,
 			status

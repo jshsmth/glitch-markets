@@ -21,7 +21,6 @@ export async function GET({ params }: RequestEvent) {
 	try {
 		const { slug } = params;
 
-		// Validate slug parameter
 		if (!slug || slug.trim() === '') {
 			logger.error('Missing or empty tag slug', undefined, { slug });
 			return json(
@@ -32,10 +31,8 @@ export async function GET({ params }: RequestEvent) {
 
 		logger.info('Fetching tag by slug', { slug });
 
-		// Fetch tag from service
 		const tag = await tagService.getTagBySlug(slug);
 
-		// Handle not found
 		if (!tag) {
 			const duration = Date.now() - startTime;
 			logger.info('Tag not found', { slug, duration });
@@ -47,7 +44,6 @@ export async function GET({ params }: RequestEvent) {
 		const duration = Date.now() - startTime;
 		logger.info('Tag fetched successfully', { slug, duration });
 
-		// Return response with cache headers
 		return json(tag, {
 			headers: {
 				'Cache-Control': 'public, max-age=60, s-maxage=60',
@@ -63,7 +59,6 @@ export async function GET({ params }: RequestEvent) {
 			return json(formatErrorResponse(error), { status: error.statusCode });
 		}
 
-		// Handle unexpected errors
 		logger.error('Unexpected error in tag by slug route', error, { duration });
 		const errorResponse = formatErrorResponse(
 			error instanceof Error ? error : new Error('Unknown error occurred')

@@ -71,7 +71,6 @@ export class UserDataService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { user, markets });
 			return this.pendingRequests.get(cacheKey)!;
@@ -133,7 +132,6 @@ export class UserDataService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { user, markets });
 			return this.pendingRequests.get(cacheKey)!;
@@ -205,7 +203,6 @@ export class UserDataService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { user });
 			return this.pendingRequests.get(cacheKey)!;
@@ -252,7 +249,6 @@ export class UserDataService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { markets });
 			return this.pendingRequests.get(cacheKey)!;
@@ -303,7 +299,6 @@ export class UserDataService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { user, markets });
 			return this.pendingRequests.get(cacheKey)!;
@@ -354,7 +349,6 @@ export class UserDataService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { user });
 			return this.pendingRequests.get(cacheKey)!;

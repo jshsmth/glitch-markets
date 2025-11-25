@@ -61,7 +61,6 @@ export class TagService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result');
 			return this.pendingRequests.get(cacheKey)!;
@@ -69,17 +68,14 @@ export class TagService {
 
 		this.logger.info('Cache miss for tags, fetching from API');
 
-		// Create the promise for fetching data
 		const fetchPromise = this.fetchAndCacheTags(cacheKey);
 
-		// Store the promise so concurrent requests can wait for it
 		this.pendingRequests.set(cacheKey, fetchPromise);
 
 		try {
 			const result = await fetchPromise;
 			return result;
 		} finally {
-			// Clean up the pending request
 			this.pendingRequests.delete(cacheKey);
 		}
 	}
@@ -120,7 +116,6 @@ export class TagService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { id });
 			return this.pendingRequests.get(cacheKey)!;
@@ -181,7 +176,6 @@ export class TagService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { slug });
 			return this.pendingRequests.get(cacheKey)!;
@@ -240,7 +234,6 @@ export class TagService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { id });
 			return this.pendingRequests.get(cacheKey)!;
@@ -299,7 +292,6 @@ export class TagService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { slug });
 			return this.pendingRequests.get(cacheKey)!;
@@ -359,7 +351,6 @@ export class TagService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { id });
 			return this.pendingRequests.get(cacheKey)!;
@@ -419,7 +410,6 @@ export class TagService {
 			return cached;
 		}
 
-		// Check if request is already in-flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result', { slug });
 			return this.pendingRequests.get(cacheKey)!;
