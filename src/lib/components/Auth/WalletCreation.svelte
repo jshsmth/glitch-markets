@@ -3,8 +3,10 @@
 	 * Wallet Creation Component
 	 * Creates an embedded wallet for the user using Dynamic's WaaS API
 	 */
-	import { dynamicClient } from '$lib/stores/auth';
+	import { authState } from '$lib/stores/auth.svelte';
 	import { refreshUser } from '@dynamic-labs-sdk/client';
+	import { onMount } from 'svelte';
+	import { dev } from '$app/environment';
 
 	interface WalletInfo {
 		address: string;
@@ -27,18 +29,17 @@
 
 	let { chains = ['EVM'], autoCreate = false }: Props = $props();
 
-	// Local state
 	let isCreating = $state(false);
 	let hasCreated = $state(false);
 	let error = $state<string | null>(null);
 	let walletData = $state<WalletCreationResponse | null>(null);
-	let hasAttemptedAutoCreate = $state(false);
+	let hasAttemptedAutoCreate = false;
 
 	/**
 	 * Create embedded wallet via API
 	 */
 	async function createWallet() {
-		if (!$dynamicClient || !$dynamicClient.token) {
+		if (!authState.client || !authState.client.token) {
 			error = 'Not authenticated';
 			return;
 		}
@@ -51,12 +52,11 @@
 		error = null;
 
 		try {
-			// 1. Create the wallet via API
 			const response = await fetch('/api/wallet/create', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					Authorization: `Bearer ${$dynamicClient.token}`
+					Authorization: `Bearer ${authState.client.token}`
 				},
 				body: JSON.stringify({ chains })
 			});
@@ -69,14 +69,15 @@
 			const data = (await response.json()) as WalletCreationResponse;
 			hasCreated = true;
 			walletData = data;
-			console.log('Wallet creation response:', data);
+			if (dev) {
+				console.log('Wallet creation response:', data);
+			}
 
-			// 2. Refresh the Dynamic client to fetch the new wallet
-			// This updates the user object with the new verified credentials
 			await refreshUser();
-			console.log('Dynamic user refreshed after wallet creation');
+			if (dev) {
+				console.log('Dynamic user refreshed after wallet creation');
+			}
 
-			// 3. Update the database with the new wallet address
 			if (data.wallets && data.wallets.length > 0) {
 				const walletAddress = data.wallets[0].address;
 				await updateWalletInDatabase(walletAddress);
@@ -93,7 +94,7 @@
 	 * Update wallet address in database
 	 */
 	async function updateWalletInDatabase(walletAddress: string) {
-		if (!$dynamicClient || !$dynamicClient.token) {
+		if (!authState.client || !authState.client.token) {
 			return;
 		}
 
@@ -102,27 +103,26 @@
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					Authorization: `Bearer ${$dynamicClient.token}`
+					Authorization: `Bearer ${authState.client.token}`
 				},
 				body: JSON.stringify({ walletAddress })
 			});
 
 			if (response.ok) {
-				console.log('Wallet address updated in database:', walletAddress);
+				if (dev) {
+					console.log('Wallet address updated in database:', walletAddress);
+				}
 			} else {
 				console.warn('Failed to update wallet in database');
 			}
 		} catch (err) {
 			console.error('Failed to update wallet address:', err);
-			// Don't throw - this is a non-critical update
 		}
 	}
 
-	// Auto-create wallet if enabled
-	$effect(() => {
-		if (autoCreate && $dynamicClient && $dynamicClient.token && !hasAttemptedAutoCreate) {
+	onMount(() => {
+		if (autoCreate && authState.client && authState.client.token && !hasAttemptedAutoCreate) {
 			hasAttemptedAutoCreate = true;
-			// Wait a bit to ensure user is fully authenticated
 			setTimeout(() => {
 				createWallet();
 			}, 500);

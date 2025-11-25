@@ -4,26 +4,28 @@
 	 * Handles one-time signature for Polymarket CLOB API credentials
 	 */
 	import { isSignedIn, getWalletAccounts, signMessage } from '@dynamic-labs-sdk/client';
-	import { dynamicClient } from '$lib/stores/auth';
+	import { authState, isAuthenticated } from '$lib/stores/auth.svelte';
+	import { onMount } from 'svelte';
+	import { dev } from '$app/environment';
 
-	// Local state
+	const authenticated = $derived(isAuthenticated());
+
 	let isRegistering = $state(false);
 	let isRegistered = $state(false);
 	let error = $state<string | null>(null);
-	let hasCheckedRegistration = $state(false);
 
 	/**
 	 * Check if user is already registered with Polymarket
 	 */
 	async function checkRegistration() {
-		if (!$dynamicClient || !isSignedIn($dynamicClient)) {
+		if (!authState.client || !isSignedIn(authState.client)) {
 			return;
 		}
 
 		try {
 			const response = await fetch('/api/polymarket/status', {
 				headers: {
-					Authorization: `Bearer ${$dynamicClient.token}`
+					Authorization: `Bearer ${authState.client.token}`
 				}
 			});
 
@@ -41,7 +43,7 @@
 	 * Signs authorization message and sends to backend
 	 */
 	async function registerWithPolymarket() {
-		if (!$dynamicClient) {
+		if (!authState.client) {
 			error = 'Authentication required';
 			return;
 		}
@@ -50,7 +52,6 @@
 		error = null;
 
 		try {
-			// Get the user's wallet account
 			const walletAccounts = getWalletAccounts();
 			if (!walletAccounts || walletAccounts.length === 0) {
 				throw new Error('No wallet found. Please connect a wallet first.');
@@ -59,19 +60,16 @@
 			const walletAccount = walletAccounts[0];
 			const walletAddress = walletAccount.address;
 
-			// Create authorization message
 			const timestamp = Date.now();
 			const messageText = `I authorize Glitch Markets to trade on my behalf.\nWallet: ${walletAddress}\nTimestamp: ${timestamp}`;
 
-			// Request user signature using the Dynamic SDK
 			const signature = await signMessage({ walletAccount, message: messageText });
 
-			// Send to backend
 			const response = await fetch('/api/polymarket/register', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					Authorization: `Bearer ${$dynamicClient.token}`
+					Authorization: `Bearer ${authState.client.token}`
 				},
 				body: JSON.stringify({
 					signature,
@@ -95,10 +93,14 @@
 		}
 	}
 
-	// Check registration status when client is ready (only once)
+	onMount(() => {
+		if (authenticated) {
+			checkRegistration();
+		}
+	});
+
 	$effect(() => {
-		if ($dynamicClient && isSignedIn($dynamicClient) && !hasCheckedRegistration) {
-			hasCheckedRegistration = true;
+		if (authenticated) {
 			checkRegistration();
 		}
 	});

@@ -4,22 +4,20 @@
 	 * Shows social login buttons or user info based on auth state
 	 */
 	import { logout } from '@dynamic-labs-sdk/client';
-	import { dynamicClient, isAuthenticated, user, isInitializing } from '$lib/stores/auth';
+	import { authState, isAuthenticated } from '$lib/stores/auth.svelte';
 	import SocialLoginButton from './SocialLoginButton.svelte';
 
-	// Subscribe to auth state
-	const authenticated = $derived($isAuthenticated);
-	const currentUser = $derived($user);
-	const initializing = $derived($isInitializing);
+	// Derive authenticated state locally
+	const authenticated = $derived(isAuthenticated());
 
 	/**
 	 * Handle logout button click
 	 */
 	async function handleLogout() {
-		if (!$dynamicClient) return;
+		if (!authState.client) return;
 
 		try {
-			await logout($dynamicClient);
+			await logout(authState.client);
 		} catch (err) {
 			console.error('Logout error:', err);
 		}
@@ -27,23 +25,20 @@
 </script>
 
 <div class="auth-button-container">
-	{#if initializing}
-		<!-- Loading state during initialization -->
+	{#if authState.isInitializing}
 		<div class="auth-loading">
 			<div class="loading-skeleton"></div>
 		</div>
-	{:else if authenticated && currentUser}
-		<!-- User is logged in -->
+	{:else if authenticated && authState.user}
 		<div class="user-info">
 			<div class="user-details">
 				<span class="user-name">
-					{currentUser.email || currentUser.verifiedCredentials?.[0]?.address || 'User'}
+					{authState.user.email || authState.user.verifiedCredentials?.[0]?.address || 'User'}
 				</span>
 			</div>
 			<button class="logout-btn" onclick={handleLogout}> Logout </button>
 		</div>
 	{:else}
-		<!-- User is not logged in - show social login options -->
 		<div class="login-options">
 			<p class="login-prompt">Sign in to continue</p>
 			<div class="social-buttons">

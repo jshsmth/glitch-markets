@@ -4,7 +4,11 @@
 	 * Automatically registers user in our database after Dynamic authentication
 	 */
 	import { isSignedIn } from '@dynamic-labs-sdk/client';
-	import { dynamicClient } from '$lib/stores/auth';
+	import { authState, isAuthenticated } from '$lib/stores/auth.svelte';
+	import { onMount } from 'svelte';
+	import { dev } from '$app/environment';
+
+	const authenticated = $derived(isAuthenticated());
 
 	interface RegisteredUser {
 		userId: string;
@@ -13,31 +17,32 @@
 		hasServerWallet?: boolean;
 	}
 
-	// Local state
 	let isRegistering = $state(false);
 	let isRegistered = $state(false);
 	let error = $state<string | null>(null);
 	let registeredUser = $state<RegisteredUser | null>(null);
-	let lastRegisteredUserId = $state<string | null>(null);
+	let lastRegisteredUserId: string | null = null;
 
 	/**
 	 * Register user in our database
 	 * Called automatically when user authenticates with Dynamic
 	 */
 	async function registerUser() {
-		if (!$dynamicClient) {
+		if (!authState.client) {
 			return;
 		}
 
-		// Check if user is signed in
-		if (!isSignedIn($dynamicClient)) {
+		if (!isSignedIn(authState.client)) {
 			return;
 		}
 
-		if (isRegistered || isRegistering) {
-			return; // Already registered or in progress
+		const currentUserId = authState.client.user?.id;
+
+		if (!currentUserId || currentUserId === lastRegisteredUserId || isRegistering || isRegistered) {
+			return;
 		}
 
+		lastRegisteredUserId = currentUserId;
 		isRegistering = true;
 		error = null;
 
@@ -46,7 +51,7 @@
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					Authorization: `Bearer ${$dynamicClient.token}`
+					Authorization: `Bearer ${authState.client.token}`
 				}
 			});
 
@@ -58,7 +63,9 @@
 			const data = await response.json();
 			isRegistered = true;
 			registeredUser = data.user;
-			console.log('User registered successfully:', data.user);
+			if (dev) {
+				console.log('User registered successfully:', data.user);
+			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to register user';
 			console.error('User registration error:', err);
@@ -67,21 +74,19 @@
 		}
 	}
 
-	// Auto-register when user signs in (only once per user)
-	$effect(() => {
-		if ($dynamicClient && isSignedIn($dynamicClient)) {
-			const currentUserId = $dynamicClient.user?.id;
+	onMount(() => {
+		if (authenticated) {
+			registerUser();
+		}
+	});
 
-			// Only register if we have a user ID and haven't registered this user yet
-			if (currentUserId && currentUserId !== lastRegisteredUserId && !isRegistering) {
-				lastRegisteredUserId = currentUserId;
-				registerUser();
-			}
+	$effect(() => {
+		if (authenticated) {
+			registerUser();
 		}
 	});
 </script>
 
-<!-- Registration status display -->
 {#if isRegistering}
 	<div class="registration-status">
 		<p>Registering user...</p>

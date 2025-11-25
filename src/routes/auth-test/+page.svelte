@@ -6,7 +6,9 @@
 	import AuthButton from '$lib/components/Auth/AuthButton.svelte';
 	import UserRegistration from '$lib/components/Auth/UserRegistration.svelte';
 	import PolymarketAuth from '$lib/components/Auth/PolymarketAuth.svelte';
-	import { isAuthenticated, user } from '$lib/stores/auth';
+	import { authState, isAuthenticated } from '$lib/stores/auth.svelte';
+
+	const authenticated = $derived(isAuthenticated());
 </script>
 
 <div class="auth-test-page">
@@ -16,12 +18,11 @@
 	</header>
 
 	<main>
-		<!-- Step 1: Dynamic Authentication -->
 		<section class="test-section">
 			<div class="section-header">
 				<h2>Step 1: Sign In</h2>
-				<span class="status-badge" class:active={$isAuthenticated}>
-					{$isAuthenticated ? '✓ Signed In' : '○ Not Signed In'}
+				<span class="status-badge" class:active={authenticated}>
+					{authenticated ? '✓ Signed In' : '○ Not Signed In'}
 				</span>
 			</div>
 			<p class="description">
@@ -30,22 +31,21 @@
 			</p>
 			<AuthButton />
 
-			{#if $isAuthenticated && $user}
+			{#if authenticated && authState.user}
 				<div class="user-info-panel">
 					<h3>User Info</h3>
 					<dl>
 						<dt>Email:</dt>
-						<dd>{$user.email || 'N/A'}</dd>
+						<dd>{authState.user.email || 'N/A'}</dd>
 
 						<dt>User ID:</dt>
-						<dd class="mono">{$user.id || 'N/A'}</dd>
+						<dd class="mono">{authState.user.id || 'N/A'}</dd>
 					</dl>
 				</div>
 			{/if}
 		</section>
 
-		<!-- Step 2: User Registration & Server Wallet Creation (happens automatically) -->
-		{#if $isAuthenticated}
+		{#if authenticated}
 			<section class="test-section">
 				<div class="section-header">
 					<h2>Step 2: User Registration & Server Wallet</h2>
@@ -59,7 +59,6 @@
 				<UserRegistration />
 			</section>
 
-			<!-- Step 3: Polymarket Authorization -->
 			<section class="test-section">
 				<div class="section-header">
 					<h2>Step 3: Enable Polymarket Trading</h2>
@@ -73,16 +72,15 @@
 			</section>
 		{/if}
 
-		<!-- Debug Info -->
-		{#if $isAuthenticated}
+		{#if authenticated}
 			<section class="test-section debug">
 				<h3>Debug Information</h3>
 				<details>
 					<summary>View Raw Data</summary>
 					<pre>{JSON.stringify(
 							{
-								isAuthenticated: $isAuthenticated,
-								user: $user
+								isAuthenticated: authenticated,
+								user: authState.user
 							},
 							null,
 							2

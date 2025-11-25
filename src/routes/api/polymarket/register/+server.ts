@@ -12,7 +12,6 @@ import { encryptWithAES } from '$lib/server/utils/crypto';
 import { POLYMARKET_CLOB_URL } from '$env/static/private';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-	// Check authentication
 	if (!locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
@@ -20,14 +19,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const userId = locals.user.userId;
 
 	try {
-		// Parse request body
 		const { signature, walletAddress, timestamp, message } = await request.json();
 
 		if (!signature || !walletAddress) {
 			return json({ error: 'Missing required fields' }, { status: 400 });
 		}
 
-		// Check if user is already registered with Polymarket
 		const existing = await db.query.polymarketCredentials.findFirst({
 			where: eq(polymarketCredentials.userId, userId)
 		});
@@ -36,7 +33,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ error: 'Already registered with Polymarket' }, { status: 400 });
 		}
 
-		// Register with Polymarket CLOB API
 		const clobUrl = POLYMARKET_CLOB_URL || 'https://clob.polymarket.com';
 		const response = await fetch(`${clobUrl}/auth/api-key`, {
 			method: 'POST',
@@ -52,7 +48,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 
 		if (!response.ok) {
-			const errorData = await response.text();
+			let errorData: string;
+			try {
+				const jsonError = await response.json();
+				errorData = JSON.stringify(jsonError);
+			} catch {
+				errorData = await response.text();
+			}
 			console.error('Polymarket CLOB registration failed:', errorData);
 			return json(
 				{
@@ -69,12 +71,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ error: 'Invalid response from Polymarket API' }, { status: 500 });
 		}
 
-		// Encrypt credentials before storing
 		const encryptedApiKey = encryptWithAES(apiKey);
 		const encryptedSecret = encryptWithAES(secret);
 		const encryptedPassphrase = encryptWithAES(passphrase);
 
-		// Store encrypted credentials in database
 		await db.insert(polymarketCredentials).values({
 			userId,
 			walletAddress,

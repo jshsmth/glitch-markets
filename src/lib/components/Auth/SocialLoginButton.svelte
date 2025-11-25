@@ -73,11 +73,11 @@
 	}
 
 	.social-btn.google {
-		border-color: #4285f4;
+		border-color: var(--google-blue);
 	}
 
 	.social-btn.twitter {
-		border-color: #1da1f2;
+		border-color: var(--twitter-blue);
 	}
 
 	.error {

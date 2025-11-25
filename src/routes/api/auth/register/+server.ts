@@ -15,7 +15,6 @@ import { Logger } from '$lib/server/utils/logger';
 const logger = new Logger({ component: 'UserRegistration' });
 
 export const POST: RequestHandler = async ({ locals }) => {
-	// Check authentication
 	if (!locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
@@ -23,13 +22,11 @@ export const POST: RequestHandler = async ({ locals }) => {
 	const { userId, email } = locals.user;
 
 	try {
-		// Check if user already exists
 		const existingUser = await db.query.users.findFirst({
 			where: eq(users.id, userId)
 		});
 
 		if (existingUser) {
-			// Update last login time
 			await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, userId));
 
 			return json({
@@ -44,7 +41,6 @@ export const POST: RequestHandler = async ({ locals }) => {
 			});
 		}
 
-		// Create server wallet for the new user
 		logger.info('Creating server wallet for new user', { userId });
 		let serverWallet;
 		try {
@@ -62,7 +58,6 @@ export const POST: RequestHandler = async ({ locals }) => {
 			throw walletError;
 		}
 
-		// Create new user with server wallet
 		await db.insert(users).values({
 			id: userId,
 			email,

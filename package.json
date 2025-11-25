@@ -58,9 +58,10 @@
 		"@dynamic-labs-sdk/evm": "^0.0.1-alpha.25",
 		"@dynamic-labs-wallet/node-evm": "^0.0.211",
 		"@tanstack/svelte-query": "^6.0.8",
+		"better-auth": "^1.4.1",
 		"jose": "^6.1.2",
 		"postgres": "^3.4.7",
-		"viem": "^2.40.1",
+		"viem": "2.38.2",
 		"vite-plugin-mkcert": "^1.17.9"
 	}
 }

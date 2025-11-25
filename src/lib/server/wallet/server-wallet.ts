@@ -11,12 +11,8 @@ import { encryptData, decryptData } from '$lib/server/utils/encryption';
 
 const logger = new Logger({ component: 'ServerWallet' });
 
-// Singleton client instance
 let evmClientInstance: DynamicEvmWalletClient | null = null;
 
-/**
- * Get authenticated EVM client (singleton pattern)
- */
 async function getAuthenticatedEvmClient(): Promise<DynamicEvmWalletClient> {
 	if (evmClientInstance) {
 		return evmClientInstance;
@@ -24,7 +20,7 @@ async function getAuthenticatedEvmClient(): Promise<DynamicEvmWalletClient> {
 
 	const client = new DynamicEvmWalletClient({
 		environmentId: DYNAMIC_ENVIRONMENT_ID,
-		enableMPCAccelerator: false // Disabled - Node.js environment doesn't support WASM attestation
+		enableMPCAccelerator: false
 	});
 
 	await client.authenticateApiToken(DYNAMIC_API_TOKEN);
@@ -41,22 +37,16 @@ export interface ServerWalletData {
 	encryptedKeyShares: string; // Encrypted JSON string of external key shares
 }
 
-/**
- * Create a new server wallet for a user
- * This wallet is controlled by the backend and can sign transactions automatically
- */
 export async function createServerWallet(userId: string): Promise<ServerWalletData> {
 	try {
 		logger.info('Creating server wallet', { userId });
 
 		const evmClient = await getAuthenticatedEvmClient();
 
-		// Create wallet with 2-of-2 threshold signature scheme
-		// This means 2 shares are needed to sign: one from Dynamic, one from our backend
 		const { accountAddress, walletId, publicKeyHex, externalServerKeyShares } =
 			await evmClient.createWalletAccount({
 				thresholdSignatureScheme: ThresholdSignatureScheme.TWO_OF_TWO,
-				backUpToClientShareService: true, // Backup to Dynamic's service for recovery
+				backUpToClientShareService: true,
 				onError: (error: Error) => {
 					logger.error('Server wallet creation error', { error: error.message, userId });
 				}
@@ -68,8 +58,6 @@ export async function createServerWallet(userId: string): Promise<ServerWalletDa
 			walletId
 		});
 
-		// Encrypt the external key shares before storing
-		// These are critical - losing them means losing access to the wallet
 		const encryptedKeyShares = encryptData(JSON.stringify(externalServerKeyShares));
 
 		return {
@@ -87,10 +75,6 @@ export async function createServerWallet(userId: string): Promise<ServerWalletDa
 	}
 }
 
-/**
- * Sign a message with a server wallet
- * Used for Polymarket order signing and other blockchain operations
- */
 export async function signMessageWithServerWallet(
 	accountAddress: string,
 	message: string,
@@ -101,7 +85,6 @@ export async function signMessageWithServerWallet(
 
 		const evmClient = await getAuthenticatedEvmClient();
 
-		// If we have external key shares, decrypt them
 		let externalServerKeyShares;
 		if (encryptedKeyShares) {
 			const decrypted = decryptData(encryptedKeyShares);
@@ -125,10 +108,6 @@ export async function signMessageWithServerWallet(
 	}
 }
 
-/**
- * Get a Viem wallet client for the server wallet
- * Used for sending transactions and interacting with contracts
- */
 export async function getServerWalletClient(
 	accountAddress: string,
 	chainId: number,
@@ -138,7 +117,6 @@ export async function getServerWalletClient(
 	try {
 		const evmClient = await getAuthenticatedEvmClient();
 
-		// Decrypt key shares if provided
 		let externalServerKeyShares;
 		if (encryptedKeyShares) {
 			const decrypted = decryptData(encryptedKeyShares);
