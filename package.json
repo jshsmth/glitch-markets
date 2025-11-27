@@ -62,6 +62,7 @@
 		"@dynamic-labs-wallet/node-evm": "^0.0.211",
 		"@tanstack/svelte-query": "^6.0.8",
 		"jose": "^6.1.2",
+		"lottie-web": "^5.13.0",
 		"postgres": "^3.4.7",
 		"tslib": "^2.8.1",
 		"viem": "2.38.2",
