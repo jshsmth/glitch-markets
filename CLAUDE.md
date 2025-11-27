@@ -67,13 +67,14 @@ You have access to the Svelte MCP server with comprehensive Svelte 5 and SvelteK
 
 ## Key Principles
 
-1. **Mode Selection** - Always ask user to choose Spec or Vibe mode for new features
-2. **Design System** - Never use hard-coded colors, always use CSS variables
-3. **Type Safety** - Use TypeScript for all code, avoid `any`
-4. **Testing** - Write tests for utilities and component behavior
-5. **Accessibility** - Use semantic HTML and ARIA labels
-6. **Performance** - Lazy load routes and optimize images
-7. **Security** - Sanitize input, use environment variables for secrets
+1. **PWA-First, Desktop-Ready** - This is a Progressive Web App first that should scale gracefully into a simple, clean desktop app. Prioritize mobile web experience (touch-friendly interfaces, responsive layouts, offline capabilities, app-like interactions) while ensuring designs can scale up to larger screens with a clean, uncluttered desktop aesthetic. Think mobile-first responsive design that enhances naturally on desktop without becoming complex.
+2. **Mode Selection** - Always ask user to choose Spec or Vibe mode for new features
+3. **Design System** - Never use hard-coded colors, always use CSS variables
+4. **Type Safety** - Use TypeScript for all code, avoid `any`
+5. **Testing** - Write tests for utilities and component behavior
+6. **Accessibility** - Use semantic HTML and ARIA labels
+7. **Performance** - Lazy load routes and optimize images
+8. **Security** - Sanitize input, use environment variables for secrets
 
 ---
 
