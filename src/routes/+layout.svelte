@@ -8,7 +8,10 @@
 	import { createDynamicClient, initializeClient, onEvent } from '@dynamic-labs-sdk/client';
 	import { PUBLIC_DYNAMIC_ENVIRONMENT_ID } from '$env/static/public';
 	import { initializeAuthListeners, setInitializationComplete } from '$lib/stores/auth.svelte';
+	import { initializeTheme } from '$lib/stores/theme.svelte';
 	import { onMount } from 'svelte';
+	import TopHeader from '$lib/components/layout/TopHeader.svelte';
+	import BottomNav from '$lib/components/layout/BottomNav.svelte';
 	// @ts-expect-error - virtual module from vite-plugin-pwa
 	import { pwaInfo } from 'virtual:pwa-info';
 
@@ -17,6 +20,9 @@
 	const queryClient = data?.queryClient || createQueryClient();
 
 	onMount(async () => {
+		// Initialize theme
+		initializeTheme();
+
 		try {
 			const { detectOAuthRedirect, completeSocialAuthentication } =
 				await import('@dynamic-labs-sdk/client');
@@ -104,8 +110,47 @@
 </svelte:head>
 
 <QueryClientProvider client={queryClient}>
-	{@render children()}
+	<div class="app-layout">
+		<TopHeader />
+
+		<main class="main-content">
+			{@render children()}
+		</main>
+
+		<BottomNav />
+	</div>
+
 	{#if dev}
 		<SvelteQueryDevtools buttonPosition="bottom-right" />
 	{/if}
 </QueryClientProvider>
+
+<style>
+	.app-layout {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+		background-color: var(--bg-0);
+	}
+
+	.main-content {
+		flex: 1;
+		margin-top: 60px; /* Header height */
+		margin-bottom: 64px; /* Bottom nav height */
+		overflow-y: auto;
+		padding: 12px;
+	}
+
+	/* Desktop: Remove bottom nav margin and align with header content */
+	@media (min-width: 768px) {
+		.main-content {
+			margin-top: 64px;
+			margin-bottom: 0;
+			max-width: 1400px;
+			margin: 64px auto 0;
+			padding: 24px;
+			width: 100%;
+			box-sizing: border-box;
+		}
+	}
+</style>
