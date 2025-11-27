@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="@vite-pwa/sveltekit" />
 
 // SvelteKit Environment Variables Type Definitions
 // This file ensures TypeScript knows about all environment variables
