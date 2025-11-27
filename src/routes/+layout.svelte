@@ -20,7 +20,6 @@
 	const queryClient = data?.queryClient || createQueryClient();
 
 	onMount(async () => {
-		// Initialize theme
 		initializeTheme();
 
 		try {

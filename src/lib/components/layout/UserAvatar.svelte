@@ -16,17 +16,14 @@
 	 * Generate a consistent gradient based on user ID
 	 */
 	function generateAvatarGradient(userId: string): string {
-		// Simple hash function
 		let hash = 0;
 		for (let i = 0; i < userId.length; i++) {
 			hash = userId.charCodeAt(i) + ((hash << 5) - hash);
 		}
 
-		// Generate two hue values
 		const hue1 = Math.abs(hash % 360);
 		const hue2 = Math.abs((hash * 2) % 360);
 
-		// Create gradient with vibrant, saturated colors
 		return `linear-gradient(135deg, hsl(${hue1}, 70%, 60%), hsl(${hue2}, 70%, 60%))`;
 	}
 
@@ -36,7 +33,6 @@
 	function getUserInitials(user: typeof authState.user): string {
 		if (!user) return '';
 
-		// Try to get initials from email
 		if (user.email) {
 			const parts = user.email.split('@')[0].split('.');
 			if (parts.length >= 2) {
@@ -45,12 +41,11 @@
 			return user.email.substring(0, 2).toUpperCase();
 		}
 
-		// Fallback to user ID
 		if (user.id) {
 			return user.id.substring(0, 2).toUpperCase();
 		}
 
-		return 'GM'; // Glitch Markets
+		return 'GM';
 	}
 
 	let gradient = $derived(
@@ -90,7 +85,6 @@
 		}
 	}
 
-	// Close dropdown when clicking outside
 	function handleClickOutside(event: MouseEvent) {
 		const target = event.target as HTMLElement;
 		if (!target.closest('.avatar-container')) {

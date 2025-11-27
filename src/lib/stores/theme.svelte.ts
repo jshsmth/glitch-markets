@@ -21,11 +21,9 @@ export const themeState = $state({
 export function initializeTheme() {
 	if (!browser) return;
 
-	// Get stored theme or default to dark
 	const storedTheme = localStorage.getItem('theme') as Theme | null;
 	themeState.current = storedTheme || 'dark';
 
-	// Apply theme to document
 	applyTheme(themeState.current);
 }
 
@@ -38,10 +36,7 @@ export function toggleTheme() {
 	const newTheme = themeState.current === 'dark' ? 'light' : 'dark';
 	themeState.current = newTheme;
 
-	// Save to localStorage
 	localStorage.setItem('theme', newTheme);
-
-	// Apply to document
 	applyTheme(newTheme);
 }
 
@@ -53,10 +48,7 @@ export function setTheme(theme: Theme) {
 
 	themeState.current = theme;
 
-	// Save to localStorage
 	localStorage.setItem('theme', theme);
-
-	// Apply to document
 	applyTheme(theme);
 }
 
@@ -66,6 +58,5 @@ export function setTheme(theme: Theme) {
 function applyTheme(theme: Theme) {
 	if (!browser) return;
 
-	// Set data-theme attribute on :root element
 	document.documentElement.setAttribute('data-theme', theme);
 }

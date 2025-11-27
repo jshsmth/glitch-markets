@@ -26,12 +26,10 @@
 
 <header class="top-header">
 	<div class="header-content">
-		<!-- Logo -->
 		<a href="/" class="logo-link" aria-label="Go to home">
 			<img src={logoSrc} alt="Glitch Markets" class="logo" />
 		</a>
 
-		<!-- Search Input -->
 		<div class="search-container">
 			<span class="search-icon" aria-hidden="true">
 				<SearchIcon size={18} color="var(--text-3)" />
@@ -46,9 +44,7 @@
 			/>
 		</div>
 
-		<!-- Action Buttons -->
 		<div class="actions">
-			<!-- Deposit Button -->
 			<button class="action-button primary" onclick={handleDepositClick} aria-label="Deposit funds">
 				<span class="button-icon">
 					<DollarCircleIcon size={18} color="currentColor" />
@@ -56,7 +52,6 @@
 				<span class="button-label">Deposit</span>
 			</button>
 
-			<!-- Notifications -->
 			<button
 				class="icon-button"
 				onclick={handleNotificationsClick}
@@ -65,7 +60,6 @@
 				<BellIcon size={24} color="var(--text-2)" />
 			</button>
 
-			<!-- User Avatar / Sign In -->
 			<UserAvatar />
 		</div>
 	</div>
@@ -95,7 +89,6 @@
 		justify-content: space-between;
 	}
 
-	/* Desktop: Max width with left alignment */
 	@media (min-width: 768px) {
 		.header-content {
 			max-width: 1400px;
@@ -130,7 +123,6 @@
 		display: none;
 	}
 
-	/* Show search on desktop only */
 	@media (min-width: 768px) {
 		.search-container {
 			display: block;
@@ -181,7 +173,6 @@
 		margin-left: auto;
 	}
 
-	/* On desktop, remove auto margin since search already pushes to right */
 	@media (min-width: 768px) {
 		.actions {
 			margin-left: 0;
@@ -205,7 +196,6 @@
 		white-space: nowrap;
 	}
 
-	/* Show deposit button on desktop */
 	@media (min-width: 768px) {
 		.action-button {
 			display: flex;
@@ -261,9 +251,6 @@
 		transform: scale(0.95);
 	}
 
-	/* Responsive Styles */
-
-	/* Very small mobile - hide labels */
 	@media (max-width: 374px) {
 		.button-label {
 			display: none;
@@ -289,7 +276,6 @@
 		}
 	}
 
-	/* Mobile - compact labels */
 	@media (min-width: 375px) and (max-width: 767px) {
 		.header-content {
 			gap: 10px;
@@ -300,7 +286,6 @@
 		}
 	}
 
-	/* Desktop - full layout */
 	@media (min-width: 768px) {
 		.top-header {
 			height: 64px;
@@ -334,7 +319,6 @@
 		}
 	}
 
-	/* Large desktop */
 	@media (min-width: 1024px) {
 		.search-container {
 			max-width: 600px;
