@@ -58,8 +58,8 @@
 				for Svelte reactivity
 			</li>
 			<li>
-				<strong>SSR-Safe:</strong> Queries are disabled on the server (via browser check) to prevent
-				async issues
+				<strong>SSR-Safe:</strong> Queries are disabled on the server (via browser check) to prevent async
+				issues
 			</li>
 			<li>
 				<strong>Invalidation:</strong> Use queryClient.invalidateQueries() to manually refetch data

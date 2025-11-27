@@ -18,9 +18,8 @@
 
 	onMount(async () => {
 		try {
-			const { detectOAuthRedirect, completeSocialAuthentication } = await import(
-				'@dynamic-labs-sdk/client'
-			);
+			const { detectOAuthRedirect, completeSocialAuthentication } =
+				await import('@dynamic-labs-sdk/client');
 
 			const { addEvmExtension } = await import('@dynamic-labs-sdk/evm');
 
