@@ -49,11 +49,7 @@
 		<!-- Action Buttons -->
 		<div class="actions">
 			<!-- Deposit Button -->
-			<button
-				class="action-button primary"
-				onclick={handleDepositClick}
-				aria-label="Deposit funds"
-			>
+			<button class="action-button primary" onclick={handleDepositClick} aria-label="Deposit funds">
 				<span class="button-icon">
 					<DollarCircleIcon size={18} color="currentColor" />
 				</span>
