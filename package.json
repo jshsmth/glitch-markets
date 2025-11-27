@@ -65,5 +65,8 @@
 		"postgres": "^3.4.7",
 		"viem": "2.38.2",
 		"vite-plugin-mkcert": "^1.17.9"
+	},
+	"overrides": {
+		"abitype": "^1.1.0"
 	}
 }
