@@ -9,6 +9,8 @@
 	import { PUBLIC_DYNAMIC_ENVIRONMENT_ID } from '$env/static/public';
 	import { initializeAuthListeners, setInitializationComplete } from '$lib/stores/auth.svelte';
 	import { onMount } from 'svelte';
+	// @ts-expect-error - virtual module from vite-plugin-pwa
+	import { pwaInfo } from 'virtual:pwa-info';
 
 	let { children, data } = $props();
 
@@ -91,7 +93,16 @@
 			}
 		}
 	});
+
+	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 </script>
+
+<svelte:head>
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html webManifestLink}
+	<link rel="icon" href="/favicon.ico" sizes="48x48" />
+	<link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+</svelte:head>
 
 <QueryClientProvider client={queryClient}>
 	{@render children()}
