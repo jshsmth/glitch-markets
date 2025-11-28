@@ -1,5 +1,6 @@
 <script lang="ts">
 	import BellIcon from '$lib/components/icons/BellIcon.svelte';
+	import CoinIcon from '$lib/components/icons/CoinIcon.svelte';
 	import UserAvatar from './UserAvatar.svelte';
 	import SubHeader from './SubHeader.svelte';
 	import Logo from './Logo.svelte';
@@ -46,7 +47,12 @@
 					<PortfolioStat label="Cash" value="$0.00" valueColor="success" href="/wallet" />
 				</div>
 
-				<Button variant="primary" size="small" onclick={handleDepositClick}>Deposit</Button>
+				<Button variant="primary" size="small" onclick={handleDepositClick}>
+					Deposit funds
+					{#snippet iconAfter()}
+						<CoinIcon size={16} />
+					{/snippet}
+				</Button>
 
 				<div class="user-actions">
 					<button
@@ -157,7 +163,7 @@
 
 	.portfolio-stats {
 		display: flex;
-		gap: var(--space-xs);
+		gap: var(--spacing-1); /* 4px - tighter spacing between portfolio and cash */
 		margin-right: var(--space-xs);
 	}
 

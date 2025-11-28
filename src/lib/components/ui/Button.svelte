@@ -112,10 +112,12 @@
 		cursor: pointer;
 
 		/* Layout */
+		position: relative;
+		isolation: isolate;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-xs);
+		gap: 6px;
 
 		/* Typography */
 		font-family: var(--font-sans);
@@ -127,13 +129,29 @@
 		text-rendering: optimizeLegibility;
 
 		/* Transitions */
-		transition: var(--transition-colors);
+		transition:
+			background-color var(--transition-base),
+			transform var(--transition-fast);
 
 		/* Touch target (WCAG AA) */
 		min-height: var(--target-min);
+	}
 
-		/* Accessibility */
-		position: relative;
+	/* Touch target expansion for mobile - expands to 44×44px minimum */
+	.button::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: max(100%, 44px);
+		height: max(100%, 44px);
+		transform: translate(-50%, -50%);
+	}
+
+	@media (pointer: fine) {
+		.button::before {
+			display: none;
+		}
 	}
 
 	.button:focus-visible {
@@ -160,6 +178,7 @@
 		font-size: 14px;
 		border-radius: var(--radius-md);
 		min-height: var(--target-min);
+		line-height: 1.5;
 	}
 
 	/* Medium - Default size */
@@ -186,29 +205,52 @@
 	.button.variant-primary {
 		background-color: var(--primary);
 		color: #111111;
+		border: 1px solid rgba(0, 0, 0, 0.1);
 		box-shadow:
-			0 1px 2px rgba(0, 0, 0, 0.05),
-			0 0 0 1px rgba(0, 0, 0, 0.05);
-		transition:
-			background-color 0.2s ease,
-			box-shadow 0.2s ease,
-			transform 0.15s ease;
+			0 1px 2px 0 rgba(0, 0, 0, 0.05),
+			inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+	}
+
+	.button.variant-primary::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border-radius: inherit;
+		background: transparent;
+		transition: background-color var(--transition-fast);
+		pointer-events: none;
 	}
 
 	.button.variant-primary:hover:not(:disabled) {
 		background-color: var(--primary-hover);
+		border-color: rgba(0, 0, 0, 0.15);
 		box-shadow:
-			0 2px 4px rgba(0, 0, 0, 0.08),
-			0 0 0 1px rgba(0, 0, 0, 0.08);
+			0 2px 4px 0 rgba(0, 0, 0, 0.08),
+			inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
 		transform: translateY(-1px);
+	}
+
+	.button.variant-primary:hover:not(:disabled)::after {
+		background-color: rgba(255, 255, 255, 0.1);
 	}
 
 	.button.variant-primary:active:not(:disabled) {
 		background-color: var(--primary-active);
+		border-color: rgba(0, 0, 0, 0.2);
 		box-shadow:
-			0 1px 2px rgba(0, 0, 0, 0.05),
-			0 0 0 1px rgba(0, 0, 0, 0.1);
+			0 1px 2px 0 rgba(0, 0, 0, 0.05),
+			inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
 		transform: translateY(0);
+	}
+
+	.button.variant-primary:active:not(:disabled)::after {
+		background-color: rgba(0, 0, 0, 0.05);
+	}
+
+	.button.variant-primary:disabled {
+		box-shadow: none;
+		border-color: transparent;
 	}
 
 	/* ============================================
@@ -221,12 +263,26 @@
 		border: 1px solid var(--bg-4);
 	}
 
+	.button.variant-secondary::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border-radius: inherit;
+		background: transparent;
+		transition: background-color var(--transition-fast);
+		pointer-events: none;
+	}
+
 	.button.variant-secondary:hover:not(:disabled) {
-		background-color: var(--bg-3);
 		border-color: var(--primary);
 	}
 
-	.button.variant-secondary:active:not(:disabled) {
+	.button.variant-secondary:hover:not(:disabled)::after {
+		background-color: var(--bg-3);
+	}
+
+	.button.variant-secondary:active:not(:disabled)::after {
 		background-color: var(--bg-4);
 	}
 
@@ -239,12 +295,26 @@
 		color: var(--text-1);
 	}
 
+	.button.variant-tertiary::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border-radius: inherit;
+		background: transparent;
+		transition: background-color var(--transition-fast);
+		pointer-events: none;
+	}
+
 	.button.variant-tertiary:hover:not(:disabled) {
-		background-color: var(--bg-2);
 		color: var(--text-0);
 	}
 
-	.button.variant-tertiary:active:not(:disabled) {
+	.button.variant-tertiary:hover:not(:disabled)::after {
+		background-color: var(--bg-2);
+	}
+
+	.button.variant-tertiary:active:not(:disabled)::after {
 		background-color: var(--bg-3);
 	}
 
@@ -279,6 +349,7 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
+		flex-shrink: 0;
 	}
 
 	.button-text {
