@@ -1,22 +1,19 @@
-<div class="search-page">
+<div class="page-container">
 	<h1>Search</h1>
 </div>
 
 <style>
-	.search-page {
-		max-width: 800px;
+	.page-container {
+		max-width: 1200px;
 		margin: 0 auto;
+		padding: var(--space-lg);
 	}
 
 	h1 {
-		font-size: 2rem;
+		font-size: var(--h1-size);
+		font-weight: var(--h1-weight);
+		letter-spacing: var(--h1-tracking);
 		color: var(--text-0);
 		margin: 0;
-	}
-
-	@media (max-width: 768px) {
-		h1 {
-			font-size: 1.75rem;
-		}
 	}
 </style>

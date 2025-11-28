@@ -23,7 +23,7 @@
 	<meta name="description" content="Manage your cash balance, deposits, and withdrawals" />
 </svelte:head>
 
-<div class="wallet-page">
+<div class="page-container">
 	<header class="page-header">
 		<h1>Wallet</h1>
 		{#if authState.user}
@@ -65,10 +65,10 @@
 </div>
 
 <style>
-	.wallet-page {
+	.page-container {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: var(--space-lg) 0;
+		padding: var(--space-lg);
 	}
 
 	.page-header {
@@ -80,7 +80,7 @@
 		font-weight: var(--h1-weight);
 		letter-spacing: var(--h1-tracking);
 		color: var(--text-0);
-		margin-bottom: var(--space-xs);
+		margin: 0 0 var(--space-xs) 0;
 	}
 
 	.user-email {

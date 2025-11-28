@@ -126,23 +126,42 @@
 
 <style>
 	.app-layout {
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-template-rows: auto 1fr auto;
+		grid-template-columns: 100%;
+		grid-template-areas:
+			'header'
+			'main'
+			'footer';
 		min-height: 100vh;
 		background-color: var(--bg-0);
 	}
 
-	.main-content {
-		flex: 1;
-		margin-top: 112px; /* Header height (64px + 48px) */
-		margin-bottom: 64px; /* Bottom nav height */
+	.app-layout :global(.site-header) {
+		grid-area: header;
 	}
 
-	/* Desktop: Remove bottom nav margin */
+	.main-content {
+		grid-area: main;
+		width: 100%;
+		overflow-x: hidden;
+	}
+
+	.app-layout :global(.bottom-nav) {
+		grid-area: footer;
+	}
+
+	/* Desktop: Hide bottom nav from grid */
 	@media (min-width: 768px) {
-		.main-content {
-			margin-top: 120px; /* 72px + 48px */
-			margin-bottom: 0;
+		.app-layout {
+			grid-template-rows: auto 1fr;
+			grid-template-areas:
+				'header'
+				'main';
+		}
+
+		.app-layout :global(.bottom-nav) {
+			display: none;
 		}
 	}
 </style>

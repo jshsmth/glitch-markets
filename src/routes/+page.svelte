@@ -1,22 +1,19 @@
-<div class="home-page">
+<div class="page-container">
 	<h1>Home</h1>
 </div>
 
 <style>
-	.home-page {
+	.page-container {
 		max-width: 1200px;
 		margin: 0 auto;
+		padding: var(--space-lg);
 	}
 
 	h1 {
-		font-size: 2.5rem;
+		font-size: var(--h1-size);
+		font-weight: var(--h1-weight);
+		letter-spacing: var(--h1-tracking);
 		color: var(--text-0);
 		margin: 0;
-	}
-
-	@media (max-width: 768px) {
-		h1 {
-			font-size: 2rem;
-		}
 	}
 </style>
