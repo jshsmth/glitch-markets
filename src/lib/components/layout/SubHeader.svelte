@@ -18,7 +18,6 @@
 		SpeakerIcon,
 		MessageTextIcon
 	} from '$lib/components/icons';
-	import ChevronDownIcon from '$lib/components/icons/ChevronDownIcon.svelte';
 
 	interface Category {
 		name: string;
@@ -27,8 +26,7 @@
 		dropdown?: boolean;
 	}
 
-	// Primary filters - most important/frequently used
-	const primaryCategories: Category[] = [
+	const categories: Category[] = [
 		{ name: 'Trending', href: '/?category=trending', icon: RocketIcon },
 		{ name: 'Breaking', href: '/?category=breaking', icon: FlashIcon },
 		{ name: 'New', href: '/?category=new', icon: StarsIcon },
@@ -36,11 +34,7 @@
 		{ name: 'Sports', href: '/?category=sports', icon: CupIcon },
 		{ name: 'Finance', href: '/?category=finance', icon: DollarCircleIcon },
 		{ name: 'Crypto', href: '/?category=crypto', icon: BitcoinCardIcon },
-		{ name: 'Tech', href: '/?category=tech', icon: DocumentTextIcon }
-	];
-
-	// Secondary filters - additional categories
-	const secondaryCategories: Category[] = [
+		{ name: 'Tech', href: '/?category=tech', icon: DocumentTextIcon },
 		{ name: 'Culture', href: '/?category=culture', icon: TicketIcon },
 		{ name: 'World', href: '/?category=world', icon: GlobalEditIcon },
 		{ name: 'Economy', href: '/?category=economy', icon: DollarChangeIcon },
@@ -51,14 +45,43 @@
 	];
 
 	let activeCategory = $derived(page.url.searchParams.get('category') || 'trending');
+	let scrollContainer = $state<HTMLDivElement>();
+	let showSwipeHint = $state(false);
+	let hasOverflow = $state(false);
+
+	function handleScroll() {
+		if (!scrollContainer) return;
+
+		const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
+		hasOverflow = scrollWidth > clientWidth;
+
+		// Hide swipe hint after user scrolls
+		if (scrollLeft > 5) {
+			showSwipeHint = false;
+		}
+	}
+
+	$effect(() => {
+		if (scrollContainer) {
+			handleScroll();
+			// Show swipe hint only if there's overflow
+			if (hasOverflow) {
+				showSwipeHint = true;
+				// Auto-hide swipe hint after 3 seconds
+				const timeout = setTimeout(() => {
+					showSwipeHint = false;
+				}, 3000);
+				return () => clearTimeout(timeout);
+			}
+		}
+	});
 </script>
 
 <div class="sub-header">
 	<nav class="nav-container">
-		<!-- Primary Row -->
-		<div class="nav-scroll">
+		<div class="nav-scroll" bind:this={scrollContainer} onscroll={handleScroll}>
 			<ul class="nav-list">
-				{#each primaryCategories as category (category.name)}
+				{#each categories as category (category.name)}
 					<li class="nav-item">
 						<a
 							href={category.href}
@@ -74,27 +97,20 @@
 					</li>
 				{/each}
 			</ul>
-		</div>
 
-		<!-- Secondary Row -->
-		<div class="nav-scroll secondary">
-			<ul class="nav-list">
-				{#each secondaryCategories as category (category.name)}
-					<li class="nav-item">
-						<a
-							href={category.href}
-							class="nav-link"
-							class:active={activeCategory === category.name.toLowerCase()}
-						>
-							{#if category.icon}
-								{@const Icon = category.icon}
-								<Icon size={16} />
-							{/if}
-							{category.name}
-						</a>
-					</li>
-				{/each}
-			</ul>
+			{#if showSwipeHint}
+				<div class="swipe-hint">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+						<path
+							d="M9 18L15 12L9 6"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</div>
+			{/if}
 		</div>
 	</nav>
 </div>
@@ -106,23 +122,25 @@
 	}
 
 	.nav-container {
+		position: relative;
 		max-width: 1400px;
 		margin: 0 auto;
+		display: flex;
+		align-items: center;
 	}
 
 	.nav-scroll {
+		position: relative;
 		overflow-x: auto;
 		scrollbar-width: none; /* Firefox */
 		-ms-overflow-style: none; /* IE/Edge */
 		-webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+		flex: 1;
+		padding: 0 12px;
 	}
 
 	.nav-scroll::-webkit-scrollbar {
 		display: none;
-	}
-
-	.nav-scroll.secondary {
-		border-top: 1px solid var(--bg-2);
 	}
 
 	.nav-list {
@@ -131,8 +149,8 @@
 		gap: 16px;
 		list-style: none;
 		margin: 0;
-		padding: 0 12px;
-		min-height: 44px;
+		padding: 0;
+		min-height: 48px;
 	}
 
 	.nav-link {
@@ -145,8 +163,8 @@
 		font-size: 14px;
 		font-weight: 600;
 		white-space: nowrap;
-		min-height: 44px;
-		border-bottom: 2px solid transparent;
+		min-height: 48px;
+		padding-bottom: 2px;
 		transition: color 0.2s ease;
 	}
 
@@ -184,82 +202,66 @@
 		}
 	}
 
-	/* Icons inherit the link color automatically via currentColor */
 	.nav-link :global(svg) {
 		flex-shrink: 0;
 		transition: transform 0.2s ease;
 	}
 
-	/* Secondary row styling - slightly less emphasis */
-	.nav-scroll.secondary .nav-link {
-		font-size: 13px;
-		color: var(--text-3);
+	/* Swipe Hint - Mobile only */
+	.swipe-hint {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: absolute;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		width: 48px;
+		background: linear-gradient(to left, var(--bg-0) 60%, transparent);
+		color: var(--text-1);
+		animation: swipeAnimation 1.5s ease-in-out infinite;
+		pointer-events: none;
+		z-index: 5;
 	}
 
-	.nav-scroll.secondary .nav-link:hover {
-		color: var(--text-2);
+	@keyframes swipeAnimation {
+		0%,
+		100% {
+			opacity: 0.8;
+		}
+		50% {
+			opacity: 0.4;
+		}
 	}
 
-	.nav-scroll.secondary .nav-link.active {
-		color: var(--text-0);
+	.swipe-hint svg {
+		filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 	}
 
-	/* Desktop: Polished two-row layout */
+	/* Desktop styles */
 	@media (min-width: 768px) {
-		.nav-list {
-			padding: 0 24px;
-			gap: 24px;
-		}
-
-		.nav-list li:first-child .nav-link {
-			padding-left: 0;
-		}
-
-		/* Add subtle fade indicators on edges */
 		.nav-scroll {
-			position: relative;
+			padding: 0 24px;
 		}
 
-		.nav-scroll::after {
-			content: '';
-			position: absolute;
-			top: 0;
-			right: 0;
-			width: 40px;
-			height: 100%;
-			background: linear-gradient(to left, var(--bg-0), transparent);
-			pointer-events: none;
+		.nav-list {
+			gap: 24px;
+			min-height: 44px;
 		}
 
-		.nav-scroll::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 40px;
-			height: 100%;
-			background: linear-gradient(to right, var(--bg-0), transparent);
-			pointer-events: none;
-			opacity: 0;
-			transition: opacity 0.2s;
+		.nav-link {
+			min-height: 44px;
+		}
+
+		/* Hide swipe hint on desktop */
+		.swipe-hint {
+			display: none;
 		}
 	}
 
 	@media (min-width: 1024px) {
-		/* More compact on desktop */
 		.nav-list {
-			min-height: 40px;
 			gap: 20px;
-		}
-
-		.nav-link {
-			min-height: 40px;
-		}
-
-		/* Make secondary categories same size on desktop */
-		.nav-scroll.secondary .nav-link {
-			font-size: 14px;
-			color: var(--text-2);
 		}
 	}
 </style>
