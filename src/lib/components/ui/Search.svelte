@@ -44,6 +44,7 @@
 	}: Props = $props();
 
 	let inputElement = $state<HTMLInputElement>();
+	let hasValue = $derived(value.length > 0);
 
 	// Listen for "/" key to focus search
 	function handleKeyDown(event: KeyboardEvent) {
@@ -51,6 +52,11 @@
 			event.preventDefault();
 			inputElement?.focus();
 		}
+	}
+
+	function clearSearch() {
+		value = '';
+		inputElement?.focus();
 	}
 </script>
 
@@ -60,7 +66,7 @@
 	<Input
 		bind:inputElement
 		bind:value
-		type="search"
+		type="text"
 		{placeholder}
 		{oninput}
 		{inputSize}
@@ -72,7 +78,18 @@
 		{/snippet}
 
 		{#snippet iconAfter()}
-			{#if showShortcut}
+			{#if hasValue}
+				<button type="button" class="clear-button" onclick={clearSearch} aria-label="Clear search">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+						<path
+							d="M18 6L6 18M6 6l12 12"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</button>
+			{:else if showShortcut}
 				<span class="keyboard-shortcut">/</span>
 			{/if}
 		{/snippet}
@@ -100,5 +117,30 @@
 
 	.search-wrapper :global(.input-container:focus-within .keyboard-shortcut) {
 		opacity: 0;
+	}
+
+	.clear-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		padding: 0;
+		background: none;
+		border: none;
+		border-radius: 50%;
+		color: var(--text-3);
+		cursor: pointer;
+		pointer-events: all;
+		transition: all var(--transition-fast);
+	}
+
+	.clear-button:hover {
+		background-color: var(--bg-3);
+		color: var(--text-1);
+	}
+
+	.clear-button:active {
+		transform: scale(0.9);
 	}
 </style>

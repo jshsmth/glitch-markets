@@ -104,7 +104,9 @@
 		color: var(--text-2); /* Better contrast than text-3 (Principle #9) */
 		text-decoration: none;
 		border-radius: var(--radius-md);
-		transition: var(--transition-colors), transform var(--transition-fast);
+		transition:
+			var(--transition-colors),
+			transform var(--transition-fast);
 		cursor: pointer;
 	}
 

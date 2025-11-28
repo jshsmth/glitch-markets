@@ -111,34 +111,58 @@
 
 	.input-container {
 		position: relative;
+		isolation: isolate;
 		display: flex;
 		align-items: center;
-		background-color: var(--bg-2);
-		border: 1px solid var(--bg-4);
+		width: 100%;
 		border-radius: var(--radius-md);
-		transition:
-			background-color 0.2s ease,
-			border-color 0.2s ease,
-			box-shadow 0.2s ease;
 	}
 
-	.input-container:hover {
+	/* Background + shadow layer (similar to Tailwind's before pseudo) */
+	.input-container::before {
+		content: '';
+		position: absolute;
+		inset: 1px;
+		border-radius: calc(var(--radius-md) - 1px);
 		background-color: var(--bg-1);
+		box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+		z-index: -2;
+		transition: background-color var(--transition-base);
 	}
 
-	.input-container:focus-within {
+	/* Focus ring layer (similar to Tailwind's after pseudo) */
+	.input-container::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: var(--radius-md);
+		border: 2px solid transparent;
+		pointer-events: none;
+		z-index: -1;
+		transition: border-color var(--transition-base);
+	}
+
+	.input-container:hover::before {
 		background-color: var(--bg-0);
+	}
+
+	.input-container:focus-within::before {
+		background-color: var(--bg-0);
+	}
+
+	.input-container:focus-within::after {
 		border-color: var(--primary);
-		box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
 	}
 
-	.input-container.error {
+	.input-container.error::after {
 		border-color: var(--danger);
 	}
 
-	.input-container.error:focus-within {
-		border-color: var(--danger);
-		box-shadow: 0 0 0 3px rgba(250, 28, 101, 0.1);
+	/* Disabled state */
+	.input-container:has(input:disabled)::before {
+		background-color: var(--bg-3);
+		box-shadow: none;
+		opacity: 0.5;
 	}
 
 	/* ============================================
@@ -162,19 +186,61 @@
      ============================================ */
 
 	.input {
-		flex: 1;
+		/* Reset */
+		appearance: none;
 		background: transparent;
-		border: none;
+		border: 1px solid rgba(0, 0, 0, 0.1);
 		outline: none;
-		color: var(--text-0);
-		font-size: 14px;
-		padding: 0 14px;
+
+		/* Layout */
+		position: relative;
+		flex: 1;
 		width: 100%;
 		height: 100%;
+		border-radius: var(--radius-md);
+		padding: 0 14px;
+
+		/* Typography */
+		color: var(--text-0);
+		font-size: 14px;
+		font-family: var(--font-sans);
+		line-height: 1.5;
+		-webkit-font-smoothing: antialiased;
+
+		/* Transitions */
+		transition: border-color var(--transition-base);
+	}
+
+	.input:hover {
+		border-color: rgba(0, 0, 0, 0.15);
+	}
+
+	.input:focus {
+		border-color: transparent;
 	}
 
 	.input::placeholder {
 		color: var(--text-3);
+	}
+
+	.input:disabled {
+		cursor: not-allowed;
+		border-color: transparent;
+	}
+
+	/* Dark mode border adjustments */
+	@media (prefers-color-scheme: dark) {
+		.input {
+			border-color: rgba(255, 255, 255, 0.1);
+		}
+
+		.input:hover {
+			border-color: rgba(255, 255, 255, 0.15);
+		}
+
+		.input:focus {
+			border-color: transparent;
+		}
 	}
 
 	.input.has-icon-before {

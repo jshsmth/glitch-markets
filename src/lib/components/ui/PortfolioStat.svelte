@@ -72,7 +72,7 @@
 		gap: 2px;
 
 		/* Spacing */
-		padding: 8px 12px;
+		padding: 8px; /* Reduced horizontal padding for tighter fit */
 		border-radius: var(--radius-md);
 
 		/* Transition */

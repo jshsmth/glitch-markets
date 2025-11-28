@@ -47,12 +47,7 @@
 					<PortfolioStat label="Cash" value="$0.00" valueColor="success" href="/wallet" />
 				</div>
 
-				<Button variant="primary" size="small" onclick={handleDepositClick}>
-					Deposit funds
-					{#snippet iconAfter()}
-						<CoinIcon size={16} />
-					{/snippet}
-				</Button>
+				<Button variant="primary" size="small" onclick={handleDepositClick}>Deposit</Button>
 
 				<div class="user-actions">
 					<button
