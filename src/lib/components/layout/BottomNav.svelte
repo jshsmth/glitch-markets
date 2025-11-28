@@ -29,9 +29,9 @@
 		},
 		{
 			label: 'Portfolio',
-			href: '#',
+			href: '/portfolio',
 			icon: PokerChipIcon,
-			isPlaceholder: true
+			isPlaceholder: false
 		},
 		{
 			label: 'More',

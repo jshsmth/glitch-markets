@@ -6,6 +6,7 @@
 	import { logout } from '@dynamic-labs-sdk/client';
 	import { authState } from '$lib/stores/auth.svelte';
 	import SocialLoginButton from './SocialLoginButton.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	// Derive authenticated state directly from authState.user for better performance
 	const authenticated = $derived(!!authState.user);
@@ -36,7 +37,7 @@
 					{authState.user.email || authState.user.verifiedCredentials?.[0]?.address || 'User'}
 				</span>
 			</div>
-			<button class="logout-btn" onclick={handleLogout}> Logout </button>
+			<Button variant="secondary" size="small" onclick={handleLogout}>Logout</Button>
 		</div>
 	{:else}
 		<div class="login-options">
@@ -76,22 +77,6 @@
 		font-size: 0.875rem;
 		font-weight: 500;
 		color: var(--text-0);
-	}
-
-	.logout-btn {
-		background-color: var(--bg-3);
-		color: var(--text-0);
-		padding: 0.5rem 1rem;
-		font-size: 0.875rem;
-		border: none;
-		border-radius: 0.375rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.logout-btn:hover {
-		background-color: var(--bg-4);
 	}
 
 	.login-options {

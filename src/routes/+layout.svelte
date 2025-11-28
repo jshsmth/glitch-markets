@@ -134,22 +134,15 @@
 
 	.main-content {
 		flex: 1;
-		margin-top: 60px; /* Header height */
+		margin-top: 112px; /* Header height (64px + 48px) */
 		margin-bottom: 64px; /* Bottom nav height */
-		overflow-y: auto;
-		padding: 12px;
 	}
 
-	/* Desktop: Remove bottom nav margin and align with header content */
+	/* Desktop: Remove bottom nav margin */
 	@media (min-width: 768px) {
 		.main-content {
-			margin-top: 64px;
+			margin-top: 120px; /* 72px + 48px */
 			margin-bottom: 0;
-			max-width: 1400px;
-			margin: 64px auto 0;
-			padding: 24px;
-			width: 100%;
-			box-sizing: border-box;
 		}
 	}
 </style>
