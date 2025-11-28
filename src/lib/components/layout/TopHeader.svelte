@@ -48,17 +48,19 @@
 
 				<Button variant="primary" size="small" onclick={handleDepositClick}>Deposit</Button>
 
-				<button
-					class="icon-button"
-					onclick={handleNotificationsClick}
-					aria-label="View notifications"
-				>
-					<BellIcon size={24} color="var(--text-1)" />
-				</button>
+				<div class="user-actions">
+					<button
+						class="icon-button"
+						onclick={handleNotificationsClick}
+						aria-label="View notifications"
+					>
+						<BellIcon size={24} color="var(--text-1)" />
+					</button>
 
-				<div class="header-divider" aria-hidden="true"></div>
+					<div class="header-divider" aria-hidden="true"></div>
 
-				<UserAvatar />
+					<UserAvatar />
+				</div>
 			</div>
 
 			<div class="mobile-actions">
@@ -69,7 +71,7 @@
 				>
 					<BellIcon size={24} color="var(--text-1)" />
 				</button>
-				<UserAvatar />
+				<UserAvatar hideChevron={true} />
 			</div>
 		</div>
 	</div>
@@ -101,7 +103,7 @@
 	.header-content {
 		width: 100%;
 		height: 100%;
-		padding: 0 12px;
+		padding: 0 var(--spacing-3); /* 12px mobile */
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -111,14 +113,14 @@
 		.header-content {
 			max-width: 1400px;
 			margin: 0 auto;
-			padding: 0 24px;
+			padding: 0 var(--spacing-6); /* 24px desktop */
 		}
 	}
 
 	.left-section {
 		display: flex;
 		align-items: center;
-		gap: 24px;
+		gap: var(--spacing-6); /* 24px - related items */
 		flex: 1;
 	}
 
@@ -144,7 +146,7 @@
 	.right-section {
 		display: none;
 		align-items: center;
-		gap: var(--space-sm);
+		gap: var(--space-sm); /* Normal spacing between major groups */
 	}
 
 	@media (min-width: 768px) {
@@ -159,35 +161,48 @@
 		margin-right: var(--space-xs);
 	}
 
+	.user-actions {
+		display: flex;
+		align-items: center;
+		gap: 2px; /* Very tight spacing for bell + divider + avatar group */
+	}
+
 	.icon-button {
 		background: none;
 		border: none;
-		padding: 8px;
+		padding: var(--spacing-2); /* 8px */
 		cursor: pointer;
-		border-radius: 50%;
+		border-radius: var(--radius-full);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: background-color 0.2s;
+		min-width: var(--target-min); /* 48px touch target */
+		min-height: var(--target-min);
+		transition: var(--transition-colors);
 	}
 
 	.icon-button:hover {
 		background-color: var(--bg-2);
 	}
 
+	.icon-button:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
 	.header-divider {
 		width: 1px;
-		height: 24px;
+		height: var(--spacing-6); /* 24px */
 		background-color: var(--bg-4);
 		flex-shrink: 0;
-		margin: 0 6px;
+		margin: 0 var(--spacing-2); /* 8px */
 	}
 
 	/* Mobile Actions */
 	.mobile-actions {
 		display: flex;
 		align-items: center;
-		gap: var(--space-sm);
+		gap: 2px; /* Very tight spacing between bell and avatar */
 	}
 
 	@media (min-width: 768px) {

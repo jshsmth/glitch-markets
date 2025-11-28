@@ -136,7 +136,7 @@
 		-ms-overflow-style: none; /* IE/Edge */
 		-webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 		flex: 1;
-		padding: 0 12px;
+		padding: 0 var(--spacing-3); /* 12px - using design tokens */
 	}
 
 	.nav-scroll::-webkit-scrollbar {
@@ -146,65 +146,44 @@
 	.nav-list {
 		display: flex;
 		align-items: center;
-		gap: 16px;
+		gap: var(--space-sm); /* 16px - related items within section */
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		min-height: 48px;
+		min-height: var(--target-min); /* 48px - WCAG touch target */
 	}
 
 	.nav-link {
-		position: relative;
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--spacing-2); /* 8px - better icon/text balance (Principle #14) */
 		text-decoration: none;
-		color: var(--text-2);
+		color: var(--text-3); /* Lighter gray for inactive state */
 		font-size: 14px;
-		font-weight: 600;
+		font-weight: var(--font-regular); /* Regular weight for inactive */
 		white-space: nowrap;
-		min-height: 48px;
-		padding-bottom: 2px;
-		transition: color 0.2s ease;
+		min-height: var(--target-min); /* 48px - WCAG touch target */
+		transition: var(--transition-colors);
+		padding: var(--spacing-2) 0; /* Add padding for larger tap area */
 	}
 
 	.nav-link:hover {
-		color: var(--text-1);
+		color: var(--text-0); /* Darker on hover for better feedback */
 	}
 
 	.nav-link:hover :global(svg) {
 		transform: scale(1.1);
-		transition: transform 0.2s ease;
+		transition: transform var(--transition-base);
 	}
 
 	.nav-link.active {
-		color: var(--text-0);
-	}
-
-	.nav-link.active::after {
-		content: '';
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		height: 2px;
-		background: var(--text-0);
-		animation: slideIn 0.3s ease;
-		transform-origin: left;
-	}
-
-	@keyframes slideIn {
-		from {
-			transform: scaleX(0);
-		}
-		to {
-			transform: scaleX(1);
-		}
+		color: var(--text-0); /* Bold black instead of blue */
+		font-weight: var(--font-bold); /* Use design token */
 	}
 
 	.nav-link :global(svg) {
 		flex-shrink: 0;
-		transition: transform 0.2s ease;
+		transition: transform var(--transition-base);
 	}
 
 	/* Swipe Hint - Mobile only */
@@ -241,16 +220,16 @@
 	/* Desktop styles */
 	@media (min-width: 768px) {
 		.nav-scroll {
-			padding: 0 24px;
+			padding: 0 var(--spacing-6); /* 24px */
 		}
 
 		.nav-list {
-			gap: 24px;
-			min-height: 44px;
+			gap: var(--spacing-6); /* 24px - more spacing on desktop */
+			min-height: var(--target-min); /* Keep 48px for consistency */
 		}
 
 		.nav-link {
-			min-height: 44px;
+			min-height: var(--target-min); /* Keep 48px for consistency */
 		}
 
 		/* Hide swipe hint on desktop */
@@ -261,7 +240,7 @@
 
 	@media (min-width: 1024px) {
 		.nav-list {
-			gap: 20px;
+			gap: var(--spacing-5); /* 20px - slightly tighter on large screens */
 		}
 	}
 </style>

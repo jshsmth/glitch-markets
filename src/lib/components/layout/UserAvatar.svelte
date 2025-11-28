@@ -9,9 +9,10 @@
 
 	interface Props {
 		size?: number;
+		hideChevron?: boolean;
 	}
 
-	let { size = 36 }: Props = $props();
+	let { size = 36, hideChevron = false }: Props = $props();
 
 	/**
 	 * Generate a consistent gradient based on user ID using brand colors
@@ -97,7 +98,9 @@
 	{:else if authState.user}
 		<button class="avatar-button" onclick={handleAvatarClick} aria-label="Account menu">
 			<div class="avatar" style="background: {gradient}"></div>
-			<ChevronDownIcon size={16} color="var(--text-2)" />
+			{#if !hideChevron}
+				<ChevronDownIcon size={16} color="var(--text-2)" />
+			{/if}
 		</button>
 
 		{#if showDropdown}
