@@ -4,9 +4,15 @@
 
 <style>
 	.page-container {
-		max-width: 1200px;
+		max-width: 1400px;
 		margin: 0 auto;
-		padding: var(--space-lg);
+		padding: var(--space-lg) 12px;
+	}
+
+	@media (min-width: 768px) {
+		.page-container {
+			padding: var(--space-lg) 24px;
+		}
 	}
 
 	h1 {
