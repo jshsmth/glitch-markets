@@ -179,6 +179,7 @@
 		border-radius: var(--radius-md);
 		min-height: var(--target-min);
 		line-height: 1.5;
+		letter-spacing: 0.02em;
 	}
 
 	/* Medium - Default size */
@@ -188,6 +189,7 @@
 		border-radius: var(--radius-button);
 		min-height: var(--target-min);
 		line-height: 1.5;
+		letter-spacing: 0.02em;
 	}
 
 	/* Large - Important CTAs */
@@ -196,6 +198,8 @@
 		font-size: 16px;
 		border-radius: var(--radius-lg);
 		min-height: var(--target-comfortable);
+		line-height: 1.5;
+		letter-spacing: 0.02em;
 	}
 
 	/* ============================================
