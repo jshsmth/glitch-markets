@@ -4,6 +4,8 @@
 export { default as BellIcon } from './BellIcon.svelte';
 export { default as BitcoinCardIcon } from './BitcoinCardIcon.svelte';
 export { default as ChevronDownIcon } from './ChevronDownIcon.svelte';
+export { default as ChevronLeftIcon } from './ChevronLeftIcon.svelte';
+export { default as ChevronRightIcon } from './ChevronRightIcon.svelte';
 export { default as CoinIcon } from './CoinIcon.svelte';
 export { default as CourthouseIcon } from './CourthouseIcon.svelte';
 export { default as CupIcon } from './CupIcon.svelte';

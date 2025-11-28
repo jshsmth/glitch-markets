@@ -16,7 +16,9 @@
 		GlobalEditIcon,
 		DollarChangeIcon,
 		SpeakerIcon,
-		MessageTextIcon
+		MessageTextIcon,
+		ChevronLeftIcon,
+		ChevronRightIcon
 	} from '$lib/components/icons';
 
 	interface Category {
@@ -48,17 +50,31 @@
 	let scrollContainer = $state<HTMLDivElement>();
 	let showSwipeHint = $state(false);
 	let hasOverflow = $state(false);
+	let canScrollLeft = $state(false);
+	let canScrollRight = $state(false);
 
 	function handleScroll() {
 		if (!scrollContainer) return;
 
 		const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
 		hasOverflow = scrollWidth > clientWidth;
+		canScrollLeft = scrollLeft > 5;
+		canScrollRight = scrollLeft < scrollWidth - clientWidth - 5;
 
 		// Hide swipe hint after user scrolls
 		if (scrollLeft > 5) {
 			showSwipeHint = false;
 		}
+	}
+
+	function scrollLeft() {
+		if (!scrollContainer) return;
+		scrollContainer.scrollBy({ left: -200, behavior: 'smooth' });
+	}
+
+	function scrollRight() {
+		if (!scrollContainer) return;
+		scrollContainer.scrollBy({ left: 200, behavior: 'smooth' });
 	}
 
 	$effect(() => {
@@ -79,6 +95,12 @@
 
 <div class="sub-header">
 	<nav class="nav-container">
+		{#if canScrollLeft}
+			<button class="nav-arrow nav-arrow-left" onclick={scrollLeft} aria-label="Scroll left">
+				<ChevronLeftIcon size={20} />
+			</button>
+		{/if}
+
 		<div class="nav-scroll" bind:this={scrollContainer} onscroll={handleScroll}>
 			<ul class="nav-list">
 				{#each categories as category (category.name)}
@@ -112,6 +134,12 @@
 				</div>
 			{/if}
 		</div>
+
+		{#if canScrollRight}
+			<button class="nav-arrow nav-arrow-right" onclick={scrollRight} aria-label="Scroll right">
+				<ChevronRightIcon size={20} />
+			</button>
+		{/if}
 	</nav>
 </div>
 
@@ -127,6 +155,38 @@
 		margin: 0 auto;
 		display: flex;
 		align-items: center;
+		gap: var(--spacing-2); /* 8px spacing between arrows and scroll area */
+	}
+
+	.nav-arrow {
+		display: none; /* Hidden on mobile - swipe instead */
+		background: var(--bg-1);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-md);
+		padding: var(--spacing-2); /* 8px */
+		cursor: pointer;
+		color: var(--text-1);
+		transition: var(--transition-colors);
+		flex-shrink: 0;
+		height: 36px;
+		width: 36px;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.nav-arrow:hover {
+		background: var(--bg-2);
+		border-color: var(--primary);
+		color: var(--text-0);
+	}
+
+	.nav-arrow:active {
+		background: var(--bg-3);
+	}
+
+	.nav-arrow:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
 	}
 
 	.nav-scroll {
@@ -219,6 +279,10 @@
 
 	/* Desktop styles */
 	@media (min-width: 768px) {
+		.nav-arrow {
+			display: flex; /* Show arrows on desktop */
+		}
+
 		.nav-scroll {
 			padding: 0 var(--spacing-6); /* 24px */
 		}

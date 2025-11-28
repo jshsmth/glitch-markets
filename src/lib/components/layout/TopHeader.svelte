@@ -196,7 +196,7 @@
 		height: var(--spacing-6); /* 24px */
 		background-color: var(--bg-4);
 		flex-shrink: 0;
-		margin: 0 var(--spacing-2); /* 8px */
+		margin: 0 var(--spacing-1); /* 4px - tighter spacing */
 	}
 
 	/* Mobile Actions */
