@@ -2346,7 +2346,7 @@ describe('Property 3: Series response structure validation', () => {
 					expect(() => validateSeries(invalidSeries)).toThrow('Series validation failed');
 				}
 			),
-			{ numRuns: 50 }
+			{ numRuns: 100 }
 		);
 
 		fc.assert(
@@ -2361,7 +2361,7 @@ describe('Property 3: Series response structure validation', () => {
 					expect(() => validateSeries(invalidSeries)).toThrow('Series validation failed');
 				}
 			),
-			{ numRuns: 50 }
+			{ numRuns: 100 }
 		);
 	});
 

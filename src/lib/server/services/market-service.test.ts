@@ -16,7 +16,7 @@ describe('MarketService', () => {
 
 	beforeEach(() => {
 		// Reset all mocks
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 
 		// Mock loadConfig
 		vi.mocked(loadConfig).mockReturnValue({

@@ -90,6 +90,20 @@ try:
                 output.append(f"**First Sport**: {first.get('sport')}")
                 if 'ordering' in first:
                     output.append(f"**Ordering**: {first.get('ordering')}")
+            # Check for BuilderLeaderboardEntry objects
+            if 'builder' in first and 'volume' in first and 'rank' in first:
+                output.append(f"**First Builder**: {first.get('builder')} (Rank #{first.get('rank')})")
+                output.append(f"**Volume**: ${first.get('volume'):,.0f}")
+                output.append(f"**Active Users**: {first.get('activeUsers')}")
+                if 'verified' in first:
+                    verified_status = "✓ Verified" if first.get('verified') else "Unverified"
+                    output.append(f"**Status**: {verified_status}")
+            # Check for BuilderVolumeEntry objects
+            if 'dt' in first and 'builder' in first and 'volume' in first:
+                output.append(f"**First Entry**: {first.get('dt')}")
+                output.append(f"**Builder**: {first.get('builder')}")
+                output.append(f"**Volume**: ${first.get('volume'):,.0f}")
+                output.append(f"**Active Users**: {first.get('activeUsers')}")
 
     elif isinstance(d, dict):
         # For health check responses
@@ -335,6 +349,27 @@ test_endpoint "Missing Limit Parameter" "/api/sports/teams?offset=0" "400"
 test_endpoint "Missing Offset Parameter" "/api/sports/teams?limit=10" "400"
 test_endpoint "Invalid Limit (Not a Number)" "/api/sports/teams?limit=abc&offset=0" "400"
 test_endpoint "Invalid Offset (Not a Number)" "/api/sports/teams?limit=10&offset=xyz" "400"
+
+# Builders API
+echo -e "\n${YELLOW}Testing Builders API...${NC}"
+echo "# Builders API" >> "$OUTPUT"
+echo "" >> "$OUTPUT"
+test_endpoint "Builder Leaderboard (Default)" "/api/builders/leaderboard"
+test_endpoint "Builder Leaderboard (Weekly)" "/api/builders/leaderboard?timePeriod=WEEK"
+test_endpoint "Builder Leaderboard (Monthly)" "/api/builders/leaderboard?timePeriod=MONTH"
+test_endpoint "Builder Leaderboard (All Time)" "/api/builders/leaderboard?timePeriod=ALL"
+test_endpoint "Builder Leaderboard (With Pagination)" "/api/builders/leaderboard?limit=10&offset=5"
+test_endpoint "Builder Volume (Default)" "/api/builders/volume"
+test_endpoint "Builder Volume (Weekly)" "/api/builders/volume?timePeriod=WEEK"
+test_endpoint "Builder Volume (Monthly)" "/api/builders/volume?timePeriod=MONTH"
+
+# Builders validation tests
+echo -e "\n${YELLOW}Testing Builders Validation...${NC}"
+test_endpoint "Invalid Time Period" "/api/builders/leaderboard?timePeriod=INVALID" "400"
+test_endpoint "Limit Too High" "/api/builders/leaderboard?limit=100" "400"
+test_endpoint "Offset Too High" "/api/builders/leaderboard?offset=2000" "400"
+test_endpoint "Negative Limit" "/api/builders/leaderboard?limit=-5" "400"
+test_endpoint "Negative Offset" "/api/builders/leaderboard?offset=-10" "400"
 
 # Comments API - Use event ID from earlier
 echo -e "\n${YELLOW}Testing Comments API...${NC}"

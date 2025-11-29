@@ -1,13 +1,9 @@
-import '@testing-library/jest-dom';
-import { expect, afterEach } from 'vitest';
-import { cleanup } from '@testing-library/svelte';
+/**
+ * Vitest setup file
+ * Automatically loaded before all tests
+ */
 
-// Cleanup after each test
-afterEach(() => {
-	cleanup();
-});
+// Import custom matchers to extend Vitest's expect
+import './matchers/custom-matchers';
 
-// Add custom matchers if needed
-expect.extend({
-	// Add custom matchers here
-});
+// Any other global test setup can go here

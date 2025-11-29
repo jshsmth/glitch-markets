@@ -11,6 +11,7 @@ import {
 	NetworkError,
 	ApiResponseError
 } from '$lib/server/errors/api-errors.js';
+import { arbitraries } from '$lib/tests/arbitraries/common-arbitraries.js';
 
 // Mock the PolymarketClient to control API responses
 const mockFetchTags = vi.fn();
@@ -27,25 +28,25 @@ const { GET } = await import('../../routes/api/tags/+server');
 
 // Helper to generate valid tag data
 const tagArbitrary = fc.record({
-	id: fc.string({ minLength: 1 }),
-	label: fc.string({ minLength: 1 }),
-	slug: fc.string({ minLength: 1 })
+	id: arbitraries.nonEmptyString(),
+	label: arbitraries.nonEmptyString(),
+	slug: arbitraries.nonEmptyString()
 });
 
 describe('Tags Server Route', () => {
 	beforeEach(async () => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 		mockFetchTags.mockReset();
 
 		// Clear the cache before each test
 		const { TagService } = await import('$lib/server/services/tag-service');
 		const service = new TagService();
-		// @ts-expect-error - accessing private cache for testing
-		service.cache.clear();
+
+		service.clearCache();
 	});
 
 	afterEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 		mockFetchTags.mockReset();
 	});
 
@@ -60,7 +61,7 @@ describe('Tags Server Route', () => {
 	describe('Property 6: Error status code mapping', () => {
 		it('should map ValidationError to 400 status code', async () => {
 			await fc.assert(
-				fc.asyncProperty(fc.string({ minLength: 1, maxLength: 100 }), async (errorMessage) => {
+				fc.asyncProperty(arbitraries.errorMessage(), async (errorMessage) => {
 					// Reset the mock
 					mockFetchTags.mockReset();
 					mockFetchTags.mockRejectedValue(new ValidationError(errorMessage));
@@ -75,11 +76,8 @@ describe('Tags Server Route', () => {
 					const responseText = await response.text();
 					const errorResponse = JSON.parse(responseText);
 
-					// Verify error response structure
-					expect(errorResponse).toHaveProperty('error');
-					expect(errorResponse).toHaveProperty('message');
-					expect(errorResponse).toHaveProperty('statusCode');
-					expect(errorResponse.statusCode).toBe(400);
+					// Verify error response structure using custom matcher
+					expect(errorResponse).toBeErrorResponse(400, 'VALIDATION_ERROR');
 				}),
 				{ numRuns: 100 }
 			);
@@ -87,7 +85,7 @@ describe('Tags Server Route', () => {
 
 		it('should map NetworkError to 503 status code', async () => {
 			await fc.assert(
-				fc.asyncProperty(fc.string({ minLength: 1, maxLength: 100 }), async (errorMessage) => {
+				fc.asyncProperty(arbitraries.errorMessage(), async (errorMessage) => {
 					// Reset the mock
 					mockFetchTags.mockReset();
 					mockFetchTags.mockRejectedValue(new NetworkError(errorMessage));
@@ -102,11 +100,8 @@ describe('Tags Server Route', () => {
 					const responseText = await response.text();
 					const errorResponse = JSON.parse(responseText);
 
-					// Verify error response structure
-					expect(errorResponse).toHaveProperty('error');
-					expect(errorResponse).toHaveProperty('message');
-					expect(errorResponse).toHaveProperty('statusCode');
-					expect(errorResponse.statusCode).toBe(503);
+					// Verify error response structure using custom matcher
+					expect(errorResponse).toBeErrorResponse(503, 'NETWORK_ERROR');
 				}),
 				{ numRuns: 100 }
 			);
@@ -114,7 +109,7 @@ describe('Tags Server Route', () => {
 
 		it('should map TimeoutError to 503 status code', async () => {
 			await fc.assert(
-				fc.asyncProperty(fc.string({ minLength: 1, maxLength: 100 }), async (errorMessage) => {
+				fc.asyncProperty(arbitraries.errorMessage(), async (errorMessage) => {
 					// Reset the mock
 					mockFetchTags.mockReset();
 					mockFetchTags.mockRejectedValue(new TimeoutError(errorMessage));
@@ -122,18 +117,15 @@ describe('Tags Server Route', () => {
 					// Call the GET handler
 					const response = await GET();
 
-					// Should return 504 for timeout error
+					// Should return 503 for timeout error
 					expect(response.status).toBe(503);
 
 					// Parse the error response
 					const responseText = await response.text();
 					const errorResponse = JSON.parse(responseText);
 
-					// Verify error response structure
-					expect(errorResponse).toHaveProperty('error');
-					expect(errorResponse).toHaveProperty('message');
-					expect(errorResponse).toHaveProperty('statusCode');
-					expect(errorResponse.statusCode).toBe(503);
+					// Verify error response structure using custom matcher
+					expect(errorResponse).toBeErrorResponse(503, 'TIMEOUT_ERROR');
 				}),
 				{ numRuns: 100 }
 			);
@@ -142,7 +134,7 @@ describe('Tags Server Route', () => {
 		it('should map ApiResponseError to its status code', async () => {
 			await fc.assert(
 				fc.asyncProperty(
-					fc.string({ minLength: 1, maxLength: 100 }),
+					arbitraries.errorMessage(),
 					fc.integer({ min: 400, max: 599 }),
 					async (errorMessage, statusCode) => {
 						// Reset the mock
@@ -161,11 +153,8 @@ describe('Tags Server Route', () => {
 						const responseText = await response.text();
 						const errorResponse = JSON.parse(responseText);
 
-						// Verify error response structure
-						expect(errorResponse).toHaveProperty('error');
-						expect(errorResponse).toHaveProperty('message');
-						expect(errorResponse).toHaveProperty('statusCode');
-						expect(errorResponse.statusCode).toBe(statusCode);
+						// Verify error response structure using custom matcher
+						expect(errorResponse).toBeErrorResponse(statusCode, 'API_RESPONSE_ERROR');
 					}
 				),
 				{ numRuns: 100 }
@@ -174,7 +163,7 @@ describe('Tags Server Route', () => {
 
 		it('should map unknown errors to 500 status code', async () => {
 			await fc.assert(
-				fc.asyncProperty(fc.string({ minLength: 1, maxLength: 100 }), async (errorMessage) => {
+				fc.asyncProperty(arbitraries.errorMessage(), async (errorMessage) => {
 					// Reset the mock
 					mockFetchTags.mockReset();
 					mockFetchTags.mockRejectedValue(new Error(errorMessage));
@@ -189,11 +178,8 @@ describe('Tags Server Route', () => {
 					const responseText = await response.text();
 					const errorResponse = JSON.parse(responseText);
 
-					// Verify error response structure
-					expect(errorResponse).toHaveProperty('error');
-					expect(errorResponse).toHaveProperty('message');
-					expect(errorResponse).toHaveProperty('statusCode');
-					expect(errorResponse.statusCode).toBe(500);
+					// Verify error response structure using custom matcher
+					expect(errorResponse).toBeErrorResponse(500, 'INTERNAL_ERROR');
 				}),
 				{ numRuns: 100 }
 			);
@@ -253,19 +239,8 @@ describe('Tags Server Route', () => {
 
 			expect(response.status).toBe(200);
 
-			// Verify cache headers are present and have appropriate values (60 seconds)
-			const cacheControl = response.headers.get('Cache-Control');
-			expect(cacheControl).toBeDefined();
-			expect(cacheControl).toContain('public');
-			expect(cacheControl).toContain('max-age=60');
-
-			const cdnCacheControl = response.headers.get('CDN-Cache-Control');
-			expect(cdnCacheControl).toBeDefined();
-			expect(cdnCacheControl).toContain('max-age=60');
-
-			const vercelCdnCacheControl = response.headers.get('Vercel-CDN-Cache-Control');
-			expect(vercelCdnCacheControl).toBeDefined();
-			expect(vercelCdnCacheControl).toContain('max-age=60');
+			// Verify cache headers are present using custom matcher
+			expect(response).toHaveCacheHeaders(60);
 		});
 
 		it('should include cache headers for empty tag lists', async () => {

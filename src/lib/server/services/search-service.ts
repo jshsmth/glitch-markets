@@ -157,4 +157,12 @@ export class SearchService {
 	private buildCacheKey(options: SearchOptions): string {
 		return `search:${JSON.stringify(options)}`;
 	}
+
+	/**
+	 * Clears the cache - useful for testing
+	 * @internal This method is primarily for testing purposes
+	 */
+	clearCache(): void {
+		this.cache.clear();
+	}
 }

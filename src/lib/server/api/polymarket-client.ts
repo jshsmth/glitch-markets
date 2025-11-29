@@ -61,7 +61,9 @@ import {
 	validateSupportedAssets,
 	validateDepositAddresses,
 	validateTeams,
-	validateSportsMetadataList
+	validateSportsMetadataList,
+	validateBuilderLeaderboard,
+	validateBuilderVolume
 } from '../validation/response-validator.js';
 
 /**
@@ -204,6 +206,47 @@ export interface SportsMetadata {
 	ordering: string;
 	tags: string;
 	series: string;
+}
+
+/**
+ * Query parameters for builder leaderboard endpoint
+ */
+export interface BuilderLeaderboardParams {
+	timePeriod: 'DAY' | 'WEEK' | 'MONTH' | 'ALL';
+	limit?: number;
+	offset?: number;
+}
+
+/**
+ * Single entry in builder leaderboard response
+ */
+export interface BuilderLeaderboardEntry {
+	rank: string;
+	builder: string;
+	volume: number;
+	activeUsers: number;
+	verified: boolean;
+	builderLogo: string;
+}
+
+/**
+ * Query parameters for builder volume time-series endpoint
+ */
+export interface BuilderVolumeParams {
+	timePeriod: 'DAY' | 'WEEK' | 'MONTH' | 'ALL';
+}
+
+/**
+ * Single entry in builder volume time-series response
+ */
+export interface BuilderVolumeEntry {
+	dt: string;
+	builder: string;
+	builderLogo: string;
+	verified: boolean;
+	volume: number;
+	activeUsers: number;
+	rank: string;
 }
 
 /**
@@ -1738,5 +1781,81 @@ export class PolymarketClient {
 		}
 
 		return parts.join('&');
+	}
+
+	/**
+	 * Fetches builder leaderboard from Polymarket Data API
+	 * Returns aggregated builder rankings for the specified time period
+	 *
+	 * @param params - Query parameters (timePeriod, limit, offset)
+	 * @returns Promise resolving to array of builder leaderboard entries
+	 * @throws {ValidationError} When parameters are invalid
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error
+	 *
+	 * @example
+	 * ```typescript
+	 * const leaderboard = await client.fetchBuilderLeaderboard({
+	 *   timePeriod: 'WEEK',
+	 *   limit: 25,
+	 *   offset: 0
+	 * });
+	 * console.log(leaderboard); // [{ rank: "1", builder: "...", ... }]
+	 * ```
+	 */
+	async fetchBuilderLeaderboard(
+		params: BuilderLeaderboardParams
+	): Promise<BuilderLeaderboardEntry[]> {
+		const queryParams = new URLSearchParams();
+		queryParams.set('timePeriod', params.timePeriod);
+
+		if (params.limit !== undefined) {
+			queryParams.set('limit', params.limit.toString());
+		}
+
+		if (params.offset !== undefined) {
+			queryParams.set('offset', params.offset.toString());
+		}
+
+		const url = `${this.dataApiBaseUrl}/v1/builders/leaderboard?${queryParams}`;
+		this.logger.info('Fetching builder leaderboard', { url, params });
+
+		const data = await this.request<unknown>(url);
+
+		const validated = validateBuilderLeaderboard(data);
+		this.logger.info('Builder leaderboard fetched successfully', { count: validated.length });
+
+		return validated;
+	}
+
+	/**
+	 * Fetches builder volume time-series from Polymarket Data API
+	 * Returns daily volume data with multiple entries per builder
+	 *
+	 * @param params - Query parameters (timePeriod)
+	 * @returns Promise resolving to array of builder volume entries
+	 * @throws {ValidationError} When parameters are invalid
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error
+	 *
+	 * @example
+	 * ```typescript
+	 * const volume = await client.fetchBuilderVolume({ timePeriod: 'MONTH' });
+	 * console.log(volume); // [{ dt: "2025-11-29", builder: "...", ... }]
+	 * ```
+	 */
+	async fetchBuilderVolume(params: BuilderVolumeParams): Promise<BuilderVolumeEntry[]> {
+		const queryParams = new URLSearchParams();
+		queryParams.set('timePeriod', params.timePeriod);
+
+		const url = `${this.dataApiBaseUrl}/v1/builders/volume?${queryParams}`;
+		this.logger.info('Fetching builder volume', { url, params });
+
+		const data = await this.request<unknown>(url);
+
+		const validated = validateBuilderVolume(data);
+		this.logger.info('Builder volume fetched successfully', { count: validated.length });
+
+		return validated;
 	}
 }

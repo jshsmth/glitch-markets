@@ -21,7 +21,7 @@ vi.mock('../utils/logger.js');
 
 describe('UserDataService Property Tests', () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 	});
 
 	/**

@@ -392,4 +392,12 @@ export class MarketService {
 
 		return sorted;
 	}
+
+	/**
+	 * Clears the cache - useful for testing
+	 * @internal This method is primarily for testing purposes
+	 */
+	clearCache(): void {
+		this.cache.clear();
+	}
 }

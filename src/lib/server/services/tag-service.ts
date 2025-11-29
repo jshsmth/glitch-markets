@@ -444,4 +444,12 @@ export class TagService {
 			this.pendingRequests.delete(cacheKey);
 		}
 	}
+
+	/**
+	 * Clears the cache - useful for testing
+	 * @internal This method is primarily for testing purposes
+	 */
+	clearCache(): void {
+		this.cache.clear();
+	}
 }

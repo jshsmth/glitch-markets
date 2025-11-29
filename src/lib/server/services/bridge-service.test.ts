@@ -15,7 +15,7 @@ describe('BridgeService', () => {
 	let service: BridgeService;
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 		service = new BridgeService(300000); // 5 minute cache
 	});
 
