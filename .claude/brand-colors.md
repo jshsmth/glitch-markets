@@ -2,9 +2,14 @@
 
 ## Design Philosophy
 
-Following Google's approach: Create a palette of brand color shades from light to dark, almost white to almost black, all with a subtle brand tint. This creates an "almost unnoticeable but present brand feeling" throughout the interface.
+Following Google's approach: Create a palette of brand color shades from light to dark, almost white to almost black, with subtle brand tint in backgrounds only. This creates an "almost unnoticeable but present brand feeling" throughout the interface.
 
-**Key benefit for trading interfaces**: Works especially well where positive/negative colors (green/red) dominate, allowing brand presence without jarring conflicts.
+**Updated approach**:
+
+- **Backgrounds**: Subtle cyan tint (maintains brand presence)
+- **Text**: Neutral cool grays with barely perceptible tint (avoids "blue text" feeling)
+
+**Key benefit for trading interfaces**: Works especially well where positive/negative colors (green/red) dominate, allowing brand presence without jarring conflicts or color-cast issues in text.
 
 ---
 
@@ -62,12 +67,12 @@ bg-2:   #f0f9fb
 bg-3:   #e8f6f9
 bg-4:   #d8f0f5
 
-Text Shades (cyan-tinted blacks):
-text-0: #111314  (almost black with tiny cyan tint)
-text-1: #1a1e1f
-text-2: #2a3133
-text-3: #3a4447
-text-4: #5a6c70
+Text Shades (neutral cool grays):
+text-0: #111213  (nearly pure black, barely perceptible cool tint)
+text-1: #1c1d1e  (subtle cool dark gray)
+text-2: #2e3032  (neutral dark gray)
+text-3: #4a4c4e  (cool mid-gray)
+text-4: #6a6c6e  (neutral gray)
 
 Primary (Brand Cyan):
 primary-50:  #e6f9ff
@@ -97,12 +102,12 @@ bg-2:   #1a2023
 bg-3:   #212a2e
 bg-4:   #2a3539
 
-Text Shades (cyan-tinted whites):
-text-0: #fcfeff  (almost white with tiny cyan tint)
-text-1: #f0f7f9
-text-2: #d8eef3
-text-3: #c0e5ed
-text-4: #a8dce7
+Text Shades (neutral cool grays):
+text-0: #fefeff  (nearly pure white, barely perceptible cool tint)
+text-1: #f5f6f7  (subtle cool gray)
+text-2: #e0e3e5  (neutral cool mid-gray)
+text-3: #c5cacd  (cool mid-gray)
+text-4: #a8adb1  (neutral gray)
 
 Primary (Brand Cyan):
 primary-50:  #002d36

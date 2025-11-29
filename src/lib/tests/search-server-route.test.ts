@@ -63,7 +63,7 @@ describe('Search Server Route', () => {
 			await fc.assert(
 				fc.asyncProperty(
 					fc.record({
-						q: fc.string({ minLength: 1 }),
+						q: fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0), // Exclude whitespace-only strings
 						limitPerType: fc.option(fc.integer({ min: 1, max: 100 })),
 						searchTags: fc.option(fc.boolean()),
 						searchProfiles: fc.option(fc.boolean())

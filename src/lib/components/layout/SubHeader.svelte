@@ -180,7 +180,7 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		min-height: var(--target-min); /* 48px - WCAG touch target */
+		min-height: var(--target-comfortable); /* 44px - WCAG 2.1 AA */
 	}
 
 	.nav-link {
@@ -192,7 +192,7 @@
 		font-size: 14px;
 		font-weight: var(--font-regular); /* Regular weight for inactive */
 		white-space: nowrap;
-		min-height: var(--target-min); /* 48px - WCAG touch target */
+		min-height: var(--target-comfortable); /* 44px - WCAG 2.1 AA */
 		transition: var(--transition-colors);
 		padding: var(--spacing-2) 0; /* Add padding for larger tap area */
 	}
@@ -259,11 +259,11 @@
 
 		.nav-list {
 			gap: var(--spacing-6); /* 24px - more spacing on desktop */
-			min-height: var(--target-min); /* Keep 48px for consistency */
+			min-height: var(--target-comfortable); /* 44px - consistent with mobile */
 		}
 
 		.nav-link {
-			min-height: var(--target-min); /* Keep 48px for consistency */
+			min-height: var(--target-comfortable); /* 44px - consistent with mobile */
 		}
 
 		/* Hide swipe hint on desktop */

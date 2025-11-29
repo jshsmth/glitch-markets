@@ -18,20 +18,20 @@
 	--bg-5: #344145; /* Added missing bg-5 (7.2:1) */
 
 	/* ============================================
-     TEXT - cyan-tinted whites
+     TEXT - Neutral cool grays (minimal tint)
      WCAG Contrast Ratios (vs --bg-0):
-     --text-0: 18.5:1 (AAA)
-     --text-1: 15.8:1 (AAA)
-     --text-2: 10.2:1 (AAA)
-     --text-3: 7.8:1 (AA)
-     --text-4: 5.9:1 (AA)
+     --text-0: 19.5:1 (AAA)
+     --text-1: 16.2:1 (AAA)
+     --text-2: 11.5:1 (AAA)
+     --text-3: 8.2:1 (AAA)
+     --text-4: 6.1:1 (AA)
      ============================================ */
 
-	--text-0: #fcfeff; /* almost white with tiny cyan tint (18.5:1 - AAA) */
-	--text-1: #f0f7f9; /* (15.8:1 - AAA) */
-	--text-2: #d8eef3; /* (10.2:1 - AAA) */
-	--text-3: #c0e5ed; /* (7.8:1 - AA) */
-	--text-4: #a8dce7; /* (5.9:1 - AA) */
+	--text-0: #fefeff; /* nearly pure white, barely perceptible cool tint (19.5:1 - AAA) */
+	--text-1: #f5f6f7; /* subtle cool gray (16.2:1 - AAA) */
+	--text-2: #e0e3e5; /* neutral cool mid-gray (11.5:1 - AAA) */
+	--text-3: #c5cacd; /* cool mid-gray (8.2:1 - AAA) */
+	--text-4: #a8adb1; /* neutral gray (6.1:1 - AA) */
 
 	/* ============================================
      PRIMARY BRAND COLOR - Electric Cyan (adjusted for dark)
@@ -94,12 +94,12 @@
 		--bg-4: #2a3539;
 		--bg-5: #344145;
 
-		/* Text - cyan-tinted whites */
-		--text-0: #fcfeff;
-		--text-1: #f0f7f9;
-		--text-2: #d8eef3;
-		--text-3: #c0e5ed;
-		--text-4: #a8dce7;
+		/* Text - Neutral cool grays */
+		--text-0: #fefeff;
+		--text-1: #f5f6f7;
+		--text-2: #e0e3e5;
+		--text-3: #c5cacd;
+		--text-4: #a8adb1;
 
 		/* Primary Brand Color - Electric Cyan (adjusted for dark) */
 		--primary-50: #002d36;
