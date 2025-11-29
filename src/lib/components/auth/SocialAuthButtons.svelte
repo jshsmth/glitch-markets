@@ -33,7 +33,9 @@
 		if (!browser) return;
 
 		if (!authState.client) {
-			onError?.('Authentication service is still initializing. Please wait a moment and try again.');
+			onError?.(
+				'Authentication service is still initializing. Please wait a moment and try again.'
+			);
 			return;
 		}
 
