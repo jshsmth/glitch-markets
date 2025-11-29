@@ -19,13 +19,18 @@
 
 	const queryClient = data?.queryClient || createQueryClient();
 
-	onMount(async () => {
+	onMount(() => {
 		// Initialize theme immediately (synchronous)
 		initializeTheme();
 
-		// Initialize Dynamic SDK asynchronously (non-blocking)
-		// This runs in the background and updates auth state when ready
-		initializeDynamicSDK();
+		// Defer Dynamic SDK initialization to after initial render
+		// Use requestIdleCallback to not block user interactions
+		if ('requestIdleCallback' in window) {
+			requestIdleCallback(() => initializeDynamicSDK(), { timeout: 2000 });
+		} else {
+			// Fallback: defer by 100ms to allow first paint
+			setTimeout(() => initializeDynamicSDK(), 100);
+		}
 	});
 
 	/**

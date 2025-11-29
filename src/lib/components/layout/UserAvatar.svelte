@@ -93,8 +93,13 @@
 
 <div class="avatar-container" style="--size: {size}px">
 	{#if authState.isInitializing}
-		<!-- Skeleton placeholder to prevent flash -->
-		<div class="avatar-skeleton"></div>
+		<!-- Skeleton placeholder matching exact dimensions of avatar-button -->
+		<div class="avatar-skeleton-wrapper">
+			<div class="avatar-skeleton"></div>
+			{#if !hideChevron}
+				<div class="chevron-skeleton"></div>
+			{/if}
+		</div>
 	{:else if authState.user}
 		<button class="avatar-button" onclick={handleAvatarClick} aria-label="Account menu">
 			<div class="avatar" style="background: {gradient}"></div>
@@ -129,12 +134,41 @@
 		display: inline-block;
 	}
 
+	.avatar-skeleton-wrapper {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 6px 4px 4px;
+		border-radius: 24px;
+	}
+
 	.avatar-skeleton {
 		width: var(--size);
 		height: var(--size);
 		border-radius: 50%;
-		background-color: var(--bg-3);
-		opacity: 0.5;
+		background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-3) 50%, var(--bg-2) 75%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s ease-in-out infinite;
+		flex-shrink: 0;
+	}
+
+	.chevron-skeleton {
+		width: 16px;
+		height: 16px;
+		background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-3) 50%, var(--bg-2) 75%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s ease-in-out infinite;
+		border-radius: 2px;
+		flex-shrink: 0;
+	}
+
+	@keyframes shimmer {
+		0% {
+			background-position: 200% 0;
+		}
+		100% {
+			background-position: -200% 0;
+		}
 	}
 
 	.avatar-button {
