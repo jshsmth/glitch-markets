@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { generateComponentId } from '$lib/utils/id';
+
 	interface Props {
 		size?: number;
 		color?: string;
 	}
 
 	let { size = 24, color = 'currentColor' }: Props = $props();
+	const clipId = generateComponentId('clip-cup');
 </script>
 
 <svg
@@ -15,7 +18,7 @@
 	xmlns="http://www.w3.org/2000/svg"
 	aria-hidden="true"
 >
-	<g clip-path="url(#clip0_2826_110462)">
+	<g clip-path="url(#{clipId})">
 		<path
 			d="M11.9999 16.0802C8.51994 16.0802 5.68994 13.2502 5.68994 9.77023V1.24023H18.2999V9.77023C18.2999 13.2502 15.4799 16.0802 11.9999 16.0802ZM7.18994 2.75023V9.78023C7.18994 12.4302 9.34994 14.5902 11.9999 14.5902C14.6499 14.5902 16.8099 12.4302 16.8099 9.78023V2.75023H7.19994H7.18994Z"
 		/>
@@ -31,7 +34,7 @@
 		<path d="M12.75 15.3301H11.25V18.6601H12.75V15.3301Z" />
 	</g>
 	<defs>
-		<clipPath id="clip0_2826_110462">
+		<clipPath id={clipId}>
 			<rect width="24" height="24" fill="white" />
 		</clipPath>
 	</defs>

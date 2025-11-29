@@ -1,50 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import type { Component } from 'svelte';
-	import {
-		RocketIcon,
-		FlashIcon,
-		StarsIcon,
-		CourthouseIcon,
-		CupIcon,
-		DollarCircleIcon,
-		BitcoinCardIcon,
-		GlobalIcon,
-		DollarSquareIcon,
-		DocumentTextIcon,
-		TicketIcon,
-		GlobalEditIcon,
-		DollarChangeIcon,
-		SpeakerIcon,
-		MessageTextIcon,
-		ChevronLeftIcon,
-		ChevronRightIcon
-	} from '$lib/components/icons';
-
-	interface Category {
-		name: string;
-		href: string;
-		icon?: Component;
-		dropdown?: boolean;
-	}
-
-	const categories: Category[] = [
-		{ name: 'Trending', href: '/?category=trending', icon: RocketIcon },
-		{ name: 'Breaking', href: '/?category=breaking', icon: FlashIcon },
-		{ name: 'New', href: '/?category=new', icon: StarsIcon },
-		{ name: 'Politics', href: '/?category=politics', icon: CourthouseIcon },
-		{ name: 'Sports', href: '/?category=sports', icon: CupIcon },
-		{ name: 'Finance', href: '/?category=finance', icon: DollarCircleIcon },
-		{ name: 'Crypto', href: '/?category=crypto', icon: BitcoinCardIcon },
-		{ name: 'Tech', href: '/?category=tech', icon: DocumentTextIcon },
-		{ name: 'Culture', href: '/?category=culture', icon: TicketIcon },
-		{ name: 'World', href: '/?category=world', icon: GlobalEditIcon },
-		{ name: 'Economy', href: '/?category=economy', icon: DollarChangeIcon },
-		{ name: 'Elections', href: '/?category=elections', icon: SpeakerIcon },
-		{ name: 'Earnings', href: '/?category=earnings', icon: DollarSquareIcon },
-		{ name: 'Geopolitics', href: '/?category=geopolitics', icon: GlobalIcon },
-		{ name: 'Mentions', href: '/?category=mentions', icon: MessageTextIcon }
-	];
+	import { ChevronLeftIcon, ChevronRightIcon } from '$lib/components/icons';
+	import { categories, SCROLL_AMOUNT, SCROLL_THRESHOLD } from '$lib/config/categories';
 
 	let activeCategory = $derived(page.url.searchParams.get('category') || 'trending');
 	let scrollContainer = $state<HTMLDivElement>();
@@ -58,37 +15,50 @@
 
 		const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
 		hasOverflow = scrollWidth > clientWidth;
-		canScrollLeft = scrollLeft > 5;
-		canScrollRight = scrollLeft < scrollWidth - clientWidth - 5;
+		canScrollLeft = scrollLeft > SCROLL_THRESHOLD;
+		canScrollRight = scrollLeft < scrollWidth - clientWidth - SCROLL_THRESHOLD;
 
 		// Hide swipe hint after user scrolls
-		if (scrollLeft > 5) {
+		if (scrollLeft > SCROLL_THRESHOLD) {
 			showSwipeHint = false;
 		}
 	}
 
 	function scrollLeft() {
 		if (!scrollContainer) return;
-		scrollContainer.scrollBy({ left: -200, behavior: 'smooth' });
+		scrollContainer.scrollBy({ left: -SCROLL_AMOUNT, behavior: 'smooth' });
 	}
 
 	function scrollRight() {
 		if (!scrollContainer) return;
-		scrollContainer.scrollBy({ left: 200, behavior: 'smooth' });
+		scrollContainer.scrollBy({ left: SCROLL_AMOUNT, behavior: 'smooth' });
 	}
 
 	$effect(() => {
 		if (scrollContainer) {
 			handleScroll();
+
+			// Create ResizeObserver to update overflow state on window resize
+			const resizeObserver = new ResizeObserver(() => {
+				handleScroll();
+			});
+
+			resizeObserver.observe(scrollContainer);
+
 			// Show swipe hint only if there's overflow
+			let timeout: ReturnType<typeof setTimeout> | undefined;
 			if (hasOverflow) {
 				showSwipeHint = true;
 				// Auto-hide swipe hint after 3 seconds
-				const timeout = setTimeout(() => {
+				timeout = setTimeout(() => {
 					showSwipeHint = false;
 				}, 3000);
-				return () => clearTimeout(timeout);
 			}
+
+			return () => {
+				resizeObserver.disconnect();
+				if (timeout) clearTimeout(timeout);
+			};
 		}
 	});
 </script>

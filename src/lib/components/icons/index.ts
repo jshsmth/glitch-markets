@@ -1,6 +1,9 @@
 // Icon components index
 // Auto-generated icon exports
 
+// Export types
+export type { IconProps, ExtendedIconProps } from './types';
+
 export { default as BellIcon } from './BellIcon.svelte';
 export { default as BitcoinCardIcon } from './BitcoinCardIcon.svelte';
 export { default as ChevronDownIcon } from './ChevronDownIcon.svelte';

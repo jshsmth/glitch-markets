@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Input from './Input.svelte';
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
+	import { debounce } from '$lib/utils/debounce';
 
 	interface Props {
 		/**
@@ -14,9 +15,14 @@
 		placeholder?: string;
 
 		/**
-		 * Input handler
+		 * Input handler (debounced by 300ms by default)
 		 */
 		oninput?: (event: Event) => void;
+
+		/**
+		 * Debounce delay in milliseconds (default: 300)
+		 */
+		debounceDelay?: number;
 
 		/**
 		 * Show keyboard shortcut hint
@@ -38,17 +44,31 @@
 		value = $bindable(''),
 		placeholder = 'Search...',
 		oninput,
+		debounceDelay = 300,
 		showShortcut = true,
 		inputSize = 'medium',
 		class: className
 	}: Props = $props();
 
-	let inputElement = $state<HTMLInputElement>();
+	let inputElement = $state<HTMLInputElement | undefined>();
 	let hasValue = $derived(value.length > 0);
+
+	// Create debounced input handler if oninput is provided
+	const debouncedInput = oninput ? debounce(oninput, debounceDelay) : undefined;
+
+	function handleInput(event: Event) {
+		if (debouncedInput) {
+			debouncedInput(event);
+		}
+	}
 
 	// Listen for "/" key to focus search
 	function handleKeyDown(event: KeyboardEvent) {
-		if (event.key === '/' && event.target !== inputElement) {
+		const target = event.target as HTMLElement;
+		const isInInput =
+			target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+		if (event.key === '/' && !isInInput) {
 			event.preventDefault();
 			inputElement?.focus();
 		}
@@ -58,6 +78,13 @@
 		value = '';
 		inputElement?.focus();
 	}
+
+	// Cleanup on unmount
+	$effect(() => {
+		return () => {
+			// Cleanup happens automatically when component unmounts
+		};
+	});
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
@@ -68,7 +95,7 @@
 		bind:value
 		type="text"
 		{placeholder}
-		{oninput}
+		oninput={handleInput}
 		{inputSize}
 		variant="search"
 		aria-label="Search"

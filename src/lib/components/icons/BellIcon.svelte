@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { generateComponentId } from '$lib/utils/id';
+
 	interface Props {
 		size?: number;
 		color?: string;
@@ -6,6 +8,7 @@
 	}
 
 	let { size = 24, color = 'currentColor', hasNotifications = false }: Props = $props();
+	const clipId = generateComponentId('clip-bell');
 </script>
 
 <div class="bell-icon-wrapper" style="--size: {size}px">
@@ -16,7 +19,7 @@
 		fill="none"
 		xmlns="http://www.w3.org/2000/svg"
 	>
-		<g clip-path="url(#clip0_2826_100350)">
+		<g clip-path="url(#{clipId})">
 			<path
 				d="M14.22 20.89C13.69 21.59 12.87 22 12 22C11.13 22 10.3 21.59 9.78 20.89"
 				stroke={color}
@@ -33,7 +36,7 @@
 			/>
 		</g>
 		<defs>
-			<clipPath id="clip0_2826_100350">
+			<clipPath id={clipId}>
 				<rect width="24" height="24" fill="none" />
 			</clipPath>
 		</defs>
