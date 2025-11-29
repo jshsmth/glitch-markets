@@ -40,13 +40,8 @@
 	async function initializeDynamicSDK() {
 		try {
 			// Use Promise.all to load all SDK modules in parallel
-			const [
-				{ detectOAuthRedirect, completeSocialAuthentication },
-				{ addEvmExtension }
-			] = await Promise.all([
-				import('@dynamic-labs-sdk/client'),
-				import('@dynamic-labs-sdk/evm')
-			]);
+			const [{ detectOAuthRedirect, completeSocialAuthentication }, { addEvmExtension }] =
+				await Promise.all([import('@dynamic-labs-sdk/client'), import('@dynamic-labs-sdk/evm')]);
 
 			const client = createDynamicClient({
 				environmentId: PUBLIC_DYNAMIC_ENVIRONMENT_ID,
@@ -168,12 +163,7 @@
 		left: 0;
 		right: 0;
 		height: 3px;
-		background: linear-gradient(
-			90deg,
-			transparent,
-			var(--primary),
-			transparent
-		);
+		background: linear-gradient(90deg, transparent, var(--primary), transparent);
 		background-size: 50% 100%;
 		animation: loading-slide 1s ease-in-out infinite;
 		z-index: var(--z-modal);

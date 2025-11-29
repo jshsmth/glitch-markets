@@ -1,6 +1,5 @@
 <script lang="ts">
 	import BellIcon from '$lib/components/icons/BellIcon.svelte';
-	import CoinIcon from '$lib/components/icons/CoinIcon.svelte';
 	import UserAvatar from './UserAvatar.svelte';
 	import SubHeader from './SubHeader.svelte';
 	import Logo from './Logo.svelte';

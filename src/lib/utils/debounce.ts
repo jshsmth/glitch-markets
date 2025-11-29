@@ -13,14 +13,14 @@
  *
  * debouncedSearch('hello'); // Will only execute after 300ms of no calls
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: never[]) => unknown>(
 	func: T,
 	wait: number
 ): (...args: Parameters<T>) => void {
 	let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-	return function (this: any, ...args: Parameters<T>) {
-		const context = this;
+	return function (this: unknown, ...args: Parameters<T>) {
+		const context = this as ThisParameterType<T>;
 
 		if (timeoutId !== undefined) {
 			clearTimeout(timeoutId);
@@ -49,7 +49,7 @@ export function debounce<T extends (...args: any[]) => any>(
  *   return cancel; // Cleanup on component unmount
  * });
  */
-export function debounceCancellable<T extends (...args: any[]) => any>(
+export function debounceCancellable<T extends (...args: never[]) => unknown>(
 	func: T,
 	wait: number
 ): {
@@ -65,8 +65,8 @@ export function debounceCancellable<T extends (...args: any[]) => any>(
 		}
 	};
 
-	const debounced = function (this: any, ...args: Parameters<T>) {
-		const context = this;
+	const debounced = function (this: unknown, ...args: Parameters<T>) {
+		const context = this as ThisParameterType<T>;
 		cancel();
 
 		timeoutId = setTimeout(() => {
