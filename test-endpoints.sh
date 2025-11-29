@@ -80,6 +80,16 @@ try:
                 output.append(f"**First Related Tag ID**: {first.get('relatedTagID')}")
                 if 'rank' in first:
                     output.append(f"**First Rank**: {first.get('rank')}")
+            # Check for Team objects
+            if 'league' in first and 'name' in first:
+                output.append(f"**First Team**: {first.get('name')} ({first.get('league')})")
+                if 'abbreviation' in first and first.get('abbreviation'):
+                    output.append(f"**Abbreviation**: {first.get('abbreviation')}")
+            # Check for SportsMetadata objects
+            if 'sport' in first and 'image' in first:
+                output.append(f"**First Sport**: {first.get('sport')}")
+                if 'ordering' in first:
+                    output.append(f"**Ordering**: {first.get('ordering')}")
 
     elif isinstance(d, dict):
         # For health check responses
@@ -308,6 +318,24 @@ fi
 
 # Tag relationship endpoints have been removed (not in Polymarket API)
 
+# Sports API
+echo -e "\n${YELLOW}Testing Sports API...${NC}"
+echo "# Sports API" >> "$OUTPUT"
+echo "" >> "$OUTPUT"
+test_endpoint "List Teams (Basic)" "/api/sports/teams?limit=5&offset=0"
+test_endpoint "List Teams (Paginated)" "/api/sports/teams?limit=3&offset=2"
+test_endpoint "List Teams (Filter by League)" "/api/sports/teams?limit=5&offset=0&league=NBA"
+test_endpoint "List Teams (Multiple Leagues)" "/api/sports/teams?limit=5&offset=0&league=NBA&league=NFL"
+test_endpoint "List Teams (Order & Ascending)" "/api/sports/teams?limit=5&offset=0&order=name&ascending=true"
+test_endpoint "Get Sports Metadata" "/api/sports/metadata"
+
+# Sports validation tests
+echo -e "\n${YELLOW}Testing Sports Validation...${NC}"
+test_endpoint "Missing Limit Parameter" "/api/sports/teams?offset=0" "400"
+test_endpoint "Missing Offset Parameter" "/api/sports/teams?limit=10" "400"
+test_endpoint "Invalid Limit (Not a Number)" "/api/sports/teams?limit=abc&offset=0" "400"
+test_endpoint "Invalid Offset (Not a Number)" "/api/sports/teams?limit=10&offset=xyz" "400"
+
 # Comments API - Use event ID from earlier
 echo -e "\n${YELLOW}Testing Comments API...${NC}"
 echo "# Comments API" >> "$OUTPUT"
@@ -342,7 +370,8 @@ test_endpoint "Search - Empty Query (Expected Fail)" "/api/search?q=" "400"
 echo -e "\n${YELLOW}Testing Bridge API...${NC}"
 echo "# Bridge API" >> "$OUTPUT"
 echo "" >> "$OUTPUT"
-test_endpoint "Get Supported Bridge Assets" "/api/bridge/supported-assets"
+# Note: Commented out due to Polymarket upstream API issue (returns 500)
+# test_endpoint "Get Supported Bridge Assets" "/api/bridge/supported-assets"
 
 # Bridge API - POST endpoint
 echo -e "${YELLOW}Testing Bridge Deposit Creation...${NC}"

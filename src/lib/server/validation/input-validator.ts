@@ -651,3 +651,121 @@ export function validateEthereumAddress(address: unknown): string {
 
 	return trimmed.toLowerCase();
 }
+
+/**
+ * Validates query parameters for the teams endpoint
+ *
+ * @param params - Query parameters object
+ * @returns Validated parameters
+ * @throws {ValidationError} When validation fails
+ *
+ * @example
+ * ```typescript
+ * const params = validateTeamQueryParams({
+ *   limit: 10,
+ *   offset: 0,
+ *   league: ['NBA', 'NFL']
+ * });
+ * ```
+ */
+export function validateTeamQueryParams(params: {
+	limit: number;
+	offset: number;
+	order?: string;
+	ascending?: boolean;
+	league?: string[];
+	name?: string[];
+	abbreviation?: string[];
+}): {
+	limit: number;
+	offset: number;
+	order?: string;
+	ascending?: boolean;
+	league?: string[];
+	name?: string[];
+	abbreviation?: string[];
+} {
+	// Validate required params
+	const limit = validateNonNegativeNumber(params.limit, 'limit');
+	const offset = validateNonNegativeNumber(params.offset, 'offset');
+
+	// Build validated params object
+	const validated: {
+		limit: number;
+		offset: number;
+		order?: string;
+		ascending?: boolean;
+		league?: string[];
+		name?: string[];
+		abbreviation?: string[];
+	} = {
+		limit,
+		offset
+	};
+
+	// Validate optional string param
+	if (params.order !== undefined) {
+		validated.order = validateNonEmptyString(params.order, 'order');
+	}
+
+	// Validate optional boolean param
+	if (params.ascending !== undefined) {
+		validated.ascending = validateBoolean(params.ascending, 'ascending');
+	}
+
+	// Validate optional array params
+	if (params.league !== undefined) {
+		if (!Array.isArray(params.league)) {
+			throw new ValidationError('league must be an array', { league: params.league });
+		}
+		if (params.league.length > 0) {
+			validated.league = params.league.map((item, index) => {
+				if (typeof item !== 'string' || item.trim().length === 0) {
+					throw new ValidationError(`league[${index}] must be a non-empty string`, {
+						league: params.league,
+						index
+					});
+				}
+				return item;
+			});
+		}
+	}
+
+	if (params.name !== undefined) {
+		if (!Array.isArray(params.name)) {
+			throw new ValidationError('name must be an array', { name: params.name });
+		}
+		if (params.name.length > 0) {
+			validated.name = params.name.map((item, index) => {
+				if (typeof item !== 'string' || item.trim().length === 0) {
+					throw new ValidationError(`name[${index}] must be a non-empty string`, {
+						name: params.name,
+						index
+					});
+				}
+				return item;
+			});
+		}
+	}
+
+	if (params.abbreviation !== undefined) {
+		if (!Array.isArray(params.abbreviation)) {
+			throw new ValidationError('abbreviation must be an array', {
+				abbreviation: params.abbreviation
+			});
+		}
+		if (params.abbreviation.length > 0) {
+			validated.abbreviation = params.abbreviation.map((item, index) => {
+				if (typeof item !== 'string' || item.trim().length === 0) {
+					throw new ValidationError(`abbreviation[${index}] must be a non-empty string`, {
+						abbreviation: params.abbreviation,
+						index
+					});
+				}
+				return item;
+			});
+		}
+	}
+
+	return validated;
+}
