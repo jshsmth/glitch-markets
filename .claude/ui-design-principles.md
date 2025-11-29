@@ -69,9 +69,11 @@ XXL: 80pt - Completely separate areas
 
 **Guidelines**:
 
-- Minimum size: **48pt × 48pt** (exceeds WCAG's 44pt × 44pt)
-- Frequently used buttons: Make even larger for efficiency
-- Button separation: At least **8pt** between buttons to prevent mis-taps
+- Minimum size: **24px × 24px** (WCAG 2.2 AA Level 2.5.8)
+- Comfortable size: **44px × 44px** (WCAG 2.1 AA Level 2.5.5 - use for primary actions)
+- Button separation: At least **8px** between buttons to prevent mis-taps
+
+**Note**: We target WCAG 2.2 AA (24×24px minimum) but use larger sizes (44px+) for frequently-used primary actions to improve usability
 
 ---
 
@@ -255,9 +257,10 @@ Use the existing CSS variable system with consistent spacing:
 
 ### Accessibility Checklist
 
-- [ ] UI elements: 3:1 contrast
-- [ ] Text 18px and under: 4.5:1 contrast
-- [ ] Buttons: 48pt × 48pt minimum
+- [ ] UI elements: 3:1 contrast (WCAG 2.1 AA)
+- [ ] Text 18px and under: 4.5:1 contrast (WCAG 2.1 AA)
+- [ ] Touch targets: 24px × 24px minimum (WCAG 2.2 AA)
+- [ ] Primary actions: 44px × 44px recommended (enhanced usability)
 - [ ] Icons: Include text labels or ARIA labels
 - [ ] Color: Never sole indicator of state
 
@@ -284,7 +287,8 @@ Before finalizing any design:
 - [ ] Spacing reflects element relationships
 - [ ] 3:1 contrast on all UI elements
 - [ ] 4.5:1 contrast on text ≤18px
-- [ ] Buttons are 48pt × 48pt minimum
+- [ ] Touch targets are 24px × 24px minimum (WCAG 2.2 AA)
+- [ ] Primary actions are 44px × 44px (enhanced usability)
 - [ ] Important content is visible
 - [ ] Large text has tighter letter spacing
 - [ ] Color not sole indicator of meaning

@@ -75,12 +75,12 @@
 	--focus-ring: 0 0 0 3px rgba(0, 217, 255, 0.3); /* cyan with transparency */
 
 	/* ============================================
-     TARGET SIZES (Touch-friendly per UI principles)
+     TARGET SIZES (WCAG 2.2 AA Compliance)
      ============================================ */
 
-	--target-min: 48px; /* Minimum touch target size */
-	--target-comfortable: 56px; /* Comfortable tap target */
-	--target-large: 64px; /* Large, easy-to-hit target */
+	--target-min: 24px; /* WCAG 2.2 AA minimum (Level 2.5.8) */
+	--target-comfortable: 44px; /* WCAG 2.1 AA / Enhanced usability (Level 2.5.5) */
+	--target-large: 56px; /* Extra comfortable for primary CTAs */
 
 	/* ============================================
      Z-INDEX SCALE

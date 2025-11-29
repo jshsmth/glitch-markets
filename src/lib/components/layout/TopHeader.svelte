@@ -183,8 +183,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-width: var(--target-min); /* 48px touch target */
-		min-height: var(--target-min);
+		min-width: var(--target-comfortable); /* 44px - WCAG 2.1 AA */
+		min-height: var(--target-comfortable);
 		transition: var(--transition-colors);
 	}
 

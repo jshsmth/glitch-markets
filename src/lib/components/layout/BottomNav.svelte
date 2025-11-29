@@ -124,8 +124,8 @@
 		justify-content: center;
 		gap: var(--spacing-1); /* 4px - tight spacing for icon+label pair */
 		padding: var(--spacing-2) var(--spacing-1); /* 8px 4px */
-		min-height: var(--target-min); /* 48px - WCAG touch target */
-		min-width: var(--target-min);
+		min-height: var(--target-comfortable); /* 44px - WCAG 2.1 AA */
+		min-width: var(--target-comfortable);
 		color: var(--text-2); /* Better contrast than text-3 (Principle #9) */
 		text-decoration: none;
 		border-radius: var(--radius-md);

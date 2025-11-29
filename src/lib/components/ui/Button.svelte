@@ -13,7 +13,9 @@
 
 		/**
 		 * Button size
-		 * All sizes meet WCAG minimum touch target (48px)
+		 * - small: 36px height (meets WCAG 2.2 AA with 44px touch target)
+		 * - medium: 44px height (WCAG 2.1 AA / comfortable)
+		 * - large: 56px height (enhanced usability for primary CTAs)
 		 */
 		size?: 'small' | 'medium' | 'large';
 
@@ -133,23 +135,23 @@
 			background-color var(--transition-base),
 			transform var(--transition-fast);
 
-		/* Touch target (WCAG AA) */
-		min-height: var(--target-min);
+		/* Accessible by default - actual size meets or exceeds WCAG 2.2 AA */
 	}
 
-	/* Touch target expansion for mobile - expands to 44×44px minimum */
-	.button::before {
+	/* Touch target expansion for small buttons on touch devices
+	   Ensures WCAG 2.2 AA compliance (24×24px min) with comfortable 44×44px target */
+	.button.size-small::before {
 		content: '';
 		position: absolute;
 		top: 50%;
 		left: 50%;
-		width: max(100%, 44px);
-		height: max(100%, 44px);
+		width: max(100%, var(--target-comfortable));
+		height: max(100%, var(--target-comfortable));
 		transform: translate(-50%, -50%);
 	}
 
 	@media (pointer: fine) {
-		.button::before {
+		.button.size-small::before {
 			display: none;
 		}
 	}
@@ -172,32 +174,32 @@
      SIZE VARIANTS
      ============================================ */
 
-	/* Small - Compact actions */
+	/* Small - Compact actions (touch target expanded via ::before) */
 	.button.size-small {
-		padding: 8px 16px;
+		padding: 6px 16px;
 		font-size: 14px;
 		border-radius: var(--radius-md);
-		min-height: var(--target-min);
+		min-height: 36px;
 		line-height: 1.5;
 		letter-spacing: 0.02em;
 	}
 
-	/* Medium - Default size */
+	/* Medium - Default size (WCAG 2.1 AA / comfortable) */
 	.button.size-medium {
 		padding: 10px 20px;
 		font-size: 15px;
 		border-radius: var(--radius-button);
-		min-height: var(--target-min);
+		min-height: var(--target-comfortable); /* 44px */
 		line-height: 1.5;
 		letter-spacing: 0.02em;
 	}
 
-	/* Large - Important CTAs */
+	/* Large - Important CTAs (enhanced usability) */
 	.button.size-large {
 		padding: 14px 28px;
 		font-size: 16px;
 		border-radius: var(--radius-lg);
-		min-height: var(--target-comfortable);
+		min-height: var(--target-large); /* 56px */
 		line-height: 1.5;
 		letter-spacing: 0.02em;
 	}

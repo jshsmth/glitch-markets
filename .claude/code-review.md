@@ -32,7 +32,8 @@ Overall, your code follows Svelte 5 best practices well. You're using runes corr
 ### 4. **Accessibility** ✅
 
 - **ARIA Labels**: `aria-label="Search"`, `aria-hidden="true"` on decorative elements
-- **Touch Targets**: `min-height: var(--target-min)` (48px) meets WCAG AA
+- **Touch Targets**: Components use `--target-comfortable` (44px) for WCAG 2.1 AA compliance
+- **Minimum Compliance**: All targets meet WCAG 2.2 AA minimum (24px)
 - **Focus States**: `:focus-visible` with proper outline and box-shadow
 - **Keyboard Navigation**: "/" shortcut in Search component
 
