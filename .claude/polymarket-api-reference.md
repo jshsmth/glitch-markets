@@ -205,6 +205,11 @@ wss://ws-live-data.polymarket.com
 - `POST /api/bridge/deposit` - Create deposit addresses for cross-chain transfers
 - `GET /api/bridge/supported-assets` - Get supported chains and tokens
 
+### Builders API
+
+- `GET /api/builders/leaderboard` - Get aggregated builder rankings
+- `GET /api/builders/volume` - Get daily builder volume time-series
+
 ### Health API
 
 - `GET /api/health` - Check health status of upstream Polymarket APIs
@@ -562,4 +567,4 @@ curl http://localhost:5173/api/bridge/supported-assets
 
 ---
 
-**Last Updated**: 2025-01-25
+**Last Updated**: 2025-11-29

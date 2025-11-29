@@ -118,7 +118,7 @@ const eventArbitrary = fc.record({
 
 describe('Events Server Routes', () => {
 	beforeEach(async () => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 		mockFetchEvents.mockReset();
 		mockFetchEventById.mockReset();
 		mockFetchEventBySlug.mockReset();
@@ -126,12 +126,12 @@ describe('Events Server Routes', () => {
 		// Clear the cache before each test
 		const { EventService } = await import('$lib/server/services/event-service');
 		const service = new EventService();
-		// @ts-expect-error - accessing private cache for testing
-		service.cache.clear();
+
+		service.clearCache();
 	});
 
 	afterEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 		mockFetchEvents.mockReset();
 		mockFetchEventById.mockReset();
 		mockFetchEventBySlug.mockReset();
@@ -320,7 +320,7 @@ describe('Events Server Routes', () => {
 						expect(errorResponse.statusCode).toBe(400);
 					}
 				),
-				{ numRuns: 50 }
+				{ numRuns: 100 }
 			);
 		});
 
@@ -355,7 +355,7 @@ describe('Events Server Routes', () => {
 						expect(errorResponse.statusCode).toBe(400);
 					}
 				),
-				{ numRuns: 50 }
+				{ numRuns: 100 }
 			);
 		});
 
@@ -391,7 +391,7 @@ describe('Events Server Routes', () => {
 						expect(errorResponse.statusCode).toBe(400);
 					}
 				),
-				{ numRuns: 50 }
+				{ numRuns: 100 }
 			);
 		});
 

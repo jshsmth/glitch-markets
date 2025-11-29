@@ -35,7 +35,9 @@ import type {
 	DepositAddresses,
 	DepositAddressMap,
 	Team,
-	SportsMetadata
+	SportsMetadata,
+	BuilderLeaderboardEntry,
+	BuilderVolumeEntry
 } from '../api/polymarket-client.js';
 
 /**
@@ -2369,6 +2371,163 @@ export function validateSportsMetadataList(data: unknown): SportsMetadata[] {
 		} catch (error) {
 			if (error instanceof ValidationError) {
 				throw new ValidationError(`Invalid sports metadata at index ${index}`, {
+					index,
+					originalError: error.message
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single builder leaderboard entry
+ * @param data - Raw data from API
+ * @returns Validated BuilderLeaderboardEntry
+ * @throws {ValidationError} If validation fails
+ */
+export function validateBuilderLeaderboardEntry(data: unknown): BuilderLeaderboardEntry {
+	if (!isObject(data)) {
+		throw new ValidationError('BuilderLeaderboardEntry must be an object', { data });
+	}
+
+	const entry = data as Record<string, unknown>;
+
+	// Validate required string fields
+	if (!isString(entry.rank)) {
+		throw new ValidationError('rank must be a string', { rank: entry.rank });
+	}
+
+	if (!isString(entry.builder)) {
+		throw new ValidationError('builder must be a string', { builder: entry.builder });
+	}
+
+	if (!isString(entry.builderLogo)) {
+		throw new ValidationError('builderLogo must be a string', { builderLogo: entry.builderLogo });
+	}
+
+	// Validate required number fields
+	if (!isNumber(entry.volume)) {
+		throw new ValidationError('volume must be a number', { volume: entry.volume });
+	}
+
+	if (!isNumber(entry.activeUsers)) {
+		throw new ValidationError('activeUsers must be a number', { activeUsers: entry.activeUsers });
+	}
+
+	// Validate required boolean field
+	if (!isBoolean(entry.verified)) {
+		throw new ValidationError('verified must be a boolean', { verified: entry.verified });
+	}
+
+	return {
+		rank: entry.rank,
+		builder: entry.builder,
+		volume: entry.volume,
+		activeUsers: entry.activeUsers,
+		verified: entry.verified,
+		builderLogo: entry.builderLogo
+	};
+}
+
+/**
+ * Validates builder leaderboard response array
+ * @param data - Raw data from API
+ * @returns Validated array of BuilderLeaderboardEntry
+ * @throws {ValidationError} If validation fails
+ */
+export function validateBuilderLeaderboard(data: unknown): BuilderLeaderboardEntry[] {
+	if (!isArray(data)) {
+		throw new ValidationError('BuilderLeaderboard response must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateBuilderLeaderboardEntry(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`Invalid builder leaderboard entry at index ${index}`, {
+					index,
+					originalError: error.message
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single builder volume entry
+ * @param data - Raw data from API
+ * @returns Validated BuilderVolumeEntry
+ * @throws {ValidationError} If validation fails
+ */
+export function validateBuilderVolumeEntry(data: unknown): BuilderVolumeEntry {
+	if (!isObject(data)) {
+		throw new ValidationError('BuilderVolumeEntry must be an object', { data });
+	}
+
+	const entry = data as Record<string, unknown>;
+
+	// Validate required string fields
+	if (!isString(entry.dt)) {
+		throw new ValidationError('dt must be a string', { dt: entry.dt });
+	}
+
+	if (!isString(entry.builder)) {
+		throw new ValidationError('builder must be a string', { builder: entry.builder });
+	}
+
+	if (!isString(entry.builderLogo)) {
+		throw new ValidationError('builderLogo must be a string', { builderLogo: entry.builderLogo });
+	}
+
+	if (!isString(entry.rank)) {
+		throw new ValidationError('rank must be a string', { rank: entry.rank });
+	}
+
+	// Validate required boolean field
+	if (!isBoolean(entry.verified)) {
+		throw new ValidationError('verified must be a boolean', { verified: entry.verified });
+	}
+
+	// Validate required number fields
+	if (!isNumber(entry.volume)) {
+		throw new ValidationError('volume must be a number', { volume: entry.volume });
+	}
+
+	if (!isNumber(entry.activeUsers)) {
+		throw new ValidationError('activeUsers must be a number', { activeUsers: entry.activeUsers });
+	}
+
+	return {
+		dt: entry.dt,
+		builder: entry.builder,
+		builderLogo: entry.builderLogo,
+		verified: entry.verified,
+		volume: entry.volume,
+		activeUsers: entry.activeUsers,
+		rank: entry.rank
+	};
+}
+
+/**
+ * Validates builder volume time-series response array
+ * @param data - Raw data from API
+ * @returns Validated array of BuilderVolumeEntry
+ * @throws {ValidationError} If validation fails
+ */
+export function validateBuilderVolume(data: unknown): BuilderVolumeEntry[] {
+	if (!isArray(data)) {
+		throw new ValidationError('BuilderVolume response must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateBuilderVolumeEntry(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`Invalid builder volume entry at index ${index}`, {
 					index,
 					originalError: error.message
 				});

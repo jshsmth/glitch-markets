@@ -83,12 +83,12 @@ const seriesArbitrary = fc.record({
 
 describe('Series Server Route', () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 		mockGetSeries.mockReset();
 	});
 
 	afterEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 		mockGetSeries.mockReset();
 	});
 

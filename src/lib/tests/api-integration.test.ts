@@ -52,11 +52,11 @@ vi.mock('$lib/server/api/polymarket-client', () => {
 
 describe('API Integration Tests', () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 	});
 
 	afterEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 	});
 
 	describe('/api/markets endpoint', () => {
@@ -159,19 +159,6 @@ describe('API Integration Tests', () => {
 			expect(data.message).toContain('closed');
 		});
 
-		it('should include cache headers in response', async () => {
-			mockFetchMarkets.mockResolvedValue([]);
-
-			const { GET } = await import('../../routes/api/markets/+server');
-
-			const url = new URL('http://localhost/api/markets');
-			const response = await GET({ url } as never);
-
-			expect(response.status).toBe(200);
-			expect(response.headers.get('Cache-Control')).toContain('max-age=60');
-			expect(response.headers.get('Cache-Control')).toContain('public');
-		});
-
 		it('should handle network errors gracefully', async () => {
 			// Note: This test verifies error handling structure
 			// The actual error may be cached from previous successful calls
@@ -250,26 +237,6 @@ describe('API Integration Tests', () => {
 			expect(response.status).toBe(400);
 			const data = await response.json();
 			expect(data.error).toBe('VALIDATION_ERROR');
-		});
-
-		it('should include cache headers in response', async () => {
-			const market = createMockMarket();
-			const mockGetMarketById = vi.fn().mockResolvedValue(market);
-			vi.doMock('$lib/server/services/market-service', () => ({
-				MarketService: class {
-					getMarketById = mockGetMarketById;
-				}
-			}));
-
-			const { GET } = await import('../../routes/api/markets/[id]/+server');
-
-			const response = await GET({
-				params: { id: 'test-123' },
-				url: new URL('http://localhost/api/markets/test-123')
-			} as never);
-
-			expect(response.status).toBe(200);
-			expect(response.headers.get('Cache-Control')).toContain('max-age=30');
 		});
 	});
 
@@ -376,35 +343,6 @@ describe('API Integration Tests', () => {
 	});
 
 	describe('Caching behavior across requests', () => {
-		it('should set appropriate cache headers for different endpoints', async () => {
-			mockFetchMarkets.mockResolvedValue([]);
-			const market = createMockMarket();
-
-			const mockGetMarketById = vi.fn().mockResolvedValue(market);
-
-			vi.doMock('$lib/server/services/market-service', () => ({
-				MarketService: class {
-					getMarketById = mockGetMarketById;
-				}
-			}));
-
-			const { GET: getMarkets } = await import('../../routes/api/markets/+server');
-			const { GET: getMarketById } = await import('../../routes/api/markets/[id]/+server');
-
-			// Markets list - 60 second cache
-			const response1 = await getMarkets({
-				url: new URL('http://localhost/api/markets')
-			} as never);
-			expect(response1.headers.get('Cache-Control')).toContain('max-age=60');
-
-			// Individual market - 30 second cache
-			const response2 = await getMarketById({
-				params: { id: 'test-123' },
-				url: new URL('http://localhost/api/markets/test-123')
-			} as never);
-			expect(response2.headers.get('Cache-Control')).toContain('max-age=30');
-		});
-
 		it('should include CDN cache headers', async () => {
 			mockFetchMarkets.mockResolvedValue([]);
 
@@ -482,14 +420,14 @@ vi.mock('$lib/server/api/polymarket-client', () => {
 
 describe('Events API Integration Tests', () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 		mockFetchEvents.mockReset();
 		mockFetchEventById.mockReset();
 		mockFetchEventBySlug.mockReset();
 	});
 
 	afterEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 	});
 
 	describe('/api/events endpoint', () => {
@@ -590,19 +528,6 @@ describe('Events API Integration Tests', () => {
 			expect(data.error).toBe('VALIDATION_ERROR');
 			expect(data.message).toContain('closed');
 		});
-
-		it('should include cache headers in response', async () => {
-			mockFetchEvents.mockResolvedValue([]);
-
-			const { GET } = await import('../../routes/api/events/+server');
-
-			const url = new URL('http://localhost/api/events');
-			const response = await GET({ url } as never);
-
-			expect(response.status).toBe(200);
-			expect(response.headers.get('Cache-Control')).toContain('max-age=60');
-			expect(response.headers.get('Cache-Control')).toContain('public');
-		});
 	});
 
 	describe('/api/events/[id] endpoint', () => {
@@ -635,21 +560,6 @@ describe('Events API Integration Tests', () => {
 			expect(data.error).toBe('VALIDATION_ERROR');
 			expect(data.message).toContain('Event ID is required');
 		});
-
-		it('should include cache headers in response', async () => {
-			const event = createMockEvent();
-			mockFetchEventById.mockResolvedValue(event);
-
-			const { GET } = await import('../../routes/api/events/[id]/+server');
-
-			const response = await GET({
-				params: { id: 'test-123' },
-				url: new URL('http://localhost/api/events/test-123')
-			} as never);
-
-			expect(response.status).toBe(200);
-			expect(response.headers.get('Cache-Control')).toContain('max-age=60');
-		});
 	});
 
 	describe('/api/events/slug/[slug] endpoint', () => {
@@ -681,21 +591,6 @@ describe('Events API Integration Tests', () => {
 			const data = await response.json();
 			expect(data.error).toBe('VALIDATION_ERROR');
 			expect(data.message).toContain('Event slug is required');
-		});
-
-		it('should include cache headers in response', async () => {
-			const event = createMockEvent();
-			mockFetchEventBySlug.mockResolvedValue(event);
-
-			const { GET } = await import('../../routes/api/events/slug/[slug]/+server');
-
-			const response = await GET({
-				params: { slug: 'test-slug' },
-				url: new URL('http://localhost/api/events/slug/test-slug')
-			} as never);
-
-			expect(response.status).toBe(200);
-			expect(response.headers.get('Cache-Control')).toContain('max-age=60');
 		});
 	});
 

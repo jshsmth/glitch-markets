@@ -55,12 +55,12 @@ const marketArbitrary = fc.record({
 
 describe('Markets Server Route', () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 		mockFetchMarkets.mockReset();
 	});
 
 	afterEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 		mockFetchMarkets.mockReset();
 	});
 

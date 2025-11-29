@@ -769,3 +769,110 @@ export function validateTeamQueryParams(params: {
 
 	return validated;
 }
+
+/**
+ * Validates builder leaderboard query parameters
+ * @param params - Raw parameters object
+ * @returns Validated BuilderLeaderboardParams object
+ * @throws {ValidationError} If validation fails
+ *
+ * @example
+ * ```typescript
+ * const params = validateBuilderLeaderboardParams({
+ *   timePeriod: 'WEEK',
+ *   limit: 25,
+ *   offset: 0
+ * });
+ * ```
+ */
+export function validateBuilderLeaderboardParams(params: Record<string, unknown>): {
+	timePeriod: 'DAY' | 'WEEK' | 'MONTH' | 'ALL';
+	limit?: number;
+	offset?: number;
+} {
+	const validated: {
+		timePeriod: 'DAY' | 'WEEK' | 'MONTH' | 'ALL';
+		limit?: number;
+		offset?: number;
+	} = {
+		timePeriod: 'DAY' // default
+	};
+
+	// Validate timePeriod
+	if (params.timePeriod !== undefined) {
+		const validPeriods = ['DAY', 'WEEK', 'MONTH', 'ALL'];
+		const timePeriod = params.timePeriod;
+
+		if (typeof timePeriod !== 'string' || !validPeriods.includes(timePeriod)) {
+			throw new ValidationError(`timePeriod must be one of: ${validPeriods.join(', ')}`, {
+				timePeriod,
+				validPeriods
+			});
+		}
+
+		validated.timePeriod = timePeriod as 'DAY' | 'WEEK' | 'MONTH' | 'ALL';
+	}
+
+	// Validate limit (optional, 0-50)
+	if (params.limit !== undefined) {
+		const limit = Number(params.limit);
+
+		if (isNaN(limit)) {
+			throw new ValidationError('limit must be a valid number', { limit: params.limit });
+		}
+
+		if (limit < 0 || limit > 50) {
+			throw new ValidationError('limit must be between 0 and 50', { limit });
+		}
+
+		validated.limit = limit;
+	}
+
+	// Validate offset (optional, 0-1000)
+	if (params.offset !== undefined) {
+		const offset = Number(params.offset);
+
+		if (isNaN(offset)) {
+			throw new ValidationError('offset must be a valid number', { offset: params.offset });
+		}
+
+		if (offset < 0 || offset > 1000) {
+			throw new ValidationError('offset must be between 0 and 1000', { offset });
+		}
+
+		validated.offset = offset;
+	}
+
+	return validated;
+}
+
+/**
+ * Validates builder volume time-series query parameters
+ * @param params - Raw parameters object
+ * @returns Validated BuilderVolumeParams object
+ * @throws {ValidationError} If validation fails
+ *
+ * @example
+ * ```typescript
+ * const params = validateBuilderVolumeParams({
+ *   timePeriod: 'MONTH'
+ * });
+ * ```
+ */
+export function validateBuilderVolumeParams(params: Record<string, unknown>): {
+	timePeriod: 'DAY' | 'WEEK' | 'MONTH' | 'ALL';
+} {
+	const validPeriods = ['DAY', 'WEEK', 'MONTH', 'ALL'];
+	const timePeriod = params.timePeriod ?? 'DAY';
+
+	if (typeof timePeriod !== 'string' || !validPeriods.includes(timePeriod)) {
+		throw new ValidationError(`timePeriod must be one of: ${validPeriods.join(', ')}`, {
+			timePeriod,
+			validPeriods
+		});
+	}
+
+	return {
+		timePeriod: timePeriod as 'DAY' | 'WEEK' | 'MONTH' | 'ALL'
+	};
+}
