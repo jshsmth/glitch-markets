@@ -37,7 +37,8 @@ import {
 	validateUserCommentsQueryParams,
 	validateProxyWallet,
 	validateBoolean,
-	validateSearchQueryParams
+	validateSearchQueryParams,
+	validateTeamQueryParams
 } from '../validation/input-validator.js';
 import {
 	validateMarket,
@@ -58,7 +59,9 @@ import {
 	validateComments,
 	validateSearchResults,
 	validateSupportedAssets,
-	validateDepositAddresses
+	validateDepositAddresses,
+	validateTeams,
+	validateSportsMetadataList
 } from '../validation/response-validator.js';
 
 /**
@@ -161,6 +164,46 @@ export interface Event {
 	markets: Market[];
 	categories?: Category[] | null;
 	tags: Tag[];
+}
+
+/**
+ * Represents a sports team from Polymarket
+ */
+export interface Team {
+	id: number;
+	name: string | null;
+	league: string | null;
+	record: string | null;
+	logo: string | null;
+	abbreviation: string | null;
+	alias: string | null;
+	createdAt: string | null;
+	updatedAt: string | null;
+}
+
+/**
+ * Query parameters for fetching teams
+ */
+export interface TeamQueryParams {
+	limit: number;
+	offset: number;
+	order?: string;
+	ascending?: boolean;
+	league?: string[];
+	name?: string[];
+	abbreviation?: string[];
+}
+
+/**
+ * Represents sports metadata configuration from Polymarket
+ */
+export interface SportsMetadata {
+	sport: string;
+	image: string;
+	resolution: string;
+	ordering: string;
+	tags: string;
+	series: string;
 }
 
 /**
@@ -1577,5 +1620,123 @@ export class PolymarketClient {
 		});
 
 		return validated;
+	}
+
+	/**
+	 * Fetches teams from Polymarket Gamma API
+	 * Supports pagination, sorting, and filtering by league, name, and abbreviation
+	 *
+	 * @param params - Query parameters for filtering and pagination
+	 * @returns Promise resolving to array of teams
+	 * @throws {ValidationError} When params are invalid
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error
+	 *
+	 * @example
+	 * ```typescript
+	 * const teams = await client.fetchTeams({
+	 *   limit: 10,
+	 *   offset: 0,
+	 *   league: ['NBA', 'NFL']
+	 * });
+	 * ```
+	 */
+	async fetchTeams(params: TeamQueryParams): Promise<Team[]> {
+		// Validate params
+		const validated = validateTeamQueryParams(params);
+
+		// Build query string
+		const queryString = this.buildTeamsQueryString(validated);
+		const url = new URL(`/teams?${queryString}`, this.baseUrl).toString();
+
+		this.logger.info('Fetching teams', { url, params: validated });
+
+		const data = await this.request<unknown>(url);
+
+		const validatedTeams = validateTeams(data);
+		this.logger.info('Teams fetched successfully', { count: validatedTeams.length });
+
+		return validatedTeams;
+	}
+
+	/**
+	 * Fetches sports metadata from Polymarket Gamma API
+	 * Returns configuration data for all sports including images, resolution sources, etc.
+	 *
+	 * @returns Promise resolving to array of sports metadata
+	 * @throws {TimeoutError} When the request times out
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error
+	 *
+	 * @example
+	 * ```typescript
+	 * const metadata = await client.fetchSportsMetadata();
+	 * console.log(metadata); // [{ sport: "NFL", image: "...", ... }]
+	 * ```
+	 */
+	async fetchSportsMetadata(): Promise<SportsMetadata[]> {
+		const url = new URL('/sports', this.baseUrl).toString();
+		this.logger.info('Fetching sports metadata', { url });
+
+		const data = await this.request<unknown>(url);
+
+		const validated = validateSportsMetadataList(data);
+		this.logger.info('Sports metadata fetched successfully', { count: validated.length });
+
+		return validated;
+	}
+
+	/**
+	 * Builds query string for teams endpoint with support for array parameters
+	 * Array params are encoded as multiple query parameters with the same name
+	 *
+	 * @param params - Validated team query parameters
+	 * @returns URL-encoded query string
+	 * @private
+	 *
+	 * @example
+	 * ```typescript
+	 * buildTeamsQueryString({ limit: 10, offset: 0, league: ['NBA', 'NFL'] })
+	 * // Returns: "limit=10&offset=0&league=NBA&league=NFL"
+	 * ```
+	 */
+	private buildTeamsQueryString(params: TeamQueryParams): string {
+		const parts: string[] = [];
+
+		// Required params
+		parts.push(`limit=${encodeURIComponent(params.limit)}`);
+		parts.push(`offset=${encodeURIComponent(params.offset)}`);
+
+		// Optional string param
+		if (params.order !== undefined) {
+			parts.push(`order=${encodeURIComponent(params.order)}`);
+		}
+
+		// Optional boolean param
+		if (params.ascending !== undefined) {
+			parts.push(`ascending=${encodeURIComponent(params.ascending)}`);
+		}
+
+		// Optional array params - multiple values as separate query params
+		if (params.league !== undefined && params.league.length > 0) {
+			for (const league of params.league) {
+				parts.push(`league=${encodeURIComponent(league)}`);
+			}
+		}
+
+		if (params.name !== undefined && params.name.length > 0) {
+			for (const name of params.name) {
+				parts.push(`name=${encodeURIComponent(name)}`);
+			}
+		}
+
+		if (params.abbreviation !== undefined && params.abbreviation.length > 0) {
+			for (const abbr of params.abbreviation) {
+				parts.push(`abbreviation=${encodeURIComponent(abbr)}`);
+			}
+		}
+
+		return parts.join('&');
 	}
 }

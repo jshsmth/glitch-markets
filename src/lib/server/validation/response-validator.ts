@@ -33,7 +33,9 @@ import type {
 	SupportedAsset,
 	SupportedAssets,
 	DepositAddresses,
-	DepositAddressMap
+	DepositAddressMap,
+	Team,
+	SportsMetadata
 } from '../api/polymarket-client.js';
 
 /**
@@ -2212,4 +2214,166 @@ export function validateDepositAddresses(data: unknown): DepositAddresses {
 		address,
 		note: data.note as string | undefined
 	} as DepositAddresses;
+}
+
+/**
+ * Validates a single team object
+ *
+ * @param data - Raw API response data
+ * @returns Validated Team object
+ * @throws {ValidationError} When validation fails
+ *
+ * @example
+ * ```typescript
+ * const team = validateTeam(apiResponse);
+ * // Result: { id: 123, name: "Lakers", league: "NBA", ... }
+ * ```
+ */
+export function validateTeam(data: unknown): Team {
+	if (!isObject(data)) {
+		throw new ValidationError('Team data must be an object', { data });
+	}
+
+	// id is the only required field
+	if (!('id' in data) || !isNumber(data.id)) {
+		throw new ValidationError('Team.id must be a number', { data });
+	}
+
+	// All other fields are nullable strings
+	const nullableStringFields = [
+		'name',
+		'league',
+		'record',
+		'logo',
+		'abbreviation',
+		'alias',
+		'createdAt',
+		'updatedAt'
+	];
+
+	for (const field of nullableStringFields) {
+		if (
+			field in data &&
+			data[field] !== null &&
+			data[field] !== undefined &&
+			!isString(data[field])
+		) {
+			throw new ValidationError(`Team.${field} must be a string or null`, { data, field });
+		}
+	}
+
+	return {
+		id: data.id,
+		name: (data.name as string) ?? null,
+		league: (data.league as string) ?? null,
+		record: (data.record as string) ?? null,
+		logo: (data.logo as string) ?? null,
+		abbreviation: (data.abbreviation as string) ?? null,
+		alias: (data.alias as string) ?? null,
+		createdAt: (data.createdAt as string) ?? null,
+		updatedAt: (data.updatedAt as string) ?? null
+	};
+}
+
+/**
+ * Validates an array of teams
+ *
+ * @param data - Raw API response data
+ * @returns Validated array of Team objects
+ * @throws {ValidationError} When validation fails
+ *
+ * @example
+ * ```typescript
+ * const teams = validateTeams(apiResponse);
+ * // Result: [{ id: 123, name: "Lakers", ... }, ...]
+ * ```
+ */
+export function validateTeams(data: unknown): Team[] {
+	if (!isArray(data)) {
+		throw new ValidationError('Teams response must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateTeam(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`Invalid team at index ${index}`, {
+					index,
+					originalError: error.message
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single sports metadata object
+ *
+ * @param data - Raw API response data
+ * @returns Validated SportsMetadata object
+ * @throws {ValidationError} When validation fails
+ *
+ * @example
+ * ```typescript
+ * const metadata = validateSportsMetadata(apiResponse);
+ * // Result: { sport: "NFL", image: "...", resolution: "...", ... }
+ * ```
+ */
+export function validateSportsMetadata(data: unknown): SportsMetadata {
+	if (!isObject(data)) {
+		throw new ValidationError('SportsMetadata data must be an object', { data });
+	}
+
+	// All fields are required strings
+	const requiredFields = ['sport', 'image', 'resolution', 'ordering', 'tags', 'series'];
+
+	for (const field of requiredFields) {
+		if (!(field in data) || !isString(data[field])) {
+			throw new ValidationError(`SportsMetadata.${field} must be a string`, { data, field });
+		}
+	}
+
+	return {
+		sport: data.sport as string,
+		image: data.image as string,
+		resolution: data.resolution as string,
+		ordering: data.ordering as string,
+		tags: data.tags as string,
+		series: data.series as string
+	};
+}
+
+/**
+ * Validates an array of sports metadata objects
+ *
+ * @param data - Raw API response data
+ * @returns Validated array of SportsMetadata objects
+ * @throws {ValidationError} When validation fails
+ *
+ * @example
+ * ```typescript
+ * const metadata = validateSportsMetadataList(apiResponse);
+ * // Result: [{ sport: "NFL", ... }, { sport: "NBA", ... }, ...]
+ * ```
+ */
+export function validateSportsMetadataList(data: unknown): SportsMetadata[] {
+	if (!isArray(data)) {
+		throw new ValidationError('SportsMetadata response must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateSportsMetadata(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`Invalid sports metadata at index ${index}`, {
+					index,
+					originalError: error.message
+				});
+			}
+			throw error;
+		}
+	});
 }
