@@ -10,6 +10,7 @@
 	import { initializeAuthListeners, setInitializationComplete } from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
 	import { onMount } from 'svelte';
+	import { TIMEOUTS } from '$lib/config/constants';
 	import TopHeader from '$lib/components/layout/TopHeader.svelte';
 	import BottomNav from '$lib/components/layout/BottomNav.svelte';
 	// @ts-expect-error - virtual module from vite-plugin-pwa
@@ -20,16 +21,15 @@
 	const queryClient = data?.queryClient || createQueryClient();
 
 	onMount(() => {
-		// Initialize theme immediately (synchronous)
 		initializeTheme();
 
 		// Defer Dynamic SDK initialization to after initial render
 		// Use requestIdleCallback to not block user interactions
 		if ('requestIdleCallback' in window) {
-			requestIdleCallback(() => initializeDynamicSDK(), { timeout: 2000 });
+			requestIdleCallback(() => initializeDynamicSDK(), { timeout: TIMEOUTS.IDLE_CALLBACK_LONG });
 		} else {
-			// Fallback: defer by 100ms to allow first paint
-			setTimeout(() => initializeDynamicSDK(), 100);
+			// Fallback: defer to allow first paint
+			setTimeout(() => initializeDynamicSDK(), TIMEOUTS.SDK_INIT_FALLBACK);
 		}
 	});
 
@@ -81,10 +81,8 @@
 				console.log('Dynamic client created with EVM extension');
 			}
 
-			// Initialize the client
 			await initializeClient();
 
-			// Handle OAuth redirect if present
 			const currentUrl = new URL(window.location.href);
 			const isReturning = await detectOAuthRedirect({ url: currentUrl });
 
@@ -95,7 +93,10 @@
 				try {
 					await completeSocialAuthentication({ url: currentUrl });
 					if (dev) {
-						console.log('Authentication completed!', client.user);
+						console.log('Authentication completed!', {
+							userId: client.user?.id,
+							authenticated: !!client.user
+						});
 					}
 				} catch (err) {
 					console.error('Failed to complete authentication:', err);
@@ -112,7 +113,6 @@
 
 	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 
-	// Enable view transitions for smooth page navigation
 	import { onNavigate } from '$app/navigation';
 	import { navigating } from '$app/stores';
 

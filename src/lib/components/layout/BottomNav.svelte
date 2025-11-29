@@ -5,6 +5,7 @@
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
 	import PokerChipIcon from '$lib/components/icons/PokerChipIcon.svelte';
 	import MenuIcon from '$lib/components/icons/MenuIcon.svelte';
+	import { TIMEOUTS } from '$lib/config/constants';
 
 	import type { Component } from 'svelte';
 
@@ -68,9 +69,9 @@
 
 		// Preload after a short delay to not interfere with initial page load
 		if ('requestIdleCallback' in window) {
-			requestIdleCallback(preloadRoutes, { timeout: 1000 });
+			requestIdleCallback(preloadRoutes, { timeout: TIMEOUTS.IDLE_CALLBACK_SHORT });
 		} else {
-			setTimeout(preloadRoutes, 500);
+			setTimeout(preloadRoutes, TIMEOUTS.SDK_INIT_FALLBACK);
 		}
 	});
 </script>

@@ -18,7 +18,6 @@ const searchService = new SearchService();
 function parseArrayParam(value: string | null): string[] | undefined {
 	if (value === null) return undefined;
 
-	// If it contains commas, split by comma
 	if (value.includes(',')) {
 		return value
 			.split(',')
@@ -26,7 +25,6 @@ function parseArrayParam(value: string | null): string[] | undefined {
 			.filter((v) => v.length > 0);
 	}
 
-	// Otherwise return as single-element array
 	return [value];
 }
 
@@ -91,7 +89,6 @@ export async function GET({ url }: RequestEvent) {
 			);
 		}
 
-		// Build search options object
 		const options: {
 			q: string;
 			cache?: boolean;
@@ -109,7 +106,6 @@ export async function GET({ url }: RequestEvent) {
 			optimized?: boolean;
 		} = { q };
 
-		// Parse cache parameter
 		if (cache !== null) {
 			if (cache !== 'true' && cache !== 'false') {
 				logger.error('Invalid cache parameter', undefined, { cache });
@@ -270,7 +266,6 @@ export async function GET({ url }: RequestEvent) {
 
 		logger.info('Searching', { options });
 
-		// Perform search using service
 		const results = await searchService.search(options);
 
 		const duration = Date.now() - startTime;

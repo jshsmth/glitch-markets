@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/svelte-query';
 import { browser } from '$app/environment';
+import { QUERY_CACHE } from '$lib/config/constants';
 
 // Singleton QueryClient instance for client-side navigation
 let browserQueryClient: QueryClient | undefined;
@@ -16,9 +17,9 @@ export function createQueryClient(): QueryClient {
 			defaultOptions: {
 				queries: {
 					enabled: false,
-					staleTime: 60 * 1000,
-					gcTime: 5 * 60 * 1000,
-					retry: 1,
+					staleTime: QUERY_CACHE.STALE_TIME,
+					gcTime: QUERY_CACHE.GC_TIME,
+					retry: QUERY_CACHE.RETRY_COUNT,
 					refetchOnWindowFocus: false
 				}
 			}
@@ -31,9 +32,9 @@ export function createQueryClient(): QueryClient {
 			defaultOptions: {
 				queries: {
 					enabled: true,
-					staleTime: 60 * 1000,
-					gcTime: 5 * 60 * 1000,
-					retry: 1,
+					staleTime: QUERY_CACHE.STALE_TIME,
+					gcTime: QUERY_CACHE.GC_TIME,
+					retry: QUERY_CACHE.RETRY_COUNT,
 					refetchOnWindowFocus: false
 				}
 			}

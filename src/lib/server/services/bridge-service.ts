@@ -9,6 +9,7 @@ import { CacheManager } from '../cache/cache-manager.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
 import { validateEthereumAddress } from '../validation/input-validator.js';
+import { CACHE_TTL } from '$lib/config/constants.js';
 
 /**
  * Service layer for bridge operations
@@ -31,9 +32,9 @@ export class BridgeService {
 
 	/**
 	 * Creates a new BridgeService instance
-	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 300000ms = 5 minutes)
+	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 5 minutes)
 	 */
-	constructor(cacheTtl: number = 300000) {
+	constructor(cacheTtl: number = CACHE_TTL.EXTENDED) {
 		const config = loadConfig();
 		this.client = new PolymarketClient(config);
 		this.cache = new CacheManager(100);
