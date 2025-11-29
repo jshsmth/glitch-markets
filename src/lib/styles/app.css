@@ -93,3 +93,41 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
+
+/* ============================================
+   VIEW TRANSITIONS
+   ============================================ */
+
+/* Default cross-fade transition for all navigations */
+@view-transition {
+	navigation: auto;
+}
+
+/* Customize the transition animation */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 0.2s;
+	animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fade out the old page */
+::view-transition-old(root) {
+	animation-name: fade-out;
+}
+
+/* Fade in the new page */
+::view-transition-new(root) {
+	animation-name: fade-in;
+}
+
+@keyframes fade-out {
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+}

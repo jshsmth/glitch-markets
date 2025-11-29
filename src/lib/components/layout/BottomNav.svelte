@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { preloadData } from '$app/navigation';
 	import HomeIcon from '$lib/components/icons/HomeIcon.svelte';
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
 	import PokerChipIcon from '$lib/components/icons/PokerChipIcon.svelte';
@@ -51,6 +52,27 @@
 			event.preventDefault();
 		}
 	}
+
+	// Eagerly preload all navigation routes when the component mounts
+	$effect(() => {
+		// Use requestIdleCallback to preload during idle time
+		const preloadRoutes = () => {
+			navItems.forEach((item) => {
+				if (!item.isPlaceholder && item.href !== $page.url.pathname) {
+					preloadData(item.href).catch(() => {
+						// Silently fail if preload fails (route might not exist yet)
+					});
+				}
+			});
+		};
+
+		// Preload after a short delay to not interfere with initial page load
+		if ('requestIdleCallback' in window) {
+			requestIdleCallback(preloadRoutes, { timeout: 1000 });
+		} else {
+			setTimeout(preloadRoutes, 500);
+		}
+	});
 </script>
 
 <nav class="bottom-nav" aria-label="Main navigation">
@@ -64,6 +86,8 @@
 			aria-current={isActive(item.href) ? 'page' : undefined}
 			aria-label={item.label}
 			onclick={(e) => handleNavClick(e, item)}
+			data-sveltekit-preload-data="tap"
+			data-sveltekit-noscroll
 		>
 			<span class="nav-icon">
 				<Icon size={22} color="currentColor" />

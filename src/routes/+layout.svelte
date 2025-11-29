@@ -20,13 +20,28 @@
 	const queryClient = data?.queryClient || createQueryClient();
 
 	onMount(async () => {
+		// Initialize theme immediately (synchronous)
 		initializeTheme();
 
-		try {
-			const { detectOAuthRedirect, completeSocialAuthentication } =
-				await import('@dynamic-labs-sdk/client');
+		// Initialize Dynamic SDK asynchronously (non-blocking)
+		// This runs in the background and updates auth state when ready
+		initializeDynamicSDK();
+	});
 
-			const { addEvmExtension } = await import('@dynamic-labs-sdk/evm');
+	/**
+	 * Initialize Dynamic SDK for authentication
+	 * Runs asynchronously to avoid blocking initial render
+	 */
+	async function initializeDynamicSDK() {
+		try {
+			// Use Promise.all to load all SDK modules in parallel
+			const [
+				{ detectOAuthRedirect, completeSocialAuthentication },
+				{ addEvmExtension }
+			] = await Promise.all([
+				import('@dynamic-labs-sdk/client'),
+				import('@dynamic-labs-sdk/evm')
+			]);
 
 			const client = createDynamicClient({
 				environmentId: PUBLIC_DYNAMIC_ENVIRONMENT_ID,
@@ -38,6 +53,7 @@
 				autoInitialize: false
 			});
 
+			// Setup event listeners
 			onEvent({
 				event: 'initStatusChanged',
 				listener: ({ initStatus }) => {
@@ -57,21 +73,18 @@
 				}
 			});
 
+			// Add EVM extension and initialize listeners
 			addEvmExtension(client);
-
 			initializeAuthListeners(client);
 
 			if (dev) {
 				console.log('Dynamic client created with EVM extension');
-				console.log('Client configuration:', {
-					environmentId: PUBLIC_DYNAMIC_ENVIRONMENT_ID,
-					hasMetadata: true,
-					extensions: ['EVM']
-				});
 			}
 
+			// Initialize the client
 			await initializeClient();
 
+			// Handle OAuth redirect if present
 			const currentUrl = new URL(window.location.href);
 			const isReturning = await detectOAuthRedirect({ url: currentUrl });
 
@@ -91,14 +104,28 @@
 		} catch (importError) {
 			console.error('Failed to load Dynamic SDK modules:', importError);
 			setInitializationComplete();
-			// Optionally notify user of initialization failure
 			if (dev) {
 				console.error('Critical: Dynamic SDK failed to load. Authentication features unavailable.');
 			}
 		}
-	});
+	}
 
 	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
+
+	// Enable view transitions for smooth page navigation
+	import { onNavigate } from '$app/navigation';
+	import { navigating } from '$app/stores';
+
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 </script>
 
 <svelte:head>
@@ -109,6 +136,11 @@
 </svelte:head>
 
 <QueryClientProvider client={queryClient}>
+	<!-- Loading indicator for page navigation -->
+	{#if $navigating}
+		<div class="loading-bar"></div>
+	{/if}
+
 	<div class="app-layout">
 		<TopHeader />
 
@@ -125,6 +157,33 @@
 </QueryClientProvider>
 
 <style>
+	.loading-bar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 3px;
+		background: linear-gradient(
+			90deg,
+			transparent,
+			var(--primary),
+			transparent
+		);
+		background-size: 50% 100%;
+		animation: loading-slide 1s ease-in-out infinite;
+		z-index: var(--z-modal);
+		pointer-events: none;
+	}
+
+	@keyframes loading-slide {
+		0% {
+			background-position: -50% 0;
+		}
+		100% {
+			background-position: 150% 0;
+		}
+	}
+
 	.app-layout {
 		display: grid;
 		grid-template-rows: auto 1fr auto;
