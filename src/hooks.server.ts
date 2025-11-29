@@ -147,7 +147,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (
 		url.pathname.startsWith('/api/auth/') ||
 		url.pathname.startsWith('/api/polymarket/') ||
-		url.pathname.startsWith('/api/wallet/')
+		url.pathname.startsWith('/api/wallet/') ||
+		url.pathname.startsWith('/api/user/')
 	) {
 		const user = await verifyJWT(request);
 		if (user) {
