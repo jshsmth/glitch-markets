@@ -1,0 +1,28 @@
+<script lang="ts">
+	interface Props {
+		size?: number;
+		color?: string;
+	}
+
+	let { size = 24, color = 'currentColor' }: Props = $props();
+</script>
+
+<svg
+	width={size}
+	height={size}
+	viewBox="0 0 24 24"
+	fill={color}
+	xmlns="http://www.w3.org/2000/svg"
+	aria-hidden="true"
+>
+	<path d="M22.75 21.25H1.25V22.75H22.75V21.25Z" />
+	<path
+		d="M14.5 6.80963L11.25 5.50964V0.889648L14.5 2.18964L17.75 0.889648V5.50964L14.5 6.80963ZM12.75 4.48962L14.5 5.18964L16.25 4.48962V3.10962L14.5 3.80963L12.75 3.10962V4.48962Z"
+	/>
+	<path d="M12.75 4.25H11.25V8.75H12.75V4.25Z" />
+	<path d="M20.75 22.75H3.25V7.25H20.75V22.75ZM4.75 21.25H19.25V8.75H4.75V21.25Z" />
+	<path d="M20.1701 11.25H3.83008V12.75H20.1701V11.25Z" />
+	<path d="M8.74023 11.25H7.24023V22.75H8.74023V11.25Z" />
+	<path d="M12.7402 11.25H11.2402V22.75H12.7402V11.25Z" />
+	<path d="M16.7402 11.25H15.2402V22.75H16.7402V11.25Z" />
+</svg>

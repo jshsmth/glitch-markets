@@ -1,9 +1,11 @@
 <script lang="ts">
 	import BellIcon from '$lib/components/icons/BellIcon.svelte';
-	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
-	import DollarCircleIcon from '$lib/components/icons/DollarCircleIcon.svelte';
 	import UserAvatar from './UserAvatar.svelte';
-	import { themeState } from '$lib/stores/theme.svelte';
+	import SubHeader from './SubHeader.svelte';
+	import Logo from './Logo.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import PortfolioStat from '$lib/components/ui/PortfolioStat.svelte';
+	import Search from '$lib/components/ui/Search.svelte';
 
 	let searchQuery = $state('');
 
@@ -20,72 +22,90 @@
 	function handleNotificationsClick() {
 		// Future: navigate to /notifications or open dropdown
 	}
-
-	let logoSrc = $derived(themeState.current === 'dark' ? '/logo-light.svg' : '/logo-dark.svg');
 </script>
 
-<header class="top-header">
-	<div class="header-content">
-		<a href="/" class="logo-link" aria-label="Go to home">
-			<img src={logoSrc} alt="Glitch Markets" class="logo" />
-		</a>
+<header class="site-header">
+	<div class="top-bar">
+		<div class="header-content">
+			<div class="left-section">
+				<a href="/" class="logo-link" aria-label="Go to home">
+					<Logo />
+				</a>
 
-		<div class="search-container">
-			<span class="search-icon" aria-hidden="true">
-				<SearchIcon size={18} color="var(--text-3)" />
-			</span>
-			<input
-				type="search"
-				class="search-input"
-				placeholder="Search markets..."
-				bind:value={searchQuery}
-				oninput={handleSearchInput}
-				aria-label="Search markets"
-			/>
-		</div>
+				<Search
+					bind:value={searchQuery}
+					placeholder="Find the Glitch"
+					oninput={handleSearchInput}
+					class="search-container"
+				/>
+			</div>
 
-		<div class="actions">
-			<button class="action-button primary" onclick={handleDepositClick} aria-label="Deposit funds">
-				<span class="button-icon">
-					<DollarCircleIcon size={18} color="currentColor" />
-				</span>
-				<span class="button-label">Deposit</span>
-			</button>
+			<div class="right-section">
+				<div class="portfolio-stats">
+					<PortfolioStat label="Portfolio" value="$0.00" valueColor="success" href="/portfolio" />
+					<PortfolioStat label="Cash" value="$0.00" valueColor="success" href="/wallet" />
+				</div>
 
-			<button
-				class="icon-button"
-				onclick={handleNotificationsClick}
-				aria-label="View notifications"
-			>
-				<BellIcon size={24} color="var(--text-2)" />
-			</button>
+				<Button variant="primary" size="small" onclick={handleDepositClick}>Deposit</Button>
 
-			<UserAvatar />
+				<div class="user-actions">
+					<button
+						class="icon-button"
+						onclick={handleNotificationsClick}
+						aria-label="View notifications"
+					>
+						<BellIcon size={24} color="var(--text-1)" />
+					</button>
+
+					<div class="header-divider" aria-hidden="true"></div>
+
+					<UserAvatar />
+				</div>
+			</div>
+
+			<div class="mobile-actions">
+				<button
+					class="icon-button"
+					onclick={handleNotificationsClick}
+					aria-label="View notifications"
+				>
+					<BellIcon size={24} color="var(--text-1)" />
+				</button>
+				<UserAvatar hideChevron={true} />
+			</div>
 		</div>
 	</div>
+
+	<SubHeader />
 </header>
 
 <style>
-	.top-header {
-		position: fixed;
+	.site-header {
+		position: sticky;
 		top: 0;
-		left: 0;
-		right: 0;
-		height: 60px;
-		background-color: var(--bg-0);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		border-bottom: 1px solid var(--bg-4);
 		z-index: 1000;
+		background-color: var(--bg-0);
+		border-bottom: 1px solid var(--bg-4);
+	}
+
+	.top-bar {
+		height: 64px;
+		display: flex;
+		align-items: center;
+	}
+
+	@media (min-width: 768px) {
+		.top-bar {
+			height: 72px;
+		}
 	}
 
 	.header-content {
-		max-width: 100%;
+		width: 100%;
 		height: 100%;
-		padding: 0 12px;
+		padding: 0 var(--spacing-3); /* 12px mobile */
 		display: flex;
 		align-items: center;
-		gap: 12px;
 		justify-content: space-between;
 	}
 
@@ -93,9 +113,15 @@
 		.header-content {
 			max-width: 1400px;
 			margin: 0 auto;
-			padding: 0 24px;
-			justify-content: flex-start;
+			padding: 0 var(--spacing-6); /* 24px desktop */
 		}
+	}
+
+	.left-section {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-6); /* 24px - related items */
+		flex: 1;
 	}
 
 	.logo-link {
@@ -105,223 +131,83 @@
 		text-decoration: none;
 	}
 
-	.logo {
-		height: 32px;
-		width: auto;
-		transition: transform 0.2s ease;
-	}
-
-	.logo-link:hover .logo {
-		transform: scale(1.05);
-	}
-
-	.search-container {
-		position: relative;
-		flex: 1;
-		min-width: 120px;
-		max-width: 400px;
+	/* Search */
+	:global(.search-container) {
 		display: none;
 	}
 
 	@media (min-width: 768px) {
-		.search-container {
+		:global(.search-container) {
 			display: block;
-			margin-right: auto;
 		}
 	}
 
-	.search-icon {
-		position: absolute;
-		left: 12px;
-		top: 50%;
-		transform: translateY(-50%);
-		pointer-events: none;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.search-input {
-		width: 100%;
-		height: 38px;
-		padding: 8px 12px 8px 36px;
-		background-color: var(--bg-2);
-		border: 1px solid var(--bg-4);
-		border-radius: 8px;
-		color: var(--text-0);
-		font-size: 14px;
-		transition:
-			border-color 0.2s ease,
-			background-color 0.2s ease;
-	}
-
-	.search-input::placeholder {
-		color: var(--text-3);
-	}
-
-	.search-input:focus {
-		outline: none;
-		border-color: var(--primary);
-		background-color: var(--bg-1);
-	}
-
-	.actions {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		flex-shrink: 0;
-		margin-left: auto;
-	}
-
-	@media (min-width: 768px) {
-		.actions {
-			margin-left: 0;
-		}
-	}
-
-	.action-button {
+	/* Right Section */
+	.right-section {
 		display: none;
 		align-items: center;
-		gap: 6px;
-		padding: 8px 12px;
-		border-radius: 6px;
-		font-size: 14px;
-		font-weight: 600;
-		cursor: pointer;
-		border: none;
-		transition:
-			background-color 0.2s ease,
-			border-color 0.2s ease,
-			transform 0.15s ease;
-		white-space: nowrap;
+		gap: var(--space-sm); /* Normal spacing between major groups */
 	}
 
 	@media (min-width: 768px) {
-		.action-button {
+		.right-section {
 			display: flex;
 		}
 	}
 
-	.action-button:active {
-		transform: scale(0.98);
+	.portfolio-stats {
+		display: flex;
+		gap: var(--spacing-1); /* 4px - tighter spacing between portfolio and cash */
+		margin-right: var(--space-xs);
 	}
 
-	.action-button.primary {
-		background-color: var(--primary);
-		color: #111111;
-		border: 1px solid transparent;
-	}
-
-	.action-button.primary:hover {
-		background-color: var(--primary-hover);
-	}
-
-	.button-icon {
+	.user-actions {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		line-height: 1;
-	}
-
-	.button-label {
-		line-height: 1;
+		gap: 2px; /* Very tight spacing for bell + divider + avatar group */
 	}
 
 	.icon-button {
+		background: none;
+		border: none;
+		padding: var(--spacing-2); /* 8px */
+		cursor: pointer;
+		border-radius: var(--radius-full);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 40px;
-		height: 40px;
-		padding: 0;
-		background: none;
-		border: none;
-		border-radius: 8px;
-		cursor: pointer;
-		transition:
-			background-color 0.15s ease,
-			transform 0.15s ease;
+		min-width: var(--target-min); /* 48px touch target */
+		min-height: var(--target-min);
+		transition: var(--transition-colors);
 	}
 
 	.icon-button:hover {
 		background-color: var(--bg-2);
 	}
 
-	.icon-button:active {
-		transform: scale(0.95);
+	.icon-button:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
 	}
 
-	@media (max-width: 374px) {
-		.button-label {
-			display: none;
-		}
-
-		.action-button {
-			padding: 8px;
-			min-width: 40px;
-			justify-content: center;
-		}
-
-		.header-content {
-			padding: 0 8px;
-			gap: 6px;
-		}
-
-		.actions {
-			gap: 6px;
-		}
-
-		.search-container {
-			min-width: 100px;
-		}
+	.header-divider {
+		width: 1px;
+		height: var(--spacing-6); /* 24px */
+		background-color: var(--bg-4);
+		flex-shrink: 0;
+		margin: 0 var(--spacing-1); /* 4px - tighter spacing */
 	}
 
-	@media (min-width: 375px) and (max-width: 767px) {
-		.header-content {
-			gap: 10px;
-		}
-
-		.search-container {
-			max-width: 300px;
-		}
+	/* Mobile Actions */
+	.mobile-actions {
+		display: flex;
+		align-items: center;
+		gap: 2px; /* Very tight spacing between bell and avatar */
 	}
 
 	@media (min-width: 768px) {
-		.top-header {
-			height: 64px;
-		}
-
-		.header-content {
-			padding: 0 24px;
-			gap: 12px;
-			max-width: 1400px;
-		}
-
-		.logo {
-			height: 40px;
-		}
-
-		.search-container {
-			max-width: 500px;
-		}
-
-		.actions {
-			gap: 12px;
-		}
-
-		.action-button {
-			padding: 8px 16px;
-		}
-
-		.icon-button {
-			width: 44px;
-			height: 44px;
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.search-container {
-			max-width: 600px;
+		.mobile-actions {
+			display: none;
 		}
 	}
 </style>

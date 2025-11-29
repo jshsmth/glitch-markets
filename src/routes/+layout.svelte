@@ -19,14 +19,29 @@
 
 	const queryClient = data?.queryClient || createQueryClient();
 
-	onMount(async () => {
+	onMount(() => {
+		// Initialize theme immediately (synchronous)
 		initializeTheme();
 
-		try {
-			const { detectOAuthRedirect, completeSocialAuthentication } =
-				await import('@dynamic-labs-sdk/client');
+		// Defer Dynamic SDK initialization to after initial render
+		// Use requestIdleCallback to not block user interactions
+		if ('requestIdleCallback' in window) {
+			requestIdleCallback(() => initializeDynamicSDK(), { timeout: 2000 });
+		} else {
+			// Fallback: defer by 100ms to allow first paint
+			setTimeout(() => initializeDynamicSDK(), 100);
+		}
+	});
 
-			const { addEvmExtension } = await import('@dynamic-labs-sdk/evm');
+	/**
+	 * Initialize Dynamic SDK for authentication
+	 * Runs asynchronously to avoid blocking initial render
+	 */
+	async function initializeDynamicSDK() {
+		try {
+			// Use Promise.all to load all SDK modules in parallel
+			const [{ detectOAuthRedirect, completeSocialAuthentication }, { addEvmExtension }] =
+				await Promise.all([import('@dynamic-labs-sdk/client'), import('@dynamic-labs-sdk/evm')]);
 
 			const client = createDynamicClient({
 				environmentId: PUBLIC_DYNAMIC_ENVIRONMENT_ID,
@@ -38,6 +53,7 @@
 				autoInitialize: false
 			});
 
+			// Setup event listeners
 			onEvent({
 				event: 'initStatusChanged',
 				listener: ({ initStatus }) => {
@@ -57,21 +73,18 @@
 				}
 			});
 
+			// Add EVM extension and initialize listeners
 			addEvmExtension(client);
-
 			initializeAuthListeners(client);
 
 			if (dev) {
 				console.log('Dynamic client created with EVM extension');
-				console.log('Client configuration:', {
-					environmentId: PUBLIC_DYNAMIC_ENVIRONMENT_ID,
-					hasMetadata: true,
-					extensions: ['EVM']
-				});
 			}
 
+			// Initialize the client
 			await initializeClient();
 
+			// Handle OAuth redirect if present
 			const currentUrl = new URL(window.location.href);
 			const isReturning = await detectOAuthRedirect({ url: currentUrl });
 
@@ -91,14 +104,28 @@
 		} catch (importError) {
 			console.error('Failed to load Dynamic SDK modules:', importError);
 			setInitializationComplete();
-			// Optionally notify user of initialization failure
 			if (dev) {
 				console.error('Critical: Dynamic SDK failed to load. Authentication features unavailable.');
 			}
 		}
-	});
+	}
 
 	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
+
+	// Enable view transitions for smooth page navigation
+	import { onNavigate } from '$app/navigation';
+	import { navigating } from '$app/stores';
+
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 </script>
 
 <svelte:head>
@@ -109,6 +136,11 @@
 </svelte:head>
 
 <QueryClientProvider client={queryClient}>
+	<!-- Loading indicator for page navigation -->
+	{#if $navigating}
+		<div class="loading-bar"></div>
+	{/if}
+
 	<div class="app-layout">
 		<TopHeader />
 
@@ -125,31 +157,65 @@
 </QueryClientProvider>
 
 <style>
+	.loading-bar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 3px;
+		background: linear-gradient(90deg, transparent, var(--primary), transparent);
+		background-size: 50% 100%;
+		animation: loading-slide 1s ease-in-out infinite;
+		z-index: var(--z-modal);
+		pointer-events: none;
+	}
+
+	@keyframes loading-slide {
+		0% {
+			background-position: -50% 0;
+		}
+		100% {
+			background-position: 150% 0;
+		}
+	}
+
 	.app-layout {
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-template-rows: auto 1fr auto;
+		grid-template-columns: 100%;
+		grid-template-areas:
+			'header'
+			'main'
+			'footer';
 		min-height: 100vh;
 		background-color: var(--bg-0);
 	}
 
-	.main-content {
-		flex: 1;
-		margin-top: 60px; /* Header height */
-		margin-bottom: 64px; /* Bottom nav height */
-		overflow-y: auto;
-		padding: 12px;
+	.app-layout :global(.site-header) {
+		grid-area: header;
 	}
 
-	/* Desktop: Remove bottom nav margin and align with header content */
+	.main-content {
+		grid-area: main;
+		width: 100%;
+		overflow-x: hidden;
+	}
+
+	.app-layout :global(.bottom-nav) {
+		grid-area: footer;
+	}
+
+	/* Desktop: Hide bottom nav from grid */
 	@media (min-width: 768px) {
-		.main-content {
-			margin-top: 64px;
-			margin-bottom: 0;
-			max-width: 1400px;
-			margin: 64px auto 0;
-			padding: 24px;
-			width: 100%;
-			box-sizing: border-box;
+		.app-layout {
+			grid-template-rows: auto 1fr;
+			grid-template-areas:
+				'header'
+				'main';
+		}
+
+		.app-layout :global(.bottom-nav) {
+			display: none;
 		}
 	}
 </style>

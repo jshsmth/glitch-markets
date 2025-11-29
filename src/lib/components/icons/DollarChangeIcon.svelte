@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { generateComponentId } from '$lib/utils/id';
+
 	interface Props {
 		size?: number;
 		color?: string;
@@ -6,6 +8,7 @@
 	}
 
 	let { size = 24, color = 'currentColor', class: className = '' }: Props = $props();
+	const clipId = generateComponentId('clip-dollar-change');
 </script>
 
 <svg
@@ -16,7 +19,7 @@
 	xmlns="http://www.w3.org/2000/svg"
 	class={className}
 >
-	<g clip-path="url(#clip0_dollar_change)">
+	<g clip-path="url(#{clipId})">
 		<path
 			d="M15.0002 22.7502H13.6802L15.8002 19.2202L17.0902 19.9902L16.4302 21.0802C19.1902 20.4302 21.2602 17.9502 21.2602 14.9902V14.2402H22.7602V14.9902C22.7602 19.2602 19.2802 22.7402 15.0102 22.7402L15.0002 22.7502Z"
 		/>
@@ -30,7 +33,7 @@
 		/>
 	</g>
 	<defs>
-		<clipPath id="clip0_dollar_change">
+		<clipPath id={clipId}>
 			<rect width="24" height="24" fill="white" />
 		</clipPath>
 	</defs>

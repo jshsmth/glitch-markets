@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
+
 	let theme = $state<'light' | 'dark'>('light');
 
 	function toggleTheme() {
@@ -6,6 +8,10 @@
 		if (typeof document !== 'undefined') {
 			document.documentElement.setAttribute('data-theme', theme);
 		}
+	}
+
+	function handleClick() {
+		console.log('Button clicked');
 	}
 </script>
 
@@ -130,9 +136,63 @@
 		<h2>Component Examples</h2>
 
 		<div class="component-examples">
-			<!-- Buttons -->
+			<!-- Button Component - All Variants & Sizes -->
 			<div class="example-group">
-				<h3>Buttons</h3>
+				<h3>Button Component - All Variants & Sizes</h3>
+
+				<!-- Primary Variant -->
+				<div class="variant-group">
+					<h4>Primary Variant</h4>
+					<div class="button-group">
+						<Button variant="primary" size="small" onclick={handleClick}>Small</Button>
+						<Button variant="primary" size="medium" onclick={handleClick}>Medium</Button>
+						<Button variant="primary" size="large" onclick={handleClick}>Large</Button>
+						<Button variant="primary" size="medium" onclick={handleClick} disabled>Disabled</Button>
+					</div>
+				</div>
+
+				<!-- Secondary Variant -->
+				<div class="variant-group">
+					<h4>Secondary Variant</h4>
+					<div class="button-group">
+						<Button variant="secondary" size="small" onclick={handleClick}>Small</Button>
+						<Button variant="secondary" size="medium" onclick={handleClick}>Medium</Button>
+						<Button variant="secondary" size="large" onclick={handleClick}>Large</Button>
+						<Button variant="secondary" size="medium" onclick={handleClick} disabled
+							>Disabled</Button
+						>
+					</div>
+				</div>
+
+				<!-- Tertiary Variant -->
+				<div class="variant-group">
+					<h4>Tertiary Variant</h4>
+					<div class="button-group">
+						<Button variant="tertiary" size="small" onclick={handleClick}>Small</Button>
+						<Button variant="tertiary" size="medium" onclick={handleClick}>Medium</Button>
+						<Button variant="tertiary" size="large" onclick={handleClick}>Large</Button>
+						<Button variant="tertiary" size="medium" onclick={handleClick} disabled>Disabled</Button
+						>
+					</div>
+				</div>
+
+				<!-- Full Width Examples -->
+				<div class="variant-group">
+					<h4>Full Width Buttons</h4>
+					<div class="full-width-examples">
+						<Button variant="primary" size="medium" onclick={handleClick} fullWidth
+							>Primary Full Width</Button
+						>
+						<Button variant="secondary" size="medium" onclick={handleClick} fullWidth
+							>Secondary Full Width</Button
+						>
+					</div>
+				</div>
+			</div>
+
+			<!-- Old Button Styles for Comparison -->
+			<div class="example-group">
+				<h3>Old Button Styles (for comparison)</h3>
 				<div class="button-group">
 					<button class="button-primary">Primary Button</button>
 					<button class="button-secondary">Secondary Button</button>
@@ -394,11 +454,34 @@
 		border: 1px solid var(--bg-4);
 	}
 
+	.example-group h4 {
+		color: var(--text-1);
+		margin-bottom: 1rem;
+		font-size: 1rem;
+		font-weight: 600;
+	}
+
+	.variant-group {
+		margin-bottom: 2rem;
+	}
+
+	.variant-group:last-child {
+		margin-bottom: 0;
+	}
+
 	/* Buttons */
 	.button-group {
 		display: flex;
 		gap: 1rem;
 		flex-wrap: wrap;
+		align-items: center;
+	}
+
+	.full-width-examples {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		max-width: 400px;
 	}
 
 	.button-primary {

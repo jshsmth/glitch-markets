@@ -1,5 +1,10 @@
+<svelte:head>
+	<title>Portfolio - Glitch Markets</title>
+	<meta name="description" content="View your portfolio, positions, and trading history" />
+</svelte:head>
+
 <div class="page-container">
-	<h1>Home</h1>
+	<h1>Portfolio</h1>
 </div>
 
 <style>

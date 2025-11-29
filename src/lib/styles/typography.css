@@ -1,0 +1,8 @@
+/**
+ * Glitch Markets - Typography System Entry Point
+ * Imports all typography-related CSS modules
+ */
+
+@import './typography/scale.css';
+@import './typography/semantic.css';
+@import './typography/utilities.css';

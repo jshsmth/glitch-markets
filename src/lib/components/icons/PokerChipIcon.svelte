@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { generateComponentId } from '$lib/utils/id';
+
 	interface Props {
 		size?: number;
 		color?: string;
@@ -6,6 +8,7 @@
 	}
 
 	let { size = 24, color = 'currentColor', class: className = '' }: Props = $props();
+	const clipId = generateComponentId('clip-poker-chip');
 </script>
 
 <svg
@@ -16,7 +19,7 @@
 	xmlns="http://www.w3.org/2000/svg"
 	class={className}
 >
-	<g clip-path="url(#clip0_poker_chip)">
+	<g clip-path="url(#{clipId})">
 		<path
 			d="M12.0202 22.7C7.67021 22.7 3.78021 20.1 2.11021 16.08C0.44021 12.06 1.36023 7.47 4.44023 4.39C6.47023 2.36 9.16021 1.25 12.0202 1.25C14.8802 1.25 17.5802 2.37 19.6002 4.39C22.6802 7.47 23.5902 12.06 21.9302 16.08C20.2602 20.1 16.3702 22.7 12.0202 22.7ZM12.0202 2.75C9.56021 2.75 7.24022 3.71 5.50022 5.45C2.85022 8.1 2.07022 12.05 3.50022 15.5C4.93022 18.96 8.28021 21.2 12.0202 21.2C15.7602 21.2 19.1102 18.96 20.5402 15.5C21.9702 12.04 21.1902 8.09 18.5402 5.45C16.8002 3.71 14.4802 2.75 12.0202 2.75Z"
 		/>
@@ -38,7 +41,7 @@
 		<path d="M17.3142 13.7889L16.6421 15.1299L21.1599 17.3942L21.7907 16.0325L17.3142 13.7889Z" />
 	</g>
 	<defs>
-		<clipPath id="clip0_poker_chip">
+		<clipPath id={clipId}>
 			<rect width="24" height="24" fill="white" />
 		</clipPath>
 	</defs>

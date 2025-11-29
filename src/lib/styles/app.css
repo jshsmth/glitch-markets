@@ -1,120 +1,133 @@
 /**
  * Global application styles
- * Using CSS variables from colors.css
+ * Using CSS variables from colors.css and typography.css
  */
 
-* {
-	margin: 0;
-	padding: 0;
+@import './colors.css';
+@import './typography.css';
+
+/* ============================================
+   MODERN CSS RESET
+   ============================================ */
+
+/* Box sizing reset */
+*,
+*::before,
+*::after {
 	box-sizing: border-box;
 }
 
-body {
-	background-color: var(--bg-0);
-	color: var(--text-0);
-	font-family:
-		-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
-		'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+/* Remove default margins and padding */
+* {
+	margin: 0;
+	padding: 0;
+}
+
+/* HTML & Body defaults */
+html {
+	-webkit-text-size-adjust: 100%;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
 
+body {
+	min-height: 100vh;
+	background-color: var(--bg-0);
+	color: var(--text-0);
+	line-height: 1.5;
+	text-rendering: optimizeLegibility;
+	/* Typography font family is handled by typography.css */
+}
+
+/* Remove list styles */
+ul,
+ol {
+	list-style: none;
+}
+
+/* Reset form elements */
+button,
+input,
+textarea,
+select {
+	font: inherit;
+	color: inherit;
+}
+
+/* Remove button defaults */
+button {
+	background: none;
+	border: none;
+	cursor: pointer;
+}
+
+/* Images & Media */
+img,
+picture,
+video,
+canvas,
+svg {
+	display: block;
+	max-width: 100%;
+}
+
+/* Remove default link underline */
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+/* Avoid text overflow */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	overflow-wrap: break-word;
+}
+
+/* Improve table rendering */
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
 /* ============================================
-   COMPONENT EXAMPLES (commented out)
+   VIEW TRANSITIONS
    ============================================ */
 
-/* Card Component
-.card {
-	background-color: var(--bg-1);
-	border: 1px solid var(--bg-4);
-	border-radius: 8px;
-	padding: 1.5rem;
+/* Default cross-fade transition for all navigations */
+@view-transition {
+	navigation: auto;
 }
 
-.card-elevated {
-	background-color: var(--bg-2);
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-*/
-
-/* Button - Primary
-.button-primary {
-	background-color: var(--primary);
-	color: #111111;
-	border: none;
-	padding: 0.75rem 1.5rem;
-	border-radius: 6px;
-	font-weight: 600;
-	cursor: pointer;
-	transition: background-color 0.2s;
+/* Customize the transition animation */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 0.2s;
+	animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.button-primary:hover {
-	background-color: var(--primary-hover);
+/* Fade out the old page */
+::view-transition-old(root) {
+	animation-name: fade-out;
 }
 
-.button-primary:active {
-	background-color: var(--primary-active);
-}
-*/
-
-/* Button - Secondary
-.button-secondary {
-	background-color: var(--bg-2);
-	color: var(--text-0);
-	border: 1px solid var(--bg-4);
-	padding: 0.75rem 1.5rem;
-	border-radius: 6px;
-	font-weight: 600;
-	cursor: pointer;
-	transition: background-color 0.2s, border-color 0.2s;
+/* Fade in the new page */
+::view-transition-new(root) {
+	animation-name: fade-in;
 }
 
-.button-secondary:hover {
-	background-color: var(--bg-3);
-	border-color: var(--primary);
-}
-*/
-
-/* Text Styles
-.text-primary {
-	color: var(--text-0);
+@keyframes fade-out {
+	to {
+		opacity: 0;
+	}
 }
 
-.text-secondary {
-	color: var(--text-2);
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
 }
-
-.text-muted {
-	color: var(--text-4);
-}
-*/
-
-/* Trading Indicators
-.profit {
-	color: var(--success);
-	font-weight: 600;
-}
-
-.loss {
-	color: var(--danger);
-	font-weight: 600;
-}
-
-.neutral {
-	color: var(--warning);
-	font-weight: 600;
-}
-*/
-
-/* Links
-a {
-	color: var(--primary);
-	text-decoration: none;
-	transition: color 0.2s;
-}
-
-a:hover {
-	color: var(--primary-hover);
-}
-*/

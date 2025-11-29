@@ -1,0 +1,184 @@
+/**
+ * Glitch Markets - Typography Utility Classes
+ * Optional utility classes for typography
+ */
+
+/* ============================================
+   SEMANTIC UTILITY CLASSES
+   ============================================ */
+
+/* Display */
+.display {
+	font-size: var(--display-size);
+	font-weight: var(--display-weight);
+	line-height: var(--display-leading);
+	letter-spacing: var(--display-tracking);
+	color: var(--text-0);
+}
+
+/* Body variants */
+.body {
+	font-size: var(--body-size);
+	font-weight: var(--body-weight);
+	line-height: var(--body-leading);
+	letter-spacing: var(--body-tracking);
+}
+
+.body-lg {
+	font-size: var(--body-lg-size);
+	font-weight: var(--body-lg-weight);
+	line-height: var(--body-lg-leading);
+	letter-spacing: var(--body-lg-tracking);
+}
+
+.body-sm {
+	font-size: var(--body-sm-size);
+	font-weight: var(--body-sm-weight);
+	line-height: var(--body-sm-leading);
+	letter-spacing: var(--body-sm-tracking);
+}
+
+/* Caption */
+.caption {
+	font-size: var(--caption-size);
+	font-weight: var(--caption-weight);
+	line-height: var(--caption-leading);
+	letter-spacing: var(--caption-tracking);
+	color: var(--text-2);
+}
+
+/* Label */
+.label {
+	font-size: var(--label-size);
+	font-weight: var(--label-weight);
+	line-height: var(--label-leading);
+	letter-spacing: var(--label-tracking);
+	text-transform: uppercase;
+}
+
+/* Button text */
+.button-text {
+	font-size: var(--button-size);
+	font-weight: var(--button-weight);
+	line-height: var(--button-leading);
+	letter-spacing: var(--button-tracking);
+}
+
+/* Overline */
+.overline {
+	font-size: var(--overline-size);
+	font-weight: var(--overline-weight);
+	line-height: var(--overline-leading);
+	letter-spacing: var(--overline-tracking);
+	text-transform: uppercase;
+	color: var(--text-3);
+}
+
+/* ============================================
+   MARKET-SPECIFIC UTILITY CLASSES
+   ============================================ */
+
+/* Price display */
+.price {
+	font-family: var(--price-family);
+	font-size: var(--price-size);
+	font-weight: var(--price-weight);
+	line-height: var(--price-leading);
+	letter-spacing: var(--price-tracking);
+}
+
+/* Percentage */
+.percentage {
+	font-family: var(--percentage-family);
+	font-size: var(--percentage-size);
+	font-weight: var(--percentage-weight);
+	line-height: var(--percentage-leading);
+	letter-spacing: var(--percentage-tracking);
+}
+
+/* Market odds */
+.odds {
+	font-family: var(--odds-family);
+	font-size: var(--odds-size);
+	font-weight: var(--odds-weight);
+	line-height: var(--odds-leading);
+	letter-spacing: var(--odds-tracking);
+}
+
+/* Wallet address */
+.address {
+	font-family: var(--address-family);
+	font-size: var(--address-size);
+	font-weight: var(--address-weight);
+	line-height: var(--address-leading);
+	letter-spacing: var(--address-tracking);
+}
+
+/* ============================================
+   UTILITY MODIFIERS
+   ============================================ */
+
+/* Font weights */
+.font-regular {
+	font-weight: var(--font-regular);
+}
+
+.font-semibold {
+	font-weight: var(--font-semibold);
+}
+
+.font-bold {
+	font-weight: var(--font-bold);
+}
+
+/* Font families */
+.font-sans {
+	font-family: var(--font-sans);
+}
+
+.font-mono {
+	font-family: var(--font-mono);
+}
+
+/* Letter spacing utilities */
+.tracking-tight {
+	letter-spacing: var(--tracking-tight);
+}
+
+.tracking-normal {
+	letter-spacing: var(--tracking-normal);
+}
+
+.tracking-wide {
+	letter-spacing: var(--tracking-wide);
+}
+
+/* Line height utilities */
+.leading-tight {
+	line-height: var(--leading-tight);
+}
+
+.leading-normal {
+	line-height: var(--leading-normal);
+}
+
+.leading-relaxed {
+	line-height: var(--leading-relaxed);
+}
+
+/* Text colors (using color system) */
+.text-primary {
+	color: var(--text-0);
+}
+
+.text-secondary {
+	color: var(--text-2);
+}
+
+.text-tertiary {
+	color: var(--text-3);
+}
+
+.text-muted {
+	color: var(--text-4);
+}

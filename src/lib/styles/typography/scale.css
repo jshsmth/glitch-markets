@@ -1,0 +1,114 @@
+/**
+ * Glitch Markets - Typography Scale
+ * Type scale, font weights, and spacing values
+ */
+
+:root {
+	/* ============================================
+     FONT FAMILIES
+     ============================================ */
+
+	/* System font stack - optimized for performance and native feel */
+	--font-sans:
+		-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+		'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+
+	/* Monospace for numbers, code, addresses */
+	--font-mono:
+		ui-monospace, 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Menlo', 'Consolas',
+		'DejaVu Sans Mono', monospace;
+
+	/* ============================================
+     FONT WEIGHTS (UI Design Principle #11)
+     Use only regular and bold for consistency
+     ============================================ */
+
+	--font-regular: 400;
+	--font-semibold: 600; /* Primary bold weight */
+	--font-bold: 700; /* Use only when extra emphasis needed */
+
+	/* Semantic aliases - use these in components */
+	--font-normal: var(--font-regular);
+	--font-emphasis: var(--font-semibold);
+
+	/* ============================================
+     TYPE SCALE (Major Third - 1.250)
+     ============================================ */
+
+	/* Base size */
+	--text-base: 1rem; /* 16px */
+
+	/* Scale down */
+	--text-xs: 0.64rem; /* 10.24px ≈ 10px */
+	--text-sm: 0.8rem; /* 12.8px ≈ 13px */
+	--text-md: 0.875rem; /* 14px */
+
+	/* Scale up */
+	--text-lg: 1.125rem; /* 18px */
+	--text-xl: 1.25rem; /* 20px */
+	--text-2xl: 1.563rem; /* 25px */
+	--text-3xl: 1.953rem; /* 31.25px */
+	--text-4xl: 2.441rem; /* 39px */
+	--text-5xl: 3.052rem; /* 48.83px */
+
+	/* ============================================
+     LINE HEIGHTS
+     ============================================ */
+
+	/* Tighter line heights for headings */
+	--leading-tight: 1.1;
+	--leading-snug: 1.25;
+
+	/* Standard for body text */
+	--leading-normal: 1.5;
+	--leading-relaxed: 1.625;
+
+	/* Loose for better readability in long text */
+	--leading-loose: 1.75;
+
+	/* ============================================
+     LETTER SPACING
+     ============================================ */
+
+	/* Tighter for large text (headings) */
+	--tracking-tighter: -0.05em;
+	--tracking-tight: -0.025em;
+	--tracking-snug: -0.0125em;
+
+	/* Normal */
+	--tracking-normal: 0em;
+
+	/* Wider for small text, labels, all-caps */
+	--tracking-wide: 0.025em;
+	--tracking-wider: 0.05em;
+	--tracking-widest: 0.1em;
+}
+
+/* ============================================
+   RESPONSIVE TYPOGRAPHY (Mobile-First)
+   ============================================ */
+
+/* Tablet and up (768px+) */
+@media (min-width: 768px) {
+	:root {
+		/* Slightly larger base size on tablets */
+		--text-base: 1.0625rem; /* 17px */
+
+		/* Scale display and h1 for better desktop presence */
+		--display-size: 3.815rem; /* ~61px */
+		--h1-size: 3.052rem; /* ~49px */
+	}
+}
+
+/* Desktop and up (1024px+) */
+@media (min-width: 1024px) {
+	:root {
+		/* Full desktop base size */
+		--text-base: 1.125rem; /* 18px */
+
+		/* Larger headings for desktop */
+		--display-size: 4.768rem; /* ~76px */
+		--h1-size: 3.815rem; /* ~61px */
+		--h2-size: 2.441rem; /* ~39px */
+	}
+}

@@ -17,6 +17,10 @@ const config = {
 		adapter: adapter(),
 		serviceWorker: {
 			register: false
+		},
+		prerender: {
+			crawl: true,
+			entries: ['*']
 		}
 	}
 };

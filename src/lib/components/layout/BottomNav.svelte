@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { preloadData } from '$app/navigation';
 	import HomeIcon from '$lib/components/icons/HomeIcon.svelte';
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
 	import PokerChipIcon from '$lib/components/icons/PokerChipIcon.svelte';
@@ -29,9 +30,9 @@
 		},
 		{
 			label: 'Portfolio',
-			href: '#',
+			href: '/portfolio',
 			icon: PokerChipIcon,
-			isPlaceholder: true
+			isPlaceholder: false
 		},
 		{
 			label: 'More',
@@ -51,6 +52,27 @@
 			event.preventDefault();
 		}
 	}
+
+	// Eagerly preload all navigation routes when the component mounts
+	$effect(() => {
+		// Use requestIdleCallback to preload during idle time
+		const preloadRoutes = () => {
+			navItems.forEach((item) => {
+				if (!item.isPlaceholder && item.href !== $page.url.pathname) {
+					preloadData(item.href).catch(() => {
+						// Silently fail if preload fails (route might not exist yet)
+					});
+				}
+			});
+		};
+
+		// Preload after a short delay to not interfere with initial page load
+		if ('requestIdleCallback' in window) {
+			requestIdleCallback(preloadRoutes, { timeout: 1000 });
+		} else {
+			setTimeout(preloadRoutes, 500);
+		}
+	});
 </script>
 
 <nav class="bottom-nav" aria-label="Main navigation">
@@ -64,6 +86,8 @@
 			aria-current={isActive(item.href) ? 'page' : undefined}
 			aria-label={item.label}
 			onclick={(e) => handleNavClick(e, item)}
+			data-sveltekit-preload-data="tap"
+			data-sveltekit-noscroll
 		>
 			<span class="nav-icon">
 				<Icon size={22} color="currentColor" />
@@ -79,7 +103,7 @@
 		bottom: 0;
 		left: 0;
 		right: 0;
-		height: 64px;
+		height: var(--target-large); /* 64px - comfortable tap height */
 		background-color: var(--bg-1);
 		backdrop-filter: blur(8px);
 		-webkit-backdrop-filter: blur(8px);
@@ -87,8 +111,8 @@
 		display: flex;
 		justify-content: space-around;
 		align-items: center;
-		padding: 0 8px;
-		z-index: 1000;
+		padding: 0 var(--spacing-2); /* 8px */
+		z-index: var(--z-fixed);
 	}
 
 	.nav-item {
@@ -97,17 +121,16 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 4px;
-		padding: 8px 4px;
-		min-height: 48px;
-		min-width: 48px;
-		color: var(--text-3);
+		gap: var(--spacing-1); /* 4px - tight spacing for icon+label pair */
+		padding: var(--spacing-2) var(--spacing-1); /* 8px 4px */
+		min-height: var(--target-min); /* 48px - WCAG touch target */
+		min-width: var(--target-min);
+		color: var(--text-2); /* Better contrast than text-3 (Principle #9) */
 		text-decoration: none;
-		border-radius: 8px;
+		border-radius: var(--radius-md);
 		transition:
-			color 0.2s ease,
-			background-color 0.15s ease,
-			transform 0.15s ease;
+			var(--transition-colors),
+			transform var(--transition-fast);
 		cursor: pointer;
 	}
 
@@ -141,9 +164,10 @@
 
 	.nav-label {
 		font-size: 11px;
-		font-weight: 500;
+		font-weight: var(--font-semibold); /* Use design token instead of 500 */
 		white-space: nowrap;
 		line-height: 1;
+		letter-spacing: 0.01em; /* Slight spacing for small text readability */
 	}
 
 	/* Hide bottom nav on desktop */

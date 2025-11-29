@@ -1,0 +1,195 @@
+/**
+ * Glitch Markets - Semantic Typography Styles
+ * Semantic text styles and element defaults
+ */
+
+:root {
+	/* ============================================
+     SEMANTIC TEXT STYLES
+     ============================================ */
+
+	/* Display - Hero text */
+	--display-size: var(--text-5xl);
+	--display-weight: var(--font-bold);
+	--display-leading: var(--leading-tight);
+	--display-tracking: var(--tracking-tighter);
+
+	/* H1 - Page title */
+	--h1-size: var(--text-4xl);
+	--h1-weight: var(--font-bold);
+	--h1-leading: var(--leading-tight);
+	--h1-tracking: var(--tracking-tight);
+
+	/* H2 - Section title */
+	--h2-size: var(--text-3xl);
+	--h2-weight: var(--font-bold);
+	--h2-leading: var(--leading-snug);
+	--h2-tracking: var(--tracking-snug);
+
+	/* H3 - Subsection title */
+	--h3-size: var(--text-2xl);
+	--h3-weight: var(--font-semibold);
+	--h3-leading: var(--leading-snug);
+	--h3-tracking: var(--tracking-snug);
+
+	/* H4 - Card title */
+	--h4-size: var(--text-xl);
+	--h4-weight: var(--font-semibold);
+	--h4-leading: var(--leading-snug);
+	--h4-tracking: var(--tracking-normal);
+
+	/* H5 - Small heading */
+	--h5-size: var(--text-lg);
+	--h5-weight: var(--font-semibold);
+	--h5-leading: var(--leading-normal);
+	--h5-tracking: var(--tracking-normal);
+
+	/* H6 - Tiny heading */
+	--h6-size: var(--text-base);
+	--h6-weight: var(--font-semibold);
+	--h6-leading: var(--leading-normal);
+	--h6-tracking: var(--tracking-normal);
+
+	/* Body - Default text */
+	--body-size: var(--text-base);
+	--body-weight: var(--font-regular);
+	--body-leading: var(--leading-normal);
+	--body-tracking: var(--tracking-normal);
+
+	/* Body Large - Intro text, important content */
+	--body-lg-size: var(--text-lg);
+	--body-lg-weight: var(--font-regular);
+	--body-lg-leading: var(--leading-relaxed);
+	--body-lg-tracking: var(--tracking-normal);
+
+	/* Body Small - Secondary content */
+	--body-sm-size: var(--text-md);
+	--body-sm-weight: var(--font-regular);
+	--body-sm-leading: var(--leading-normal);
+	--body-sm-tracking: var(--tracking-normal);
+
+	/* Caption - Meta info, timestamps */
+	--caption-size: var(--text-sm);
+	--caption-weight: var(--font-regular);
+	--caption-leading: var(--leading-normal);
+	--caption-tracking: var(--tracking-wide);
+
+	/* Label - Form labels, small UI text */
+	--label-size: var(--text-sm);
+	--label-weight: var(--font-semibold);
+	--label-leading: var(--leading-normal);
+	--label-tracking: var(--tracking-wide);
+
+	/* Button - Button text */
+	--button-size: var(--text-md);
+	--button-weight: var(--font-semibold);
+	--button-leading: var(--leading-normal);
+	--button-tracking: var(--tracking-wide);
+
+	/* Overline - All caps labels */
+	--overline-size: var(--text-xs);
+	--overline-weight: var(--font-semibold);
+	--overline-leading: var(--leading-normal);
+	--overline-tracking: var(--tracking-widest);
+
+	/* ============================================
+     MARKET-SPECIFIC STYLES
+     ============================================ */
+
+	/* Price display - Large numbers */
+	--price-size: var(--text-2xl);
+	--price-weight: var(--font-bold);
+	--price-leading: var(--leading-tight);
+	--price-tracking: var(--tracking-tight);
+	--price-family: var(--font-mono);
+
+	/* Percentage - Trading percentages */
+	--percentage-size: var(--text-lg);
+	--percentage-weight: var(--font-semibold);
+	--percentage-leading: var(--leading-normal);
+	--percentage-tracking: var(--tracking-normal);
+	--percentage-family: var(--font-mono);
+
+	/* Market odds - Probability display */
+	--odds-size: var(--text-xl);
+	--odds-weight: var(--font-bold);
+	--odds-leading: var(--leading-tight);
+	--odds-tracking: var(--tracking-normal);
+	--odds-family: var(--font-mono);
+
+	/* Wallet address - Monospace short addresses */
+	--address-size: var(--text-sm);
+	--address-weight: var(--font-regular);
+	--address-leading: var(--leading-normal);
+	--address-tracking: var(--tracking-normal);
+	--address-family: var(--font-mono);
+}
+
+/* ============================================
+   BASE ELEMENT STYLES
+   ============================================ */
+
+body {
+	font-family: var(--font-sans);
+	font-size: var(--body-size);
+	font-weight: var(--body-weight);
+	line-height: var(--body-leading);
+	letter-spacing: var(--body-tracking);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings */
+h1,
+.h1 {
+	font-size: var(--h1-size);
+	font-weight: var(--h1-weight);
+	line-height: var(--h1-leading);
+	letter-spacing: var(--h1-tracking);
+	color: var(--text-0);
+}
+
+h2,
+.h2 {
+	font-size: var(--h2-size);
+	font-weight: var(--h2-weight);
+	line-height: var(--h2-leading);
+	letter-spacing: var(--h2-tracking);
+	color: var(--text-0);
+}
+
+h3,
+.h3 {
+	font-size: var(--h3-size);
+	font-weight: var(--h3-weight);
+	line-height: var(--h3-leading);
+	letter-spacing: var(--h3-tracking);
+	color: var(--text-0);
+}
+
+h4,
+.h4 {
+	font-size: var(--h4-size);
+	font-weight: var(--h4-weight);
+	line-height: var(--h4-leading);
+	letter-spacing: var(--h4-tracking);
+	color: var(--text-0);
+}
+
+h5,
+.h5 {
+	font-size: var(--h5-size);
+	font-weight: var(--h5-weight);
+	line-height: var(--h5-leading);
+	letter-spacing: var(--h5-tracking);
+	color: var(--text-0);
+}
+
+h6,
+.h6 {
+	font-size: var(--h6-size);
+	font-weight: var(--h6-weight);
+	line-height: var(--h6-leading);
+	letter-spacing: var(--h6-tracking);
+	color: var(--text-0);
+}

@@ -9,22 +9,26 @@ type Theme = 'light' | 'dark';
 
 /**
  * Theme state using Svelte 5 runes
+ * On SSR: defaults to 'dark'
+ * On client: will be synced by initializeTheme() which runs in onMount
  */
 export const themeState = $state({
-	current: (browser ? (localStorage.getItem('theme') as Theme) || 'dark' : 'dark') as Theme
+	current: 'dark' as Theme
 });
 
 /**
- * Initialize theme from localStorage and apply to document
- * Call this once on app initialization
+ * Initialize theme - reads the theme from DOM (set by inline script in app.html)
+ * This MUST be called synchronously during component initialization
  */
 export function initializeTheme() {
 	if (!browser) return;
 
-	const storedTheme = localStorage.getItem('theme') as Theme | null;
-	themeState.current = storedTheme || 'dark';
+	// Read theme from data-theme attribute (set by inline script)
+	const currentTheme = document.documentElement.getAttribute('data-theme') as Theme | null;
 
-	applyTheme(themeState.current);
+	if (currentTheme === 'light' || currentTheme === 'dark') {
+		themeState.current = currentTheme;
+	}
 }
 
 /**
