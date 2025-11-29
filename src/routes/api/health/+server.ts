@@ -8,14 +8,14 @@
 
 import { json } from '@sveltejs/kit';
 import { Logger } from '$lib/server/utils/logger.js';
+import { TIMEOUTS } from '$lib/config/constants.js';
 
 const logger = new Logger({ component: 'HealthRoute' });
 
-// Upstream API URLs
 // Note: Gamma API doesn't have a dedicated health endpoint, so we check /markets with limit=1
 const GAMMA_API_URL = 'https://gamma-api.polymarket.com/markets?limit=1';
 const DATA_API_URL = 'https://data-api.polymarket.com/';
-const TIMEOUT_MS = 5000;
+const TIMEOUT_MS = TIMEOUTS.API_REQUEST;
 
 /**
  * Health status for an individual service
@@ -132,7 +132,6 @@ export async function GET() {
 			}
 		});
 	} catch (error) {
-		// Catch-all for unexpected errors (should be rare)
 		logger.error('Unexpected error in health check', error);
 
 		const response: HealthResponse = {

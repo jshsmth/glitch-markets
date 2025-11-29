@@ -8,6 +8,7 @@ import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
+import { CACHE_TTL } from '$lib/config/constants.js';
 
 export interface SeriesFilters {
 	category?: string;
@@ -43,9 +44,9 @@ export class SeriesService {
 
 	/**
 	 * Creates a new SeriesService instance
-	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 60000ms = 1 minute)
+	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 1 minute)
 	 */
-	constructor(cacheTtl: number = 60000) {
+	constructor(cacheTtl: number = CACHE_TTL.DEFAULT) {
 		const config = loadConfig();
 		this.client = new PolymarketClient(config);
 		this.cache = new CacheManager(100);

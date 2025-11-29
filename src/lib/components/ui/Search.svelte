@@ -2,6 +2,7 @@
 	import Input from './Input.svelte';
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
 	import { debounce } from '$lib/utils/debounce';
+	import { DEBOUNCE_DELAYS } from '$lib/config/constants';
 
 	interface Props {
 		/**
@@ -44,7 +45,7 @@
 		value = $bindable(''),
 		placeholder = 'Search...',
 		oninput,
-		debounceDelay = 300,
+		debounceDelay = DEBOUNCE_DELAYS.SEARCH,
 		showShortcut = true,
 		inputSize = 'medium',
 		class: className
@@ -78,13 +79,6 @@
 		value = '';
 		inputElement?.focus();
 	}
-
-	// Cleanup on unmount
-	$effect(() => {
-		return () => {
-			// Cleanup happens automatically when component unmounts
-		};
-	});
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
