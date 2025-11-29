@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { authState } from '$lib/stores/auth.svelte';
 	import { themeState, toggleTheme } from '$lib/stores/theme.svelte';
-	import { authenticateWithSocial, logout } from '@dynamic-labs-sdk/client';
-	import { browser } from '$app/environment';
+	import { logout } from '@dynamic-labs-sdk/client';
 	import MoonIcon from '$lib/components/icons/MoonIcon.svelte';
 	import SunIcon from '$lib/components/icons/SunIcon.svelte';
 	import ChevronDownIcon from '$lib/components/icons/ChevronDownIcon.svelte';
+	import SignInModal from '$lib/components/auth/SignInModal.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	interface Props {
 		size?: number;
@@ -45,19 +46,14 @@
 		authState.user ? generateAvatarGradient(authState.user.id || 'default') : ''
 	);
 	let showDropdown = $state(false);
+	let showSignInModal = $state(false);
 
-	async function handleSignIn() {
-		if (!browser) return;
+	function openSignInModal() {
+		showSignInModal = true;
+	}
 
-		try {
-			const redirectUrl = window.location.origin + window.location.pathname;
-			await authenticateWithSocial({
-				provider: 'google',
-				redirectUrl
-			});
-		} catch (err) {
-			console.error('Sign in error:', err);
-		}
+	function closeSignInModal() {
+		showSignInModal = false;
 	}
 
 	function handleAvatarClick() {
@@ -124,7 +120,15 @@
 			</div>
 		{/if}
 	{:else}
-		<button class="sign-in-button" onclick={handleSignIn} aria-label="Sign in">Sign In</button>
+		<div class="auth-buttons">
+			<Button variant="tertiary" size="small" onclick={openSignInModal} aria-label="Log in">
+				Log In
+			</Button>
+			<Button variant="primary" size="small" onclick={openSignInModal} aria-label="Sign up">
+				Sign Up
+			</Button>
+		</div>
+		<SignInModal isOpen={showSignInModal} onClose={closeSignInModal} />
 	{/if}
 </div>
 
@@ -203,28 +207,10 @@
 		flex-shrink: 0;
 	}
 
-	.sign-in-button {
-		background-color: var(--bg-2);
-		color: var(--text-0);
-		border: 1px solid var(--bg-4);
-		padding: 8px 16px;
-		border-radius: 6px;
-		font-weight: 600;
-		font-size: 14px;
-		cursor: pointer;
-		transition:
-			background-color 0.2s,
-			border-color 0.2s;
-		white-space: nowrap;
-	}
-
-	.sign-in-button:hover {
-		background-color: var(--bg-3);
-		border-color: var(--primary);
-	}
-
-	.sign-in-button:active {
-		transform: scale(0.98);
+	.auth-buttons {
+		display: flex;
+		align-items: center;
+		gap: 8px;
 	}
 
 	.dropdown {

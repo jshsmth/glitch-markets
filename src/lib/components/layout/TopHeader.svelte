@@ -6,6 +6,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import PortfolioStat from '$lib/components/ui/PortfolioStat.svelte';
 	import Search from '$lib/components/ui/Search.svelte';
+	import { authState } from '$lib/stores/auth.svelte';
 
 	let searchQuery = $state('');
 
@@ -41,14 +42,34 @@
 			</div>
 
 			<div class="right-section">
-				<div class="portfolio-stats">
-					<PortfolioStat label="Portfolio" value="$0.00" valueColor="success" href="/portfolio" />
-					<PortfolioStat label="Cash" value="$0.00" valueColor="success" href="/wallet" />
-				</div>
+				{#if authState.user}
+					<div class="portfolio-stats">
+						<PortfolioStat label="Portfolio" value="$0.00" valueColor="success" href="/portfolio" />
+						<PortfolioStat label="Cash" value="$0.00" valueColor="success" href="/wallet" />
+					</div>
 
-				<Button variant="primary" size="small" onclick={handleDepositClick}>Deposit</Button>
+					<Button variant="primary" size="small" onclick={handleDepositClick}>Deposit</Button>
+				{/if}
 
 				<div class="user-actions">
+					{#if authState.user}
+						<button
+							class="icon-button"
+							onclick={handleNotificationsClick}
+							aria-label="View notifications"
+						>
+							<BellIcon size={24} color="var(--text-1)" />
+						</button>
+
+						<div class="header-divider" aria-hidden="true"></div>
+					{/if}
+
+					<UserAvatar />
+				</div>
+			</div>
+
+			<div class="mobile-actions">
+				{#if authState.user}
 					<button
 						class="icon-button"
 						onclick={handleNotificationsClick}
@@ -56,21 +77,7 @@
 					>
 						<BellIcon size={24} color="var(--text-1)" />
 					</button>
-
-					<div class="header-divider" aria-hidden="true"></div>
-
-					<UserAvatar />
-				</div>
-			</div>
-
-			<div class="mobile-actions">
-				<button
-					class="icon-button"
-					onclick={handleNotificationsClick}
-					aria-label="View notifications"
-				>
-					<BellIcon size={24} color="var(--text-1)" />
-				</button>
+				{/if}
 				<UserAvatar hideChevron={true} />
 			</div>
 		</div>
