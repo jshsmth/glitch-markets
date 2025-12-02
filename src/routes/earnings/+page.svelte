@@ -1,11 +1,15 @@
+<script lang="ts">
+	// Earnings markets page - corporate earnings and business prediction markets
+</script>
+
 <div class="page-container">
 	<div class="page-header">
-		<h1>Trending</h1>
-		<p class="page-description">Most popular and trending prediction markets</p>
+		<h1>Earnings</h1>
+		<p class="page-description">Corporate earnings and business prediction markets</p>
 	</div>
 
 	<div class="content">
-		<!-- Trending markets layout will go here -->
+		<!-- Earnings-specific layout and filters will go here -->
 	</div>
 </div>
 

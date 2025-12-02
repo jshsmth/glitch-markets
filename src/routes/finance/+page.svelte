@@ -1,11 +1,15 @@
+<script lang="ts">
+	// Finance markets page - financial and market prediction markets
+</script>
+
 <div class="page-container">
 	<div class="page-header">
-		<h1>Trending</h1>
-		<p class="page-description">Most popular and trending prediction markets</p>
+		<h1>Finance</h1>
+		<p class="page-description">Financial markets and economic predictions</p>
 	</div>
 
 	<div class="content">
-		<!-- Trending markets layout will go here -->
+		<!-- Finance-specific layout and filters will go here -->
 	</div>
 </div>
 

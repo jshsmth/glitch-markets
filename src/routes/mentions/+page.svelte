@@ -1,11 +1,15 @@
+<script lang="ts">
+	// Mentions markets page - markets where you've been mentioned or tagged
+</script>
+
 <div class="page-container">
 	<div class="page-header">
-		<h1>Trending</h1>
-		<p class="page-description">Most popular and trending prediction markets</p>
+		<h1>Mentions</h1>
+		<p class="page-description">Markets where you've been mentioned or tagged</p>
 	</div>
 
 	<div class="content">
-		<!-- Trending markets layout will go here -->
+		<!-- Mentions-specific layout and filters will go here -->
 	</div>
 </div>
 
