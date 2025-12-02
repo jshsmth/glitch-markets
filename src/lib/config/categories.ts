@@ -25,21 +25,21 @@ export interface Category {
 }
 
 export const categories: Category[] = [
-	{ name: 'Trending', href: '/?category=trending', icon: RocketIcon },
-	{ name: 'Breaking', href: '/?category=breaking', icon: FlashIcon },
-	{ name: 'New', href: '/?category=new', icon: StarsIcon },
-	{ name: 'Politics', href: '/?category=politics', icon: CourthouseIcon },
-	{ name: 'Sports', href: '/?category=sports', icon: CupIcon },
-	{ name: 'Finance', href: '/?category=finance', icon: DollarCircleIcon },
-	{ name: 'Crypto', href: '/?category=crypto', icon: BitcoinCardIcon },
-	{ name: 'Tech', href: '/?category=tech', icon: DocumentTextIcon },
-	{ name: 'Culture', href: '/?category=culture', icon: TicketIcon },
-	{ name: 'World', href: '/?category=world', icon: GlobalEditIcon },
-	{ name: 'Economy', href: '/?category=economy', icon: DollarChangeIcon },
-	{ name: 'Elections', href: '/?category=elections', icon: SpeakerIcon },
-	{ name: 'Earnings', href: '/?category=earnings', icon: DollarSquareIcon },
-	{ name: 'Geopolitics', href: '/?category=geopolitics', icon: GlobalIcon },
-	{ name: 'Mentions', href: '/?category=mentions', icon: MessageTextIcon }
+	{ name: 'Trending', href: '/', icon: RocketIcon },
+	{ name: 'Breaking', href: '/breaking', icon: FlashIcon },
+	{ name: 'New', href: '/new', icon: StarsIcon },
+	{ name: 'Politics', href: '/politics', icon: CourthouseIcon },
+	{ name: 'Sports', href: '/sports', icon: CupIcon },
+	{ name: 'Finance', href: '/finance', icon: DollarCircleIcon },
+	{ name: 'Crypto', href: '/crypto', icon: BitcoinCardIcon },
+	{ name: 'Tech', href: '/tech', icon: DocumentTextIcon },
+	{ name: 'Culture', href: '/culture', icon: TicketIcon },
+	{ name: 'World', href: '/world', icon: GlobalEditIcon },
+	{ name: 'Economy', href: '/economy', icon: DollarChangeIcon },
+	{ name: 'Elections', href: '/elections', icon: SpeakerIcon },
+	{ name: 'Earnings', href: '/earnings', icon: DollarSquareIcon },
+	{ name: 'Geopolitics', href: '/geopolitics', icon: GlobalIcon },
+	{ name: 'Mentions', href: '/mentions', icon: MessageTextIcon }
 ];
 
 // Scroll configuration constants

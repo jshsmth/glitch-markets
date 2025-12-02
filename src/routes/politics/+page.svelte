@@ -1,11 +1,15 @@
+<script lang="ts">
+	// Politics markets page - political prediction markets
+</script>
+
 <div class="page-container">
 	<div class="page-header">
-		<h1>Trending</h1>
-		<p class="page-description">Most popular and trending prediction markets</p>
+		<h1>Politics</h1>
+		<p class="page-description">Political and election prediction markets</p>
 	</div>
 
 	<div class="content">
-		<!-- Trending markets layout will go here -->
+		<!-- Politics-specific layout and filters will go here -->
 	</div>
 </div>
 
@@ -38,5 +42,9 @@
 		font-size: 16px;
 		color: var(--text-2);
 		margin: 0;
+	}
+
+	.content {
+		/* Politics-specific layout styles */
 	}
 </style>

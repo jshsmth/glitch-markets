@@ -1,11 +1,15 @@
+<script lang="ts">
+	// Breaking markets page - markets with recent significant activity or news
+</script>
+
 <div class="page-container">
 	<div class="page-header">
-		<h1>Trending</h1>
-		<p class="page-description">Most popular and trending prediction markets</p>
+		<h1>Breaking</h1>
+		<p class="page-description">Markets with breaking news and significant activity</p>
 	</div>
 
 	<div class="content">
-		<!-- Trending markets layout will go here -->
+		<!-- Breaking-specific layout and filters will go here -->
 	</div>
 </div>
 
@@ -38,5 +42,9 @@
 		font-size: 16px;
 		color: var(--text-2);
 		margin: 0;
+	}
+
+	.content {
+		/* Breaking-specific layout styles */
 	}
 </style>

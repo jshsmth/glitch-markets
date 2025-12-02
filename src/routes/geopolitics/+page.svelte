@@ -1,11 +1,15 @@
+<script lang="ts">
+	// Geopolitics markets page - international relations and geopolitical prediction markets
+</script>
+
 <div class="page-container">
 	<div class="page-header">
-		<h1>Trending</h1>
-		<p class="page-description">Most popular and trending prediction markets</p>
+		<h1>Geopolitics</h1>
+		<p class="page-description">International relations and geopolitical prediction markets</p>
 	</div>
 
 	<div class="content">
-		<!-- Trending markets layout will go here -->
+		<!-- Geopolitics-specific layout and filters will go here -->
 	</div>
 </div>
 

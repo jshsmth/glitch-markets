@@ -3,7 +3,13 @@
 	import { ChevronLeftIcon, ChevronRightIcon } from '$lib/components/icons';
 	import { categories, SCROLL_AMOUNT, SCROLL_THRESHOLD } from '$lib/config/categories';
 
-	let activeCategory = $derived(page.url.searchParams.get('category') || 'trending');
+	// Determine active category based on pathname
+	let activeCategory = $derived(() => {
+		const pathname = page.url.pathname;
+		if (pathname === '/') return 'trending';
+		// Remove leading slash to get category name
+		return pathname.slice(1);
+	});
 	let scrollContainer = $state<HTMLDivElement>();
 	let showSwipeHint = $state(false);
 	let hasOverflow = $state(false);
@@ -78,7 +84,7 @@
 						<a
 							href={category.href}
 							class="nav-link"
-							class:active={activeCategory === category.name.toLowerCase()}
+							class:active={activeCategory() === category.name.toLowerCase()}
 						>
 							{#if category.icon}
 								{@const Icon = category.icon}

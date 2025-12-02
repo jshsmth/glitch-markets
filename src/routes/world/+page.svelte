@@ -1,11 +1,15 @@
+<script lang="ts">
+	// World markets page - global events and international prediction markets
+</script>
+
 <div class="page-container">
 	<div class="page-header">
-		<h1>Trending</h1>
-		<p class="page-description">Most popular and trending prediction markets</p>
+		<h1>World</h1>
+		<p class="page-description">Global events and international prediction markets</p>
 	</div>
 
 	<div class="content">
-		<!-- Trending markets layout will go here -->
+		<!-- World-specific layout and filters will go here -->
 	</div>
 </div>
 

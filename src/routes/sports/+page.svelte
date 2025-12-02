@@ -1,11 +1,15 @@
+<script lang="ts">
+	// Sports markets page - sports-related prediction markets
+</script>
+
 <div class="page-container">
 	<div class="page-header">
-		<h1>Trending</h1>
-		<p class="page-description">Most popular and trending prediction markets</p>
+		<h1>Sports</h1>
+		<p class="page-description">Sports and athletics prediction markets</p>
 	</div>
 
 	<div class="content">
-		<!-- Trending markets layout will go here -->
+		<!-- Sports-specific layout and filters will go here -->
 	</div>
 </div>
 
@@ -38,5 +42,9 @@
 		font-size: 16px;
 		color: var(--text-2);
 		margin: 0;
+	}
+
+	.content {
+		/* Sports-specific layout styles */
 	}
 </style>

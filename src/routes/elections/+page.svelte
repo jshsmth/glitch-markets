@@ -1,11 +1,15 @@
+<script lang="ts">
+	// Elections markets page - election and voting prediction markets
+</script>
+
 <div class="page-container">
 	<div class="page-header">
-		<h1>Trending</h1>
-		<p class="page-description">Most popular and trending prediction markets</p>
+		<h1>Elections</h1>
+		<p class="page-description">Election and voting prediction markets</p>
 	</div>
 
 	<div class="content">
-		<!-- Trending markets layout will go here -->
+		<!-- Elections-specific layout and filters will go here -->
 	</div>
 </div>
 

@@ -1,11 +1,15 @@
+<script lang="ts">
+	// Economy markets page - economic indicators and macroeconomic prediction markets
+</script>
+
 <div class="page-container">
 	<div class="page-header">
-		<h1>Trending</h1>
-		<p class="page-description">Most popular and trending prediction markets</p>
+		<h1>Economy</h1>
+		<p class="page-description">Economic indicators and macroeconomic predictions</p>
 	</div>
 
 	<div class="content">
-		<!-- Trending markets layout will go here -->
+		<!-- Economy-specific layout and filters will go here -->
 	</div>
 </div>
 
