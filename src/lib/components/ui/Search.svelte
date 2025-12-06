@@ -157,8 +157,13 @@
 	}
 
 	.clear-button:hover {
-		background-color: var(--bg-3);
-		color: var(--text-1);
+		background-color: var(--primary-hover-bg);
+		color: var(--primary);
+	}
+
+	.clear-button:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
 	}
 
 	.clear-button:active {

@@ -226,7 +226,7 @@
 
 	.close-button {
 		background: none;
-		border: none;
+		border: 1px solid transparent;
 		color: var(--text-2);
 		cursor: pointer;
 		padding: 8px;
@@ -238,12 +238,19 @@
 	}
 
 	.close-button:hover {
-		background: var(--bg-2);
-		color: var(--text-0);
+		background: var(--primary-hover-bg);
+		color: var(--primary);
+		border-color: rgba(var(--primary-rgb), 0.2);
+	}
+
+	.close-button:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
 	}
 
 	.close-button:active {
 		transform: scale(0.95);
+		background: var(--primary-hover-bg-medium);
 	}
 
 	.modal-content {

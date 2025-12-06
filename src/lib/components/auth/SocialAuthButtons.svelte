@@ -145,9 +145,18 @@
 		transform: translateY(0);
 	}
 
+	.auth-button:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
 	.auth-button.google {
 		background: #000000;
 		color: #ffffff;
+	}
+
+	.auth-button.google:focus-visible {
+		box-shadow: var(--focus-ring); /* Cyan ring on black button */
 	}
 
 	.auth-button.google:not(:disabled):hover {
@@ -157,6 +166,10 @@
 	.auth-button.discord {
 		background: #5865f2;
 		color: #ffffff;
+	}
+
+	.auth-button.discord:focus-visible {
+		box-shadow: var(--focus-ring); /* Cyan ring on purple button */
 	}
 
 	.auth-button.discord:not(:disabled):hover {

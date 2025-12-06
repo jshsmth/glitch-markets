@@ -182,9 +182,17 @@
 	}
 
 	.event-card:hover {
-		border-color: var(--bg-4);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+		border-color: rgba(var(--primary-rgb), 0.3);
+		box-shadow:
+			0 2px 8px rgba(0, 0, 0, 0.06),
+			0 0 0 1px rgba(var(--primary-rgb), 0.1);
 		transform: translateY(-1px);
+	}
+
+	.event-card:focus-within {
+		outline: none;
+		border-color: var(--primary);
+		box-shadow: var(--shadow-primary-md);
 	}
 
 	:global([data-theme='dark']) .event-card {
@@ -236,6 +244,13 @@
 
 	.event-title-link:hover .event-title {
 		text-decoration: underline;
+		color: var(--primary);
+	}
+
+	.event-title-link:focus-visible {
+		outline: none;
+		border-radius: 4px;
+		box-shadow: var(--focus-ring);
 	}
 
 	.event-title {
@@ -274,9 +289,14 @@
 	}
 
 	.outcome-chip:hover {
-		background: var(--bg-3);
-		border-color: var(--primary-300);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+		background: var(--primary-hover-bg);
+		border-color: var(--primary);
+		box-shadow: var(--shadow-primary-sm);
+	}
+
+	.outcome-chip:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
 	}
 
 	:global([data-theme='dark']) .outcome-chip {
@@ -350,9 +370,14 @@
 	}
 
 	.outcome-button-inline:hover {
-		background: var(--bg-2);
-		border-color: var(--primary-300);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+		background: var(--primary-hover-bg);
+		border-color: var(--primary);
+		box-shadow: var(--shadow-primary-sm);
+	}
+
+	.outcome-button-inline:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
 	}
 
 	.outcome-button-label {

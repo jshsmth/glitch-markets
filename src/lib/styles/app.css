@@ -193,3 +193,20 @@ body::before {
 		transparent 100%
 	);
 }
+
+/* ============================================
+   BRAND HIGHLIGHT UTILITIES
+   ============================================ */
+
+/* All links should have focus rings */
+a:focus-visible {
+	outline: none;
+	box-shadow: var(--focus-ring);
+	border-radius: 4px;
+}
+
+/* All buttons should have focus rings (fallback) */
+button:focus-visible {
+	outline: none;
+	box-shadow: var(--focus-ring);
+}

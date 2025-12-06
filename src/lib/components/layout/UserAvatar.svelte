@@ -392,7 +392,12 @@
 	}
 
 	.avatar-button:hover {
-		background-color: var(--bg-2);
+		background-color: var(--primary-hover-bg);
+	}
+
+	.avatar-button:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
 	}
 
 	.avatar-button:active {
@@ -470,11 +475,13 @@
 	}
 
 	.dropdown-item:hover {
-		background-color: var(--bg-2);
+		background-color: var(--primary-hover-bg);
+		border-left: 2px solid var(--primary);
+		padding-left: 10px; /* Compensate for border */
 	}
 
 	.dropdown-item:active {
-		background-color: var(--bg-3);
+		background-color: var(--primary-hover-bg-medium);
 		transform: scale(0.98);
 	}
 
@@ -489,6 +496,13 @@
 
 	.logout-item:hover {
 		background-color: rgba(255, 59, 48, 0.1);
+		border-left: 2px solid var(--error);
+		padding-left: 10px;
+	}
+
+	.logout-item:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring); /* Cyan focus even on red item */
 	}
 
 	.dropdown-header {
@@ -517,12 +531,14 @@
 		gap: 6px;
 		padding: 6px 8px;
 		background-color: var(--bg-2);
+		border: 1px solid transparent;
 		border-radius: 6px;
-		transition: background-color 0.15s ease;
+		transition: all 0.15s ease;
 	}
 
 	.header-address:hover {
-		background-color: var(--bg-3);
+		background-color: var(--primary-hover-bg);
+		border-color: rgba(var(--primary-rgb), 0.2);
 	}
 
 	.address-text {
@@ -546,7 +562,13 @@
 	}
 
 	.copy-button:hover {
-		background-color: var(--bg-4);
+		background-color: var(--primary-hover-bg);
+		color: var(--primary);
+	}
+
+	.copy-button:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
 	}
 
 	.copy-button:active {
@@ -567,7 +589,8 @@
 	}
 
 	.settings-button:hover {
-		background-color: var(--bg-2);
+		background-color: var(--primary-hover-bg);
+		color: var(--primary);
 	}
 
 	.settings-button:active {
