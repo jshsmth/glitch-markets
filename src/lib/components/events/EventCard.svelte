@@ -46,11 +46,13 @@
 			return [
 				{
 					label: outcomes[0] || 'Yes',
-					price: percentages[0]?.toFixed(0) || '—'
+					price: percentages[0]?.toFixed(0) || '—',
+					percentage: percentages[0] || 0
 				},
 				{
 					label: outcomes[1] || 'No',
-					price: percentages[1]?.toFixed(0) || '—'
+					price: percentages[1]?.toFixed(0) || '—',
+					percentage: percentages[1] || 0
 				}
 			];
 		} catch {
@@ -79,11 +81,13 @@
 							? [
 									{
 										label: outcomes[0],
-										price: (parseFloat(prices[0]) * 100).toFixed(0)
+										price: (parseFloat(prices[0]) * 100).toFixed(0),
+										percentage: parseFloat(prices[0]) * 100
 									},
 									{
 										label: outcomes[1],
-										price: (parseFloat(prices[1]) * 100).toFixed(0)
+										price: (parseFloat(prices[1]) * 100).toFixed(0),
+										percentage: parseFloat(prices[1]) * 100
 									}
 								]
 							: null
@@ -100,6 +104,7 @@
 
 <div class="event-card">
 	<div class="card-content">
+		<!-- Header with Icon + Title -->
 		<div class="card-header">
 			<div class="title-row">
 				{#if event.image}
@@ -113,28 +118,40 @@
 			</div>
 		</div>
 
+		<!-- Binary Market: Odds Board Layout -->
 		{#if primaryOdds}
-			<div class="odds-section binary">
+			<div class="odds-board">
 				{#each primaryOdds as outcome, i (i)}
-					<a href={`/event/${event.slug || event.id}`} class="outcome-chip">
-						<span class="outcome-label">{outcome.label}</span>
-						<span class="outcome-price">{outcome.price}%</span>
+					<a href={`/event/${event.slug || event.id}`} class="odds-row">
+						<div class="odds-info">
+							<span class="outcome-label">{outcome.label}</span>
+							<span class="outcome-odds">{outcome.price}%</span>
+						</div>
+						<div class="odds-bar-container">
+							<div class="odds-bar" style="width: {outcome.percentage}%"></div>
+						</div>
+						<div class="bet-action">
+							<span class="bet-button">BET</span>
+						</div>
 					</a>
 				{/each}
 			</div>
 		{/if}
 
+		<!-- Multi-Market Preview -->
 		{#if topMarkets}
 			<div class="markets-preview">
 				{#each topMarkets as market, i (i)}
 					<div class="market-item">
-						<div class="market-question">{market.question}</div>
+						<div class="market-header">
+							<div class="market-question">{market.question}</div>
+						</div>
 						{#if market.outcomes}
-							<div class="market-outcomes-inline">
+							<div class="market-odds-inline">
 								{#each market.outcomes as outcome, j (j)}
-									<a href={`/event/${event.slug || event.id}`} class="outcome-button-inline">
-										<span class="outcome-button-label">{outcome.label}</span>
-										<span class="outcome-button-price">{outcome.price}%</span>
+									<a href={`/event/${event.slug || event.id}`} class="odds-chip">
+										<span class="odds-chip-label">{outcome.label}</span>
+										<span class="odds-chip-price">{outcome.price}%</span>
 									</a>
 								{/each}
 							</div>
@@ -144,20 +161,26 @@
 			</div>
 		{/if}
 
+		<!-- Footer Stats -->
 		<div class="card-footer">
 			<div class="stats">
 				<div class="stat">
-					<span class="stat-label">Vol</span>
+					<span class="stat-icon">💰</span>
 					<span class="stat-value">{formatNumber(event.volume24hr)}</span>
+					<span class="stat-label">24h</span>
 				</div>
 				<div class="stat">
-					<span class="stat-label">Liq</span>
+					<span class="stat-icon">🌊</span>
 					<span class="stat-value">{formatNumber(event.liquidity)}</span>
+					<span class="stat-label">Liq</span>
 				</div>
-				<div class="stat">
-					<span class="stat-label">Markets</span>
-					<span class="stat-value">{event.markets?.length || 0}</span>
-				</div>
+				{#if isMultiMarket}
+					<div class="stat">
+						<span class="stat-icon">📊</span>
+						<span class="stat-value">{event.markets?.length || 0}</span>
+						<span class="stat-label">Markets</span>
+					</div>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -169,7 +192,7 @@
 		background: var(--bg-1);
 		border: 1px solid var(--bg-4);
 		border-radius: var(--radius-card);
-		padding: 16px;
+		padding: 18px;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 		transition:
 			all var(--transition-fast),
@@ -177,7 +200,6 @@
 			box-shadow var(--transition-fast);
 		color: inherit;
 		height: 100%;
-		min-height: 220px;
 		cursor: pointer;
 	}
 
@@ -206,9 +228,13 @@
 	.card-content {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-sm);
+		gap: 16px;
 		width: 100%;
 	}
+
+	/* ============================================
+	   HEADER
+	   ============================================ */
 
 	.card-header {
 		margin-bottom: 0;
@@ -217,16 +243,17 @@
 	.title-row {
 		display: flex;
 		align-items: center;
-		gap: var(--space-sm);
+		gap: 12px;
 	}
 
 	.event-icon {
 		flex-shrink: 0;
-		width: 32px;
-		height: 32px;
-		border-radius: var(--radius-sm);
+		width: 40px;
+		height: 40px;
+		border-radius: var(--radius-md);
 		overflow: hidden;
 		background: var(--bg-2);
+		border: 1px solid var(--bg-4);
 	}
 
 	.event-icon img {
@@ -243,7 +270,6 @@
 	}
 
 	.event-title-link:hover .event-title {
-		text-decoration: underline;
 		color: var(--primary);
 	}
 
@@ -254,92 +280,173 @@
 	}
 
 	.event-title {
-		font-size: 16px;
-		font-weight: 600;
+		font-size: 17px;
+		font-weight: 700;
 		color: var(--text-0);
-		line-height: 1.5;
+		line-height: 1.4;
 		margin: 0;
+		letter-spacing: -0.01em;
 	}
 
-	@media (max-width: 768px) {
-		.event-title {
-			font-size: 15px;
-		}
-	}
+	/* ============================================
+	   ODDS BOARD (Binary Markets)
+	   ============================================ */
 
-	.odds-section {
+	.odds-board {
 		display: flex;
-		gap: var(--space-sm);
+		flex-direction: column;
+		gap: 10px;
 	}
 
-	.outcome-chip {
-		flex: 1;
-		display: flex;
+	.odds-row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 12px;
 		align-items: center;
-		justify-content: space-between;
-		gap: var(--space-xs);
-		padding: 10px 14px;
+		padding: 12px 14px;
 		background: var(--bg-2);
-		border-radius: var(--radius-md);
 		border: 1.5px solid var(--bg-4);
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+		border-radius: var(--radius-md);
 		text-decoration: none;
-		cursor: pointer;
 		transition: all var(--transition-fast);
 	}
 
-	.outcome-chip:hover {
+	.odds-row:hover {
 		background: var(--primary-hover-bg);
 		border-color: var(--primary);
 		box-shadow: var(--shadow-primary-sm);
 	}
 
-	.outcome-chip:focus-visible {
+	.odds-row:focus-visible {
 		outline: none;
 		box-shadow: var(--focus-ring);
 	}
 
-	:global([data-theme='dark']) .outcome-chip {
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-	}
-
-	:global([data-theme='dark']) .outcome-chip:hover {
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	.odds-info {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		min-width: 0;
+		grid-column: 1 / -1;
 	}
 
 	.outcome-label {
-		font-size: 13px;
+		font-size: 14px;
 		color: var(--text-1);
-		font-weight: 500;
+		font-weight: 600;
 		text-overflow: ellipsis;
 		overflow: hidden;
 		white-space: nowrap;
+		flex: 1;
+		min-width: 0;
 	}
 
-	.outcome-price {
-		font-size: 16px;
-		font-weight: 800;
+	.outcome-odds {
+		font-size: 24px;
+		font-weight: 900;
 		color: var(--text-0);
 		white-space: nowrap;
+		letter-spacing: -0.02em;
 	}
+
+	.odds-bar-container {
+		grid-column: 1 / -1;
+		height: 6px;
+		background: var(--bg-3);
+		border-radius: 3px;
+		overflow: hidden;
+		position: relative;
+	}
+
+	.odds-bar {
+		height: 100%;
+		background: linear-gradient(90deg, var(--primary), var(--primary-600));
+		border-radius: 3px;
+		transition: width 0.3s ease;
+	}
+
+	.bet-action {
+		grid-column: 1 / -1;
+		display: flex;
+		justify-content: flex-end;
+	}
+
+	.bet-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 8px 20px;
+		background: var(--primary);
+		color: var(--button-primary-text);
+		font-size: 13px;
+		font-weight: 700;
+		border-radius: var(--radius-md);
+		letter-spacing: 0.02em;
+		transition: all var(--transition-fast);
+	}
+
+	.odds-row:hover .bet-button {
+		background: var(--primary-hover);
+		transform: scale(1.05);
+	}
+
+	/* Desktop: Horizontal Layout */
+	@media (min-width: 768px) {
+		.odds-row {
+			grid-template-columns: minmax(0, 1fr) 200px auto;
+			gap: 16px;
+		}
+
+		.odds-info {
+			grid-column: 1 / 2;
+		}
+
+		.odds-bar-container {
+			grid-column: 2 / 3;
+			align-self: center;
+		}
+
+		.bet-action {
+			grid-column: 3 / 4;
+		}
+
+		.outcome-odds {
+			font-size: 28px;
+		}
+	}
+
+	/* ============================================
+	   MULTI-MARKET PREVIEW
+	   ============================================ */
 
 	.markets-preview {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-sm);
+		gap: 12px;
 	}
 
 	.market-item {
 		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 12px 14px;
+		background: var(--bg-2);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-md);
+	}
+
+	.market-header {
+		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: var(--space-md);
+		gap: 12px;
 	}
 
 	.market-question {
-		font-size: 13px;
+		font-size: 14px;
 		color: var(--text-0);
-		font-weight: 500;
+		font-weight: 600;
 		line-height: 1.4;
 		flex: 1;
 		overflow: hidden;
@@ -347,18 +454,17 @@
 		white-space: nowrap;
 	}
 
-	.market-outcomes-inline {
+	.market-odds-inline {
 		display: flex;
-		gap: 6px;
-		flex-shrink: 0;
-		margin-left: auto;
+		gap: 8px;
+		flex-wrap: wrap;
 	}
 
-	.outcome-button-inline {
+	.odds-chip {
 		display: flex;
 		align-items: center;
-		gap: 4px;
-		padding: 5px 10px;
+		gap: 6px;
+		padding: 8px 12px;
 		background: var(--bg-0);
 		border: 1.5px solid var(--bg-4);
 		border-radius: var(--radius-md);
@@ -367,47 +473,68 @@
 		transition: all var(--transition-fast);
 		white-space: nowrap;
 		text-decoration: none;
+		flex: 1;
+		min-width: 0;
 	}
 
-	.outcome-button-inline:hover {
+	.odds-chip:hover {
 		background: var(--primary-hover-bg);
 		border-color: var(--primary);
 		box-shadow: var(--shadow-primary-sm);
 	}
 
-	.outcome-button-inline:focus-visible {
+	.odds-chip:focus-visible {
 		outline: none;
 		box-shadow: var(--focus-ring);
 	}
 
-	.outcome-button-label {
-		font-size: 12px;
+	.odds-chip-label {
+		font-size: 13px;
 		color: var(--text-1);
 		font-weight: 500;
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
-	.outcome-button-price {
-		font-size: 12px;
+	.odds-chip-price {
+		font-size: 16px;
 		color: var(--text-0);
-		font-weight: 600;
+		font-weight: 800;
+		white-space: nowrap;
 	}
+
+	/* ============================================
+	   FOOTER STATS
+	   ============================================ */
 
 	.card-footer {
 		margin-top: auto;
-		padding-top: 0;
+		padding-top: 4px;
+		border-top: 1px solid var(--bg-3);
 	}
 
 	.stats {
 		display: flex;
-		gap: var(--space-md);
-		font-size: 12px;
-		color: var(--text-3);
+		gap: 20px;
+		align-items: center;
 	}
 
 	.stat {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: 6px;
+	}
+
+	.stat-icon {
+		font-size: 14px;
+	}
+
+	.stat-value {
+		font-size: 13px;
+		font-weight: 700;
+		color: var(--text-0);
 	}
 
 	.stat-label {
@@ -416,27 +543,38 @@
 		font-weight: 500;
 	}
 
-	.stat-value {
-		font-size: 11px;
-		font-weight: 600;
-		color: var(--text-1);
-	}
+	/* ============================================
+	   MOBILE OPTIMIZATIONS
+	   ============================================ */
 
 	@media (max-width: 768px) {
 		.event-card {
 			padding: 16px;
 		}
 
-		.card-content {
-			gap: 12px;
+		.event-title {
+			font-size: 16px;
+		}
+
+		.event-icon {
+			width: 36px;
+			height: 36px;
+		}
+
+		.outcome-odds {
+			font-size: 20px;
 		}
 
 		.stats {
-			gap: var(--space-md);
+			gap: 16px;
 		}
 
 		.stat-value {
-			font-size: 11px;
+			font-size: 12px;
+		}
+
+		.odds-chip {
+			flex: 1 1 calc(50% - 4px);
 		}
 	}
 </style>
