@@ -26,19 +26,18 @@
 		onStatusChange?.(status);
 	}
 
-	function handleSortSelect(event: Event) {
-		const select = event.target as HTMLSelectElement;
-		onSortChange?.(select.value);
+	function handleSortClick(sort: string) {
+		onSortChange?.(sort);
 	}
 </script>
 
 <div class="filter-bar">
+	<!-- Status Filter -->
 	<div class="filter-section">
-		<span class="filter-label">Status</span>
-		<div class="status-buttons">
+		<div class="filter-group">
 			{#each statusOptions as option (option.value)}
 				<button
-					class="status-button"
+					class="filter-pill"
 					class:active={currentStatus === option.value}
 					onclick={() => handleStatusClick(option.value as 'active' | 'closed' | 'all')}
 				>
@@ -48,14 +47,18 @@
 		</div>
 	</div>
 
+	<!-- Sort Filter -->
 	<div class="filter-section">
-		<label for="sort-select" class="filter-label">Sort by</label>
-		<div class="select-wrapper">
-			<select id="sort-select" class="sort-select" value={currentSort} onchange={handleSortSelect}>
-				{#each sortOptions as option (option.value)}
-					<option value={option.value}>{option.label}</option>
-				{/each}
-			</select>
+		<div class="filter-group">
+			{#each sortOptions as option (option.value)}
+				<button
+					class="filter-pill sort-pill"
+					class:active={currentSort === option.value}
+					onclick={() => handleSortClick(option.value)}
+				>
+					{option.label}
+				</button>
+			{/each}
 		</div>
 	</div>
 </div>
@@ -64,92 +67,60 @@
 	.filter-bar {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--space-lg);
-		align-items: flex-end;
+		align-items: center;
+		gap: var(--space-sm);
 		padding: var(--space-md) 0;
-		margin-bottom: var(--space-lg);
-		border-bottom: 1px solid var(--bg-3);
+		margin-bottom: var(--space-md);
+		position: sticky;
+		top: 60px;
+		background: var(--bg-0);
+		z-index: 10;
 	}
 
 	.filter-section {
 		display: flex;
-		flex-direction: column;
+		align-items: center;
 		gap: var(--space-xs);
 	}
 
-	.filter-label {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-2);
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-	}
-
-	.status-buttons {
+	.filter-group {
 		display: flex;
-		gap: var(--space-xs);
+		gap: 6px;
+		flex-wrap: wrap;
 		background: var(--bg-2);
 		padding: 4px;
 		border-radius: var(--radius-button);
 		border: 1px solid var(--bg-3);
 	}
 
-	.status-button {
-		padding: var(--space-xs) var(--space-md);
+	.filter-pill {
+		padding: 6px 14px;
 		background: transparent;
 		color: var(--text-2);
 		border: none;
 		border-radius: calc(var(--radius-button) - 2px);
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 500;
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		white-space: nowrap;
-		min-height: var(--target-min);
+		min-height: 34px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 
-	.status-button:hover {
-		color: var(--text-0);
-		background: var(--bg-3);
+	.filter-pill:active {
+		transform: scale(0.97);
 	}
 
-	.status-button.active {
+	.filter-pill.active {
 		background: var(--bg-0);
 		color: var(--text-0);
 		font-weight: 600;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-	}
-
-	.select-wrapper {
-		position: relative;
-	}
-
-	.sort-select {
-		appearance: none;
-		padding: var(--space-xs) var(--space-xl) var(--space-xs) var(--space-md);
-		background: var(--bg-2);
-		color: var(--text-0);
-		border: 1px solid var(--bg-3);
-		border-radius: var(--radius-button);
-		font-size: 14px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		min-height: var(--target-min);
-		background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23808080' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-		background-repeat: no-repeat;
-		background-position: right var(--space-sm) center;
-		background-size: 12px;
-	}
-
-	.sort-select:hover {
-		border-color: var(--bg-4);
-		background-color: var(--bg-3);
-	}
-
-	.sort-select:focus {
-		outline: 2px solid var(--primary);
-		outline-offset: 2px;
+		box-shadow:
+			0 1px 3px rgba(0, 0, 0, 0.1),
+			0 1px 2px rgba(0, 0, 0, 0.06);
 	}
 
 	/* Mobile responsiveness */
@@ -158,33 +129,20 @@
 			flex-direction: column;
 			align-items: stretch;
 			gap: var(--space-md);
+			top: 56px;
 		}
 
 		.filter-section {
 			width: 100%;
 		}
 
-		.status-buttons {
-			flex: 1;
-		}
-
-		.status-button {
-			flex: 1;
-			justify-content: center;
-		}
-
-		.sort-select {
+		.filter-group {
 			width: 100%;
 		}
-	}
 
-	@media (min-width: 769px) {
-		.filter-bar {
-			align-items: center;
-		}
-
-		.sort-select {
-			min-width: 180px;
+		.filter-pill {
+			flex: 1;
+			min-width: 0;
 		}
 	}
 </style>

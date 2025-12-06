@@ -58,16 +58,16 @@
 		<div class="event-grid">
 			{#each Array(6) as _, i (i)}
 				<div class="skeleton-card">
-					<div class="skeleton-image"></div>
-					<div class="skeleton-content">
+					<div class="skeleton-header">
+						<div class="skeleton-icon"></div>
 						<div class="skeleton-title"></div>
-						<div class="skeleton-text"></div>
-						<div class="skeleton-text short"></div>
-						<div class="skeleton-stats">
-							<div class="skeleton-stat"></div>
-							<div class="skeleton-stat"></div>
-							<div class="skeleton-stat"></div>
-						</div>
+					</div>
+					<div class="skeleton-text"></div>
+					<div class="skeleton-text short"></div>
+					<div class="skeleton-stats">
+						<div class="skeleton-stat"></div>
+						<div class="skeleton-stat"></div>
+						<div class="skeleton-stat"></div>
 					</div>
 				</div>
 			{/each}
@@ -140,54 +140,59 @@
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
 		border-radius: var(--radius-card);
-		overflow: hidden;
+		padding: var(--space-lg);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
 	}
 
-	.skeleton-image {
-		width: 100%;
-		aspect-ratio: 16 / 9;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-	}
-
-	.skeleton-content {
-		padding: var(--space-md);
-	}
-
-	.skeleton-title {
-		height: 24px;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: var(--radius-sm);
-		margin-bottom: var(--space-sm);
-	}
-
-	.skeleton-text {
-		height: 16px;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: var(--radius-sm);
+	.skeleton-header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
 		margin-bottom: var(--space-xs);
 	}
 
+	.skeleton-icon {
+		flex-shrink: 0;
+		width: 32px;
+		height: 32px;
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s infinite;
+		border-radius: var(--radius-sm);
+	}
+
+	.skeleton-title {
+		flex: 1;
+		height: 18px;
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s infinite;
+		border-radius: var(--radius-sm);
+	}
+
+	.skeleton-text {
+		height: 14px;
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s infinite;
+		border-radius: var(--radius-sm);
+	}
+
 	.skeleton-text.short {
-		width: 60%;
+		width: 45%;
 	}
 
 	.skeleton-stats {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: var(--space-md);
-		margin-top: var(--space-md);
-		padding-top: var(--space-md);
-		border-top: 1px solid var(--bg-3);
+		gap: var(--space-lg);
+		margin-top: var(--space-sm);
 	}
 
 	.skeleton-stat {
-		height: 40px;
+		height: 36px;
 		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
 		background-size: 200% 100%;
 		animation: shimmer 1.5s infinite;

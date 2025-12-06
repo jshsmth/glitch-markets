@@ -128,10 +128,6 @@
 </script>
 
 <div class="page-container">
-	<div class="page-header">
-		<h1>Economy</h1>
-	</div>
-
 	<!-- Subcategory Navigation -->
 	<SubcategoryNav
 		subcategories={subcategoriesQuery.data || []}
@@ -173,21 +169,4 @@
 		}
 	}
 
-	.page-header {
-		margin-bottom: var(--space-lg);
-	}
-
-	h1 {
-		font-size: var(--h1-size);
-		font-weight: var(--h1-weight);
-		letter-spacing: var(--h1-tracking);
-		color: var(--text-0);
-		margin: 0 0 var(--space-xs) 0;
-	}
-
-	.page-description {
-		font-size: 16px;
-		color: var(--text-2);
-		margin: 0;
-	}
 </style>

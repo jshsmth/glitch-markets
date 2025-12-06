@@ -63,49 +63,44 @@
 
 	.chip-container {
 		display: flex;
-		gap: var(--space-sm);
-		padding: var(--space-xs) 0;
+		gap: 6px;
+		padding: 4px;
 		min-width: min-content;
+		background: var(--bg-2);
+		border-radius: var(--radius-button);
+		border: 1px solid var(--bg-3);
+		width: fit-content;
 	}
 
 	.chip {
 		display: inline-flex;
 		align-items: center;
 		gap: var(--space-xs);
-		padding: var(--space-sm) var(--space-md);
-		background: var(--bg-2);
+		padding: 6px 14px;
+		background: transparent;
 		color: var(--text-2);
-		border: 1px solid var(--bg-3);
-		border-radius: var(--radius-button);
-		font-size: 14px;
+		border: none;
+		border-radius: calc(var(--radius-button) - 2px);
+		font-size: 13px;
 		font-weight: 500;
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		white-space: nowrap;
-		min-height: var(--target-comfortable);
+		min-height: 34px;
 		user-select: none;
 	}
 
-	.chip:hover {
-		background: var(--bg-3);
-		border-color: var(--bg-4);
-		color: var(--text-1);
-	}
-
 	.chip:active {
-		transform: scale(0.98);
+		transform: scale(0.97);
 	}
 
 	.chip.active {
-		background: var(--primary);
-		color: var(--bg-0);
-		border-color: var(--primary);
+		background: var(--bg-0);
+		color: var(--text-0);
 		font-weight: 600;
-	}
-
-	.chip.active:hover {
-		background: var(--primary-hover);
-		border-color: var(--primary-hover);
+		box-shadow:
+			0 1px 3px rgba(0, 0, 0, 0.1),
+			0 1px 2px rgba(0, 0, 0, 0.06);
 	}
 
 	/* Mobile optimization */
