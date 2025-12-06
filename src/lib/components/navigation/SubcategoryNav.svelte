@@ -33,7 +33,7 @@
 </script>
 
 <nav class="subcategory-nav">
-	<div class="nav-content">
+	<div class="chip-scroll">
 		<div class="chip-container">
 			<button
 				class="chip"
@@ -55,21 +55,24 @@
 				{/if}
 			{/each}
 		</div>
+	</div>
 
+	<div class="filter-wrapper">
 		<FilterBar {currentStatus} {currentSort} {onStatusChange} {onSortChange} />
 	</div>
 </nav>
 
 <style>
 	.subcategory-nav {
-		width: 100%;
+		display: flex;
+		gap: var(--space-sm);
 		margin-bottom: var(--space-md);
+		align-items: center;
 	}
 
-	.nav-content {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
+	.chip-scroll {
+		flex: 1;
+		min-width: 0;
 		overflow-x: auto;
 		overflow-y: visible;
 		-webkit-overflow-scrolling: touch;
@@ -77,7 +80,7 @@
 		-ms-overflow-style: none;
 	}
 
-	.nav-content::-webkit-scrollbar {
+	.chip-scroll::-webkit-scrollbar {
 		display: none;
 	}
 
@@ -89,6 +92,10 @@
 		border-radius: var(--radius-button);
 		border: 1px solid var(--bg-3);
 		width: fit-content;
+	}
+
+	.filter-wrapper {
+		flex-shrink: 0;
 	}
 
 	.chip {
@@ -128,11 +135,9 @@
 	}
 
 	@media (max-width: 768px) {
-		.nav-content {
+		.chip-scroll {
 			margin-left: -12px;
-			margin-right: -12px;
 			padding-left: 12px;
-			padding-right: 12px;
 		}
 
 		.chip {
