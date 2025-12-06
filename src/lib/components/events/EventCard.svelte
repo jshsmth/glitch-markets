@@ -144,7 +144,7 @@
 	});
 </script>
 
-<a href={`/event/${event.slug || event.id}`} class="event-card">
+<div class="event-card">
 	<div class="card-content">
 		<div class="card-header">
 			<div class="title-row">
@@ -153,7 +153,9 @@
 						<img src={event.image} alt="" />
 					</div>
 				{/if}
-				<h3 class="event-title">{event.title || 'Untitled Event'}</h3>
+				<a href={`/event/${event.slug || event.id}`} class="event-title-link">
+					<h3 class="event-title">{event.title || 'Untitled Event'}</h3>
+				</a>
 			</div>
 		</div>
 
@@ -163,10 +165,10 @@
 		{#if primaryOdds}
 			<div class="odds-section binary">
 				{#each primaryOdds as outcome}
-					<div class="outcome-chip">
+					<a href={`/event/${event.slug || event.id}`} class="outcome-chip">
 						<span class="outcome-label">{outcome.label}</span>
 						<span class="outcome-price">{outcome.price}%</span>
-					</div>
+					</a>
 				{/each}
 			</div>
 		{/if}
@@ -180,10 +182,10 @@
 						{#if market.outcomes}
 							<div class="market-outcomes-inline">
 								{#each market.outcomes as outcome}
-									<button class="outcome-button-inline" onclick={(e) => e.preventDefault()}>
+									<a href={`/event/${event.slug || event.id}`} class="outcome-button-inline">
 										<span class="outcome-button-label">{outcome.label}</span>
 										<span class="outcome-button-price">{outcome.price}%</span>
-									</button>
+									</a>
 								{/each}
 							</div>
 						{/if}
@@ -209,7 +211,7 @@
 			</div>
 		</div>
 	</div>
-</a>
+</div>
 
 <style>
 	.event-card {
@@ -219,16 +221,9 @@
 		border-radius: var(--radius-card);
 		padding: 12px;
 		transition: all var(--transition-fast);
-		cursor: pointer;
-		text-decoration: none;
 		color: inherit;
 		height: 100%;
 		min-height: 220px;
-	}
-
-	.event-card:hover {
-		border-color: var(--bg-4);
-		background: var(--bg-2);
 	}
 
 	.card-content {
@@ -263,26 +258,25 @@
 		object-fit: cover;
 	}
 
-	.event-title {
+	.event-title-link {
 		flex: 1;
+		text-decoration: none;
+		color: inherit;
+		min-width: 0;
+	}
+
+	.event-title-link:hover .event-title {
+		text-decoration: underline;
+	}
+
+	.event-title {
 		font-size: 16px;
 		font-weight: 600;
 		color: var(--text-0);
 		line-height: 1.4;
 		margin: 0;
-		min-width: 0;
 	}
 
-	.event-description {
-		font-size: 14px;
-		color: var(--text-2);
-		line-height: 1.5;
-		margin: 0;
-		overflow: hidden;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
-	}
 
 	.odds-section {
 		display: flex;
@@ -299,26 +293,14 @@
 		background: var(--bg-2);
 		border-radius: var(--radius-sm);
 		border: 1px solid var(--bg-3);
+		text-decoration: none;
+		cursor: pointer;
+		transition: all var(--transition-fast);
 	}
 
-	.outcome-chip:first-child {
-		background: color-mix(in srgb, var(--success) 8%, var(--bg-1));
-		border-color: color-mix(in srgb, var(--success) 20%, var(--bg-3));
-	}
-
-	.outcome-chip:first-child:hover {
-		background: color-mix(in srgb, var(--success) 12%, var(--bg-1));
-		border-color: color-mix(in srgb, var(--success) 30%, var(--bg-3));
-	}
-
-	.outcome-chip:last-child {
-		background: color-mix(in srgb, var(--error) 8%, var(--bg-1));
-		border-color: color-mix(in srgb, var(--error) 20%, var(--bg-3));
-	}
-
-	.outcome-chip:last-child:hover {
-		background: color-mix(in srgb, var(--error) 12%, var(--bg-1));
-		border-color: color-mix(in srgb, var(--error) 30%, var(--bg-3));
+	.outcome-chip:hover {
+		background: var(--bg-3);
+		border-color: var(--bg-4);
 	}
 
 	.outcome-label {
@@ -379,26 +361,12 @@
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		white-space: nowrap;
+		text-decoration: none;
 	}
 
-	.outcome-button-inline:first-child {
-		background: color-mix(in srgb, var(--success) 8%, var(--bg-1));
-		border-color: color-mix(in srgb, var(--success) 20%, var(--bg-3));
-	}
-
-	.outcome-button-inline:first-child:hover {
-		background: color-mix(in srgb, var(--success) 12%, var(--bg-1));
-		border-color: color-mix(in srgb, var(--success) 30%, var(--bg-3));
-	}
-
-	.outcome-button-inline:last-child {
-		background: color-mix(in srgb, var(--error) 8%, var(--bg-1));
-		border-color: color-mix(in srgb, var(--error) 20%, var(--bg-3));
-	}
-
-	.outcome-button-inline:last-child:hover {
-		background: color-mix(in srgb, var(--error) 12%, var(--bg-1));
-		border-color: color-mix(in srgb, var(--error) 30%, var(--bg-3));
+	.outcome-button-inline:hover {
+		background: var(--bg-2);
+		border-color: var(--bg-4);
 	}
 
 	.outcome-button-label {
@@ -450,10 +418,6 @@
 
 		.event-title {
 			font-size: 15px;
-		}
-
-		.event-description {
-			font-size: 13px;
 		}
 
 		.stats {

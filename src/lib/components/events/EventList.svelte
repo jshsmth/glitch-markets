@@ -90,11 +90,6 @@
 			<p>Try adjusting your filters or check back later for new events.</p>
 		</div>
 	{:else}
-		<!-- Market count -->
-		<div class="market-count">
-			Showing {events.length} {events.length === 1 ? 'market' : 'markets'}
-		</div>
-
 		<!-- Event grid -->
 		<div class="event-grid">
 			{#each events as event (event.id)}
@@ -119,13 +114,6 @@
 <style>
 	.event-list-container {
 		width: 100%;
-	}
-
-	.market-count {
-		font-size: 13px;
-		font-weight: 500;
-		color: var(--text-3);
-		margin-bottom: var(--space-md);
 	}
 
 	.event-grid {

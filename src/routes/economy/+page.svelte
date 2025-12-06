@@ -2,7 +2,6 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import EventList from '$lib/components/events/EventList.svelte';
 	import SubcategoryNav from '$lib/components/navigation/SubcategoryNav.svelte';
-	import FilterBar from '$lib/components/filters/FilterBar.svelte';
 	import type { Event, Tag } from '$lib/server/api/polymarket-client';
 
 	// Internal state (not URL-based, like Polymarket)
@@ -128,15 +127,11 @@
 </script>
 
 <div class="page-container">
-	<!-- Subcategory Navigation -->
+	<!-- Subcategory Navigation with Filters -->
 	<SubcategoryNav
 		subcategories={subcategoriesQuery.data || []}
 		activeSlug={selectedTag}
 		onTagChange={handleTagChange}
-	/>
-
-	<!-- Filters -->
-	<FilterBar
 		currentStatus={status}
 		currentSort={sort}
 		onStatusChange={handleStatusChange}

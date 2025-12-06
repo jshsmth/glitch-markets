@@ -6,152 +6,164 @@
 		onSortChange?: (sort: string) => void;
 	}
 
-	let { currentStatus = 'active', currentSort = 'volume24hr', onStatusChange, onSortChange }: Props =
-		$props();
+	let { currentStatus = 'active', currentSort = 'volume24hr', onStatusChange, onSortChange }: Props = $props();
+
+	let isOpen = $state(false);
 
 	const statusOptions = [
 		{ value: 'active', label: 'Active' },
-		{ value: 'closed', label: 'Closed' },
-		{ value: 'all', label: 'All' }
+		{ value: 'closed', label: 'Resolved' }
 	];
 
 	const sortOptions = [
-		{ value: 'volume24hr', label: '24h Volume' },
-		{ value: 'volume', label: '7d Volume' },
+		{ value: 'volume24hr', label: '24h Vol' },
+		{ value: 'volume', label: '7d Vol' },
 		{ value: 'liquidity', label: 'Liquidity' },
 		{ value: 'createdAt', label: 'Newest' }
 	];
-
-	function handleStatusClick(status: 'active' | 'closed' | 'all') {
-		onStatusChange?.(status);
-	}
-
-	function handleSortClick(sort: string) {
-		onSortChange?.(sort);
-	}
 </script>
 
-<div class="filter-bar">
-	<!-- Status Filter -->
-	<div class="filter-section">
-		<span class="filter-label">Status:</span>
-		<div class="filter-group">
-			{#each statusOptions as option (option.value)}
-				<button
-					class="filter-pill"
-					class:active={currentStatus === option.value}
-					onclick={() => handleStatusClick(option.value as 'active' | 'closed' | 'all')}
-				>
-					{option.label}
-				</button>
-			{/each}
-		</div>
-	</div>
+<div class="filter-wrapper">
+	<button class="filter-button" onclick={() => (isOpen = !isOpen)}>
+		<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+			<path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+		</svg>
+		Filters
+	</button>
 
-	<!-- Sort Filter -->
-	<div class="filter-section">
-		<span class="filter-label">Sort by:</span>
-		<div class="filter-group">
-			{#each sortOptions as option (option.value)}
-				<button
-					class="filter-pill sort-pill"
-					class:active={currentSort === option.value}
-					onclick={() => handleSortClick(option.value)}
-				>
-					{option.label}
-				</button>
-			{/each}
+	{#if isOpen}
+		<div class="filter-panel">
+			<div class="filter-group">
+				<span class="group-label">Status</span>
+				<div class="options">
+					{#each statusOptions as option}
+						<button
+							class="option-chip"
+							class:active={currentStatus === option.value}
+							onclick={() => onStatusChange?.(option.value as 'active' | 'closed')}
+						>
+							{option.label}
+						</button>
+					{/each}
+				</div>
+			</div>
+
+			<div class="filter-group">
+				<span class="group-label">Sort by</span>
+				<div class="options">
+					{#each sortOptions as option}
+						<button
+							class="option-chip"
+							class:active={currentSort === option.value}
+							onclick={() => onSortChange?.(option.value)}
+						>
+							{option.label}
+						</button>
+					{/each}
+				</div>
+			</div>
 		</div>
-	</div>
+	{/if}
 </div>
 
 <style>
-	.filter-bar {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: var(--space-sm);
-		padding: var(--space-md) 0;
-		margin-bottom: var(--space-md);
-		position: sticky;
-		top: 60px;
-		background: var(--bg-0);
-		z-index: 10;
+	.filter-wrapper {
+		position: relative;
 	}
 
-	.filter-section {
+	.filter-button {
 		display: flex;
 		align-items: center;
-		gap: var(--space-sm);
-	}
-
-	.filter-label {
+		gap: 6px;
+		padding: 8px 14px;
+		background: var(--bg-1);
+		color: var(--text-0);
+		border: 1px solid var(--bg-3);
+		border-radius: var(--radius-button);
 		font-size: 13px;
 		font-weight: 600;
+		cursor: pointer;
+		min-height: 36px;
+		transition: all 0.15s;
+	}
+
+	.filter-button:hover {
+		background: var(--bg-2);
+	}
+
+	.filter-button svg {
 		color: var(--text-2);
-		white-space: nowrap;
+	}
+
+	.filter-panel {
+		position: absolute;
+		top: calc(100% + 8px);
+		left: 0;
+		background: var(--bg-1);
+		border: 1px solid var(--bg-3);
+		border-radius: 8px;
+		padding: 16px;
+		min-width: 280px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		z-index: 1000;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
 	}
 
 	.filter-group {
 		display: flex;
-		gap: 6px;
-		flex-wrap: wrap;
-		background: var(--bg-2);
-		padding: 4px;
-		border-radius: var(--radius-button);
-		border: 1px solid var(--bg-3);
+		flex-direction: column;
+		gap: 8px;
 	}
 
-	.filter-pill {
-		padding: 6px 14px;
-		background: transparent;
+	.group-label {
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--text-3);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.options {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
+	.option-chip {
+		padding: 6px 12px;
+		background: var(--bg-2);
 		color: var(--text-2);
-		border: none;
-		border-radius: calc(var(--radius-button) - 2px);
+		border: 1px solid var(--bg-3);
+		border-radius: var(--radius-button);
 		font-size: 13px;
 		font-weight: 500;
 		cursor: pointer;
-		transition: all var(--transition-fast);
-		white-space: nowrap;
-		min-height: 34px;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
+		transition: all 0.15s;
+		min-height: 32px;
 	}
 
-	.filter-pill:active {
-		transform: scale(0.97);
+	.option-chip:hover {
+		background: var(--bg-3);
 	}
 
-	.filter-pill.active {
-		background: var(--bg-0);
-		color: var(--text-0);
+	.option-chip.active {
+		background: var(--primary);
+		color: var(--bg-0);
+		border-color: var(--primary);
 		font-weight: 600;
-		box-shadow:
-			0 1px 3px rgba(0, 0, 0, 0.1),
-			0 1px 2px rgba(0, 0, 0, 0.06);
 	}
 
-	/* Mobile responsiveness */
 	@media (max-width: 768px) {
-		.filter-bar {
-			flex-direction: column;
-			align-items: stretch;
-			gap: var(--space-md);
-			top: 56px;
+		.filter-button {
+			min-height: 44px;
 		}
 
-		.filter-section {
-			width: 100%;
-		}
-
-		.filter-group {
-			width: 100%;
-		}
-
-		.filter-pill {
-			flex: 1;
-			min-width: 0;
+		.filter-panel {
+			left: 0;
+			right: 0;
+			min-width: auto;
 		}
 	}
 </style>
