@@ -6,7 +6,6 @@
 		subcategories: Tag[];
 		activeSlug?: string | null;
 		onTagChange?: (slug: string | null) => void;
-		// Filter props
 		currentStatus?: string;
 		currentSort?: string;
 		onStatusChange?: (status: 'active' | 'closed' | 'all') => void;
@@ -27,9 +26,8 @@
 		onTagChange?.(slug);
 	}
 
-	// Check if a chip is active
 	function isActive(slug: string | null): boolean {
-		if (!slug && !activeSlug) return true; // "All" is active when no tag selected
+		if (!slug && !activeSlug) return true;
 		return slug === activeSlug;
 	}
 </script>
@@ -66,23 +64,21 @@
 	.subcategory-nav {
 		width: 100%;
 		margin-bottom: var(--space-md);
-		overflow-x: auto;
-		overflow-y: visible;
-		-webkit-overflow-scrolling: touch;
-		scrollbar-width: none; /* Firefox */
-		-ms-overflow-style: none; /* IE/Edge */
-	}
-
-	.subcategory-nav::-webkit-scrollbar {
-		display: none; /* Chrome/Safari */
 	}
 
 	.nav-content {
 		display: flex;
 		align-items: center;
 		gap: var(--space-sm);
-		min-width: min-content;
-		position: relative;
+		overflow-x: auto;
+		overflow-y: visible;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.nav-content::-webkit-scrollbar {
+		display: none;
 	}
 
 	.chip-container {
@@ -113,6 +109,11 @@
 		user-select: none;
 	}
 
+	.chip:hover:not(.active) {
+		background: var(--bg-3);
+		color: var(--text-1);
+	}
+
 	.chip:active {
 		transform: scale(0.97);
 	}
@@ -126,9 +127,8 @@
 			0 1px 2px rgba(0, 0, 0, 0.06);
 	}
 
-	/* Mobile optimization */
 	@media (max-width: 768px) {
-		.subcategory-nav {
+		.nav-content {
 			margin-left: -12px;
 			margin-right: -12px;
 			padding-left: 12px;

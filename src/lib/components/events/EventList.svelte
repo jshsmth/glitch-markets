@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import EventCard from './EventCard.svelte';
 
@@ -24,16 +23,16 @@
 	let sentinel: HTMLDivElement | undefined = $state();
 	let loadingMore = $state(false);
 
-	onMount(() => {
+	$effect(() => {
 		if (!sentinel || !onLoadMore || !hasMore) return;
 
 		const observer = new IntersectionObserver(
 			async (entries) => {
 				const entry = entries[0];
-				if (entry.isIntersecting && !loadingMore && !loading && hasMore) {
+				if (entry.isIntersecting && !loadingMore && !loading && hasMore && onLoadMore) {
 					loadingMore = true;
 					try {
-						await onLoadMore?.();
+						await onLoadMore();
 					} finally {
 						loadingMore = false;
 					}
