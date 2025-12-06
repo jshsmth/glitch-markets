@@ -159,10 +159,10 @@ export interface Event {
 	category?: string;
 	subcategory?: string | null;
 	volume24hr?: number | null;
-	volume1wk: number;
-	volume1mo: number;
-	volume1yr: number;
-	commentCount: number;
+	volume1wk?: number | null;
+	volume1mo?: number | null;
+	volume1yr?: number | null;
+	commentCount?: number | null;
 	markets: Market[];
 	categories?: Category[] | null;
 	tags: Tag[];

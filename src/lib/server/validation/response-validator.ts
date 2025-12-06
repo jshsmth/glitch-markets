@@ -285,15 +285,17 @@ export function validateEvent(data: unknown): Event {
 		}
 	}
 
-	const requiredNumberFields = [
-		'openInterest',
+	const requiredNumberFields = ['openInterest'];
+
+	const optionalNumberFields = [
+		'liquidity',
+		'volume',
+		'volume24hr',
 		'volume1wk',
 		'volume1mo',
 		'volume1yr',
 		'commentCount'
 	];
-
-	const optionalNumberFields = ['liquidity', 'volume', 'volume24hr'];
 
 	for (const field of requiredNumberFields) {
 		if (!(field in data)) {
