@@ -34,6 +34,7 @@
 <div class="filter-bar">
 	<!-- Status Filter -->
 	<div class="filter-section">
+		<span class="filter-label">Status:</span>
 		<div class="filter-group">
 			{#each statusOptions as option (option.value)}
 				<button
@@ -49,6 +50,7 @@
 
 	<!-- Sort Filter -->
 	<div class="filter-section">
+		<span class="filter-label">Sort by:</span>
 		<div class="filter-group">
 			{#each sortOptions as option (option.value)}
 				<button
@@ -80,7 +82,14 @@
 	.filter-section {
 		display: flex;
 		align-items: center;
-		gap: var(--space-xs);
+		gap: var(--space-sm);
+	}
+
+	.filter-label {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-2);
+		white-space: nowrap;
 	}
 
 	.filter-group {

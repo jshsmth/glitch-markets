@@ -23,6 +23,125 @@
 		if (text.length <= maxLength) return text;
 		return text.slice(0, maxLength) + '...';
 	}
+
+	// Remove resolution rules from description
+	function getCleanDescription(description: string | null): string | null {
+		if (!description) return null;
+
+		// Split by common resolution rule starters - check all and take the earliest match
+		const resolutionPatterns = [
+			'This market will resolve',
+			'This question will resolve',
+			'This will resolve',
+			'Resolves to',
+			'Resolution criteria',
+			'The primary resolution source',
+			'Resolution source',
+			'Otherwise, this market',
+			'If the',
+			'For the purposes of this market'
+		];
+
+		let cleanDesc = description;
+		let earliestIndex = cleanDesc.length;
+
+		for (const pattern of resolutionPatterns) {
+			const index = cleanDesc.toLowerCase().indexOf(pattern.toLowerCase());
+			if (index > 0 && index < earliestIndex) {
+				earliestIndex = index;
+			}
+		}
+
+		if (earliestIndex < cleanDesc.length) {
+			cleanDesc = cleanDesc.substring(0, earliestIndex).trim();
+		}
+
+		// If we ended up with nothing or very little, return null
+		return cleanDesc.length > 10 ? cleanDesc : null;
+	}
+
+	// Check if this is a multi-market event
+	const isMultiMarket = $derived((event.markets?.length || 0) > 1);
+
+	// Get the primary market (first market with valid outcomes)
+	const primaryMarket = $derived(
+		event.markets?.find((m) => m.outcomes && m.outcomePrices) || event.markets?.[0]
+	);
+
+	// Get formatted odds for display (BINARY markets)
+	const primaryOdds = $derived.by(() => {
+		if (isMultiMarket) return null; // Multi-market events don't show odds
+		if (!primaryMarket?.outcomePrices || !primaryMarket?.outcomes) return null;
+
+		try {
+			// Parse JSON strings (API returns them as JSON strings)
+			const outcomes = typeof primaryMarket.outcomes === 'string'
+				? JSON.parse(primaryMarket.outcomes)
+				: primaryMarket.outcomes;
+			const prices = typeof primaryMarket.outcomePrices === 'string'
+				? JSON.parse(primaryMarket.outcomePrices)
+				: primaryMarket.outcomePrices;
+
+			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
+			if (outcomes.length < 2 || prices.length < 2) return null;
+
+			// Convert price strings to percentages (prices are 0-1, so multiply by 100)
+			const percentages = prices.map((p: string) => parseFloat(p) * 100);
+
+			return [
+				{
+					label: outcomes[0] || 'Yes',
+					price: percentages[0]?.toFixed(0) || '—'
+				},
+				{
+					label: outcomes[1] || 'No',
+					price: percentages[1]?.toFixed(0) || '—'
+				}
+			];
+		} catch (e) {
+			console.error('Error parsing market odds:', e);
+			return null;
+		}
+	});
+
+	// Get first two markets for multi-market display
+	const topMarkets = $derived.by(() => {
+		if (!isMultiMarket || !event.markets) return null;
+		return event.markets.slice(0, 2).map((market) => {
+			try {
+				const outcomes = typeof market.outcomes === 'string'
+					? JSON.parse(market.outcomes)
+					: market.outcomes;
+				const prices = typeof market.outcomePrices === 'string'
+					? JSON.parse(market.outcomePrices)
+					: market.outcomePrices;
+
+				// Use groupItemTitle if available, otherwise use first outcome as the title
+				const displayTitle = market.groupItemTitle || (Array.isArray(outcomes) && outcomes[0]) || market.question;
+
+				return {
+					question: displayTitle,
+					outcomes: Array.isArray(outcomes) && Array.isArray(prices) && outcomes.length >= 2
+						? [
+							{
+								label: outcomes[0],
+								price: (parseFloat(prices[0]) * 100).toFixed(0)
+							},
+							{
+								label: outcomes[1],
+								price: (parseFloat(prices[1]) * 100).toFixed(0)
+							}
+						]
+						: null
+				};
+			} catch (e) {
+				return {
+					question: market.question,
+					outcomes: null
+				};
+			}
+		});
+	});
 </script>
 
 <a href={`/event/${event.slug || event.id}`} class="event-card">
@@ -38,18 +157,49 @@
 			</div>
 		</div>
 
-		{#if event.description}
-			<p class="event-description">{truncateText(event.description, 180)}</p>
+		<!-- Description removed - not needed on cards -->
+
+		<!-- Binary Market Odds -->
+		{#if primaryOdds}
+			<div class="odds-section binary">
+				{#each primaryOdds as outcome}
+					<div class="outcome-chip">
+						<span class="outcome-label">{outcome.label}</span>
+						<span class="outcome-price">{outcome.price}%</span>
+					</div>
+				{/each}
+			</div>
+		{/if}
+
+		<!-- Multi-Market Preview -->
+		{#if topMarkets}
+			<div class="markets-preview">
+				{#each topMarkets as market}
+					<div class="market-item">
+						<div class="market-question">{market.question}</div>
+						{#if market.outcomes}
+							<div class="market-outcomes-inline">
+								{#each market.outcomes as outcome}
+									<button class="outcome-button-inline" onclick={(e) => e.preventDefault()}>
+										<span class="outcome-button-label">{outcome.label}</span>
+										<span class="outcome-button-price">{outcome.price}%</span>
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				{/each}
+			</div>
 		{/if}
 
 		<div class="card-footer">
 			<div class="stats">
 				<div class="stat">
-					<span class="stat-label">24h Vol</span>
+					<span class="stat-label">Vol</span>
 					<span class="stat-value">{formatNumber(event.volume24hr)}</span>
 				</div>
 				<div class="stat">
-					<span class="stat-label">Liquidity</span>
+					<span class="stat-label">Liq</span>
 					<span class="stat-value">{formatNumber(event.liquidity)}</span>
 				</div>
 				<div class="stat">
@@ -63,15 +213,17 @@
 
 <style>
 	.event-card {
-		display: block;
+		display: flex;
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
 		border-radius: var(--radius-card);
-		padding: var(--space-lg);
+		padding: 12px;
 		transition: all var(--transition-fast);
 		cursor: pointer;
 		text-decoration: none;
 		color: inherit;
+		height: 100%;
+		min-height: 220px;
 	}
 
 	.event-card:hover {
@@ -82,12 +234,12 @@
 	.card-content {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-md);
-		height: 100%;
+		gap: var(--space-sm);
+		width: 100%;
 	}
 
 	.card-header {
-		margin-bottom: var(--space-xs);
+		margin-bottom: 0;
 	}
 
 	.title-row {
@@ -126,35 +278,169 @@
 		color: var(--text-2);
 		line-height: 1.5;
 		margin: 0;
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+	}
+
+	.odds-section {
+		display: flex;
+		gap: var(--space-sm);
+	}
+
+	.outcome-chip {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-xs);
+		padding: 8px 12px;
+		background: var(--bg-2);
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--bg-3);
+	}
+
+	.outcome-chip:first-child {
+		background: color-mix(in srgb, var(--success) 8%, var(--bg-1));
+		border-color: color-mix(in srgb, var(--success) 20%, var(--bg-3));
+	}
+
+	.outcome-chip:first-child:hover {
+		background: color-mix(in srgb, var(--success) 12%, var(--bg-1));
+		border-color: color-mix(in srgb, var(--success) 30%, var(--bg-3));
+	}
+
+	.outcome-chip:last-child {
+		background: color-mix(in srgb, var(--error) 8%, var(--bg-1));
+		border-color: color-mix(in srgb, var(--error) 20%, var(--bg-3));
+	}
+
+	.outcome-chip:last-child:hover {
+		background: color-mix(in srgb, var(--error) 12%, var(--bg-1));
+		border-color: color-mix(in srgb, var(--error) 30%, var(--bg-3));
+	}
+
+	.outcome-label {
+		font-size: 13px;
+		color: var(--text-1);
+		font-weight: 500;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		white-space: nowrap;
+	}
+
+	.outcome-price {
+		font-size: 15px;
+		font-weight: 700;
+		color: var(--text-0);
+		white-space: nowrap;
+	}
+
+	.markets-preview {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	.market-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-md);
+	}
+
+	.market-question {
+		font-size: 13px;
+		color: var(--text-0);
+		font-weight: 500;
+		line-height: 1.4;
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.market-outcomes-inline {
+		display: flex;
+		gap: 6px;
+		flex-shrink: 0;
+		margin-left: auto;
+	}
+
+	.outcome-button-inline {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 8px;
+		background: var(--bg-0);
+		border: 1px solid var(--bg-3);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		white-space: nowrap;
+	}
+
+	.outcome-button-inline:first-child {
+		background: color-mix(in srgb, var(--success) 8%, var(--bg-1));
+		border-color: color-mix(in srgb, var(--success) 20%, var(--bg-3));
+	}
+
+	.outcome-button-inline:first-child:hover {
+		background: color-mix(in srgb, var(--success) 12%, var(--bg-1));
+		border-color: color-mix(in srgb, var(--success) 30%, var(--bg-3));
+	}
+
+	.outcome-button-inline:last-child {
+		background: color-mix(in srgb, var(--error) 8%, var(--bg-1));
+		border-color: color-mix(in srgb, var(--error) 20%, var(--bg-3));
+	}
+
+	.outcome-button-inline:last-child:hover {
+		background: color-mix(in srgb, var(--error) 12%, var(--bg-1));
+		border-color: color-mix(in srgb, var(--error) 30%, var(--bg-3));
+	}
+
+	.outcome-button-label {
+		font-size: 12px;
+		color: var(--text-1);
+		font-weight: 500;
+	}
+
+	.outcome-button-price {
+		font-size: 12px;
+		color: var(--text-0);
+		font-weight: 600;
 	}
 
 	.card-footer {
 		margin-top: auto;
-		padding-top: var(--space-sm);
+		padding-top: 0;
 	}
 
 	.stats {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: var(--space-lg);
+		display: flex;
+		gap: var(--space-md);
+		font-size: 12px;
+		color: var(--text-3);
 	}
 
 	.stat {
 		display: flex;
-		flex-direction: column;
+		align-items: center;
 		gap: 4px;
 	}
 
 	.stat-label {
-		font-size: 12px;
+		font-size: 11px;
 		color: var(--text-3);
 		font-weight: 500;
 	}
 
 	.stat-value {
-		font-size: 16px;
+		font-size: 11px;
 		font-weight: 600;
-		color: var(--text-0);
+		color: var(--text-1);
 	}
 
 	@media (max-width: 768px) {
