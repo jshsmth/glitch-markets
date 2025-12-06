@@ -37,7 +37,6 @@
 <nav class="subcategory-nav">
 	<div class="nav-content">
 		<div class="chip-container">
-			<!-- "All" chip -->
 			<button
 				class="chip"
 				class:active={isActive(null)}
@@ -46,7 +45,6 @@
 				All
 			</button>
 
-			<!-- Subcategory chips -->
 			{#each subcategories as subcategory (subcategory.id)}
 				{#if subcategory.label && subcategory.slug}
 					<button
@@ -60,7 +58,6 @@
 			{/each}
 		</div>
 
-		<!-- Filters Button -->
 		<FilterBar
 			{currentStatus}
 			{currentSort}

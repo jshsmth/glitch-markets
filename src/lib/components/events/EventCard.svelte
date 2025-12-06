@@ -24,11 +24,9 @@
 		return text.slice(0, maxLength) + '...';
 	}
 
-	// Remove resolution rules from description
 	function getCleanDescription(description: string | null): string | null {
 		if (!description) return null;
 
-		// Split by common resolution rule starters - check all and take the earliest match
 		const resolutionPatterns = [
 			'This market will resolve',
 			'This question will resolve',
@@ -56,25 +54,20 @@
 			cleanDesc = cleanDesc.substring(0, earliestIndex).trim();
 		}
 
-		// If we ended up with nothing or very little, return null
 		return cleanDesc.length > 10 ? cleanDesc : null;
 	}
 
-	// Check if this is a multi-market event
 	const isMultiMarket = $derived((event.markets?.length || 0) > 1);
 
-	// Get the primary market (first market with valid outcomes)
 	const primaryMarket = $derived(
 		event.markets?.find((m) => m.outcomes && m.outcomePrices) || event.markets?.[0]
 	);
 
-	// Get formatted odds for display (BINARY markets)
 	const primaryOdds = $derived.by(() => {
-		if (isMultiMarket) return null; // Multi-market events don't show odds
+		if (isMultiMarket) return null;
 		if (!primaryMarket?.outcomePrices || !primaryMarket?.outcomes) return null;
 
 		try {
-			// Parse JSON strings (API returns them as JSON strings)
 			const outcomes = typeof primaryMarket.outcomes === 'string'
 				? JSON.parse(primaryMarket.outcomes)
 				: primaryMarket.outcomes;
@@ -85,7 +78,6 @@
 			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
 			if (outcomes.length < 2 || prices.length < 2) return null;
 
-			// Convert price strings to percentages (prices are 0-1, so multiply by 100)
 			const percentages = prices.map((p: string) => parseFloat(p) * 100);
 
 			return [
@@ -104,7 +96,6 @@
 		}
 	});
 
-	// Get first two markets for multi-market display
 	const topMarkets = $derived.by(() => {
 		if (!isMultiMarket || !event.markets) return null;
 		return event.markets.slice(0, 2).map((market) => {
@@ -116,7 +107,6 @@
 					? JSON.parse(market.outcomePrices)
 					: market.outcomePrices;
 
-				// Use groupItemTitle if available, otherwise use first outcome as the title
 				const displayTitle = market.groupItemTitle || (Array.isArray(outcomes) && outcomes[0]) || market.question;
 
 				return {
@@ -159,9 +149,6 @@
 			</div>
 		</div>
 
-		<!-- Description removed - not needed on cards -->
-
-		<!-- Binary Market Odds -->
 		{#if primaryOdds}
 			<div class="odds-section binary">
 				{#each primaryOdds as outcome}
@@ -173,7 +160,6 @@
 			</div>
 		{/if}
 
-		<!-- Multi-Market Preview -->
 		{#if topMarkets}
 			<div class="markets-preview">
 				{#each topMarkets as market}

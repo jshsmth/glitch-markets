@@ -127,7 +127,6 @@
 </script>
 
 <div class="page-container">
-	<!-- Subcategory Navigation with Filters -->
 	<SubcategoryNav
 		subcategories={subcategoriesQuery.data || []}
 		activeSlug={selectedTag}
@@ -138,7 +137,6 @@
 		onSortChange={handleSortChange}
 	/>
 
-	<!-- Event List -->
 	<div class="content">
 		<EventList
 			events={allEvents}

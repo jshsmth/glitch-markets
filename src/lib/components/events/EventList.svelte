@@ -40,7 +40,7 @@
 				}
 			},
 			{
-				rootMargin: '200px' // Start loading 200px before reaching the bottom
+				rootMargin: '200px'
 			}
 		);
 
@@ -54,7 +54,6 @@
 
 <div class="event-list-container">
 	{#if loading && events.length === 0}
-		<!-- Loading skeleton -->
 		<div class="event-grid">
 			{#each Array(6) as _, i (i)}
 				<div class="skeleton-card">
@@ -73,7 +72,6 @@
 			{/each}
 		</div>
 	{:else if error}
-		<!-- Error state -->
 		<div class="empty-state">
 			<div class="empty-icon">⚠️</div>
 			<h3>Failed to load events</h3>
@@ -83,21 +81,18 @@
 			{/if}
 		</div>
 	{:else if events.length === 0}
-		<!-- Empty state -->
 		<div class="empty-state">
 			<div class="empty-icon">🔍</div>
 			<h3>No events found</h3>
 			<p>Try adjusting your filters or check back later for new events.</p>
 		</div>
 	{:else}
-		<!-- Event grid -->
 		<div class="event-grid">
 			{#each events as event (event.id)}
 				<EventCard {event} />
 			{/each}
 		</div>
 
-		<!-- Infinite scroll sentinel -->
 		{#if hasMore}
 			<div bind:this={sentinel} class="sentinel">
 				{#if loadingMore}
