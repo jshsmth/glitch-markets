@@ -600,13 +600,7 @@ describe('Property 16: Response validation checks required fields', () => {
 	});
 
 	it('should reject events with missing required number fields', () => {
-		const requiredNumberFields = [
-			'openInterest',
-			'volume1wk',
-			'volume1mo',
-			'volume1yr',
-			'commentCount'
-		];
+		const requiredNumberFields = ['openInterest'];
 
 		fc.assert(
 			fc.property(

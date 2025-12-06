@@ -12,10 +12,14 @@ import { CACHE_TTL } from '$lib/config/constants.js';
 
 export interface EventFilters {
 	category?: string;
+	tag_slug?: string;
 	active?: boolean;
 	closed?: boolean;
+	archived?: boolean;
 	limit?: number;
 	offset?: number;
+	order?: string;
+	ascending?: boolean;
 }
 
 export interface EventSearchOptions extends EventFilters {
@@ -109,10 +113,14 @@ export class EventService {
 	private async fetchAndCacheEvents(cacheKey: string, filters: EventFilters): Promise<Event[]> {
 		const params: Record<string, string | number | boolean> = {};
 		if (filters.category !== undefined) params.category = filters.category;
+		if (filters.tag_slug !== undefined) params.tag_slug = filters.tag_slug;
 		if (filters.active !== undefined) params.active = filters.active;
 		if (filters.closed !== undefined) params.closed = filters.closed;
+		if (filters.archived !== undefined) params.archived = filters.archived;
 		if (filters.limit !== undefined) params.limit = filters.limit;
 		if (filters.offset !== undefined) params.offset = filters.offset;
+		if (filters.order !== undefined) params.order = filters.order;
+		if (filters.ascending !== undefined) params.ascending = filters.ascending;
 
 		const events = await this.client.fetchEvents({ params });
 		const filtered = this.applyFilters(events, filters);

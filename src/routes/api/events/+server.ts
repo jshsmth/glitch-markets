@@ -22,15 +22,23 @@ export async function GET({ url }: RequestEvent) {
 		const limit = url.searchParams.get('limit');
 		const offset = url.searchParams.get('offset');
 		const category = url.searchParams.get('category');
+		const tag_slug = url.searchParams.get('tag_slug');
 		const active = url.searchParams.get('active');
 		const closed = url.searchParams.get('closed');
+		const archived = url.searchParams.get('archived');
+		const order = url.searchParams.get('order');
+		const ascending = url.searchParams.get('ascending');
 
 		const filters: {
 			limit?: number;
 			offset?: number;
 			category?: string;
+			tag_slug?: string;
 			active?: boolean;
 			closed?: boolean;
+			archived?: boolean;
+			order?: string;
+			ascending?: boolean;
 		} = {};
 
 		if (limit !== null) {
@@ -61,6 +69,10 @@ export async function GET({ url }: RequestEvent) {
 			filters.category = category;
 		}
 
+		if (tag_slug !== null) {
+			filters.tag_slug = tag_slug;
+		}
+
 		if (active !== null) {
 			if (active !== 'true' && active !== 'false') {
 				logger.error('Invalid active parameter', undefined, { active });
@@ -81,6 +93,32 @@ export async function GET({ url }: RequestEvent) {
 				);
 			}
 			filters.closed = closed === 'true';
+		}
+
+		if (archived !== null) {
+			if (archived !== 'true' && archived !== 'false') {
+				logger.error('Invalid archived parameter', undefined, { archived });
+				return json(
+					formatErrorResponse(new ApiError('Invalid archived parameter', 400, 'VALIDATION_ERROR')),
+					{ status: 400 }
+				);
+			}
+			filters.archived = archived === 'true';
+		}
+
+		if (order !== null) {
+			filters.order = order;
+		}
+
+		if (ascending !== null) {
+			if (ascending !== 'true' && ascending !== 'false') {
+				logger.error('Invalid ascending parameter', undefined, { ascending });
+				return json(
+					formatErrorResponse(new ApiError('Invalid ascending parameter', 400, 'VALIDATION_ERROR')),
+					{ status: 400 }
+				);
+			}
+			filters.ascending = ascending === 'true';
 		}
 
 		logger.info('Fetching events', { filters });

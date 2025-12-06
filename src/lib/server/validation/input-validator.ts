@@ -127,9 +127,13 @@ export function validateEventQueryParams(
 				break;
 			case 'active':
 			case 'closed':
+			case 'archived':
+			case 'ascending':
 				validated[key] = validateBoolean(value, key);
 				break;
 			case 'category':
+			case 'tag_slug':
+			case 'order':
 				validated[key] = validateNonEmptyString(value, key);
 				break;
 			default:
