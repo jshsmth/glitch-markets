@@ -256,12 +256,12 @@
 	}
 
 	.option-button {
-		padding: 14px 16px;
+		padding: 10px 14px;
 		background: var(--bg-2);
 		color: var(--text-2);
 		border: 1.5px solid var(--bg-3);
-		border-radius: 12px;
-		font-size: 14px;
+		border-radius: 10px;
+		font-size: 13px;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -306,12 +306,12 @@
 
 	.apply-button {
 		width: 100%;
-		padding: 16px;
+		padding: 12px;
 		background: var(--primary);
 		color: var(--bg-0);
 		border: none;
-		border-radius: 12px;
-		font-size: 16px;
+		border-radius: 10px;
+		font-size: 15px;
 		font-weight: 700;
 		cursor: pointer;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);

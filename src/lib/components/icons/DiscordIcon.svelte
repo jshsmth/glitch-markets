@@ -4,7 +4,7 @@
 		color?: string;
 	}
 
-	let { size = 20, color = '#fff' }: Props = $props();
+	let { size = 20, color = 'currentColor' }: Props = $props();
 </script>
 
 <svg
