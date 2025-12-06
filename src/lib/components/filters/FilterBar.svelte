@@ -36,7 +36,7 @@
 			<div class="filter-group">
 				<span class="group-label">Status</span>
 				<div class="options">
-					{#each statusOptions as option}
+					{#each statusOptions as option (option.value)}
 						<button
 							class="option-chip"
 							class:active={currentStatus === option.value}
@@ -51,7 +51,7 @@
 			<div class="filter-group">
 				<span class="group-label">Sort by</span>
 				<div class="options">
-					{#each sortOptions as option}
+					{#each sortOptions as option (option.value)}
 						<button
 							class="option-chip"
 							class:active={currentSort === option.value}
