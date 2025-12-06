@@ -121,8 +121,9 @@
 
 <style>
 	.sub-header {
-		background-color: var(--bg-0);
-		border-bottom: 1px solid var(--bg-3);
+		background-color: var(--bg-1);
+		border-bottom: 1px solid var(--bg-4);
+		padding: 12px 0;
 	}
 
 	.nav-container {
@@ -162,7 +163,12 @@
 
 	.nav-arrow:focus-visible {
 		outline: none;
-		box-shadow: var(--focus-ring);
+		box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
+	}
+
+	.nav-link:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
 	}
 
 	.nav-scroll {
@@ -182,7 +188,7 @@
 	.nav-list {
 		display: flex;
 		align-items: center;
-		gap: var(--space-sm); /* 16px - related items within section */
+		gap: var(--space-xs); /* 8px - tighter spacing */
 		list-style: none;
 		margin: 0;
 		padding: 0;
@@ -192,19 +198,20 @@
 	.nav-link {
 		display: flex;
 		align-items: center;
-		gap: var(--spacing-2); /* 8px - better icon/text balance (Principle #14) */
+		gap: var(--spacing-2); /* 8px - better icon/text balance */
 		text-decoration: none;
-		color: var(--text-3); /* Lighter gray for inactive state */
+		color: var(--text-2); /* Muted for inactive state */
 		font-size: 14px;
-		font-weight: var(--font-regular); /* Regular weight for inactive */
+		font-weight: 500;
 		white-space: nowrap;
-		min-height: var(--target-comfortable); /* 44px - WCAG 2.1 AA */
-		transition: var(--transition-colors);
-		padding: var(--spacing-2) 0; /* Add padding for larger tap area */
+		padding: 8px 16px;
+		border-radius: var(--radius-lg);
+		transition: all var(--transition-fast);
 	}
 
 	.nav-link:hover {
-		color: var(--text-0); /* Darker on hover for better feedback */
+		color: var(--text-0);
+		background-color: var(--bg-2);
 	}
 
 	.nav-link:hover :global(svg) {
@@ -213,8 +220,14 @@
 	}
 
 	.nav-link.active {
-		color: var(--text-0); /* Bold black instead of blue */
-		font-weight: var(--font-bold); /* Use design token */
+		color: var(--primary-700);
+		background-color: var(--primary-50);
+		font-weight: 600;
+	}
+
+	:global([data-theme='dark']) .nav-link.active {
+		color: var(--primary-400);
+		background-color: rgba(var(--primary-rgb), 0.12);
 	}
 
 	.nav-link :global(svg) {
@@ -264,7 +277,7 @@
 		}
 
 		.nav-list {
-			gap: var(--spacing-6); /* 24px - more spacing on desktop */
+			gap: var(--space-xs); /* 8px - consistent spacing on desktop */
 			min-height: var(--target-comfortable); /* 44px - consistent with mobile */
 		}
 
@@ -280,7 +293,7 @@
 
 	@media (min-width: 1024px) {
 		.nav-list {
-			gap: var(--spacing-5); /* 20px - slightly tighter on large screens */
+			gap: var(--space-xs); /* 8px - consistent across all breakpoints */
 		}
 	}
 </style>
