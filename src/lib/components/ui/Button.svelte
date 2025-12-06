@@ -210,53 +210,35 @@
 
 	.button.variant-primary {
 		background-color: var(--primary);
-		color: #111111;
-		border: 1px solid rgba(0, 0, 0, 0.1);
-		box-shadow:
-			0 1px 2px 0 rgba(0, 0, 0, 0.05),
-			inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+		color: var(--bg-0);
+		border: none;
+		box-shadow: 0 1px 3px rgba(var(--primary-rgb), 0.2);
+		position: relative;
+		overflow: hidden;
 	}
 
-	.button.variant-primary::after {
+	.button.variant-primary::before {
 		content: '';
 		position: absolute;
 		inset: 0;
-		z-index: -1;
-		border-radius: inherit;
-		background: transparent;
-		transition: background-color var(--transition-fast);
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
 		pointer-events: none;
+		border-radius: inherit;
 	}
 
 	.button.variant-primary:hover:not(:disabled) {
-		background-color: var(--primary-hover);
-		border-color: rgba(0, 0, 0, 0.15);
-		box-shadow:
-			0 2px 4px 0 rgba(0, 0, 0, 0.08),
-			inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
 		transform: translateY(-1px);
-	}
-
-	.button.variant-primary:hover:not(:disabled)::after {
-		background-color: rgba(255, 255, 255, 0.1);
+		box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.25);
 	}
 
 	.button.variant-primary:active:not(:disabled) {
-		background-color: var(--primary-active);
-		border-color: rgba(0, 0, 0, 0.2);
-		box-shadow:
-			0 1px 2px 0 rgba(0, 0, 0, 0.05),
-			inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
 		transform: translateY(0);
-	}
-
-	.button.variant-primary:active:not(:disabled)::after {
-		background-color: rgba(0, 0, 0, 0.05);
+		box-shadow: 0 1px 4px rgba(var(--primary-rgb), 0.2);
 	}
 
 	.button.variant-primary:disabled {
 		box-shadow: none;
-		border-color: transparent;
+		opacity: 0.5;
 	}
 
 	/* ============================================

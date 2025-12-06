@@ -90,7 +90,7 @@
 	.site-header {
 		position: sticky;
 		top: 0;
-		z-index: 1000;
+		z-index: var(--z-sticky);
 		background-color: var(--bg-0);
 		border-bottom: 1px solid var(--bg-4);
 	}

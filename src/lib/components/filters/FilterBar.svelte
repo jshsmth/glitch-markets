@@ -16,6 +16,8 @@
 	let isOpen = $state(false);
 	let buttonElement: HTMLButtonElement | undefined = $state();
 	let panelElement: HTMLDivElement | undefined = $state();
+	let wrapperElement: HTMLDivElement | undefined = $state();
+	let hoverTimeout: ReturnType<typeof setTimeout> | undefined = $state();
 
 	const statusOptions = [
 		{ value: 'active', label: 'Active' },
@@ -29,12 +31,26 @@
 		{ value: 'createdAt', label: 'Newest' }
 	];
 
+	function handleMouseEnter() {
+		if (hoverTimeout) clearTimeout(hoverTimeout);
+		hoverTimeout = setTimeout(() => {
+			isOpen = true;
+		}, 50);
+	}
+
+	function handleMouseLeave() {
+		if (hoverTimeout) clearTimeout(hoverTimeout);
+		hoverTimeout = setTimeout(() => {
+			isOpen = false;
+		}, 150);
+	}
+
 	function handleClickOutside(event: MouseEvent) {
 		if (
 			isOpen &&
-			buttonElement &&
+			wrapperElement &&
 			panelElement &&
-			!buttonElement.contains(event.target as Node) &&
+			!wrapperElement.contains(event.target as Node) &&
 			!panelElement.contains(event.target as Node)
 		) {
 			isOpen = false;
@@ -49,8 +65,14 @@
 	});
 </script>
 
-<div class="filter-wrapper">
-	<button class="filter-button" bind:this={buttonElement} onclick={() => (isOpen = !isOpen)}>
+<div
+	class="filter-wrapper"
+	bind:this={wrapperElement}
+	onmouseenter={handleMouseEnter}
+	onmouseleave={handleMouseLeave}
+	role="group"
+>
+	<button class="filter-button" bind:this={buttonElement}>
 		<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
 			<path
 				d="M2 4h12M4 8h8M6 12h4"
@@ -61,49 +83,57 @@
 		</svg>
 		Filters
 	</button>
+
+	{#if isOpen && buttonElement}
+		<!-- Mobile backdrop -->
+		<div
+			class="backdrop"
+			role="button"
+			tabindex="-1"
+			onclick={() => (isOpen = false)}
+			onkeydown={(e) => e.key === 'Escape' && (isOpen = false)}
+		></div>
+
+		<div
+			class="filter-panel"
+			bind:this={panelElement}
+			onmouseenter={handleMouseEnter}
+			onmouseleave={handleMouseLeave}
+			role="menu"
+			tabindex="-1"
+		>
+			<div class="filter-group">
+				<span class="group-label">Status</span>
+				<div class="options">
+					{#each statusOptions as option (option.value)}
+						<button
+							class="option-chip"
+							class:active={currentStatus === option.value}
+							onclick={() => onStatusChange?.(option.value as 'active' | 'closed')}
+						>
+							{option.label}
+						</button>
+					{/each}
+				</div>
+			</div>
+
+			<div class="filter-group">
+				<span class="group-label">Sort by</span>
+				<div class="options">
+					{#each sortOptions as option (option.value)}
+						<button
+							class="option-chip"
+							class:active={currentSort === option.value}
+							onclick={() => onSortChange?.(option.value)}
+						>
+							{option.label}
+						</button>
+					{/each}
+				</div>
+			</div>
+		</div>
+	{/if}
 </div>
-
-{#if isOpen && buttonElement}
-	<div
-		class="filter-panel"
-		bind:this={panelElement}
-		style="
-			position: fixed;
-			top: {buttonElement.getBoundingClientRect().bottom + 8}px;
-			left: {buttonElement.getBoundingClientRect().left}px;
-		"
-	>
-		<div class="filter-group">
-			<span class="group-label">Status</span>
-			<div class="options">
-				{#each statusOptions as option (option.value)}
-					<button
-						class="option-chip"
-						class:active={currentStatus === option.value}
-						onclick={() => onStatusChange?.(option.value as 'active' | 'closed')}
-					>
-						{option.label}
-					</button>
-				{/each}
-			</div>
-		</div>
-
-		<div class="filter-group">
-			<span class="group-label">Sort by</span>
-			<div class="options">
-				{#each sortOptions as option (option.value)}
-					<button
-						class="option-chip"
-						class:active={currentSort === option.value}
-						onclick={() => onSortChange?.(option.value)}
-					>
-						{option.label}
-					</button>
-				{/each}
-			</div>
-		</div>
-	</div>
-{/if}
 
 <style>
 	.filter-wrapper {
@@ -134,14 +164,18 @@
 		color: var(--text-2);
 	}
 
+	.backdrop {
+		display: none;
+	}
+
 	.filter-panel {
+		position: fixed;
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
 		border-radius: 8px;
 		padding: 16px;
-		min-width: 280px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-		z-index: 1000;
+		z-index: var(--z-popover);
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
@@ -178,6 +212,7 @@
 		cursor: pointer;
 		transition: all 0.15s;
 		min-height: 32px;
+		flex-shrink: 0;
 	}
 
 	.option-chip:hover {
@@ -191,15 +226,76 @@
 		font-weight: 600;
 	}
 
+	/* Desktop */
+	@media (min-width: 769px) {
+		.filter-panel {
+			position: absolute;
+			top: calc(100% + 8px);
+			right: 0;
+			min-width: 280px;
+			max-width: 320px;
+		}
+	}
+
+	/* Mobile */
 	@media (max-width: 768px) {
 		.filter-button {
 			min-height: 44px;
 		}
 
-		.filter-panel {
+		.backdrop {
+			display: block;
+			position: fixed;
+			top: 0;
 			left: 0;
 			right: 0;
-			min-width: auto;
+			bottom: 0;
+			background: rgba(0, 0, 0, 0.5);
+			z-index: var(--z-overlay);
+			animation: fadeIn 0.2s ease-out;
+		}
+
+		.filter-panel {
+			bottom: 0;
+			left: 0;
+			right: 0;
+			border-radius: 16px 16px 0 0;
+			padding: 20px 16px 24px;
+			box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+			animation: slideUp 0.2s ease-out;
+			z-index: var(--z-popover);
+		}
+
+		.filter-group {
+			gap: 12px;
+		}
+
+		.group-label {
+			font-size: 12px;
+		}
+
+		.option-chip {
+			min-height: 40px;
+			padding: 8px 14px;
+			font-size: 14px;
+		}
+	}
+
+	@keyframes slideUp {
+		from {
+			transform: translateY(100%);
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
 		}
 	}
 </style>

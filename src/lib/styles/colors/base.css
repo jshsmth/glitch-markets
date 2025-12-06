@@ -10,6 +10,7 @@
      ============================================ */
 
 	--primary-base: #00d9ff; /* Main brand color */
+	--primary-rgb: 0, 217, 255; /* RGB values for rgba() usage */
 
 	/* ============================================
      THIRD-PARTY BRAND COLORS
@@ -83,18 +84,30 @@
 	--target-large: 56px; /* Extra comfortable for primary CTAs */
 
 	/* ============================================
-     Z-INDEX SCALE
+     Z-INDEX SCALE (Semantic & Predictable)
+     Uses CSS custom properties for better maintainability
      ============================================ */
 
-	--z-base: 0;
-	--z-dropdown: 1000;
-	--z-sticky: 1100;
-	--z-fixed: 1200;
-	--z-modal-backdrop: 1300;
-	--z-modal: 1400;
-	--z-popover: 1500;
-	--z-tooltip: 1600;
-	--z-toast: 1700;
+	/* Base scale (increment by 100) */
+	--z-dropdown: 100;
+	--z-sticky: 200;
+	--z-overlay: 300;
+	--z-modal: 400;
+	--z-popover: 500;
+	--z-tooltip: 600;
+	--z-toast: 700;
+
+	/* Component-specific z-index (uses calc() for clarity) */
+	.dropdown {
+		z-index: var(--z-dropdown);
+	}
+	.modal {
+		z-index: var(--z-modal);
+	}
+	.tooltip {
+		z-index: var(--z-tooltip);
+	}
+	/* Tooltips ALWAYS above modals - documented and predictable */
 
 	/* ============================================
      TRANSITIONS
