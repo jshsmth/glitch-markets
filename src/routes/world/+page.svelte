@@ -78,7 +78,7 @@
 	}
 </script>
 
-<div class="page-container">
+<div class="page-container compact">
 	<SubcategoryNav
 		subcategories={subcategoriesQuery.data || []}
 		activeSlug={selectedTag}
@@ -102,5 +102,14 @@
 </div>
 
 <style>
-	/* Page-specific styles use global .page-container from app.css */
+	/* Reduced top padding for pages without header */
+	.page-container.compact {
+		padding-top: var(--space-md); /* 24px instead of 48px */
+	}
+
+	@media (min-width: 768px) {
+		.page-container.compact {
+			padding-top: var(--space-lg); /* 32px instead of 80px */
+		}
+	}
 </style>
