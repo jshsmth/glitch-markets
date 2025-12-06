@@ -426,7 +426,7 @@
 			0 4px 6px -1px rgba(0, 0, 0, 0.1),
 			0 2px 4px -1px rgba(0, 0, 0, 0.06);
 		min-width: 280px;
-		z-index: 1001;
+		z-index: var(--z-popover);
 		overflow: hidden;
 		padding: 12px;
 		animation: dropdown-appear 0.15s ease-out;

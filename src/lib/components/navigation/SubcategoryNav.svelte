@@ -24,6 +24,40 @@
 	}: Props = $props();
 
 	let isMobileFilterOpen = $state(false);
+	let scrollContainer: HTMLDivElement | undefined = $state();
+	let showLeftArrow = $state(false);
+	let showRightArrow = $state(false);
+
+	function updateArrowVisibility() {
+		if (!scrollContainer) return;
+
+		const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
+		showLeftArrow = scrollLeft > 0;
+		showRightArrow = scrollLeft < scrollWidth - clientWidth - 1;
+	}
+
+	function scrollLeft() {
+		if (!scrollContainer) return;
+		scrollContainer.scrollBy({ left: -200, behavior: 'smooth' });
+	}
+
+	function scrollRight() {
+		if (!scrollContainer) return;
+		scrollContainer.scrollBy({ left: 200, behavior: 'smooth' });
+	}
+
+	$effect(() => {
+		if (scrollContainer) {
+			updateArrowVisibility();
+			scrollContainer.addEventListener('scroll', updateArrowVisibility);
+			window.addEventListener('resize', updateArrowVisibility);
+
+			return () => {
+				scrollContainer?.removeEventListener('scroll', updateArrowVisibility);
+				window.removeEventListener('resize', updateArrowVisibility);
+			};
+		}
+	});
 
 	const statusOptions = [
 		{ value: 'active', label: 'Active' },
@@ -66,7 +100,21 @@
 <nav class="subcategory-nav">
 	<!-- Desktop: Horizontal scrolling chips + FilterBar -->
 	<div class="desktop-nav">
-		<div class="chip-scroll">
+		{#if showLeftArrow}
+			<button class="scroll-arrow left" onclick={scrollLeft} aria-label="Scroll left">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+					<path
+						d="M15 18l-6-6 6-6"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+			</button>
+		{/if}
+
+		<div class="chip-scroll" bind:this={scrollContainer}>
 			<div class="chip-container">
 				<button
 					class="chip"
@@ -89,6 +137,20 @@
 				{/each}
 			</div>
 		</div>
+
+		{#if showRightArrow}
+			<button class="scroll-arrow right" onclick={scrollRight} aria-label="Scroll right">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+					<path
+						d="M9 18l6-6-6-6"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+			</button>
+		{/if}
 
 		<div class="filter-wrapper">
 			<FilterBar {currentStatus} {currentSort} {onStatusChange} {onSortChange} />
@@ -346,12 +408,43 @@
 	@media (min-width: 769px) {
 		.desktop-nav {
 			display: flex;
-			gap: var(--space-sm);
+			gap: 6px;
 			align-items: center;
+			background: var(--bg-1);
+			border: 1px solid var(--bg-3);
+			border-radius: var(--radius-lg);
+			padding: 8px;
+			position: relative;
 		}
 
 		.mobile-nav {
 			display: none;
+		}
+
+		.scroll-arrow {
+			flex-shrink: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 32px;
+			height: 32px;
+			background: var(--bg-2);
+			border: 1px solid var(--bg-3);
+			border-radius: var(--radius-button);
+			color: var(--text-2);
+			cursor: pointer;
+			transition: all var(--transition-fast);
+			z-index: 1;
+		}
+
+		.scroll-arrow:hover {
+			background: var(--bg-3);
+			border-color: var(--bg-4);
+			color: var(--text-0);
+		}
+
+		.scroll-arrow:active {
+			transform: scale(0.95);
 		}
 
 		.chip-scroll {
@@ -362,6 +455,7 @@
 			-webkit-overflow-scrolling: touch;
 			scrollbar-width: none;
 			-ms-overflow-style: none;
+			scroll-behavior: smooth;
 		}
 
 		.chip-scroll::-webkit-scrollbar {
@@ -371,51 +465,49 @@
 		.chip-container {
 			display: flex;
 			gap: 6px;
-			padding: 4px;
-			background: var(--bg-2);
-			border-radius: var(--radius-button);
-			border: 1px solid var(--bg-3);
 			width: fit-content;
+			min-width: 100%;
 		}
 
 		.filter-wrapper {
 			flex-shrink: 0;
+			margin-left: 4px;
 		}
 
 		.chip {
 			display: inline-flex;
 			align-items: center;
 			gap: var(--space-xs);
-			padding: 6px 14px;
+			padding: 6px 12px;
 			background: transparent;
 			color: var(--text-2);
-			border: none;
-			border-radius: calc(var(--radius-button) - 2px);
+			border: 1px solid transparent;
+			border-radius: var(--radius-button);
 			font-size: 13px;
 			font-weight: 500;
 			cursor: pointer;
 			transition: all var(--transition-fast);
 			white-space: nowrap;
-			min-height: 34px;
+			min-height: 32px;
 			user-select: none;
 		}
 
 		.chip:hover:not(.active) {
-			background: var(--bg-3);
+			background: var(--bg-2);
+			border-color: var(--bg-4);
 			color: var(--text-1);
 		}
 
 		.chip:active {
-			transform: scale(0.97);
+			transform: scale(0.98);
 		}
 
 		.chip.active {
-			background: var(--bg-0);
-			color: var(--text-0);
+			background: var(--primary);
+			color: var(--bg-0);
+			border-color: var(--primary);
 			font-weight: 600;
-			box-shadow:
-				0 1px 3px rgba(0, 0, 0, 0.1),
-				0 1px 2px rgba(0, 0, 0, 0.06);
+			box-shadow: 0 1px 3px rgba(var(--primary-rgb), 0.2);
 		}
 	}
 </style>

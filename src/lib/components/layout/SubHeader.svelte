@@ -236,7 +236,7 @@
 		color: var(--text-1);
 		animation: swipeAnimation 1.5s ease-in-out infinite;
 		pointer-events: none;
-		z-index: 5;
+		z-index: var(--z-sticky);
 	}
 
 	@keyframes swipeAnimation {

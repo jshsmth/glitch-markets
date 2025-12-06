@@ -35,14 +35,14 @@
 		if (hoverTimeout) clearTimeout(hoverTimeout);
 		hoverTimeout = setTimeout(() => {
 			isOpen = true;
-		}, 150);
+		}, 50);
 	}
 
 	function handleMouseLeave() {
 		if (hoverTimeout) clearTimeout(hoverTimeout);
 		hoverTimeout = setTimeout(() => {
 			isOpen = false;
-		}, 200);
+		}, 150);
 	}
 
 	function handleClickOutside(event: MouseEvent) {
@@ -172,7 +172,7 @@
 		border-radius: 8px;
 		padding: 16px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-		z-index: 1000;
+		z-index: var(--z-popover);
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
@@ -248,7 +248,7 @@
 			right: 0;
 			bottom: 0;
 			background: rgba(0, 0, 0, 0.5);
-			z-index: 999;
+			z-index: var(--z-overlay);
 			animation: fadeIn 0.2s ease-out;
 		}
 
@@ -260,7 +260,7 @@
 			padding: 20px 16px 24px;
 			box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
 			animation: slideUp 0.2s ease-out;
-			z-index: 1001;
+			z-index: var(--z-popover);
 		}
 
 		.filter-group {

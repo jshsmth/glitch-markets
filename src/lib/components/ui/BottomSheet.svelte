@@ -91,7 +91,7 @@
 		right: 0;
 		bottom: 0;
 		background: rgba(0, 0, 0, 0.5);
-		z-index: 9998;
+		z-index: var(--z-overlay);
 		animation: fadeIn 0.2s ease-out;
 	}
 
@@ -105,7 +105,7 @@
 		box-shadow:
 			0 -4px 20px rgba(0, 0, 0, 0.15),
 			0 -1px 3px rgba(0, 0, 0, 0.1);
-		z-index: 9999;
+		z-index: var(--z-modal);
 		display: flex;
 		flex-direction: column;
 		animation: slideUp 0.25s ease-out;

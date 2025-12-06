@@ -212,7 +212,7 @@
 		background-color: var(--primary);
 		color: var(--bg-0);
 		border: none;
-		box-shadow: 0 2px 12px rgba(var(--primary-rgb), 0.3);
+		box-shadow: 0 1px 3px rgba(var(--primary-rgb), 0.2);
 		position: relative;
 		overflow: hidden;
 	}
@@ -232,12 +232,12 @@
 
 	.button.variant-primary:hover:not(:disabled) {
 		transform: translateY(-1px);
-		box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.4);
+		box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.25);
 	}
 
 	.button.variant-primary:active:not(:disabled) {
 		transform: translateY(0);
-		box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+		box-shadow: 0 1px 4px rgba(var(--primary-rgb), 0.2);
 	}
 
 	.button.variant-primary:disabled {
