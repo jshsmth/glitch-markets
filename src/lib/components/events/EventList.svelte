@@ -114,13 +114,13 @@
 	.event-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-		gap: var(--space-lg);
+		gap: var(--space-md);
 	}
 
 	@media (max-width: 768px) {
 		.event-grid {
 			grid-template-columns: 1fr;
-			gap: var(--space-md);
+			gap: var(--space-sm);
 		}
 	}
 
