@@ -358,11 +358,7 @@
 		position: absolute;
 		inset: 0;
 		border-radius: 11px;
-		background: linear-gradient(
-			180deg,
-			rgba(255, 255, 255, 0.1) 0%,
-			rgba(255, 255, 255, 0) 100%
-		);
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
 		pointer-events: none;
 	}
 
@@ -386,11 +382,7 @@
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(
-			180deg,
-			rgba(255, 255, 255, 0.15) 0%,
-			rgba(255, 255, 255, 0) 100%
-		);
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
 		pointer-events: none;
 	}
 

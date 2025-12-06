@@ -221,11 +221,7 @@
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(
-			180deg,
-			rgba(255, 255, 255, 0.15) 0%,
-			rgba(255, 255, 255, 0) 100%
-		);
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
 		pointer-events: none;
 		border-radius: inherit;
 	}

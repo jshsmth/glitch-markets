@@ -43,8 +43,4 @@
 		color: var(--text-2);
 		margin: 0;
 	}
-
-	.content {
-		/* Crypto-specific layout styles */
-	}
 </style>
