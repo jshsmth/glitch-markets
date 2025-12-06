@@ -58,12 +58,7 @@
 			{/each}
 		</div>
 
-		<FilterBar
-			{currentStatus}
-			{currentSort}
-			{onStatusChange}
-			{onSortChange}
-		/>
+		<FilterBar {currentStatus} {currentSort} {onStatusChange} {onSortChange} />
 	</div>
 </nav>
 

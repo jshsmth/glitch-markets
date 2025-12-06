@@ -94,6 +94,7 @@ export interface Market {
 	lastTradePrice: number | null;
 	bestBid: number | null;
 	bestAsk: number | null;
+	groupItemTitle?: string | null;
 }
 
 /**

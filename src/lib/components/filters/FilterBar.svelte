@@ -6,7 +6,12 @@
 		onSortChange?: (sort: string) => void;
 	}
 
-	let { currentStatus = 'active', currentSort = 'volume24hr', onStatusChange, onSortChange }: Props = $props();
+	let {
+		currentStatus = 'active',
+		currentSort = 'volume24hr',
+		onStatusChange,
+		onSortChange
+	}: Props = $props();
 
 	let isOpen = $state(false);
 	let buttonElement: HTMLButtonElement | undefined = $state();
@@ -47,7 +52,12 @@
 <div class="filter-wrapper">
 	<button class="filter-button" bind:this={buttonElement} onclick={() => (isOpen = !isOpen)}>
 		<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-			<path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+			<path
+				d="M2 4h12M4 8h8M6 12h4"
+				stroke="currentColor"
+				stroke-width="1.5"
+				stroke-linecap="round"
+			/>
 		</svg>
 		Filters
 	</button>
@@ -63,35 +73,35 @@
 			left: {buttonElement.getBoundingClientRect().left}px;
 		"
 	>
-			<div class="filter-group">
-				<span class="group-label">Status</span>
-				<div class="options">
-					{#each statusOptions as option (option.value)}
-						<button
-							class="option-chip"
-							class:active={currentStatus === option.value}
-							onclick={() => onStatusChange?.(option.value as 'active' | 'closed')}
-						>
-							{option.label}
-						</button>
-					{/each}
-				</div>
+		<div class="filter-group">
+			<span class="group-label">Status</span>
+			<div class="options">
+				{#each statusOptions as option (option.value)}
+					<button
+						class="option-chip"
+						class:active={currentStatus === option.value}
+						onclick={() => onStatusChange?.(option.value as 'active' | 'closed')}
+					>
+						{option.label}
+					</button>
+				{/each}
 			</div>
+		</div>
 
-			<div class="filter-group">
-				<span class="group-label">Sort by</span>
-				<div class="options">
-					{#each sortOptions as option (option.value)}
-						<button
-							class="option-chip"
-							class:active={currentSort === option.value}
-							onclick={() => onSortChange?.(option.value)}
-						>
-							{option.label}
-						</button>
-					{/each}
-				</div>
+		<div class="filter-group">
+			<span class="group-label">Sort by</span>
+			<div class="options">
+				{#each sortOptions as option (option.value)}
+					<button
+						class="option-chip"
+						class:active={currentSort === option.value}
+						onclick={() => onSortChange?.(option.value)}
+					>
+						{option.label}
+					</button>
+				{/each}
 			</div>
+		</div>
 	</div>
 {/if}
 

@@ -18,45 +18,6 @@
 		return `$${num.toFixed(0)}`;
 	}
 
-	function truncateText(text: string | null, maxLength: number): string {
-		if (!text) return '';
-		if (text.length <= maxLength) return text;
-		return text.slice(0, maxLength) + '...';
-	}
-
-	function getCleanDescription(description: string | null): string | null {
-		if (!description) return null;
-
-		const resolutionPatterns = [
-			'This market will resolve',
-			'This question will resolve',
-			'This will resolve',
-			'Resolves to',
-			'Resolution criteria',
-			'The primary resolution source',
-			'Resolution source',
-			'Otherwise, this market',
-			'If the',
-			'For the purposes of this market'
-		];
-
-		let cleanDesc = description;
-		let earliestIndex = cleanDesc.length;
-
-		for (const pattern of resolutionPatterns) {
-			const index = cleanDesc.toLowerCase().indexOf(pattern.toLowerCase());
-			if (index > 0 && index < earliestIndex) {
-				earliestIndex = index;
-			}
-		}
-
-		if (earliestIndex < cleanDesc.length) {
-			cleanDesc = cleanDesc.substring(0, earliestIndex).trim();
-		}
-
-		return cleanDesc.length > 10 ? cleanDesc : null;
-	}
-
 	const isMultiMarket = $derived((event.markets?.length || 0) > 1);
 
 	const primaryMarket = $derived(
@@ -68,12 +29,14 @@
 		if (!primaryMarket?.outcomePrices || !primaryMarket?.outcomes) return null;
 
 		try {
-			const outcomes = typeof primaryMarket.outcomes === 'string'
-				? JSON.parse(primaryMarket.outcomes)
-				: primaryMarket.outcomes;
-			const prices = typeof primaryMarket.outcomePrices === 'string'
-				? JSON.parse(primaryMarket.outcomePrices)
-				: primaryMarket.outcomePrices;
+			const outcomes =
+				typeof primaryMarket.outcomes === 'string'
+					? JSON.parse(primaryMarket.outcomes)
+					: primaryMarket.outcomes;
+			const prices =
+				typeof primaryMarket.outcomePrices === 'string'
+					? JSON.parse(primaryMarket.outcomePrices)
+					: primaryMarket.outcomePrices;
 
 			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
 			if (outcomes.length < 2 || prices.length < 2) return null;
@@ -90,8 +53,7 @@
 					price: percentages[1]?.toFixed(0) || '—'
 				}
 			];
-		} catch (e) {
-			console.error('Error parsing market odds:', e);
+		} catch {
 			return null;
 		}
 	});
@@ -100,31 +62,33 @@
 		if (!isMultiMarket || !event.markets) return null;
 		return event.markets.slice(0, 2).map((market) => {
 			try {
-				const outcomes = typeof market.outcomes === 'string'
-					? JSON.parse(market.outcomes)
-					: market.outcomes;
-				const prices = typeof market.outcomePrices === 'string'
-					? JSON.parse(market.outcomePrices)
-					: market.outcomePrices;
+				const outcomes =
+					typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : market.outcomes;
+				const prices =
+					typeof market.outcomePrices === 'string'
+						? JSON.parse(market.outcomePrices)
+						: market.outcomePrices;
 
-				const displayTitle = market.groupItemTitle || (Array.isArray(outcomes) && outcomes[0]) || market.question;
+				const displayTitle =
+					market.groupItemTitle || (Array.isArray(outcomes) && outcomes[0]) || market.question;
 
 				return {
 					question: displayTitle,
-					outcomes: Array.isArray(outcomes) && Array.isArray(prices) && outcomes.length >= 2
-						? [
-							{
-								label: outcomes[0],
-								price: (parseFloat(prices[0]) * 100).toFixed(0)
-							},
-							{
-								label: outcomes[1],
-								price: (parseFloat(prices[1]) * 100).toFixed(0)
-							}
-						]
-						: null
+					outcomes:
+						Array.isArray(outcomes) && Array.isArray(prices) && outcomes.length >= 2
+							? [
+									{
+										label: outcomes[0],
+										price: (parseFloat(prices[0]) * 100).toFixed(0)
+									},
+									{
+										label: outcomes[1],
+										price: (parseFloat(prices[1]) * 100).toFixed(0)
+									}
+								]
+							: null
 				};
-			} catch (e) {
+			} catch {
 				return {
 					question: market.question,
 					outcomes: null
@@ -151,7 +115,7 @@
 
 		{#if primaryOdds}
 			<div class="odds-section binary">
-				{#each primaryOdds as outcome}
+				{#each primaryOdds as outcome, i (i)}
 					<a href={`/event/${event.slug || event.id}`} class="outcome-chip">
 						<span class="outcome-label">{outcome.label}</span>
 						<span class="outcome-price">{outcome.price}%</span>
@@ -162,12 +126,12 @@
 
 		{#if topMarkets}
 			<div class="markets-preview">
-				{#each topMarkets as market}
+				{#each topMarkets as market, i (i)}
 					<div class="market-item">
 						<div class="market-question">{market.question}</div>
 						{#if market.outcomes}
 							<div class="market-outcomes-inline">
-								{#each market.outcomes as outcome}
+								{#each market.outcomes as outcome, j (j)}
 									<a href={`/event/${event.slug || event.id}`} class="outcome-button-inline">
 										<span class="outcome-button-label">{outcome.label}</span>
 										<span class="outcome-button-price">{outcome.price}%</span>
@@ -262,7 +226,6 @@
 		line-height: 1.4;
 		margin: 0;
 	}
-
 
 	.odds-section {
 		display: flex;

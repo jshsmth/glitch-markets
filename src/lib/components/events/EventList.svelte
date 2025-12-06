@@ -55,7 +55,7 @@
 <div class="event-list-container">
 	{#if loading && events.length === 0}
 		<div class="event-grid">
-			{#each Array(6) as _, i (i)}
+			{#each { length: 6 }, i (i)}
 				<div class="skeleton-card">
 					<div class="skeleton-header">
 						<div class="skeleton-icon"></div>

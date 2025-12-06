@@ -16,9 +16,7 @@
 	// For "active": active=true, closed=false
 	// For "closed": active=false, closed=true
 	// For "all": don't send active or closed params (let API return everything)
-	let active = $derived(
-		status === 'active' ? 'true' : status === 'closed' ? 'false' : undefined
-	);
+	let active = $derived(status === 'active' ? 'true' : status === 'closed' ? 'false' : undefined);
 	let closed = $derived(status === 'closed' ? 'true' : status === 'active' ? 'false' : undefined);
 
 	// State for infinite scroll
@@ -161,5 +159,4 @@
 			padding: var(--space-lg) 24px;
 		}
 	}
-
 </style>
