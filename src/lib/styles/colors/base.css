@@ -10,6 +10,7 @@
      ============================================ */
 
 	--primary-base: #00d9ff; /* Main brand color */
+	--primary-rgb: 0, 217, 255; /* RGB values for rgba() usage */
 
 	/* ============================================
      THIRD-PARTY BRAND COLORS

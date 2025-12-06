@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Tag } from '$lib/server/api/polymarket-client';
 	import FilterBar from '$lib/components/filters/FilterBar.svelte';
+	import { BottomSheet } from '$lib/components/ui';
 
 	interface Props {
 		subcategories: Tag[];
@@ -113,90 +114,70 @@
 </nav>
 
 <!-- Mobile Filter Bottom Sheet -->
-{#if isMobileFilterOpen}
-	<div class="mobile-backdrop" onclick={() => (isMobileFilterOpen = false)}></div>
-
-	<div class="mobile-filter-sheet">
-		<div class="sheet-header">
-			<h3>Filters</h3>
-			<button class="close-button" onclick={() => (isMobileFilterOpen = false)}>
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-					<path
-						d="M18 6L6 18M6 6l12 12"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-					/>
-				</svg>
+<BottomSheet open={isMobileFilterOpen} title="Filters" onClose={() => (isMobileFilterOpen = false)}>
+	<!-- Subcategories -->
+	<div class="filter-section">
+		<span class="section-label">Category</span>
+		<div class="option-grid">
+			<button
+				class="option-button"
+				class:active={isActive(null)}
+				onclick={() => handleSubcategoryClick(null)}
+			>
+				All
 			</button>
-		</div>
-
-		<div class="sheet-content">
-			<!-- Subcategories -->
-			<div class="filter-section">
-				<span class="section-label">Category</span>
-				<div class="option-grid">
+			{#each subcategories as subcategory (subcategory.id)}
+				{#if subcategory.label && subcategory.slug}
 					<button
 						class="option-button"
-						class:active={isActive(null)}
-						onclick={() => handleSubcategoryClick(null)}
+						class:active={isActive(subcategory.slug)}
+						onclick={() => handleSubcategoryClick(subcategory.slug)}
 					>
-						All
+						{subcategory.label}
 					</button>
-					{#each subcategories as subcategory (subcategory.id)}
-						{#if subcategory.label && subcategory.slug}
-							<button
-								class="option-button"
-								class:active={isActive(subcategory.slug)}
-								onclick={() => handleSubcategoryClick(subcategory.slug)}
-							>
-								{subcategory.label}
-							</button>
-						{/if}
-					{/each}
-				</div>
-			</div>
-
-			<!-- Status Filter -->
-			<div class="filter-section">
-				<span class="section-label">Status</span>
-				<div class="option-grid">
-					{#each statusOptions as option (option.value)}
-						<button
-							class="option-button"
-							class:active={currentStatus === option.value}
-							onclick={() => onStatusChange?.(option.value as 'active' | 'closed')}
-						>
-							{option.label}
-						</button>
-					{/each}
-				</div>
-			</div>
-
-			<!-- Sort Filter -->
-			<div class="filter-section">
-				<span class="section-label">Sort by</span>
-				<div class="option-grid">
-					{#each sortOptions as option (option.value)}
-						<button
-							class="option-button"
-							class:active={currentSort === option.value}
-							onclick={() => onSortChange?.(option.value)}
-						>
-							{option.label}
-						</button>
-					{/each}
-				</div>
-			</div>
-		</div>
-
-		<div class="sheet-footer">
-			<button class="apply-button" onclick={() => (isMobileFilterOpen = false)}>
-				Apply Filters
-			</button>
+				{/if}
+			{/each}
 		</div>
 	</div>
-{/if}
+
+	<!-- Status Filter -->
+	<div class="filter-section">
+		<span class="section-label">Status</span>
+		<div class="option-grid">
+			{#each statusOptions as option (option.value)}
+				<button
+					class="option-button"
+					class:active={currentStatus === option.value}
+					onclick={() => onStatusChange?.(option.value as 'active' | 'closed')}
+				>
+					{option.label}
+				</button>
+			{/each}
+		</div>
+	</div>
+
+	<!-- Sort Filter -->
+	<div class="filter-section">
+		<span class="section-label">Sort by</span>
+		<div class="option-grid">
+			{#each sortOptions as option (option.value)}
+				<button
+					class="option-button"
+					class:active={currentSort === option.value}
+					onclick={() => onSortChange?.(option.value)}
+				>
+					{option.label}
+				</button>
+			{/each}
+		</div>
+	</div>
+
+	{#snippet footer()}
+		<button class="apply-button" onclick={() => (isMobileFilterOpen = false)}>
+			Apply Filters
+		</button>
+	{/snippet}
+</BottomSheet>
 
 <style>
 	.subcategory-nav {
@@ -216,107 +197,40 @@
 	.mobile-filter-button {
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		width: 100%;
-		padding: 12px 16px;
-		background: var(--bg-1);
+		gap: 6px;
+		padding: 10px 18px;
+		background: var(--bg-2);
 		color: var(--text-0);
 		border: 1px solid var(--bg-3);
 		border-radius: var(--radius-button);
-		font-size: 14px;
-		font-weight: 500;
+		font-size: 13px;
+		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.15s;
-		min-height: 44px;
+		min-height: 40px;
+		width: fit-content;
 	}
 
 	.mobile-filter-button:hover {
-		background: var(--bg-2);
+		background: var(--bg-3);
+		border-color: var(--text-3);
+	}
+
+	.mobile-filter-button:active {
+		transform: scale(0.98);
 	}
 
 	.mobile-filter-button svg {
 		flex-shrink: 0;
-		color: var(--text-2);
+		color: var(--text-1);
 	}
 
 	.filter-summary {
-		flex: 1;
-		text-align: left;
 		color: var(--text-1);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		font-size: 13px;
 	}
 
-	/* Mobile Bottom Sheet */
-	.mobile-backdrop {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.5);
-		z-index: 999;
-		animation: fadeIn 0.2s ease-out;
-	}
-
-	.mobile-filter-sheet {
-		position: fixed;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		max-height: 85vh;
-		background: var(--bg-1);
-		border-radius: 16px 16px 0 0;
-		box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-		z-index: 1001;
-		display: flex;
-		flex-direction: column;
-		animation: slideUp 0.25s ease-out;
-	}
-
-	.sheet-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 20px 16px 16px;
-		border-bottom: 1px solid var(--bg-3);
-		flex-shrink: 0;
-	}
-
-	.sheet-header h3 {
-		font-size: 18px;
-		font-weight: 600;
-		color: var(--text-0);
-		margin: 0;
-	}
-
-	.close-button {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 36px;
-		height: 36px;
-		background: transparent;
-		border: none;
-		border-radius: 8px;
-		color: var(--text-2);
-		cursor: pointer;
-		transition: all 0.15s;
-	}
-
-	.close-button:hover {
-		background: var(--bg-2);
-		color: var(--text-0);
-	}
-
-	.sheet-content {
-		flex: 1;
-		overflow-y: auto;
-		padding: 16px;
-		-webkit-overflow-scrolling: touch;
-	}
-
+	/* Filter Section Styles */
 	.filter-section {
 		margin-bottom: 24px;
 	}
@@ -327,68 +241,105 @@
 
 	.section-label {
 		display: block;
-		font-size: 12px;
-		font-weight: 600;
+		font-size: 11px;
+		font-weight: 700;
 		color: var(--text-3);
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: 0.8px;
 		margin-bottom: 12px;
 	}
 
 	.option-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-		gap: 8px;
+		grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+		gap: 10px;
 	}
 
 	.option-button {
-		padding: 12px 16px;
+		padding: 14px 16px;
 		background: var(--bg-2);
 		color: var(--text-2);
-		border: 1px solid var(--bg-3);
-		border-radius: var(--radius-button);
+		border: 1.5px solid var(--bg-3);
+		border-radius: 12px;
 		font-size: 14px;
-		font-weight: 500;
+		font-weight: 600;
 		cursor: pointer;
-		transition: all 0.15s;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 		text-align: center;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		position: relative;
 	}
 
 	.option-button:hover {
 		background: var(--bg-3);
+		border-color: var(--text-3);
+		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	}
+
+	.option-button:active {
+		transform: translateY(0);
 	}
 
 	.option-button.active {
 		background: var(--primary);
 		color: var(--bg-0);
 		border-color: var(--primary);
-		font-weight: 600;
+		font-weight: 700;
+		box-shadow: 0 2px 12px rgba(var(--primary-rgb), 0.3);
 	}
 
-	.sheet-footer {
-		padding: 16px;
-		border-top: 1px solid var(--bg-3);
-		flex-shrink: 0;
+	.option-button.active::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: 11px;
+		background: linear-gradient(
+			180deg,
+			rgba(255, 255, 255, 0.1) 0%,
+			rgba(255, 255, 255, 0) 100%
+		);
+		pointer-events: none;
 	}
 
 	.apply-button {
 		width: 100%;
-		padding: 14px;
+		padding: 16px;
 		background: var(--primary);
 		color: var(--bg-0);
 		border: none;
-		border-radius: var(--radius-button);
+		border-radius: 12px;
 		font-size: 16px;
-		font-weight: 600;
+		font-weight: 700;
 		cursor: pointer;
-		transition: all 0.15s;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 2px 12px rgba(var(--primary-rgb), 0.3);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.apply-button::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			180deg,
+			rgba(255, 255, 255, 0.15) 0%,
+			rgba(255, 255, 255, 0) 100%
+		);
+		pointer-events: none;
 	}
 
 	.apply-button:hover {
-		opacity: 0.9;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.4);
+	}
+
+	.apply-button:active {
+		transform: translateY(0);
+		box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
 	}
 
 	/* Desktop Styles */
@@ -465,24 +416,6 @@
 			box-shadow:
 				0 1px 3px rgba(0, 0, 0, 0.1),
 				0 1px 2px rgba(0, 0, 0, 0.06);
-		}
-	}
-
-	@keyframes slideUp {
-		from {
-			transform: translateY(100%);
-		}
-		to {
-			transform: translateY(0);
-		}
-	}
-
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
 		}
 	}
 </style>
