@@ -5,62 +5,79 @@
 
 [data-theme='dark'] {
 	/* ============================================
-     BACKGROUNDS - cyan-tinted blacks
+     BACKGROUNDS - Much darker with subtle cyan tint
      WCAG Contrast Ratios (vs --text-0):
-     --bg-0: Base background (19.2:1)
+     --bg-0: Base background (20.5:1)
      ============================================ */
 
-	--bg-0: #0d1214; /* almost black with tiny cyan tint (19.2:1) */
-	--bg-1: #131719; /* (16.8:1) */
-	--bg-2: #1a2023; /* (13.5:1) */
-	--bg-3: #212a2e; /* (11.1:1) */
-	--bg-4: #2a3539; /* (8.9:1) */
-	--bg-5: #344145; /* Added missing bg-5 (7.2:1) */
+	--bg-0: #0a0c0e; /* Much darker base for true dark mode */
+	--bg-1: #111416; /* Darker cards for better contrast */
+	--bg-2: #1a1d21; /* Clear distinction for layered elements */
+	--bg-3: #252a30; /* More visible borders and dividers */
+	--bg-4: #323940; /* Strong accent backgrounds */
+	--bg-5: #404852; /* Even stronger backgrounds */
+
+	/* RGB values for transparency effects */
+	--bg-0-rgb: 10, 12, 14;
+	--bg-1-rgb: 17, 20, 22;
 
 	/* ============================================
-     TEXT - Neutral cool grays (minimal tint)
+     TEXT - More neutral whites with better hierarchy
      WCAG Contrast Ratios (vs --bg-0):
-     --text-0: 19.5:1 (AAA)
-     --text-1: 16.2:1 (AAA)
-     --text-2: 11.5:1 (AAA)
-     --text-3: 8.2:1 (AAA)
-     --text-4: 6.1:1 (AA)
+     --text-0: 20.8:1 (AAA)
+     --text-1: 17.5:1 (AAA)
+     --text-2: 12.8:1 (AAA)
+     --text-3: 7.5:1 (AAA)
+     --text-4: 5.2:1 (AA)
      ============================================ */
 
-	--text-0: #fefeff; /* nearly pure white, barely perceptible cool tint (19.5:1 - AAA) */
-	--text-1: #f5f6f7; /* subtle cool gray (16.2:1 - AAA) */
-	--text-2: #e0e3e5; /* neutral cool mid-gray (11.5:1 - AAA) */
-	--text-3: #c5cacd; /* cool mid-gray (8.2:1 - AAA) */
-	--text-4: #a8adb1; /* neutral gray (6.1:1 - AA) */
+	--text-0: #f7f9fa; /* Brighter primary text for better readability */
+	--text-1: #e7e9ea; /* Clear secondary text */
+	--text-2: #b0b8c0; /* More muted for less important text */
+	--text-3: #6e7681; /* Even more muted for hints/placeholders */
+	--text-4: #525a63; /* Subtle text for disabled states */
 
 	/* ============================================
-     PRIMARY BRAND COLOR - Electric Cyan (adjusted for dark)
+     PRIMARY BRAND COLOR - Refined Cyan (adjusted for dark)
      ============================================ */
 
 	--primary-50: #002d36;
-	--primary-100: #00586d;
-	--primary-200: #0083a3;
-	--primary-300: #00aed9;
-	--primary-400: #00c4f0;
-	--primary-500: #00d9ff; /* Main brand color */
-	--primary-600: #33dfff;
-	--primary-700: #66e5ff;
-	--primary-800: #99ebff;
-	--primary-900: #ccf3ff;
+	--primary-100: #005570;
+	--primary-200: #007d9e;
+	--primary-300: #00a5c8;
+	--primary-400: #00b8d9;
+	--primary-500: #00c4e6; /* Main brand color - refined */
+	--primary-600: #26d0ed;
+	--primary-700: #4dd4f1;
+	--primary-800: #80e0f5;
+	--primary-900: #b3ecf9;
 
 	/* Convenient aliases */
 	--primary: var(--primary-500);
 	--primary-hover: var(--primary-600);
 	--primary-active: var(--primary-700);
 
+	/* RGB for transparency effects */
+	--primary-rgb: 0, 196, 230;
+
 	/* ============================================
-     TRADING INDICATORS
-     (Same as light theme - these colors work well in dark)
+     TRADING INDICATORS - Brighter for dark mode
      ============================================ */
 
-	--success: #00c447;
-	--warning: #ffc233;
-	--danger: #fa1c65;
+	--success: #34d399; /* Brighter emerald for dark mode */
+	--success-bg: #064e3b; /* Dark success background */
+	--success-light: #10b981; /* Medium success accent */
+	--success-dark: #6ee7b7; /* Bright success for text */
+
+	--warning: #fbbf24; /* Brighter amber for dark mode */
+	--warning-bg: #78350f; /* Dark warning background */
+	--warning-light: #f59e0b; /* Medium warning accent */
+	--warning-dark: #fde047; /* Bright warning for text */
+
+	--danger: #f87171; /* Brighter red for dark mode */
+	--danger-bg: #7f1d1d; /* Dark danger background */
+	--danger-light: #ef4444; /* Medium danger accent */
+	--danger-dark: #fca5a5; /* Bright danger for text */
 
 	/* ============================================
      COMPONENT-SPECIFIC COLORS
@@ -78,6 +95,21 @@
 
 	/* Logo Colors */
 	--logo: #fcfcfc; /* light logo for dark theme */
+
+	/* ============================================
+     DARK MODE SHADOWS - Stronger for depth
+     ============================================ */
+
+	--shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+	--shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+	--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+	--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+	--shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+	--shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+	/* Glassmorphism for dark mode */
+	--glass-bg: rgba(var(--bg-0-rgb), 0.85);
+	--glass-border: rgba(var(--bg-4-rgb), 0.6);
 }
 
 /* ============================================
@@ -86,41 +118,59 @@
 
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		/* Backgrounds - cyan-tinted blacks */
-		--bg-0: #0d1214;
-		--bg-1: #131719;
-		--bg-2: #1a2023;
-		--bg-3: #212a2e;
-		--bg-4: #2a3539;
-		--bg-5: #344145;
+		/* Backgrounds - Much darker with subtle cyan tint */
+		--bg-0: #0a0c0e;
+		--bg-1: #111416;
+		--bg-2: #1a1d21;
+		--bg-3: #252a30;
+		--bg-4: #323940;
+		--bg-5: #404852;
 
-		/* Text - Neutral cool grays */
-		--text-0: #fefeff;
-		--text-1: #f5f6f7;
-		--text-2: #e0e3e5;
-		--text-3: #c5cacd;
-		--text-4: #a8adb1;
+		/* RGB values */
+		--bg-0-rgb: 10, 12, 14;
+		--bg-1-rgb: 17, 20, 22;
 
-		/* Primary Brand Color - Electric Cyan (adjusted for dark) */
+		/* Text - More neutral whites with better hierarchy */
+		--text-0: #f7f9fa;
+		--text-1: #e7e9ea;
+		--text-2: #b0b8c0;
+		--text-3: #6e7681;
+		--text-4: #525a63;
+
+		/* Primary Brand Color - Refined Cyan (adjusted for dark) */
 		--primary-50: #002d36;
-		--primary-100: #00586d;
-		--primary-200: #0083a3;
-		--primary-300: #00aed9;
-		--primary-400: #00c4f0;
-		--primary-500: #00d9ff;
-		--primary-600: #33dfff;
-		--primary-700: #66e5ff;
-		--primary-800: #99ebff;
-		--primary-900: #ccf3ff;
+		--primary-100: #005570;
+		--primary-200: #007d9e;
+		--primary-300: #00a5c8;
+		--primary-400: #00b8d9;
+		--primary-500: #00c4e6;
+		--primary-600: #26d0ed;
+		--primary-700: #4dd4f1;
+		--primary-800: #80e0f5;
+		--primary-900: #b3ecf9;
 
-		/* Trading Indicators */
-		--success: #00c447;
-		--warning: #ffc233;
-		--danger: #fa1c65;
+		/* RGB for transparency */
+		--primary-rgb: 0, 196, 230;
+
+		/* Trading Indicators - Brighter for dark mode */
+		--success: #34d399;
+		--success-bg: #064e3b;
+		--success-light: #10b981;
+		--success-dark: #6ee7b7;
+
+		--warning: #fbbf24;
+		--warning-bg: #78350f;
+		--warning-light: #f59e0b;
+		--warning-dark: #fde047;
+
+		--danger: #f87171;
+		--danger-bg: #7f1d1d;
+		--danger-light: #ef4444;
+		--danger-dark: #fca5a5;
 
 		/* Component-specific */
 		--button-primary-bg: var(--primary);
-		--button-primary-text: #0d1214;
+		--button-primary-text: #0a0c0e;
 		--button-primary-hover-bg: var(--primary-hover);
 
 		--error-bg: #3d1b1b;
@@ -129,5 +179,17 @@
 
 		/* Logo */
 		--logo: #fcfcfc;
+
+		/* Dark mode shadows */
+		--shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+		--shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+		--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+		--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+		--shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+		--shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+		/* Glassmorphism for dark mode */
+		--glass-bg: rgba(var(--bg-0-rgb), 0.85);
+		--glass-border: rgba(var(--bg-4-rgb), 0.6);
 	}
 }

@@ -102,15 +102,5 @@
 </div>
 
 <style>
-	.page-container {
-		max-width: 1400px;
-		margin: 0 auto;
-		padding: var(--space-lg) 12px;
-	}
-
-	@media (min-width: 768px) {
-		.page-container {
-			padding: var(--space-lg) 24px;
-		}
-	}
+	/* Page-specific styles use global .page-container from app.css */
 </style>

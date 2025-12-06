@@ -189,6 +189,8 @@
 			'footer';
 		min-height: 100vh;
 		background-color: var(--bg-0);
+		position: relative;
+		z-index: 1;
 	}
 
 	.app-layout :global(.site-header) {

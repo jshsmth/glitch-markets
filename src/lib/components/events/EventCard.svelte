@@ -167,13 +167,32 @@
 	.event-card {
 		display: flex;
 		background: var(--bg-1);
-		border: 1px solid var(--bg-3);
+		border: 1px solid var(--bg-4);
 		border-radius: var(--radius-card);
-		padding: 12px;
-		transition: all var(--transition-fast);
+		padding: 16px;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		transition:
+			all var(--transition-fast),
+			transform var(--transition-fast),
+			box-shadow var(--transition-fast);
 		color: inherit;
 		height: 100%;
 		min-height: 220px;
+		cursor: pointer;
+	}
+
+	.event-card:hover {
+		border-color: var(--bg-4);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+		transform: translateY(-1px);
+	}
+
+	:global([data-theme='dark']) .event-card {
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	}
+
+	:global([data-theme='dark']) .event-card:hover {
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 	}
 
 	.card-content {
@@ -223,8 +242,14 @@
 		font-size: 16px;
 		font-weight: 600;
 		color: var(--text-0);
-		line-height: 1.4;
+		line-height: 1.5;
 		margin: 0;
+	}
+
+	@media (max-width: 768px) {
+		.event-title {
+			font-size: 15px;
+		}
 	}
 
 	.odds-section {
@@ -238,10 +263,11 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-xs);
-		padding: 8px 12px;
+		padding: 10px 14px;
 		background: var(--bg-2);
-		border-radius: var(--radius-sm);
-		border: 1px solid var(--bg-3);
+		border-radius: var(--radius-md);
+		border: 1.5px solid var(--bg-4);
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 		text-decoration: none;
 		cursor: pointer;
 		transition: all var(--transition-fast);
@@ -249,7 +275,16 @@
 
 	.outcome-chip:hover {
 		background: var(--bg-3);
-		border-color: var(--bg-4);
+		border-color: var(--primary-300);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+	}
+
+	:global([data-theme='dark']) .outcome-chip {
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	}
+
+	:global([data-theme='dark']) .outcome-chip:hover {
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 
 	.outcome-label {
@@ -262,8 +297,8 @@
 	}
 
 	.outcome-price {
-		font-size: 15px;
-		font-weight: 700;
+		font-size: 16px;
+		font-weight: 800;
 		color: var(--text-0);
 		white-space: nowrap;
 	}
@@ -303,10 +338,11 @@
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		padding: 4px 8px;
+		padding: 5px 10px;
 		background: var(--bg-0);
-		border: 1px solid var(--bg-3);
-		border-radius: var(--radius-sm);
+		border: 1.5px solid var(--bg-4);
+		border-radius: var(--radius-md);
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		white-space: nowrap;
@@ -315,7 +351,8 @@
 
 	.outcome-button-inline:hover {
 		background: var(--bg-2);
-		border-color: var(--bg-4);
+		border-color: var(--primary-300);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 	}
 
 	.outcome-button-label {
@@ -362,11 +399,11 @@
 
 	@media (max-width: 768px) {
 		.event-card {
-			padding: var(--space-md);
+			padding: 16px;
 		}
 
-		.event-title {
-			font-size: 15px;
+		.card-content {
+			gap: 12px;
 		}
 
 		.stats {
@@ -374,7 +411,7 @@
 		}
 
 		.stat-value {
-			font-size: 15px;
+			font-size: 11px;
 		}
 	}
 </style>

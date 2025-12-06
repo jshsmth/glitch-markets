@@ -91,8 +91,16 @@
 		position: sticky;
 		top: 0;
 		z-index: var(--z-sticky);
-		background-color: var(--bg-0);
+		background-color: rgba(var(--bg-0-rgb), 0.9);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
 		border-bottom: 1px solid var(--bg-4);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+	}
+
+	:global([data-theme='dark']) .site-header {
+		background-color: rgba(var(--bg-0-rgb), 0.85);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 	}
 
 	.top-bar {
@@ -110,7 +118,7 @@
 	.header-content {
 		width: 100%;
 		height: 100%;
-		padding: 0 var(--spacing-3); /* 12px mobile */
+		padding: 0 16px; /* Increased from 12px for better mobile spacing */
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -186,15 +194,21 @@
 		min-width: var(--target-comfortable); /* 44px - WCAG 2.1 AA */
 		min-height: var(--target-comfortable);
 		transition: var(--transition-colors);
+		position: relative;
 	}
 
 	.icon-button:hover {
 		background-color: var(--bg-2);
 	}
 
+	.icon-button:active {
+		background-color: var(--bg-3);
+		transform: scale(0.95);
+	}
+
 	.icon-button:focus-visible {
 		outline: none;
-		box-shadow: var(--focus-ring);
+		box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
 	}
 
 	.header-divider {
