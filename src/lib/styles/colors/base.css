@@ -94,7 +94,8 @@
 
 	/* Brand-tinted shadows for elevation */
 	--shadow-primary-sm: 0 1px 3px rgba(var(--primary-rgb), 0.1);
-	--shadow-primary-md: 0 4px 6px -1px rgba(var(--primary-rgb), 0.15), 0 2px 4px -1px rgba(var(--primary-rgb), 0.08);
+	--shadow-primary-md:
+		0 4px 6px -1px rgba(var(--primary-rgb), 0.15), 0 2px 4px -1px rgba(var(--primary-rgb), 0.08);
 
 	/* ============================================
      TARGET SIZES (WCAG 2.2 AA Compliance)
