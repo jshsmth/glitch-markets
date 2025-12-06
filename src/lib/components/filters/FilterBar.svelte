@@ -84,41 +84,50 @@
 	</button>
 
 	{#if isOpen && buttonElement}
+		<!-- Mobile backdrop -->
+		<div
+			class="backdrop"
+			role="button"
+			tabindex="-1"
+			onclick={() => (isOpen = false)}
+			onkeydown={(e) => e.key === 'Escape' && (isOpen = false)}
+		></div>
+
 		<div
 			class="filter-panel"
 			bind:this={panelElement}
 			onmouseenter={handleMouseEnter}
 			onmouseleave={handleMouseLeave}
 		>
-		<div class="filter-group">
-			<span class="group-label">Status</span>
-			<div class="options">
-				{#each statusOptions as option (option.value)}
-					<button
-						class="option-chip"
-						class:active={currentStatus === option.value}
-						onclick={() => onStatusChange?.(option.value as 'active' | 'closed')}
-					>
-						{option.label}
-					</button>
-				{/each}
+			<div class="filter-group">
+				<span class="group-label">Status</span>
+				<div class="options">
+					{#each statusOptions as option (option.value)}
+						<button
+							class="option-chip"
+							class:active={currentStatus === option.value}
+							onclick={() => onStatusChange?.(option.value as 'active' | 'closed')}
+						>
+							{option.label}
+						</button>
+					{/each}
+				</div>
 			</div>
-		</div>
 
-		<div class="filter-group">
-			<span class="group-label">Sort by</span>
-			<div class="options">
-				{#each sortOptions as option (option.value)}
-					<button
-						class="option-chip"
-						class:active={currentSort === option.value}
-						onclick={() => onSortChange?.(option.value)}
-					>
-						{option.label}
-					</button>
-				{/each}
+			<div class="filter-group">
+				<span class="group-label">Sort by</span>
+				<div class="options">
+					{#each sortOptions as option (option.value)}
+						<button
+							class="option-chip"
+							class:active={currentSort === option.value}
+							onclick={() => onSortChange?.(option.value)}
+						>
+							{option.label}
+						</button>
+					{/each}
+				</div>
 			</div>
-		</div>
 		</div>
 	{/if}
 </div>
@@ -152,15 +161,16 @@
 		color: var(--text-2);
 	}
 
+	.backdrop {
+		display: none;
+	}
+
 	.filter-panel {
-		position: absolute;
-		top: calc(100% + 8px);
-		right: 0;
+		position: fixed;
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
 		border-radius: 8px;
 		padding: 16px;
-		min-width: 280px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 		z-index: 1000;
 		display: flex;
@@ -199,6 +209,7 @@
 		cursor: pointer;
 		transition: all 0.15s;
 		min-height: 32px;
+		flex-shrink: 0;
 	}
 
 	.option-chip:hover {
@@ -212,16 +223,76 @@
 		font-weight: 600;
 	}
 
+	/* Desktop */
+	@media (min-width: 769px) {
+		.filter-panel {
+			position: absolute;
+			top: calc(100% + 8px);
+			right: 0;
+			min-width: 280px;
+			max-width: 320px;
+		}
+	}
+
+	/* Mobile */
 	@media (max-width: 768px) {
 		.filter-button {
 			min-height: 44px;
 		}
 
-		.filter-panel {
-			left: auto;
+		.backdrop {
+			display: block;
+			position: fixed;
+			top: 0;
+			left: 0;
 			right: 0;
-			min-width: 260px;
-			max-width: calc(100vw - 24px);
+			bottom: 0;
+			background: rgba(0, 0, 0, 0.5);
+			z-index: 999;
+			animation: fadeIn 0.2s ease-out;
+		}
+
+		.filter-panel {
+			bottom: 0;
+			left: 0;
+			right: 0;
+			border-radius: 16px 16px 0 0;
+			padding: 20px 16px 24px;
+			box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+			animation: slideUp 0.2s ease-out;
+			z-index: 1001;
+		}
+
+		.filter-group {
+			gap: 12px;
+		}
+
+		.group-label {
+			font-size: 12px;
+		}
+
+		.option-chip {
+			min-height: 40px;
+			padding: 8px 14px;
+			font-size: 14px;
+		}
+	}
+
+	@keyframes slideUp {
+		from {
+			transform: translateY(100%);
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
 		}
 	}
 </style>
