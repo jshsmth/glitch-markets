@@ -70,8 +70,9 @@
 	bind:this={wrapperElement}
 	onmouseenter={handleMouseEnter}
 	onmouseleave={handleMouseLeave}
+	role="group"
 >
-	<button class="filter-button" bind:this={buttonElement} onclick={() => (isOpen = !isOpen)}>
+	<button class="filter-button" bind:this={buttonElement}>
 		<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
 			<path
 				d="M2 4h12M4 8h8M6 12h4"
@@ -98,6 +99,8 @@
 			bind:this={panelElement}
 			onmouseenter={handleMouseEnter}
 			onmouseleave={handleMouseLeave}
+			role="menu"
+			tabindex="-1"
 		>
 			<div class="filter-group">
 				<span class="group-label">Status</span>
