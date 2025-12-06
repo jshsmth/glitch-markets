@@ -87,6 +87,7 @@
 		align-items: center;
 		gap: var(--space-sm);
 		min-width: min-content;
+		position: relative;
 	}
 
 	.chip-container {

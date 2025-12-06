@@ -9,6 +9,8 @@
 	let { currentStatus = 'active', currentSort = 'volume24hr', onStatusChange, onSortChange }: Props = $props();
 
 	let isOpen = $state(false);
+	let buttonElement: HTMLButtonElement | undefined = $state();
+	let panelElement: HTMLDivElement | undefined = $state();
 
 	const statusOptions = [
 		{ value: 'active', label: 'Active' },
@@ -21,18 +23,46 @@
 		{ value: 'liquidity', label: 'Liquidity' },
 		{ value: 'createdAt', label: 'Newest' }
 	];
+
+	function handleClickOutside(event: MouseEvent) {
+		if (
+			isOpen &&
+			buttonElement &&
+			panelElement &&
+			!buttonElement.contains(event.target as Node) &&
+			!panelElement.contains(event.target as Node)
+		) {
+			isOpen = false;
+		}
+	}
+
+	$effect(() => {
+		if (isOpen) {
+			document.addEventListener('click', handleClickOutside);
+			return () => document.removeEventListener('click', handleClickOutside);
+		}
+	});
 </script>
 
 <div class="filter-wrapper">
-	<button class="filter-button" onclick={() => (isOpen = !isOpen)}>
+	<button class="filter-button" bind:this={buttonElement} onclick={() => (isOpen = !isOpen)}>
 		<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
 			<path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
 		</svg>
 		Filters
 	</button>
+</div>
 
-	{#if isOpen}
-		<div class="filter-panel">
+{#if isOpen && buttonElement}
+	<div
+		class="filter-panel"
+		bind:this={panelElement}
+		style="
+			position: fixed;
+			top: {buttonElement.getBoundingClientRect().bottom + 8}px;
+			left: {buttonElement.getBoundingClientRect().left}px;
+		"
+	>
 			<div class="filter-group">
 				<span class="group-label">Status</span>
 				<div class="options">
@@ -62,9 +92,8 @@
 					{/each}
 				</div>
 			</div>
-		</div>
-	{/if}
-</div>
+	</div>
+{/if}
 
 <style>
 	.filter-wrapper {
@@ -96,9 +125,6 @@
 	}
 
 	.filter-panel {
-		position: absolute;
-		top: calc(100% + 8px);
-		left: 0;
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
 		border-radius: 8px;
