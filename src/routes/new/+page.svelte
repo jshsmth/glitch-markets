@@ -5,6 +5,7 @@
 	import FilterBar from '$lib/components/filters/FilterBar.svelte';
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import { browser } from '$app/environment';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	const PAGE_SIZE = 20;
 	let offset = $state(0);
@@ -15,7 +16,7 @@
 	const query = createQuery<Event[]>(() => ({
 		queryKey: [...queryKeys.events.all, offset, currentSort],
 		queryFn: async () => {
-			const params = new URLSearchParams({
+			const params = new SvelteURLSearchParams({
 				limit: PAGE_SIZE.toString(),
 				active: 'true',
 				archived: 'false',
