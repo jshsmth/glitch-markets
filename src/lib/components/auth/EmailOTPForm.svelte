@@ -24,14 +24,9 @@
 		 * Callback to set error message
 		 */
 		onError?: (message: string | null) => void;
-
-		/**
-		 * Callback when form is reset
-		 */
-		onReset?: () => void;
 	}
 
-	let { onSuccess, onAuthStateChange, onError, onReset }: Props = $props();
+	let { onSuccess, onAuthStateChange, onError }: Props = $props();
 
 	let isAuthenticating = $state(false);
 
@@ -39,14 +34,6 @@
 	let emailAddress = $state('');
 	let otpCode = $state('');
 	let otpVerification = $state<OTPVerification | null>(null);
-
-	function reset() {
-		emailStep = 'input';
-		emailAddress = '';
-		otpCode = '';
-		otpVerification = null;
-		onReset?.();
-	}
 
 	function isValidEmail(email: string): boolean {
 		return EMAIL_PATTERN.test(email);

@@ -9,14 +9,12 @@
 
 	let isAuthenticating = $state<AuthProvider | null>(null);
 	let errorMessage = $state<string | null>(null);
-	let emailFormRef = $state<EmailOTPForm>();
 	let showSocialButtons = $state(true);
 
 	function resetModalState() {
 		errorMessage = null;
 		isAuthenticating = null;
 		showSocialButtons = true;
-		emailFormRef?.reset();
 	}
 
 	function handleModalClose() {
@@ -49,11 +47,7 @@
 <Modal {isOpen} onClose={handleModalClose} title="Welcome to Glitch Markets">
 	<div class="modal-subtitle">Sign in or create your account to get started</div>
 	<div class="sign-in-content">
-		<EmailOTPForm
-			bind:this={emailFormRef}
-			onAuthStateChange={handleEmailAuthChange}
-			onError={handleError}
-		/>
+		<EmailOTPForm onAuthStateChange={handleEmailAuthChange} onError={handleError} />
 
 		{#if showSocialButtons}
 			<div class="divider">
