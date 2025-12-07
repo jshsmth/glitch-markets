@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { Event } from '$lib/server/api/polymarket-client';
+	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
+	import WaterLiquidIcon from '$lib/components/icons/WaterLiquidIcon.svelte';
 
 	interface Props {
 		event: Event;
@@ -122,17 +124,15 @@
 		{#if primaryOdds}
 			<div class="odds-board">
 				{#each primaryOdds as outcome, i (i)}
-					<a href={`/event/${event.slug || event.id}`} class="odds-row">
-						<div class="odds-info">
-							<span class="outcome-label">{outcome.label}</span>
-							<span class="outcome-odds">{outcome.price}%</span>
-						</div>
-						<div class="odds-bar-container">
-							<div class="odds-bar" style="width: {outcome.percentage}%"></div>
-						</div>
-						<div class="bet-action">
-							<span class="bet-button">BET</span>
-						</div>
+					<a
+						href={`/event/${event.slug || event.id}`}
+						class="odds-row"
+						class:is-yes={i === 0}
+						class:is-no={i === 1}
+						style="--fill-percentage: {outcome.percentage}%"
+					>
+						<span class="outcome-label">{outcome.label}</span>
+						<span class="outcome-odds">{outcome.price}%</span>
 					</a>
 				{/each}
 			</div>
@@ -149,7 +149,13 @@
 						{#if market.outcomes}
 							<div class="market-odds-inline">
 								{#each market.outcomes as outcome, j (j)}
-									<a href={`/event/${event.slug || event.id}`} class="odds-chip">
+									<a
+										href={`/event/${event.slug || event.id}`}
+										class="odds-chip"
+										class:chip-first={j === 0}
+										class:chip-second={j === 1}
+										style="--fill-percentage: {outcome.percentage}%"
+									>
 										<span class="odds-chip-label">{outcome.label}</span>
 										<span class="odds-chip-price">{outcome.price}%</span>
 									</a>
@@ -165,22 +171,15 @@
 		<div class="card-footer">
 			<div class="stats">
 				<div class="stat">
-					<span class="stat-icon">💰</span>
+					<MoneyIcon size={16} class="stat-icon" />
 					<span class="stat-value">{formatNumber(event.volume24hr)}</span>
 					<span class="stat-label">24h</span>
 				</div>
 				<div class="stat">
-					<span class="stat-icon">🌊</span>
+					<WaterLiquidIcon size={16} class="stat-icon" />
 					<span class="stat-value">{formatNumber(event.liquidity)}</span>
 					<span class="stat-label">Liq</span>
 				</div>
-				{#if isMultiMarket}
-					<div class="stat">
-						<span class="stat-icon">📊</span>
-						<span class="stat-value">{event.markets?.length || 0}</span>
-						<span class="stat-label">Markets</span>
-					</div>
-				{/if}
 			</div>
 		</div>
 	</div>
@@ -196,19 +195,9 @@
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 		transition:
 			all var(--transition-fast),
-			transform var(--transition-fast),
 			box-shadow var(--transition-fast);
 		color: inherit;
 		height: 100%;
-		cursor: pointer;
-	}
-
-	.event-card:hover {
-		border-color: rgba(var(--primary-rgb), 0.3);
-		box-shadow:
-			0 2px 8px rgba(0, 0, 0, 0.06),
-			0 0 0 1px rgba(var(--primary-rgb), 0.1);
-		transform: translateY(-1px);
 	}
 
 	.event-card:focus-within {
@@ -221,10 +210,6 @@
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 	}
 
-	:global([data-theme='dark']) .event-card:hover {
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-	}
-
 	.card-content {
 		display: flex;
 		flex-direction: column;
@@ -235,10 +220,6 @@
 	/* ============================================
 	   HEADER
 	   ============================================ */
-
-	.card-header {
-		margin-bottom: 0;
-	}
 
 	.title-row {
 		display: flex;
@@ -271,6 +252,7 @@
 
 	.event-title-link:hover .event-title {
 		color: var(--primary);
+		text-decoration: underline;
 	}
 
 	.event-title-link:focus-visible {
@@ -295,26 +277,57 @@
 	.odds-board {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
+		gap: 8px;
 	}
 
 	.odds-row {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		gap: 12px;
+		display: flex;
 		align-items: center;
-		padding: 12px 14px;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 10px 12px;
 		background: var(--bg-2);
-		border: 1.5px solid var(--bg-4);
-		border-radius: var(--radius-md);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-sm);
 		text-decoration: none;
 		transition: all var(--transition-fast);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.odds-row::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: var(--fill-percentage, 0%);
+		background: linear-gradient(90deg, var(--row-gradient-start), var(--row-gradient-end));
+		transition:
+			width 0.3s ease,
+			opacity 0.3s ease;
+		z-index: 0;
+	}
+
+	/* Yes row: Green-to-cyan gradient */
+	.odds-row.is-yes {
+		--row-gradient-start: rgba(0, 196, 71, 0.12);
+		--row-gradient-end: rgba(0, 217, 255, 0.08);
+	}
+
+	/* No row: Red-to-cyan gradient */
+	.odds-row.is-no {
+		--row-gradient-start: rgba(255, 51, 102, 0.12);
+		--row-gradient-end: rgba(0, 217, 255, 0.08);
 	}
 
 	.odds-row:hover {
-		background: var(--primary-hover-bg);
 		border-color: var(--primary);
-		box-shadow: var(--shadow-primary-sm);
+		transform: translateY(-1px);
+	}
+
+	.odds-row:hover::before {
+		opacity: 1.3;
 	}
 
 	.odds-row:focus-visible {
@@ -322,98 +335,27 @@
 		box-shadow: var(--focus-ring);
 	}
 
-	.odds-info {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12px;
-		min-width: 0;
-		grid-column: 1 / -1;
-	}
-
 	.outcome-label {
 		font-size: 14px;
-		color: var(--text-1);
-		font-weight: 600;
+		color: var(--text-0);
+		font-weight: 500;
 		text-overflow: ellipsis;
 		overflow: hidden;
 		white-space: nowrap;
 		flex: 1;
 		min-width: 0;
+		position: relative;
+		z-index: 1;
 	}
 
 	.outcome-odds {
-		font-size: 24px;
-		font-weight: 900;
+		font-size: 20px;
+		font-weight: 800;
 		color: var(--text-0);
 		white-space: nowrap;
 		letter-spacing: -0.02em;
-	}
-
-	.odds-bar-container {
-		grid-column: 1 / -1;
-		height: 6px;
-		background: var(--bg-3);
-		border-radius: 3px;
-		overflow: hidden;
 		position: relative;
-	}
-
-	.odds-bar {
-		height: 100%;
-		background: linear-gradient(90deg, var(--primary), var(--primary-600));
-		border-radius: 3px;
-		transition: width 0.3s ease;
-	}
-
-	.bet-action {
-		grid-column: 1 / -1;
-		display: flex;
-		justify-content: flex-end;
-	}
-
-	.bet-button {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 8px 20px;
-		background: var(--primary);
-		color: var(--button-primary-text);
-		font-size: 13px;
-		font-weight: 700;
-		border-radius: var(--radius-md);
-		letter-spacing: 0.02em;
-		transition: all var(--transition-fast);
-	}
-
-	.odds-row:hover .bet-button {
-		background: var(--primary-hover);
-		transform: scale(1.05);
-	}
-
-	/* Desktop: Horizontal Layout */
-	@media (min-width: 768px) {
-		.odds-row {
-			grid-template-columns: minmax(0, 1fr) 200px auto;
-			gap: 16px;
-		}
-
-		.odds-info {
-			grid-column: 1 / 2;
-		}
-
-		.odds-bar-container {
-			grid-column: 2 / 3;
-			align-self: center;
-		}
-
-		.bet-action {
-			grid-column: 3 / 4;
-		}
-
-		.outcome-odds {
-			font-size: 28px;
-		}
+		z-index: 1;
 	}
 
 	/* ============================================
@@ -423,32 +365,38 @@
 	.markets-preview {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: 8px;
 	}
 
 	.market-item {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-		padding: 12px 14px;
-		background: var(--bg-2);
-		border: 1px solid var(--bg-4);
-		border-radius: var(--radius-md);
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: center;
+		gap: 12px;
+		padding: 12px 0;
+		border-bottom: 1px solid var(--bg-3);
+	}
+
+	.market-item:first-child {
+		padding-top: 0;
+	}
+
+	.market-item:last-child {
+		border-bottom: none;
+		padding-bottom: 0;
 	}
 
 	.market-header {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: 12px;
+		min-width: 0;
 	}
 
 	.market-question {
 		font-size: 14px;
 		color: var(--text-0);
-		font-weight: 600;
+		font-weight: 500;
 		line-height: 1.4;
-		flex: 1;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -456,31 +404,62 @@
 
 	.market-odds-inline {
 		display: flex;
-		gap: 8px;
-		flex-wrap: wrap;
+		gap: 6px;
+		flex-shrink: 0;
 	}
 
 	.odds-chip {
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		padding: 8px 12px;
-		background: var(--bg-0);
-		border: 1.5px solid var(--bg-4);
-		border-radius: var(--radius-md);
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+		gap: 4px;
+		padding: 5px 8px;
+		background: var(--bg-2);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-sm);
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		white-space: nowrap;
 		text-decoration: none;
-		flex: 1;
-		min-width: 0;
+		min-width: 65px;
+		justify-content: space-between;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.odds-chip::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: var(--fill-percentage, 0%);
+		background: linear-gradient(90deg, var(--chip-gradient-start), var(--chip-gradient-end));
+		transition:
+			width 0.3s ease,
+			opacity 0.3s ease;
+		z-index: 0;
+	}
+
+	/* First chip: Green-to-cyan gradient */
+	.odds-chip.chip-first {
+		--chip-gradient-start: rgba(0, 196, 71, 0.1);
+		--chip-gradient-end: rgba(0, 217, 255, 0.06);
+	}
+
+	/* Second chip: Cyan-to-purple gradient */
+	.odds-chip.chip-second {
+		--chip-gradient-start: rgba(0, 217, 255, 0.1);
+		--chip-gradient-end: rgba(139, 92, 246, 0.08);
 	}
 
 	.odds-chip:hover {
 		background: var(--primary-hover-bg);
 		border-color: var(--primary);
-		box-shadow: var(--shadow-primary-sm);
+		transform: translateY(-1px);
+	}
+
+	.odds-chip:hover::before {
+		opacity: 1.3;
 	}
 
 	.odds-chip:focus-visible {
@@ -489,20 +468,23 @@
 	}
 
 	.odds-chip-label {
-		font-size: 13px;
-		color: var(--text-1);
+		font-size: 11px;
+		color: var(--text-2);
 		font-weight: 500;
-		flex: 1;
-		min-width: 0;
+		max-width: 50px;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		position: relative;
+		z-index: 1;
 	}
 
 	.odds-chip-price {
-		font-size: 16px;
+		font-size: 12px;
 		color: var(--text-0);
-		font-weight: 800;
+		font-weight: 700;
 		white-space: nowrap;
+		position: relative;
+		z-index: 1;
 	}
 
 	/* ============================================
@@ -511,7 +493,7 @@
 
 	.card-footer {
 		margin-top: auto;
-		padding-top: 4px;
+		padding-top: 12px;
 		border-top: 1px solid var(--bg-3);
 	}
 
@@ -527,8 +509,9 @@
 		gap: 6px;
 	}
 
-	.stat-icon {
-		font-size: 14px;
+	.stat :global(.stat-icon) {
+		color: var(--text-3);
+		flex-shrink: 0;
 	}
 
 	.stat-value {
@@ -573,8 +556,17 @@
 			font-size: 12px;
 		}
 
-		.odds-chip {
-			flex: 1 1 calc(50% - 4px);
+		.market-item {
+			grid-template-columns: 1fr;
+			gap: 8px;
+		}
+
+		.market-odds-inline {
+			justify-content: flex-start;
+		}
+
+		.odds-chip-label {
+			max-width: 80px;
 		}
 	}
 </style>

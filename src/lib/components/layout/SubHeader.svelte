@@ -121,9 +121,15 @@
 
 <style>
 	.sub-header {
-		background-color: var(--bg-1);
+		background-color: var(--bg-0);
 		border-bottom: 1px solid var(--bg-4);
-		padding: 12px 0;
+		padding: 10px 0;
+	}
+
+	@media (min-width: 768px) {
+		.sub-header {
+			padding: 12px 0;
+		}
 	}
 
 	.nav-container {
@@ -132,7 +138,7 @@
 		margin: 0 auto;
 		display: flex;
 		align-items: center;
-		gap: var(--spacing-2); /* 8px spacing between arrows and scroll area */
+		gap: 8px;
 	}
 
 	.nav-arrow {
@@ -178,7 +184,13 @@
 		-ms-overflow-style: none; /* IE/Edge */
 		-webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 		flex: 1;
-		padding: 0 var(--spacing-3); /* 12px - using design tokens */
+		padding: 0 20px;
+	}
+
+	@media (min-width: 768px) {
+		.nav-scroll {
+			padding: 0 28px;
+		}
 	}
 
 	.nav-scroll::-webkit-scrollbar {
@@ -188,25 +200,25 @@
 	.nav-list {
 		display: flex;
 		align-items: center;
-		gap: var(--space-xs); /* 8px - tighter spacing */
+		gap: 6px;
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		min-height: var(--target-comfortable); /* 44px - WCAG 2.1 AA */
+		min-height: 40px;
 	}
 
 	.nav-link {
 		display: flex;
 		align-items: center;
-		gap: var(--spacing-2); /* 8px - better icon/text balance */
+		gap: 8px;
 		text-decoration: none;
-		color: var(--text-2); /* Muted for inactive state */
+		color: var(--text-2);
 		font-size: 14px;
 		font-weight: 500;
 		white-space: nowrap;
-		padding: 8px 16px;
-		border-radius: var(--radius-lg);
-		transition: all var(--transition-fast);
+		padding: 8px 14px;
+		border-radius: var(--radius-md);
+		transition: all 0.2s ease;
 	}
 
 	.nav-link:hover {

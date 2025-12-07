@@ -37,14 +37,30 @@
 
 <style>
 	.logo {
-		height: 36px;
+		height: 32px;
 		width: auto;
 		display: block;
+		transition: opacity 0.2s ease;
+	}
+
+	.logo:hover {
+		opacity: 0.8;
 	}
 
 	.logo-skeleton {
-		height: 36px;
-		width: 190px; /* 36px height * 5.27 aspect ratio */
+		height: 32px;
+		width: 170px;
 		background: transparent;
+	}
+
+	@media (min-width: 768px) {
+		.logo {
+			height: 36px;
+		}
+
+		.logo-skeleton {
+			height: 36px;
+			width: 190px;
+		}
 	}
 </style>

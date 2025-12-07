@@ -9,10 +9,12 @@
 	import { PUBLIC_DYNAMIC_ENVIRONMENT_ID } from '$env/static/public';
 	import { initializeAuthListeners, setInitializationComplete } from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
+	import { signInModalState, closeSignInModal } from '$lib/stores/modal.svelte';
 	import { onMount } from 'svelte';
 	import { TIMEOUTS } from '$lib/config/constants';
 	import TopHeader from '$lib/components/layout/TopHeader.svelte';
 	import BottomNav from '$lib/components/layout/BottomNav.svelte';
+	import SignInModal from '$lib/components/auth/SignInModal.svelte';
 	// @ts-expect-error - virtual module from vite-plugin-pwa
 	import { pwaInfo } from 'virtual:pwa-info';
 
@@ -150,6 +152,9 @@
 
 		<BottomNav />
 	</div>
+
+	<!-- Global modals rendered at root level -->
+	<SignInModal isOpen={signInModalState.isOpen} onClose={closeSignInModal} />
 
 	{#if dev}
 		<SvelteQueryDevtools buttonPosition="bottom-right" />
