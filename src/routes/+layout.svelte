@@ -20,7 +20,7 @@
 
 	let { children, data } = $props();
 
-	const queryClient = data?.queryClient || createQueryClient();
+	const queryClient = $derived(data?.queryClient || createQueryClient());
 
 	onMount(() => {
 		initializeTheme();
