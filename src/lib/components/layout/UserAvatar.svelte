@@ -466,8 +466,6 @@
 
 	.dropdown-item:hover {
 		background-color: var(--primary-hover-bg);
-		border-left: 2px solid var(--primary);
-		padding-left: 10px; /* Compensate for border */
 	}
 
 	.dropdown-item:active {
@@ -486,8 +484,6 @@
 
 	.logout-item:hover {
 		background-color: rgba(255, 59, 48, 0.1);
-		border-left: 2px solid var(--error);
-		padding-left: 10px;
 	}
 
 	.logout-item:focus-visible {
