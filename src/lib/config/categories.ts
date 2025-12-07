@@ -22,12 +22,13 @@ export interface Category {
 	href: string;
 	icon?: Component;
 	dropdown?: boolean;
+	showDivider?: boolean;
 }
 
 export const categories: Category[] = [
 	{ name: 'Trending', href: '/', icon: RocketIcon },
 	{ name: 'Breaking', href: '/breaking', icon: FlashIcon },
-	{ name: 'New', href: '/new', icon: StarsIcon },
+	{ name: 'New', href: '/new', icon: StarsIcon, showDivider: true },
 	{ name: 'Politics', href: '/politics', icon: CourthouseIcon },
 	{ name: 'Sports', href: '/sports', icon: CupIcon },
 	{ name: 'Finance', href: '/finance', icon: DollarCircleIcon },
