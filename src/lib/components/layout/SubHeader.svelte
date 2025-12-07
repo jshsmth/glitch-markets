@@ -3,12 +3,12 @@
 	import { ChevronLeftIcon, ChevronRightIcon } from '$lib/components/icons';
 	import { categories, SCROLL_AMOUNT, SCROLL_THRESHOLD } from '$lib/config/categories';
 
-	// Determine active category based on pathname
 	let activeCategory = $derived(() => {
 		const pathname = page.url.pathname;
 		if (pathname === '/') return 'trending';
-		// Remove leading slash to get category name
-		return pathname.slice(1);
+		const pathCategory = pathname.slice(1);
+		if (pathCategory === 'pop-culture') return 'culture';
+		return pathCategory;
 	});
 	let scrollContainer = $state<HTMLDivElement>();
 	let showSwipeHint = $state(false);
@@ -93,6 +93,9 @@
 							{category.name}
 						</a>
 					</li>
+					{#if category.showDivider}
+						<li class="nav-divider" aria-hidden="true"></li>
+					{/if}
 				{/each}
 			</ul>
 
@@ -245,6 +248,14 @@
 	.nav-link :global(svg) {
 		flex-shrink: 0;
 		transition: transform var(--transition-base);
+	}
+
+	.nav-divider {
+		width: 1px;
+		height: 20px;
+		background-color: var(--bg-4);
+		margin: 0 4px;
+		flex-shrink: 0;
 	}
 
 	/* Swipe Hint - Mobile only */

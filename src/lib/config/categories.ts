@@ -22,18 +22,19 @@ export interface Category {
 	href: string;
 	icon?: Component;
 	dropdown?: boolean;
+	showDivider?: boolean;
 }
 
 export const categories: Category[] = [
 	{ name: 'Trending', href: '/', icon: RocketIcon },
 	{ name: 'Breaking', href: '/breaking', icon: FlashIcon },
-	{ name: 'New', href: '/new', icon: StarsIcon },
+	{ name: 'New', href: '/new', icon: StarsIcon, showDivider: true },
 	{ name: 'Politics', href: '/politics', icon: CourthouseIcon },
 	{ name: 'Sports', href: '/sports', icon: CupIcon },
 	{ name: 'Finance', href: '/finance', icon: DollarCircleIcon },
 	{ name: 'Crypto', href: '/crypto', icon: BitcoinCardIcon },
 	{ name: 'Tech', href: '/tech', icon: DocumentTextIcon },
-	{ name: 'Culture', href: '/culture', icon: TicketIcon },
+	{ name: 'Culture', href: '/pop-culture', icon: TicketIcon },
 	{ name: 'World', href: '/world', icon: GlobalEditIcon },
 	{ name: 'Economy', href: '/economy', icon: DollarChangeIcon },
 	{ name: 'Elections', href: '/elections', icon: SpeakerIcon },

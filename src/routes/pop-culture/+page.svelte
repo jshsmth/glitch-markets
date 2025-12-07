@@ -8,7 +8,7 @@
 	let status = $state<'active' | 'closed' | 'all'>('active');
 	let sort = $state<string>('volume24hr');
 
-	let tag_slug = $derived(selectedTag || 'geopolitics');
+	let tag_slug = $derived(selectedTag || 'pop-culture');
 	let active = $derived(status === 'all' ? undefined : 'true');
 	let closed = $derived(status === 'closed' ? 'true' : status === 'active' ? 'false' : undefined);
 
@@ -25,9 +25,9 @@
 	}
 
 	const subcategoriesQuery = createQuery(() => ({
-		queryKey: ['tags', 'geopolitics', 'related'],
+		queryKey: ['tags', 'pop-culture', 'related'],
 		queryFn: async () => {
-			const res = await fetch('/api/tags/slug/geopolitics/related');
+			const res = await fetch('/api/tags/slug/pop-culture/related');
 
 			if (!res.ok) {
 				throw new Error(`Failed to fetch subcategories: ${res.statusText}`);
@@ -38,7 +38,7 @@
 	}));
 
 	const eventsQuery = createInfiniteQuery(() => ({
-		queryKey: ['events', 'geopolitics', tag_slug, status, sort],
+		queryKey: ['events', 'pop-culture', tag_slug, status, sort],
 		queryFn: async ({ pageParam = 0 }) => {
 			const params: Record<string, string> = {
 				tag_slug,
