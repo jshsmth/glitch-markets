@@ -55,7 +55,7 @@
 	let hasValue = $derived(value.length > 0);
 
 	// Create debounced input handler if oninput is provided
-	const debouncedInput = oninput ? debounce(oninput, debounceDelay) : undefined;
+	const debouncedInput = $derived(oninput ? debounce(oninput, debounceDelay) : undefined);
 
 	function handleInput(event: Event) {
 		if (debouncedInput) {

@@ -41,7 +41,7 @@
 		...restProps
 	}: Props = $props();
 
-	const Element = href ? 'a' : 'button';
+	const Element = $derived(href ? 'a' : 'button');
 </script>
 
 <svelte:element
