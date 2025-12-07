@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { page } from '$app/state';
+	import { page } from '$app/stores';
 	import { ChevronLeftIcon, ChevronRightIcon } from '$lib/components/icons';
 	import { categories, SCROLL_AMOUNT, SCROLL_THRESHOLD } from '$lib/config/categories';
 
-	let activeCategory = $derived(() => {
-		const pathname = page.url.pathname;
+	let activeCategory = $derived.by(() => {
+		const pathname = $page.url.pathname;
 		if (pathname === '/') return 'trending';
 		const pathCategory = pathname.slice(1);
 		if (pathCategory === 'pop-culture') return 'culture';
@@ -84,7 +84,7 @@
 						<a
 							href={category.href}
 							class="nav-link"
-							class:active={activeCategory() === category.name.toLowerCase()}
+							class:active={activeCategory === category.name.toLowerCase()}
 						>
 							{#if category.icon}
 								{@const Icon = category.icon}

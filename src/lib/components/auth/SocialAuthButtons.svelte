@@ -151,29 +151,21 @@
 	}
 
 	.auth-button.google {
-		background: #000000;
+		background: var(--google-bg);
 		color: #ffffff;
-	}
-
-	.auth-button.google:focus-visible {
-		box-shadow: var(--focus-ring); /* Cyan ring on black button */
 	}
 
 	.auth-button.google:not(:disabled):hover {
-		background: #1a1a1a;
+		background: color-mix(in srgb, var(--google-bg) 90%, white);
 	}
 
 	.auth-button.discord {
-		background: #5865f2;
+		background: var(--discord-bg);
 		color: #ffffff;
 	}
 
-	.auth-button.discord:focus-visible {
-		box-shadow: var(--focus-ring); /* Cyan ring on purple button */
-	}
-
 	.auth-button.discord:not(:disabled):hover {
-		background: #4752c4;
+		background: color-mix(in srgb, var(--discord-bg) 85%, black);
 	}
 
 	.spinner {

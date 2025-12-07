@@ -16,7 +16,11 @@
      THIRD-PARTY BRAND COLORS
      ============================================ */
 
+	--google-bg: #000000;
+	--google-rgb: 0, 0, 0;
 	--google-blue: #4285f4;
+	--discord-bg: #5865f2;
+	--discord-rgb: 88, 101, 242;
 	--twitter-blue: #1da1f2;
 
 	/* ============================================
@@ -79,6 +83,10 @@
 	--glass-border: rgba(var(--bg-4-rgb), 0.8);
 	--glass-blur: blur(12px);
 
+	/* Overlay/backdrop colors */
+	--overlay-backdrop: rgba(0, 0, 0, 0.6);
+	--overlay-backdrop-light: rgba(0, 0, 0, 0.5);
+
 	/* Focus ring for accessibility */
 	--focus-ring: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
 	--focus-ring-error: 0 0 0 3px rgba(239, 68, 68, 0.3);
@@ -96,6 +104,20 @@
 	--shadow-primary-sm: 0 1px 3px rgba(var(--primary-rgb), 0.1);
 	--shadow-primary-md:
 		0 4px 6px -1px rgba(var(--primary-rgb), 0.15), 0 2px 4px -1px rgba(var(--primary-rgb), 0.08);
+
+	/* Gradient utilities (using color-mix for theme adaptation) */
+	--gradient-primary-subtle: linear-gradient(
+		135deg,
+		color-mix(in srgb, var(--primary) 10%, transparent),
+		color-mix(in srgb, var(--primary) 5%, transparent)
+	);
+	--gradient-primary-medium: linear-gradient(
+		135deg,
+		color-mix(in srgb, var(--primary) 20%, transparent),
+		color-mix(in srgb, var(--primary) 10%, transparent)
+	);
+	--gradient-fade-right: linear-gradient(to left, var(--bg-0) 60%, transparent);
+	--gradient-fade-left: linear-gradient(to right, var(--bg-0) 60%, transparent);
 
 	/* ============================================
      TARGET SIZES (WCAG 2.2 AA Compliance)

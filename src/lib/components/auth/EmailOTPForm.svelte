@@ -5,7 +5,6 @@
 	import { browser } from '$app/environment';
 	import EmailIcon from '$lib/components/icons/EmailIcon.svelte';
 
-	// Constants
 	const OTP_CODE_LENGTH = 6;
 	const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	const DEV = import.meta.env.DEV;
@@ -25,9 +24,14 @@
 		 * Callback to set error message
 		 */
 		onError?: (message: string | null) => void;
+
+		/**
+		 * Callback when form is reset
+		 */
+		onReset?: () => void;
 	}
 
-	let { onSuccess, onAuthStateChange, onError }: Props = $props();
+	let { onSuccess, onAuthStateChange, onError, onReset }: Props = $props();
 
 	let isAuthenticating = $state(false);
 
@@ -36,11 +40,12 @@
 	let otpCode = $state('');
 	let otpVerification = $state<OTPVerification | null>(null);
 
-	export function reset() {
+	function reset() {
 		emailStep = 'input';
 		emailAddress = '';
 		otpCode = '';
 		otpVerification = null;
+		onReset?.();
 	}
 
 	function isValidEmail(email: string): boolean {
