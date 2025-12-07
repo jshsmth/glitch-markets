@@ -33,7 +33,7 @@ export const categories: Category[] = [
 	{ name: 'Finance', href: '/finance', icon: DollarCircleIcon },
 	{ name: 'Crypto', href: '/crypto', icon: BitcoinCardIcon },
 	{ name: 'Tech', href: '/tech', icon: DocumentTextIcon },
-	{ name: 'Culture', href: '/culture', icon: TicketIcon },
+	{ name: 'Culture', href: '/pop-culture', icon: TicketIcon },
 	{ name: 'World', href: '/world', icon: GlobalEditIcon },
 	{ name: 'Economy', href: '/economy', icon: DollarChangeIcon },
 	{ name: 'Elections', href: '/elections', icon: SpeakerIcon },
