@@ -2,7 +2,6 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import { queryKeys } from '$lib/query/client';
 	import EventList from '$lib/components/events/EventList.svelte';
-	import FilterBar from '$lib/components/filters/FilterBar.svelte';
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import { browser } from '$app/environment';
 
@@ -10,17 +9,17 @@
 	let offset = $state(0);
 	let allEvents = $state<Event[]>([]);
 	let hasMore = $state(true);
-	let currentSort = $state('volume24hr');
+	let isInitialLoad = $state(true);
 
 	const query = createQuery<Event[]>(() => ({
-		queryKey: [...queryKeys.events.all, offset, currentSort],
+		queryKey: [...queryKeys.events.all, offset],
 		queryFn: async () => {
 			const params = new URLSearchParams({
 				limit: PAGE_SIZE.toString(),
 				active: 'true',
 				archived: 'false',
 				closed: 'false',
-				order: currentSort,
+				order: 'volume24hr',
 				ascending: 'false',
 				offset: offset.toString()
 			});
@@ -42,6 +41,7 @@
 				allEvents = [...allEvents, ...query.data];
 			}
 			hasMore = query.data.length === PAGE_SIZE;
+			isInitialLoad = false;
 		}
 	});
 
@@ -60,26 +60,14 @@
 		}
 	}
 
-	function handleSortChange(sort: string) {
-		currentSort = sort;
-		offset = 0;
-		allEvents = [];
-		hasMore = true;
-	}
-
-	// Get isPending and error safely
-	const isPending = $derived(browser ? query.isPending : false);
+	// Get error safely
 	const error = $derived(browser ? (query.error as Error | null) : null);
 </script>
 
 <div class="page-container">
-	<div class="filter-container">
-		<FilterBar {currentSort} onSortChange={handleSortChange} />
-	</div>
-
 	<EventList
 		events={allEvents}
-		loading={isPending}
+		loading={isInitialLoad}
 		error={error as Error}
 		onRetry={handleRetry}
 		onLoadMore={handleLoadMore}
@@ -98,11 +86,5 @@
 		.page-container {
 			padding: var(--space-lg) 24px;
 		}
-	}
-
-	.filter-container {
-		display: flex;
-		justify-content: flex-end;
-		margin-bottom: var(--space-lg);
 	}
 </style>
