@@ -222,7 +222,7 @@
 	   ============================================ */
 
 	.card-header {
-		margin-bottom: 0;
+		/* No additional spacing - handled by card-content gap */
 	}
 
 	.title-row {
@@ -281,7 +281,7 @@
 	.odds-board {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: 8px;
 	}
 
 	.odds-row {
@@ -375,7 +375,7 @@
 		grid-template-columns: 1fr auto;
 		align-items: center;
 		gap: 12px;
-		padding: 10px 0;
+		padding: 12px 0;
 		border-bottom: 1px solid var(--bg-3);
 	}
 
@@ -493,7 +493,7 @@
 
 	.card-footer {
 		margin-top: auto;
-		padding-top: 4px;
+		padding-top: 12px;
 		border-top: 1px solid var(--bg-3);
 	}
 
