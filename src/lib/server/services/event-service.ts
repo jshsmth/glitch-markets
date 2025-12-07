@@ -20,6 +20,8 @@ export interface EventFilters {
 	offset?: number;
 	order?: string;
 	ascending?: boolean;
+	exclude_tag_id?: string | string[];
+	featured_order?: boolean;
 }
 
 export interface EventSearchOptions extends EventFilters {
@@ -111,7 +113,7 @@ export class EventService {
 	 * Separated for better cache stampede protection
 	 */
 	private async fetchAndCacheEvents(cacheKey: string, filters: EventFilters): Promise<Event[]> {
-		const params: Record<string, string | number | boolean> = {};
+		const params: Record<string, string | number | boolean | string[]> = {};
 		if (filters.category !== undefined) params.category = filters.category;
 		if (filters.tag_slug !== undefined) params.tag_slug = filters.tag_slug;
 		if (filters.active !== undefined) params.active = filters.active;
@@ -121,6 +123,8 @@ export class EventService {
 		if (filters.offset !== undefined) params.offset = filters.offset;
 		if (filters.order !== undefined) params.order = filters.order;
 		if (filters.ascending !== undefined) params.ascending = filters.ascending;
+		if (filters.exclude_tag_id !== undefined) params.exclude_tag_id = filters.exclude_tag_id;
+		if (filters.featured_order !== undefined) params.featured_order = filters.featured_order;
 
 		const events = await this.client.fetchEvents({ params });
 		const filtered = this.applyFilters(events, filters);

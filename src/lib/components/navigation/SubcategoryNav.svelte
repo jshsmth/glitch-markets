@@ -48,14 +48,26 @@
 
 	$effect(() => {
 		if (scrollContainer) {
-			updateArrowVisibility();
+			const rafId = requestAnimationFrame(() => {
+				updateArrowVisibility();
+			});
+
 			scrollContainer.addEventListener('scroll', updateArrowVisibility);
 			window.addEventListener('resize', updateArrowVisibility);
 
 			return () => {
+				cancelAnimationFrame(rafId);
 				scrollContainer?.removeEventListener('scroll', updateArrowVisibility);
 				window.removeEventListener('resize', updateArrowVisibility);
 			};
+		}
+	});
+
+	$effect(() => {
+		if (scrollContainer && subcategories.length > 0) {
+			requestAnimationFrame(() => {
+				updateArrowVisibility();
+			});
 		}
 	});
 

@@ -28,6 +28,8 @@ export async function GET({ url }: RequestEvent) {
 		const archived = url.searchParams.get('archived');
 		const order = url.searchParams.get('order');
 		const ascending = url.searchParams.get('ascending');
+		const exclude_tag_ids = url.searchParams.getAll('exclude_tag_id');
+		const featured_order = url.searchParams.get('featured_order');
 
 		const filters: {
 			limit?: number;
@@ -39,6 +41,8 @@ export async function GET({ url }: RequestEvent) {
 			archived?: boolean;
 			order?: string;
 			ascending?: boolean;
+			exclude_tag_id?: string[];
+			featured_order?: boolean;
 		} = {};
 
 		if (limit !== null) {
@@ -119,6 +123,23 @@ export async function GET({ url }: RequestEvent) {
 				);
 			}
 			filters.ascending = ascending === 'true';
+		}
+
+		if (exclude_tag_ids.length > 0) {
+			filters.exclude_tag_id = exclude_tag_ids;
+		}
+
+		if (featured_order !== null) {
+			if (featured_order !== 'true' && featured_order !== 'false') {
+				logger.error('Invalid featured_order parameter', undefined, { featured_order });
+				return json(
+					formatErrorResponse(
+						new ApiError('Invalid featured_order parameter', 400, 'VALIDATION_ERROR')
+					),
+					{ status: 400 }
+				);
+			}
+			filters.featured_order = featured_order === 'true';
 		}
 
 		logger.info('Fetching events', { filters });
