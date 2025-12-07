@@ -5,7 +5,6 @@
 	import { browser } from '$app/environment';
 	import EmailIcon from '$lib/components/icons/EmailIcon.svelte';
 
-	// Constants
 	const OTP_CODE_LENGTH = 6;
 	const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	const DEV = import.meta.env.DEV;
@@ -35,13 +34,6 @@
 	let emailAddress = $state('');
 	let otpCode = $state('');
 	let otpVerification = $state<OTPVerification | null>(null);
-
-	export function reset() {
-		emailStep = 'input';
-		emailAddress = '';
-		otpCode = '';
-		otpVerification = null;
-	}
 
 	function isValidEmail(email: string): boolean {
 		return EMAIL_PATTERN.test(email);

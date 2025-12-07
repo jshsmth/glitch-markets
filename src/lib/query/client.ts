@@ -53,6 +53,10 @@ export const queryKeys = {
 	},
 	events: {
 		all: ['events'] as const,
+		trending: (offset: number, sort: string) => ['events', 'trending', offset, sort] as const,
+		new: (offset: number, sort: string) => ['events', 'new', offset, sort] as const,
+		byCategory: (category: string, filters: Record<string, unknown>) =>
+			['events', 'category', category, filters] as const,
 		detail: (slug: string) => ['events', 'detail', slug] as const
 	}
 };
