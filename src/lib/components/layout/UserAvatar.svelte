@@ -13,7 +13,7 @@
 	import LegalIcon from '$lib/components/icons/LegalIcon.svelte';
 	import ElectricityIcon from '$lib/components/icons/ElectricityIcon.svelte';
 	import LogoutIcon from '$lib/components/icons/LogoutIcon.svelte';
-	import SignInModal from '$lib/components/auth/SignInModal.svelte';
+	import { openSignInModal } from '$lib/stores/modal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	interface Props {
@@ -54,7 +54,6 @@
 		authState.user ? generateAvatarGradient(authState.user.id || 'default') : ''
 	);
 	let showDropdown = $state(false);
-	let showSignInModal = $state(false);
 	let closeTimeout: ReturnType<typeof setTimeout> | null = null;
 	let windowWidth = $state(1024);
 	let proxyWalletAddress = $state<string | null>(null);
@@ -97,14 +96,6 @@
 			proxyWalletAddress = null;
 		}
 	});
-
-	function openSignInModal() {
-		showSignInModal = true;
-	}
-
-	function closeSignInModal() {
-		showSignInModal = false;
-	}
 
 	function handleAvatarClick() {
 		if (authState.user && isMobile) {
@@ -330,7 +321,6 @@
 				Sign Up
 			</Button>
 		</div>
-		<SignInModal isOpen={showSignInModal} onClose={closeSignInModal} />
 	{/if}
 </div>
 
