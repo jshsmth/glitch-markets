@@ -221,10 +221,6 @@
 	   HEADER
 	   ============================================ */
 
-	.card-header {
-		/* No additional spacing - handled by card-content gap */
-	}
-
 	.title-row {
 		display: flex;
 		align-items: center;
@@ -307,7 +303,9 @@
 		height: 100%;
 		width: var(--fill-percentage, 0%);
 		background: linear-gradient(90deg, var(--row-gradient-start), var(--row-gradient-end));
-		transition: width 0.3s ease, opacity 0.3s ease;
+		transition:
+			width 0.3s ease,
+			opacity 0.3s ease;
 		z-index: 0;
 	}
 
@@ -436,7 +434,9 @@
 		height: 100%;
 		width: var(--fill-percentage, 0%);
 		background: linear-gradient(90deg, var(--chip-gradient-start), var(--chip-gradient-end));
-		transition: width 0.3s ease, opacity 0.3s ease;
+		transition:
+			width 0.3s ease,
+			opacity 0.3s ease;
 		z-index: 0;
 	}
 
