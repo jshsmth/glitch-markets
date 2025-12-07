@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import EventCard from './EventCard.svelte';
+	import ResolvedEventCard from './ResolvedEventCard.svelte';
+	import ResolvedMultiEventCard from './ResolvedMultiEventCard.svelte';
 
 	interface Props {
 		events: Event[];
@@ -19,6 +21,14 @@
 		onLoadMore,
 		hasMore = false
 	}: Props = $props();
+
+	function isResolved(event: Event): boolean {
+		return event.closed === true;
+	}
+
+	function isMultiMarket(event: Event): boolean {
+		return (event.markets?.length || 0) > 1;
+	}
 
 	let sentinel: HTMLDivElement | undefined = $state();
 	let loadingMore = $state(false);
@@ -88,7 +98,15 @@
 	{:else}
 		<div class="event-grid">
 			{#each events as event (event.id)}
-				<EventCard {event} />
+				{#if isResolved(event)}
+					{#if isMultiMarket(event)}
+						<ResolvedMultiEventCard {event} />
+					{:else}
+						<ResolvedEventCard {event} />
+					{/if}
+				{:else}
+					<EventCard {event} />
+				{/if}
 			{/each}
 		</div>
 

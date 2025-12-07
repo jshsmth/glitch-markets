@@ -9,7 +9,9 @@
 	let sort = $state<string>('volume24hr');
 
 	let tag_slug = $derived(selectedTag || 'economy');
-	let active = $derived(status === 'active' ? 'true' : status === 'closed' ? 'false' : undefined);
+	// Polymarket uses active=true for both active and resolved markets
+	// The difference is: active markets have closed=false, resolved have closed=true
+	let active = $derived(status === 'all' ? undefined : 'true');
 	let closed = $derived(status === 'closed' ? 'true' : status === 'active' ? 'false' : undefined);
 
 	function handleTagChange(newTag: string | null) {
@@ -43,7 +45,8 @@
 			const params: Record<string, string> = {
 				tag_slug,
 				archived: 'false',
-				order: sort,
+				// For resolved markets, sort by closedTime instead of volume
+				order: status === 'closed' ? 'closedTime' : sort,
 				ascending: 'false',
 				limit: '20',
 				offset: String(pageParam)
