@@ -72,9 +72,9 @@ export function validateBoolean(value: unknown, paramName: string): boolean {
  * Validates query parameters for the markets endpoint
  */
 export function validateMarketQueryParams(
-	params: Record<string, string | number | boolean>
-): Record<string, string | number | boolean> {
-	const validated: Record<string, string | number | boolean> = {};
+	params: Record<string, string | number | boolean | string[]>
+): Record<string, string | number | boolean | string[]> {
+	const validated: Record<string, string | number | boolean | string[]> = {};
 
 	for (const [key, value] of Object.entries(params)) {
 		switch (key) {
@@ -115,9 +115,9 @@ export function validateMarketSlug(slug: unknown): string {
  * Validates query parameters for the events endpoint
  */
 export function validateEventQueryParams(
-	params: Record<string, string | number | boolean>
-): Record<string, string | number | boolean> {
-	const validated: Record<string, string | number | boolean> = {};
+	params: Record<string, string | number | boolean | string[]>
+): Record<string, string | number | boolean | string[]> {
+	const validated: Record<string, string | number | boolean | string[]> = {};
 
 	for (const [key, value] of Object.entries(params)) {
 		switch (key) {
@@ -129,12 +129,20 @@ export function validateEventQueryParams(
 			case 'closed':
 			case 'archived':
 			case 'ascending':
+			case 'featured_order':
 				validated[key] = validateBoolean(value, key);
 				break;
 			case 'category':
 			case 'tag_slug':
 			case 'order':
 				validated[key] = validateNonEmptyString(value, key);
+				break;
+			case 'exclude_tag_id':
+				if (Array.isArray(value)) {
+					validated[key] = value.map((v) => validateNonEmptyString(v, 'exclude_tag_id'));
+				} else {
+					validated[key] = validateNonEmptyString(value, key);
+				}
 				break;
 			default:
 				validated[key] = value;
@@ -356,9 +364,9 @@ export function validateClosedPositionsParams(params: Record<string, unknown>): 
  * Validates query parameters for the series endpoint
  */
 export function validateSeriesQueryParams(
-	params: Record<string, string | number | boolean>
-): Record<string, string | number | boolean> {
-	const validated: Record<string, string | number | boolean> = {};
+	params: Record<string, string | number | boolean | string[]>
+): Record<string, string | number | boolean | string[]> {
+	const validated: Record<string, string | number | boolean | string[]> = {};
 
 	for (const [key, value] of Object.entries(params)) {
 		switch (key) {
@@ -475,9 +483,9 @@ export function validateOrderString(order: unknown): string {
  * Validates query parameters for the comments list endpoint
  */
 export function validateCommentsQueryParams(
-	params: Record<string, string | number | boolean>
-): Record<string, string | number | boolean> {
-	const validated: Record<string, string | number | boolean> = {};
+	params: Record<string, string | number | boolean | string[]>
+): Record<string, string | number | boolean | string[]> {
+	const validated: Record<string, string | number | boolean | string[]> = {};
 
 	for (const [key, value] of Object.entries(params)) {
 		switch (key) {
@@ -509,9 +517,9 @@ export function validateCommentsQueryParams(
  * Validates query parameters for the comments by user endpoint
  */
 export function validateUserCommentsQueryParams(
-	params: Record<string, string | number | boolean>
-): Record<string, string | number | boolean> {
-	const validated: Record<string, string | number | boolean> = {};
+	params: Record<string, string | number | boolean | string[]>
+): Record<string, string | number | boolean | string[]> {
+	const validated: Record<string, string | number | boolean | string[]> = {};
 
 	for (const [key, value] of Object.entries(params)) {
 		switch (key) {

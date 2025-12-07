@@ -672,7 +672,7 @@ export interface DepositAddress {
 }
 
 export interface FetchOptions {
-	params?: Record<string, string | number | boolean>;
+	params?: Record<string, string | number | boolean | string[]>;
 	signal?: AbortSignal;
 	method?: string;
 	body?: string;
@@ -711,12 +711,19 @@ export class PolymarketClient {
 		this.logger = new Logger({ component: 'PolymarketClient' });
 	}
 
-	private buildUrl(endpoint: string, params?: Record<string, string | number | boolean>): string {
+	private buildUrl(
+		endpoint: string,
+		params?: Record<string, string | number | boolean | string[]>
+	): string {
 		const url = new URL(endpoint, this.baseUrl);
 
 		if (params) {
 			Object.entries(params).forEach(([key, value]) => {
-				url.searchParams.append(key, String(value));
+				if (Array.isArray(value)) {
+					value.forEach((v) => url.searchParams.append(key, v));
+				} else {
+					url.searchParams.append(key, String(value));
+				}
 			});
 		}
 
