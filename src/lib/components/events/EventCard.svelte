@@ -124,17 +124,13 @@
 		{#if primaryOdds}
 			<div class="odds-board">
 				{#each primaryOdds as outcome, i (i)}
-					<a href={`/event/${event.slug || event.id}`} class="odds-row">
-						<div class="odds-info">
-							<span class="outcome-label">{outcome.label}</span>
-							<span class="outcome-odds">{outcome.price}%</span>
-						</div>
-						<div class="odds-bar-container">
-							<div class="odds-bar" style="width: {outcome.percentage}%"></div>
-						</div>
-						<div class="bet-action">
-							<span class="bet-button">BET</span>
-						</div>
+					<a
+						href={`/event/${event.slug || event.id}`}
+						class="odds-row"
+						style="--fill-percentage: {outcome.percentage}%"
+					>
+						<span class="outcome-label">{outcome.label}</span>
+						<span class="outcome-odds">{outcome.price}%</span>
 					</a>
 				{/each}
 			</div>
@@ -195,19 +191,9 @@
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 		transition:
 			all var(--transition-fast),
-			transform var(--transition-fast),
 			box-shadow var(--transition-fast);
 		color: inherit;
 		height: 100%;
-		cursor: pointer;
-	}
-
-	.event-card:hover {
-		border-color: rgba(var(--primary-rgb), 0.3);
-		box-shadow:
-			0 2px 8px rgba(0, 0, 0, 0.06),
-			0 0 0 1px rgba(var(--primary-rgb), 0.1);
-		transform: translateY(-1px);
 	}
 
 	.event-card:focus-within {
@@ -218,10 +204,6 @@
 
 	:global([data-theme='dark']) .event-card {
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-	}
-
-	:global([data-theme='dark']) .event-card:hover {
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 	}
 
 	.card-content {
@@ -270,6 +252,7 @@
 
 	.event-title-link:hover .event-title {
 		color: var(--primary);
+		text-decoration: underline;
 	}
 
 	.event-title-link:focus-visible {
@@ -294,26 +277,43 @@
 	.odds-board {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
+		gap: 6px;
 	}
 
 	.odds-row {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		gap: 12px;
+		display: flex;
 		align-items: center;
-		padding: 12px 14px;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 10px 12px;
 		background: var(--bg-2);
-		border: 1.5px solid var(--bg-4);
-		border-radius: var(--radius-md);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-sm);
 		text-decoration: none;
 		transition: all var(--transition-fast);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.odds-row::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: var(--fill-percentage, 0%);
+		background: linear-gradient(90deg, rgba(var(--primary-rgb), 0.12), rgba(var(--primary-rgb), 0.06));
+		transition: width 0.3s ease;
+		z-index: 0;
 	}
 
 	.odds-row:hover {
-		background: var(--primary-hover-bg);
 		border-color: var(--primary);
-		box-shadow: var(--shadow-primary-sm);
+		transform: translateY(-1px);
+	}
+
+	.odds-row:hover::before {
+		background: linear-gradient(90deg, rgba(var(--primary-rgb), 0.18), rgba(var(--primary-rgb), 0.1));
 	}
 
 	.odds-row:focus-visible {
@@ -321,98 +321,27 @@
 		box-shadow: var(--focus-ring);
 	}
 
-	.odds-info {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12px;
-		min-width: 0;
-		grid-column: 1 / -1;
-	}
-
 	.outcome-label {
 		font-size: 14px;
-		color: var(--text-1);
-		font-weight: 600;
+		color: var(--text-0);
+		font-weight: 500;
 		text-overflow: ellipsis;
 		overflow: hidden;
 		white-space: nowrap;
 		flex: 1;
 		min-width: 0;
+		position: relative;
+		z-index: 1;
 	}
 
 	.outcome-odds {
-		font-size: 24px;
-		font-weight: 900;
+		font-size: 20px;
+		font-weight: 800;
 		color: var(--text-0);
 		white-space: nowrap;
 		letter-spacing: -0.02em;
-	}
-
-	.odds-bar-container {
-		grid-column: 1 / -1;
-		height: 6px;
-		background: var(--bg-3);
-		border-radius: 3px;
-		overflow: hidden;
 		position: relative;
-	}
-
-	.odds-bar {
-		height: 100%;
-		background: linear-gradient(90deg, var(--primary), var(--primary-600));
-		border-radius: 3px;
-		transition: width 0.3s ease;
-	}
-
-	.bet-action {
-		grid-column: 1 / -1;
-		display: flex;
-		justify-content: flex-end;
-	}
-
-	.bet-button {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 8px 20px;
-		background: var(--primary);
-		color: var(--button-primary-text);
-		font-size: 13px;
-		font-weight: 700;
-		border-radius: var(--radius-md);
-		letter-spacing: 0.02em;
-		transition: all var(--transition-fast);
-	}
-
-	.odds-row:hover .bet-button {
-		background: var(--primary-hover);
-		transform: scale(1.05);
-	}
-
-	/* Desktop: Horizontal Layout */
-	@media (min-width: 768px) {
-		.odds-row {
-			grid-template-columns: minmax(0, 1fr) 200px auto;
-			gap: 16px;
-		}
-
-		.odds-info {
-			grid-column: 1 / 2;
-		}
-
-		.odds-bar-container {
-			grid-column: 2 / 3;
-			align-self: center;
-		}
-
-		.bet-action {
-			grid-column: 3 / 4;
-		}
-
-		.outcome-odds {
-			font-size: 28px;
-		}
+		z-index: 1;
 	}
 
 	/* ============================================
