@@ -72,7 +72,11 @@
 						<img src={event.image} alt="" />
 					</div>
 				{/if}
-				<a href={`/event/${event.slug || event.id}`} class="event-title-link">
+				<a
+					href={`/event/${event.slug || event.id}`}
+					class="event-title-link"
+					data-sveltekit-preload-data="hover"
+				>
 					<h3 class="event-title">{event.title || 'Untitled Event'}</h3>
 				</a>
 			</div>
@@ -86,6 +90,7 @@
 						href={`/event/${event.slug || event.id}`}
 						class="market-item"
 						class:is-winner={market.isWinner}
+						data-sveltekit-preload-data="hover"
 					>
 						<div class="market-header">
 							{#if market.isWinner}

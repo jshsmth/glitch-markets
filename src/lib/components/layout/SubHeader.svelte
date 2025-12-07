@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
 	import { ChevronLeftIcon, ChevronRightIcon } from '$lib/components/icons';
 	import { categories, SCROLL_AMOUNT, SCROLL_THRESHOLD } from '$lib/config/categories';
+	import { useQueryClient } from '@tanstack/svelte-query';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	let activeCategory = $derived.by(() => {
 		const pathname = $page.url.pathname;
@@ -15,6 +18,109 @@
 	let hasOverflow = $state(false);
 	let canScrollLeft = $state(false);
 	let canScrollRight = $state(false);
+
+	const queryClient = useQueryClient();
+
+	// Map of category paths to their tag slugs for API calls
+	const categoryTagMap: Record<string, string> = {
+		'/politics': 'politics',
+		'/sports': 'sports',
+		'/finance': 'finance',
+		'/crypto': 'crypto',
+		'/tech': 'tech',
+		'/pop-culture': 'pop-culture',
+		'/world': 'world',
+		'/economy': 'economy',
+		'/elections': 'elections',
+		'/earnings': 'earnings',
+		'/geopolitics': 'geopolitics'
+	};
+
+	async function prefetchCategoryData(href: string) {
+		if (!browser) return;
+
+		// Prefetch events for category pages
+		const tagSlug = categoryTagMap[href];
+		if (tagSlug) {
+			// Prefetch the main events query
+			await queryClient.prefetchInfiniteQuery({
+				queryKey: ['events', tagSlug.replace('/', ''), tagSlug, 'active', 'volume24hr'],
+				queryFn: async () => {
+					const params = new SvelteURLSearchParams({
+						tag_slug: tagSlug,
+						archived: 'false',
+						order: 'volume24hr',
+						ascending: 'false',
+						limit: '20',
+						offset: '0',
+						active: 'true',
+						closed: 'false'
+					});
+					const res = await fetch(`/api/events?${params}`);
+					if (!res.ok) throw new Error('Failed to fetch');
+					return res.json();
+				},
+				initialPageParam: 0
+			});
+
+			// Prefetch subcategories
+			await queryClient.prefetchQuery({
+				queryKey: ['tags', tagSlug.replace('/', ''), 'related'],
+				queryFn: async () => {
+					const res = await fetch(`/api/tags/slug/${tagSlug}/related`);
+					if (!res.ok) throw new Error('Failed to fetch');
+					return res.json();
+				}
+			});
+		} else if (href === '/') {
+			// Prefetch trending page
+			await queryClient.prefetchQuery({
+				queryKey: ['events', 'all', 0],
+				queryFn: async () => {
+					const params = new SvelteURLSearchParams({
+						limit: '20',
+						active: 'true',
+						archived: 'false',
+						closed: 'false',
+						order: 'volume24hr',
+						ascending: 'false',
+						offset: '0'
+					});
+					const res = await fetch(`/api/events?${params}`);
+					if (!res.ok) throw new Error('Failed to fetch');
+					return res.json();
+				}
+			});
+		} else if (href === '/new') {
+			// Prefetch new page
+			await queryClient.prefetchQuery({
+				queryKey: ['events', 'all', 0],
+				queryFn: async () => {
+					const params = new SvelteURLSearchParams({
+						limit: '20',
+						active: 'true',
+						archived: 'false',
+						closed: 'false',
+						order: 'startDate',
+						ascending: 'false',
+						offset: '0'
+					});
+					params.append('exclude_tag_id', '100639');
+					params.append('exclude_tag_id', '102169');
+					const res = await fetch(`/api/events?${params}`);
+					if (!res.ok) throw new Error('Failed to fetch');
+					return res.json();
+				}
+			});
+		}
+	}
+
+	function handleCategoryHover(href: string) {
+		// Silently prefetch - don't await or handle errors
+		prefetchCategoryData(href).catch(() => {
+			// Ignore prefetch errors
+		});
+	}
 
 	function handleScroll() {
 		if (!scrollContainer) return;
@@ -85,6 +191,8 @@
 							href={category.href}
 							class="nav-link"
 							class:active={activeCategory === category.name.toLowerCase()}
+							data-sveltekit-preload-data="hover"
+							onmouseenter={() => handleCategoryHover(category.href)}
 						>
 							{#if category.icon}
 								{@const Icon = category.icon}

@@ -1,7 +1,6 @@
 import type { Component } from 'svelte';
 import {
 	RocketIcon,
-	FlashIcon,
 	StarsIcon,
 	CourthouseIcon,
 	CupIcon,
@@ -13,8 +12,7 @@ import {
 	TicketIcon,
 	GlobalEditIcon,
 	DollarChangeIcon,
-	SpeakerIcon,
-	MessageTextIcon
+	SpeakerIcon
 } from '$lib/components/icons';
 
 export interface Category {
@@ -27,7 +25,6 @@ export interface Category {
 
 export const categories: Category[] = [
 	{ name: 'Trending', href: '/', icon: RocketIcon },
-	{ name: 'Breaking', href: '/breaking', icon: FlashIcon },
 	{ name: 'New', href: '/new', icon: StarsIcon, showDivider: true },
 	{ name: 'Politics', href: '/politics', icon: CourthouseIcon },
 	{ name: 'Sports', href: '/sports', icon: CupIcon },
@@ -39,8 +36,7 @@ export const categories: Category[] = [
 	{ name: 'Economy', href: '/economy', icon: DollarChangeIcon },
 	{ name: 'Elections', href: '/elections', icon: SpeakerIcon },
 	{ name: 'Earnings', href: '/earnings', icon: DollarSquareIcon },
-	{ name: 'Geopolitics', href: '/geopolitics', icon: GlobalIcon },
-	{ name: 'Mentions', href: '/mentions', icon: MessageTextIcon }
+	{ name: 'Geopolitics', href: '/geopolitics', icon: GlobalIcon }
 ];
 
 // Scroll configuration constants

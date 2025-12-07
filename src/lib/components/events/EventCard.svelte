@@ -114,7 +114,11 @@
 						<img src={event.image} alt="" />
 					</div>
 				{/if}
-				<a href={`/event/${event.slug || event.id}`} class="event-title-link">
+				<a
+					href={`/event/${event.slug || event.id}`}
+					class="event-title-link"
+					data-sveltekit-preload-data="hover"
+				>
 					<h3 class="event-title">{event.title || 'Untitled Event'}</h3>
 				</a>
 			</div>
@@ -130,6 +134,7 @@
 						class:is-yes={i === 0}
 						class:is-no={i === 1}
 						style="--fill-percentage: {outcome.percentage}%"
+						data-sveltekit-preload-data="hover"
 					>
 						<span class="outcome-label">{outcome.label}</span>
 						<span class="outcome-odds">{outcome.price}%</span>
@@ -155,6 +160,7 @@
 										class:chip-first={j === 0}
 										class:chip-second={j === 1}
 										style="--fill-percentage: {outcome.percentage}%"
+										data-sveltekit-preload-data="hover"
 									>
 										<span class="odds-chip-label">{outcome.label}</span>
 										<span class="odds-chip-price">{outcome.price}%</span>

@@ -64,7 +64,11 @@
 						<img src={event.image} alt="" />
 					</div>
 				{/if}
-				<a href={`/event/${event.slug || event.id}`} class="event-title-link">
+				<a
+					href={`/event/${event.slug || event.id}`}
+					class="event-title-link"
+					data-sveltekit-preload-data="hover"
+				>
 					<h3 class="event-title">{event.title || 'Untitled Event'}</h3>
 				</a>
 			</div>
@@ -77,6 +81,7 @@
 					href={`/event/${event.slug || event.id}`}
 					class="outcome-row winner"
 					class:is-yes={resolution.winnerIsYes}
+					data-sveltekit-preload-data="hover"
 				>
 					<div class="outcome-content">
 						<CheckCircleIcon size={20} class="outcome-icon" />
@@ -85,7 +90,11 @@
 					<span class="outcome-badge">Won</span>
 				</a>
 
-				<a href={`/event/${event.slug || event.id}`} class="outcome-row loser">
+				<a
+					href={`/event/${event.slug || event.id}`}
+					class="outcome-row loser"
+					data-sveltekit-preload-data="hover"
+				>
 					<div class="outcome-content">
 						<CloseCircleIcon size={20} class="outcome-icon" />
 						<span class="outcome-label">{resolution.loser}</span>
