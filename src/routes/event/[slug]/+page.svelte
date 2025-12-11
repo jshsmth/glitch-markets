@@ -285,9 +285,7 @@
 		return segments;
 	}
 
-	const parsedDescription = $derived(
-		event.description ? parseTextWithUrls(event.description) : []
-	);
+	const parsedDescription = $derived(event.description ? parseTextWithUrls(event.description) : []);
 
 	// Share functionality
 	let copyState = $state<'idle' | 'copied'>('idle');
@@ -448,21 +446,23 @@
 						<h2 class="section-title">Rules</h2>
 					</div>
 					<div class="rules-content" class:expanded={rulesExpanded}>
-						<p class="rules-text">{#each parsedDescription as segment, i (i)}{#if segment.type === 'text'}{segment.content}{:else}<a
+						<p class="rules-text">
+							{#each parsedDescription as segment, i (i)}{#if segment.type === 'text'}{segment.content}{:else}<a
 										href={segment.content}
 										target="_blank"
 										rel="noopener noreferrer"
 										class="rules-link"
-									>{#if segment.iconType === 'x'}<XIcon
-											size={12}
-										/>{:else if segment.iconType === 'github'}<GitHubIcon
-											size={12}
-										/>{:else if segment.iconType === 'linkedin'}<LinkedInIcon
-											size={12}
-										/>{:else if segment.iconType === 'discord'}<DiscordIcon
-											size={12}
-										/>{:else}<GlobalIcon size={12} />{/if}<span>{segment.domain}</span></a
-								>{/if}{/each}</p>
+										>{#if segment.iconType === 'x'}<XIcon
+												size={12}
+											/>{:else if segment.iconType === 'github'}<GitHubIcon
+												size={12}
+											/>{:else if segment.iconType === 'linkedin'}<LinkedInIcon
+												size={12}
+											/>{:else if segment.iconType === 'discord'}<DiscordIcon
+												size={12}
+											/>{:else}<GlobalIcon size={12} />{/if}<span>{segment.domain}</span></a
+									>{/if}{/each}
+						</p>
 					</div>
 					{#if event.description.length > 300}
 						<button class="show-more-btn" onclick={() => (rulesExpanded = !rulesExpanded)}>
@@ -521,13 +521,9 @@
 												</div>
 												<div class="comment-meta">
 													<span class="comment-author">
-														{comment.profile?.name ||
-															comment.profile?.pseudonym ||
-															'Anonymous'}
+														{comment.profile?.name || comment.profile?.pseudonym || 'Anonymous'}
 													</span>
-													<span class="comment-time"
-														>{formatRelativeTime(comment.createdAt)}</span
-													>
+													<span class="comment-time">{formatRelativeTime(comment.createdAt)}</span>
 												</div>
 											</div>
 											<p class="comment-body">{comment.body}</p>
@@ -545,9 +541,9 @@
 							{:else if holdersQuery.error}
 								<div class="tab-error">Failed to load holders</div>
 							{:else if holdersQuery.data && holdersQuery.data.length > 0}
-								{@const allHolders = holdersQuery.data.flatMap(m => m.holders)}
-								{@const yesHolders = allHolders.filter(h => h.outcomeIndex === 0).slice(0, 10)}
-								{@const noHolders = allHolders.filter(h => h.outcomeIndex === 1).slice(0, 10)}
+								{@const allHolders = holdersQuery.data.flatMap((m) => m.holders)}
+								{@const yesHolders = allHolders.filter((h) => h.outcomeIndex === 0).slice(0, 10)}
+								{@const noHolders = allHolders.filter((h) => h.outcomeIndex === 1).slice(0, 10)}
 								<div class="holders-columns">
 									<div class="holders-column">
 										<div class="holders-table-header">

@@ -148,28 +148,28 @@
 			<div class="markets-scroll-container">
 				<div class="markets-preview">
 					{#each topMarkets as market, i (i)}
-					<div class="market-item">
-						<div class="market-header">
-							<div class="market-question">{market.question}</div>
-						</div>
-						{#if market.outcomes}
-							<div class="market-odds-inline">
-								{#each market.outcomes as outcome, j (j)}
-									<a
-										href={`/event/${event.slug || event.id}`}
-										class="odds-chip"
-										class:chip-first={j === 0}
-										class:chip-second={j === 1}
-										style="--fill-percentage: {outcome.percentage}%"
-										data-sveltekit-preload-data="hover"
-									>
-										<span class="odds-chip-label">{outcome.label}</span>
-										<span class="odds-chip-price">{outcome.price}%</span>
-									</a>
-								{/each}
+						<div class="market-item">
+							<div class="market-header">
+								<div class="market-question">{market.question}</div>
 							</div>
-						{/if}
-					</div>
+							{#if market.outcomes}
+								<div class="market-odds-inline">
+									{#each market.outcomes as outcome, j (j)}
+										<a
+											href={`/event/${event.slug || event.id}`}
+											class="odds-chip"
+											class:chip-first={j === 0}
+											class:chip-second={j === 1}
+											style="--fill-percentage: {outcome.percentage}%"
+											data-sveltekit-preload-data="hover"
+										>
+											<span class="odds-chip-label">{outcome.label}</span>
+											<span class="odds-chip-price">{outcome.price}%</span>
+										</a>
+									{/each}
+								</div>
+							{/if}
+						</div>
 					{/each}
 				</div>
 			</div>
