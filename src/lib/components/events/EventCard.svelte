@@ -64,7 +64,7 @@
 
 	const topMarkets = $derived.by(() => {
 		if (!isMultiMarket || !event.markets) return null;
-		return event.markets.slice(0, 2).map((market) => {
+		return event.markets.map((market) => {
 			try {
 				const outcomes =
 					typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : market.outcomes;
@@ -145,8 +145,9 @@
 
 		<!-- Multi-Market Preview -->
 		{#if topMarkets}
-			<div class="markets-preview">
-				{#each topMarkets as market, i (i)}
+			<div class="markets-scroll-container">
+				<div class="markets-preview">
+					{#each topMarkets as market, i (i)}
 					<div class="market-item">
 						<div class="market-header">
 							<div class="market-question">{market.question}</div>
@@ -169,7 +170,8 @@
 							</div>
 						{/if}
 					</div>
-				{/each}
+					{/each}
+				</div>
 			</div>
 		{/if}
 
@@ -368,28 +370,23 @@
 	   MULTI-MARKET PREVIEW
 	   ============================================ */
 
+	.markets-scroll-container {
+		max-height: 80px;
+		overflow-y: auto;
+	}
+
 	.markets-preview {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 4px;
 	}
 
 	.market-item {
 		display: grid;
 		grid-template-columns: 1fr auto;
 		align-items: center;
-		gap: 12px;
-		padding: 12px 0;
-		border-bottom: 1px solid var(--bg-3);
-	}
-
-	.market-item:first-child {
-		padding-top: 0;
-	}
-
-	.market-item:last-child {
-		border-bottom: none;
-		padding-bottom: 0;
+		gap: 8px;
+		padding: 6px 0;
 	}
 
 	.market-header {
