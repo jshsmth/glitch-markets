@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import type { Market, Comment, MarketHolders } from '$lib/server/api/polymarket-client';
 	import { createQuery } from '@tanstack/svelte-query';
+	import { page } from '$app/stores';
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
 	import CalendarIcon from '$lib/components/icons/CalendarIcon.svelte';
 	import ScrollIcon from '$lib/components/icons/ScrollIcon.svelte';
@@ -13,6 +14,9 @@
 	import MessageTextIcon from '$lib/components/icons/MessageTextIcon.svelte';
 	import LeaderboardIcon from '$lib/components/icons/LeaderboardIcon.svelte';
 	import FlashIcon from '$lib/components/icons/FlashIcon.svelte';
+	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
+	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
+	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -79,14 +83,34 @@
 		}
 	}
 
-	// Filter out placeholder markets (Person X, Candidate X, Other, etc.)
+	// Filter out placeholder markets
 	function isPlaceholderMarket(market: Market): boolean {
 		const title = getMarketDisplayTitle(market);
 		// Match placeholder patterns:
-		// - "Person X" where X is a single letter
-		// - "Candidate X" where X is a single letter
+		// - "Word X" where Word is common placeholder prefix and X is a single letter (A-Z)
 		// - "Other" exactly
-		return /^(Person|Candidate) [A-Z]$/i.test(title) || /^Other$/i.test(title);
+		const placeholderPrefixes = [
+			'Person',
+			'Candidate',
+			'Company',
+			'Team',
+			'Player',
+			'Country',
+			'Option',
+			'Choice',
+			'Entry',
+			'Participant',
+			'Contestant',
+			'Nominee',
+			'Artist',
+			'Song',
+			'Film',
+			'Movie',
+			'Show',
+			'Act'
+		];
+		const prefixPattern = new RegExp(`^(${placeholderPrefixes.join('|')}) [A-Z]$`, 'i');
+		return prefixPattern.test(title) || /^Other$/i.test(title);
 	}
 
 	// Get the primary outcome price for sorting
@@ -122,8 +146,8 @@
 	type TabType = 'comments' | 'holders' | 'activity';
 	let activeTab = $state<TabType>('comments');
 
-	// Get market condition IDs for holders query (API requires conditionId, not id)
-	const marketConditionIds = $derived(filteredMarkets.map((m) => m.conditionId));
+	// Get selected market condition ID for holders query (API requires conditionId, not id)
+	const selectedMarketConditionId = $derived(selectedMarket?.conditionId);
 
 	// Comments query
 	const commentsQuery = createQuery<Comment[]>(() => ({
@@ -143,18 +167,18 @@
 		enabled: activeTab === 'comments'
 	}));
 
-	// Top Holders query
+	// Top Holders query (for selected market only)
 	const holdersQuery = createQuery<MarketHolders[]>(() => ({
-		queryKey: ['holders', marketConditionIds],
+		queryKey: ['holders', selectedMarketConditionId],
 		queryFn: async () => {
-			if (marketConditionIds.length === 0) return [];
+			if (!selectedMarketConditionId) return [];
 			const params = new URLSearchParams();
-			marketConditionIds.forEach((id) => params.append('market', id));
+			params.append('market', selectedMarketConditionId);
 			const response = await fetch(`/api/users/holders?${params}`);
 			if (!response.ok) throw new Error('Failed to fetch holders');
 			return response.json();
 		},
-		enabled: activeTab === 'holders' && marketConditionIds.length > 0
+		enabled: activeTab === 'holders' && !!selectedMarketConditionId
 	}));
 
 	// Format relative time
@@ -264,6 +288,31 @@
 	const parsedDescription = $derived(
 		event.description ? parseTextWithUrls(event.description) : []
 	);
+
+	// Share functionality
+	let copyState = $state<'idle' | 'copied'>('idle');
+
+	async function copyShareLink() {
+		try {
+			await navigator.clipboard.writeText($page.url.href);
+			copyState = 'copied';
+			setTimeout(() => {
+				copyState = 'idle';
+			}, 2000);
+		} catch {
+			// Fallback for older browsers
+			const input = document.createElement('input');
+			input.value = $page.url.href;
+			document.body.appendChild(input);
+			input.select();
+			document.execCommand('copy');
+			document.body.removeChild(input);
+			copyState = 'copied';
+			setTimeout(() => {
+				copyState = 'idle';
+			}, 2000);
+		}
+	}
 </script>
 
 <svelte:head>
@@ -271,6 +320,12 @@
 </svelte:head>
 
 <div class="event-page">
+	<!-- Back Navigation -->
+	<a href="/" class="back-link">
+		<ChevronLeftIcon size={18} />
+		<span>Back to Markets</span>
+	</a>
+
 	<div class="event-layout">
 		<!-- Left Column: Event Details -->
 		<div class="event-main">
@@ -282,7 +337,28 @@
 							<img src={event.image} alt="" />
 						</div>
 					{/if}
-					<h1 class="event-title">{event.title || 'Untitled Event'}</h1>
+					<div class="header-content">
+						<h1 class="event-title">{event.title || 'Untitled Event'}</h1>
+						{#if event.tags && event.tags.length > 0}
+							<div class="event-tags">
+								{#each event.tags as tag (tag.id)}
+									<span class="event-tag">{tag.label}</span>
+								{/each}
+							</div>
+						{/if}
+					</div>
+					<button
+						class="share-btn"
+						class:copied={copyState === 'copied'}
+						onclick={copyShareLink}
+						aria-label={copyState === 'copied' ? 'Link copied!' : 'Copy link to share'}
+					>
+						{#if copyState === 'copied'}
+							<CheckCircleIcon size={18} />
+						{:else}
+							<CopyIcon size={18} />
+						{/if}
+					</button>
 				</div>
 
 				<div class="event-meta">
@@ -480,27 +556,62 @@
 							{:else if holdersQuery.error}
 								<div class="tab-error">Failed to load holders</div>
 							{:else if holdersQuery.data && holdersQuery.data.length > 0}
-								<div class="holders-list">
-									{#each holdersQuery.data as marketHolders (marketHolders.token)}
-										{#each marketHolders.holders.slice(0, 10) as holder, index (holder.proxyWallet)}
-											<div class="holder-item">
-												<span class="holder-rank">#{index + 1}</span>
-												<div class="holder-avatar">
-													{#if holder.profileImage}
-														<img src={holder.profileImage} alt="" />
-													{:else}
-														<div class="avatar-placeholder"></div>
-													{/if}
+								{@const allHolders = holdersQuery.data.flatMap(m => m.holders)}
+								{@const yesHolders = allHolders.filter(h => h.outcomeIndex === 0).slice(0, 10)}
+								{@const noHolders = allHolders.filter(h => h.outcomeIndex === 1).slice(0, 10)}
+								<div class="holders-columns">
+									<div class="holders-column">
+										<div class="holders-table-header">
+											<span class="holders-table-label yes">Yes</span>
+											<span class="holders-table-label">Shares</span>
+										</div>
+										<div class="holders-list">
+											{#each yesHolders as holder, index (holder.proxyWallet)}
+												<div class="holder-item">
+													<span class="holder-rank">#{index + 1}</span>
+													<div class="holder-avatar">
+														{#if holder.profileImage}
+															<img src={holder.profileImage} alt="" />
+														{:else}
+															<div class="avatar-placeholder"></div>
+														{/if}
+													</div>
+													<div class="holder-info">
+														<span class="holder-name">
+															{holder.name || holder.pseudonym || 'Anonymous'}
+														</span>
+													</div>
+													<span class="holder-amount yes">{formatNumber(holder.amount)}</span>
 												</div>
-												<div class="holder-info">
-													<span class="holder-name">
-														{holder.name || holder.pseudonym || 'Anonymous'}
-													</span>
+											{/each}
+										</div>
+									</div>
+									<div class="holders-column">
+										<div class="holders-table-header">
+											<span class="holders-table-label no">No</span>
+											<span class="holders-table-label">Shares</span>
+										</div>
+										<div class="holders-list">
+											{#each noHolders as holder, index (holder.proxyWallet)}
+												<div class="holder-item">
+													<span class="holder-rank">#{index + 1}</span>
+													<div class="holder-avatar">
+														{#if holder.profileImage}
+															<img src={holder.profileImage} alt="" />
+														{:else}
+															<div class="avatar-placeholder"></div>
+														{/if}
+													</div>
+													<div class="holder-info">
+														<span class="holder-name">
+															{holder.name || holder.pseudonym || 'Anonymous'}
+														</span>
+													</div>
+													<span class="holder-amount no">{formatNumber(holder.amount)}</span>
 												</div>
-												<span class="holder-amount">{formatNumber(holder.amount)}</span>
-											</div>
-										{/each}
-									{/each}
+											{/each}
+										</div>
+									</div>
 								</div>
 							{:else}
 								<div class="tab-empty">No holders data available</div>
@@ -590,6 +701,24 @@
 		padding: var(--space-lg) 12px;
 	}
 
+	/* Back Link */
+	.back-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 6px 0;
+		margin-bottom: var(--space-md);
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--text-2);
+		text-decoration: none;
+		transition: color var(--transition-fast);
+	}
+
+	.back-link:hover {
+		color: var(--primary);
+	}
+
 	.event-layout {
 		display: grid;
 		grid-template-columns: 1fr;
@@ -635,12 +764,67 @@
 		object-fit: cover;
 	}
 
+	.header-content {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
 	.event-title {
 		font-size: 24px;
 		font-weight: 700;
 		color: var(--text-0);
 		line-height: 1.3;
 		margin: 0;
+	}
+
+	/* Tags */
+	.event-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
+	.event-tag {
+		display: inline-flex;
+		padding: 4px 10px;
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--text-2);
+		background: var(--bg-2);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-sm);
+	}
+
+	/* Share Button */
+	.share-btn {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		padding: 0;
+		background: var(--bg-2);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-sm);
+		color: var(--text-2);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.share-btn:hover {
+		color: var(--primary);
+		border-color: var(--primary);
+		background: var(--primary-hover-bg);
+	}
+
+	.share-btn.copied {
+		color: var(--success);
+		border-color: var(--success);
+		background: rgba(0, 255, 136, 0.1);
 	}
 
 	.event-meta {
@@ -777,22 +961,10 @@
 	.rules-content {
 		max-height: 100px;
 		overflow: hidden;
-		position: relative;
 	}
 
 	.rules-content.expanded {
 		max-height: none;
-	}
-
-	.rules-content:not(.expanded)::after {
-		content: '';
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		height: 40px;
-		background: linear-gradient(to bottom, transparent, var(--bg-1));
-		pointer-events: none;
 	}
 
 	.rules-text {
@@ -1242,34 +1414,77 @@
 		word-wrap: break-word;
 	}
 
+	/* Holders Columns */
+	.holders-columns {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-md);
+		min-width: 0;
+	}
+
+	.holders-column {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		min-width: 0;
+		overflow: hidden;
+	}
+
+	.holders-table-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0 10px 8px;
+		border-bottom: 1px solid var(--bg-3);
+		margin-bottom: 8px;
+	}
+
+	.holders-table-label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: var(--text-3);
+	}
+
+	.holders-table-label.yes {
+		color: var(--success);
+	}
+
+	.holders-table-label.no {
+		color: var(--danger);
+	}
+
 	/* Holders List */
 	.holders-list {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
-		max-height: 400px;
+		gap: 6px;
+		max-height: 350px;
 		overflow-y: auto;
+		min-width: 0;
 	}
 
 	.holder-item {
 		display: flex;
 		align-items: center;
 		gap: var(--space-sm);
-		padding: 10px 12px;
+		padding: 8px 10px;
 		background: var(--bg-2);
 		border-radius: var(--radius-sm);
+		min-width: 0;
 	}
 
 	.holder-rank {
-		font-size: 12px;
+		font-size: 11px;
 		font-weight: 600;
 		color: var(--text-3);
-		min-width: 28px;
+		min-width: 24px;
 	}
 
 	.holder-avatar {
-		width: 28px;
-		height: 28px;
+		width: 24px;
+		height: 24px;
 		border-radius: 50%;
 		overflow: hidden;
 		flex-shrink: 0;
@@ -1284,21 +1499,32 @@
 	.holder-info {
 		flex: 1;
 		min-width: 0;
+		overflow: hidden;
 	}
 
 	.holder-name {
-		font-size: 13px;
+		display: block;
+		font-size: 12px;
 		font-weight: 500;
 		color: var(--text-0);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		max-width: 100%;
 	}
 
 	.holder-amount {
-		font-size: 13px;
+		font-size: 12px;
 		font-weight: 600;
+		color: var(--text-0);
+	}
+
+	.holder-amount.yes {
 		color: var(--success);
+	}
+
+	.holder-amount.no {
+		color: var(--danger);
 	}
 
 	/* ============================================
