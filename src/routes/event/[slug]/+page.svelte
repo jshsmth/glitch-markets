@@ -4,6 +4,11 @@
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
 	import CalendarIcon from '$lib/components/icons/CalendarIcon.svelte';
 	import ScrollIcon from '$lib/components/icons/ScrollIcon.svelte';
+	import GlobalIcon from '$lib/components/icons/GlobalIcon.svelte';
+	import XIcon from '$lib/components/icons/XIcon.svelte';
+	import GitHubIcon from '$lib/components/icons/GitHubIcon.svelte';
+	import LinkedInIcon from '$lib/components/icons/LinkedInIcon.svelte';
+	import DiscordIcon from '$lib/components/icons/DiscordIcon.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -106,11 +111,95 @@
 	// Selected outcome within the buy card (0 = first outcome, 1 = second)
 	let selectedOutcome = $state(0);
 
+	// Rules section expanded state
+	let rulesExpanded = $state(false);
+
 	// Handle market selection
 	function selectMarket(index: number) {
 		selectedMarketIndex = index;
 		selectedOutcome = 0; // Reset outcome selection when market changes
 	}
+
+	// URL parsing for rules section
+	interface ParsedSegment {
+		type: 'text' | 'url';
+		content: string;
+		domain?: string;
+		iconType?: 'x' | 'github' | 'linkedin' | 'discord' | 'global';
+	}
+
+	function getDomainFromUrl(url: string): string {
+		try {
+			const urlObj = new URL(url);
+			return urlObj.hostname.replace(/^www\./, '');
+		} catch {
+			return url;
+		}
+	}
+
+	function getIconTypeForDomain(domain: string): ParsedSegment['iconType'] {
+		if (domain.includes('twitter.com') || domain.includes('x.com')) return 'x';
+		if (domain.includes('github.com')) return 'github';
+		if (domain.includes('linkedin.com')) return 'linkedin';
+		if (domain.includes('discord.com') || domain.includes('discord.gg')) return 'discord';
+		return 'global';
+	}
+
+	function parseTextWithUrls(text: string): ParsedSegment[] {
+		const urlRegex = /(https?:\/\/[^\s<>()[\]]+?)([.,;:!?)]*(?:\s|$))/g;
+		const segments: ParsedSegment[] = [];
+		let lastIndex = 0;
+		let match;
+
+		while ((match = urlRegex.exec(text)) !== null) {
+			// Add text before the URL
+			if (match.index > lastIndex) {
+				segments.push({
+					type: 'text',
+					content: text.slice(lastIndex, match.index)
+				});
+			}
+
+			// Add the URL
+			const url = match[1];
+			const domain = getDomainFromUrl(url);
+			segments.push({
+				type: 'url',
+				content: url,
+				domain,
+				iconType: getIconTypeForDomain(domain)
+			});
+
+			// Add trailing punctuation as text if any
+			if (match[2] && match[2].trim()) {
+				segments.push({
+					type: 'text',
+					content: match[2]
+				});
+			} else if (match[2]) {
+				segments.push({
+					type: 'text',
+					content: match[2]
+				});
+			}
+
+			lastIndex = match.index + match[0].length;
+		}
+
+		// Add remaining text
+		if (lastIndex < text.length) {
+			segments.push({
+				type: 'text',
+				content: text.slice(lastIndex)
+			});
+		}
+
+		return segments;
+	}
+
+	const parsedDescription = $derived(
+		event.description ? parseTextWithUrls(event.description) : []
+	);
 </script>
 
 <svelte:head>
@@ -219,6 +308,37 @@
 					{/if}
 				</div>
 			</section>
+
+			<!-- Rules Section -->
+			{#if event.description}
+				<section class="rules-section">
+					<div class="rules-header">
+						<h2 class="section-title">Rules</h2>
+					</div>
+					<div class="rules-content" class:expanded={rulesExpanded}>
+						<p class="rules-text">{#each parsedDescription as segment}{#if segment.type === 'text'}{segment.content}{:else}<a
+										href={segment.content}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="rules-link"
+									>{#if segment.iconType === 'x'}<XIcon
+											size={12}
+										/>{:else if segment.iconType === 'github'}<GitHubIcon
+											size={12}
+										/>{:else if segment.iconType === 'linkedin'}<LinkedInIcon
+											size={12}
+										/>{:else if segment.iconType === 'discord'}<DiscordIcon
+											size={12}
+										/>{:else}<GlobalIcon size={12} />{/if}<span>{segment.domain}</span></a
+								>{/if}{/each}</p>
+					</div>
+					{#if event.description.length > 300}
+						<button class="show-more-btn" onclick={() => (rulesExpanded = !rulesExpanded)}>
+							{rulesExpanded ? 'Show less' : 'Show more'}
+						</button>
+					{/if}
+				</section>
+			{/if}
 		</div>
 
 		<!-- Right Column: Buy Card -->
@@ -460,6 +580,95 @@
 		background: linear-gradient(to bottom, transparent, var(--bg-1));
 		pointer-events: none;
 		border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+	}
+
+	/* ============================================
+	   RULES SECTION
+	   ============================================ */
+
+	.rules-section {
+		background: var(--bg-1);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-card);
+		padding: var(--space-lg);
+	}
+
+	.rules-header {
+		margin-bottom: var(--space-md);
+		padding-bottom: var(--space-sm);
+		border-bottom: 1px solid var(--bg-3);
+	}
+
+	.rules-content {
+		max-height: 100px;
+		overflow: hidden;
+		position: relative;
+	}
+
+	.rules-content.expanded {
+		max-height: none;
+	}
+
+	.rules-content:not(.expanded)::after {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: 40px;
+		background: linear-gradient(to bottom, transparent, var(--bg-1));
+		pointer-events: none;
+	}
+
+	.rules-text {
+		font-size: 14px;
+		line-height: 1.6;
+		color: var(--text-2);
+		margin: 0;
+		white-space: pre-wrap;
+	}
+
+	.rules-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px 8px;
+		background: var(--bg-2);
+		border-radius: var(--radius-sm);
+		color: var(--primary);
+		text-decoration: none;
+		font-size: 13px;
+		font-weight: 500;
+		transition: all var(--transition-fast);
+		vertical-align: middle;
+	}
+
+	.rules-link:hover {
+		background: var(--bg-3);
+		color: var(--primary-hover);
+	}
+
+	.rules-link span {
+		max-width: 150px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.show-more-btn {
+		margin-top: var(--space-sm);
+		padding: 0;
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--primary);
+		background: none;
+		border: none;
+		cursor: pointer;
+		transition: color var(--transition-fast);
+	}
+
+	.show-more-btn:hover {
+		color: var(--primary-hover);
 	}
 
 	.outcome-row {
