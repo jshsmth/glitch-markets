@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import type { Market } from '$lib/server/api/polymarket-client';
+	import type { Market, Comment, MarketHolders } from '$lib/server/api/polymarket-client';
+	import { createQuery } from '@tanstack/svelte-query';
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
 	import CalendarIcon from '$lib/components/icons/CalendarIcon.svelte';
 	import ScrollIcon from '$lib/components/icons/ScrollIcon.svelte';
@@ -9,6 +10,9 @@
 	import GitHubIcon from '$lib/components/icons/GitHubIcon.svelte';
 	import LinkedInIcon from '$lib/components/icons/LinkedInIcon.svelte';
 	import DiscordIcon from '$lib/components/icons/DiscordIcon.svelte';
+	import MessageTextIcon from '$lib/components/icons/MessageTextIcon.svelte';
+	import LeaderboardIcon from '$lib/components/icons/LeaderboardIcon.svelte';
+	import FlashIcon from '$lib/components/icons/FlashIcon.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -113,6 +117,66 @@
 
 	// Rules section expanded state
 	let rulesExpanded = $state(false);
+
+	// Tabs state: 'comments' | 'holders' | 'activity'
+	type TabType = 'comments' | 'holders' | 'activity';
+	let activeTab = $state<TabType>('comments');
+
+	// Get market condition IDs for holders query (API requires conditionId, not id)
+	const marketConditionIds = $derived(filteredMarkets.map((m) => m.conditionId));
+
+	// Comments query
+	const commentsQuery = createQuery<Comment[]>(() => ({
+		queryKey: ['comments', event.id],
+		queryFn: async () => {
+			const params = new URLSearchParams({
+				parent_entity_type: 'Event',
+				parent_entity_id: event.id,
+				limit: '20',
+				order: 'createdAt',
+				ascending: 'false'
+			});
+			const response = await fetch(`/api/comments?${params}`);
+			if (!response.ok) throw new Error('Failed to fetch comments');
+			return response.json();
+		},
+		enabled: activeTab === 'comments'
+	}));
+
+	// Top Holders query
+	const holdersQuery = createQuery<MarketHolders[]>(() => ({
+		queryKey: ['holders', marketConditionIds],
+		queryFn: async () => {
+			if (marketConditionIds.length === 0) return [];
+			const params = new URLSearchParams();
+			marketConditionIds.forEach((id) => params.append('market', id));
+			const response = await fetch(`/api/users/holders?${params}`);
+			if (!response.ok) throw new Error('Failed to fetch holders');
+			return response.json();
+		},
+		enabled: activeTab === 'holders' && marketConditionIds.length > 0
+	}));
+
+	// Format relative time
+	function formatRelativeTime(dateStr: string | null): string {
+		if (!dateStr) return '';
+		try {
+			const date = new Date(dateStr);
+			const now = new Date();
+			const diffMs = now.getTime() - date.getTime();
+			const diffMins = Math.floor(diffMs / 60000);
+			const diffHours = Math.floor(diffMs / 3600000);
+			const diffDays = Math.floor(diffMs / 86400000);
+
+			if (diffMins < 1) return 'just now';
+			if (diffMins < 60) return `${diffMins}m ago`;
+			if (diffHours < 24) return `${diffHours}h ago`;
+			if (diffDays < 7) return `${diffDays}d ago`;
+			return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+		} catch {
+			return '';
+		}
+	}
 
 	// Handle market selection
 	function selectMarket(index: number) {
@@ -339,6 +403,117 @@
 					{/if}
 				</section>
 			{/if}
+
+			<!-- Tabs Section: Comments, Top Holders, Activity -->
+			<section class="tabs-section">
+				<div class="tabs-header">
+					<button
+						class="tab-btn"
+						class:active={activeTab === 'comments'}
+						onclick={() => (activeTab = 'comments')}
+					>
+						<MessageTextIcon size={16} />
+						<span>Comments</span>
+					</button>
+					<button
+						class="tab-btn"
+						class:active={activeTab === 'holders'}
+						onclick={() => (activeTab = 'holders')}
+					>
+						<LeaderboardIcon size={16} />
+						<span>Top Holders</span>
+					</button>
+					<button
+						class="tab-btn"
+						class:active={activeTab === 'activity'}
+						onclick={() => (activeTab = 'activity')}
+					>
+						<FlashIcon size={16} />
+						<span>Activity</span>
+					</button>
+				</div>
+
+				<div class="tabs-content">
+					{#if activeTab === 'comments'}
+						<!-- Comments Tab -->
+						<div class="tab-panel">
+							{#if commentsQuery.isLoading}
+								<div class="tab-loading">Loading comments...</div>
+							{:else if commentsQuery.error}
+								<div class="tab-error">Failed to load comments</div>
+							{:else if commentsQuery.data && commentsQuery.data.length > 0}
+								<div class="comments-list">
+									{#each commentsQuery.data as comment (comment.id)}
+										<div class="comment-item">
+											<div class="comment-header">
+												<div class="comment-avatar">
+													{#if comment.profile?.profileImage}
+														<img src={comment.profile.profileImage} alt="" />
+													{:else}
+														<div class="avatar-placeholder"></div>
+													{/if}
+												</div>
+												<div class="comment-meta">
+													<span class="comment-author">
+														{comment.profile?.name ||
+															comment.profile?.pseudonym ||
+															'Anonymous'}
+													</span>
+													<span class="comment-time"
+														>{formatRelativeTime(comment.createdAt)}</span
+													>
+												</div>
+											</div>
+											<p class="comment-body">{comment.body}</p>
+										</div>
+									{/each}
+								</div>
+							{:else}
+								<div class="tab-empty">No comments yet</div>
+							{/if}
+						</div>
+					{:else if activeTab === 'holders'}
+						<!-- Top Holders Tab -->
+						<div class="tab-panel">
+							{#if holdersQuery.isLoading}
+								<div class="tab-loading">Loading top holders...</div>
+							{:else if holdersQuery.error}
+								<div class="tab-error">Failed to load holders</div>
+							{:else if holdersQuery.data && holdersQuery.data.length > 0}
+								<div class="holders-list">
+									{#each holdersQuery.data as marketHolders (marketHolders.token)}
+										{#each marketHolders.holders.slice(0, 10) as holder, index (holder.proxyWallet)}
+											<div class="holder-item">
+												<span class="holder-rank">#{index + 1}</span>
+												<div class="holder-avatar">
+													{#if holder.profileImage}
+														<img src={holder.profileImage} alt="" />
+													{:else}
+														<div class="avatar-placeholder"></div>
+													{/if}
+												</div>
+												<div class="holder-info">
+													<span class="holder-name">
+														{holder.name || holder.pseudonym || 'Anonymous'}
+													</span>
+												</div>
+												<span class="holder-amount">{formatNumber(holder.amount)}</span>
+											</div>
+										{/each}
+									{/each}
+								</div>
+							{:else}
+								<div class="tab-empty">No holders data available</div>
+							{/if}
+						</div>
+					{:else if activeTab === 'activity'}
+						<!-- Activity Tab -->
+						<div class="tab-panel">
+							<div class="tab-empty">Activity feed coming soon</div>
+						</div>
+					{/if}
+				</div>
+			</section>
 		</div>
 
 		<!-- Right Column: Buy Card -->
@@ -928,6 +1103,202 @@
 	.terms-text a {
 		color: var(--primary);
 		text-decoration: underline;
+	}
+
+	/* ============================================
+	   TABS SECTION
+	   ============================================ */
+
+	.tabs-section {
+		background: var(--bg-1);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-card);
+		overflow: hidden;
+	}
+
+	.tabs-header {
+		display: flex;
+		border-bottom: 1px solid var(--bg-3);
+	}
+
+	.tab-btn {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		padding: 14px 12px;
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--text-2);
+		background: transparent;
+		border: none;
+		border-bottom: 2px solid transparent;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.tab-btn:hover {
+		color: var(--text-0);
+		background: var(--bg-2);
+	}
+
+	.tab-btn.active {
+		color: var(--primary);
+		border-bottom-color: var(--primary);
+	}
+
+	.tabs-content {
+		padding: var(--space-md);
+	}
+
+	.tab-panel {
+		min-height: 200px;
+	}
+
+	.tab-loading,
+	.tab-error,
+	.tab-empty {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 150px;
+		font-size: 14px;
+		color: var(--text-3);
+	}
+
+	.tab-error {
+		color: var(--danger);
+	}
+
+	/* Comments List */
+	.comments-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		max-height: 400px;
+		overflow-y: auto;
+	}
+
+	.comment-item {
+		padding: var(--space-sm);
+		background: var(--bg-2);
+		border-radius: var(--radius-sm);
+	}
+
+	.comment-header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		margin-bottom: 8px;
+	}
+
+	.comment-avatar {
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		overflow: hidden;
+		flex-shrink: 0;
+	}
+
+	.comment-avatar img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.avatar-placeholder {
+		width: 100%;
+		height: 100%;
+		background: var(--bg-4);
+	}
+
+	.comment-meta {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	.comment-author {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-0);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.comment-time {
+		font-size: 11px;
+		color: var(--text-3);
+	}
+
+	.comment-body {
+		font-size: 14px;
+		line-height: 1.5;
+		color: var(--text-1);
+		margin: 0;
+		word-wrap: break-word;
+	}
+
+	/* Holders List */
+	.holders-list {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		max-height: 400px;
+		overflow-y: auto;
+	}
+
+	.holder-item {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: 10px 12px;
+		background: var(--bg-2);
+		border-radius: var(--radius-sm);
+	}
+
+	.holder-rank {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text-3);
+		min-width: 28px;
+	}
+
+	.holder-avatar {
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		overflow: hidden;
+		flex-shrink: 0;
+	}
+
+	.holder-avatar img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.holder-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.holder-name {
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--text-0);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.holder-amount {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--success);
 	}
 
 	/* ============================================
