@@ -172,9 +172,9 @@
 		queryKey: ['holders', selectedMarketConditionId],
 		queryFn: async () => {
 			if (!selectedMarketConditionId) return [];
-			const params = new URLSearchParams();
-			params.append('market', selectedMarketConditionId);
-			const response = await fetch(`/api/users/holders?${params}`);
+			const response = await fetch(
+				`/api/users/holders?market=${encodeURIComponent(selectedMarketConditionId)}`
+			);
 			if (!response.ok) throw new Error('Failed to fetch holders');
 			return response.json();
 		},
