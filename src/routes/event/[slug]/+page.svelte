@@ -320,16 +320,13 @@
 </svelte:head>
 
 <div class="event-page">
-	<!-- Back Navigation -->
 	<a href="/" class="back-link">
 		<ChevronLeftIcon size={18} />
 		<span>Back to Markets</span>
 	</a>
 
 	<div class="event-layout">
-		<!-- Left Column: Event Details -->
 		<div class="event-main">
-			<!-- Header -->
 			<header class="event-header">
 				<div class="header-top">
 					{#if event.image}
@@ -376,14 +373,12 @@
 				</div>
 			</header>
 
-			<!-- Chart Placeholder -->
 			<div class="chart-section">
 				<div class="chart-placeholder">
 					<span class="placeholder-text">Chart coming soon</span>
 				</div>
 			</div>
 
-			<!-- Outcomes Section -->
 			<section class="outcomes-section">
 				<div class="outcomes-header">
 					<h2 class="section-title">Outcomes</h2>
@@ -400,7 +395,6 @@
 				<div class="outcomes-list-wrapper" class:has-more={filteredMarkets.length > 5}>
 					<div class="outcomes-list">
 						{#if isMultiMarket}
-							<!-- Multi-market: Show all markets as selectable options -->
 							{#each filteredMarkets as market, index (market.id)}
 								{@const marketData = parseMarketData(market)}
 								<button
@@ -426,7 +420,6 @@
 								</button>
 							{/each}
 						{:else if selectedMarketData}
-							<!-- Binary market: Show outcomes -->
 							{#each selectedMarketData as outcome, index (index)}
 								<button
 									class="outcome-row"
@@ -449,14 +442,13 @@
 				</div>
 			</section>
 
-			<!-- Rules Section -->
 			{#if event.description}
 				<section class="rules-section">
 					<div class="rules-header">
 						<h2 class="section-title">Rules</h2>
 					</div>
 					<div class="rules-content" class:expanded={rulesExpanded}>
-						<p class="rules-text">{#each parsedDescription as segment}{#if segment.type === 'text'}{segment.content}{:else}<a
+						<p class="rules-text">{#each parsedDescription as segment, i (i)}{#if segment.type === 'text'}{segment.content}{:else}<a
 										href={segment.content}
 										target="_blank"
 										rel="noopener noreferrer"
@@ -480,7 +472,6 @@
 				</section>
 			{/if}
 
-			<!-- Tabs Section: Comments, Top Holders, Activity -->
 			<section class="tabs-section">
 				<div class="tabs-header">
 					<button
@@ -511,7 +502,6 @@
 
 				<div class="tabs-content">
 					{#if activeTab === 'comments'}
-						<!-- Comments Tab -->
 						<div class="tab-panel">
 							{#if commentsQuery.isLoading}
 								<div class="tab-loading">Loading comments...</div>
@@ -549,7 +539,6 @@
 							{/if}
 						</div>
 					{:else if activeTab === 'holders'}
-						<!-- Top Holders Tab -->
 						<div class="tab-panel">
 							{#if holdersQuery.isLoading}
 								<div class="tab-loading">Loading top holders...</div>
@@ -618,7 +607,6 @@
 							{/if}
 						</div>
 					{:else if activeTab === 'activity'}
-						<!-- Activity Tab -->
 						<div class="tab-panel">
 							<div class="tab-empty">Activity feed coming soon</div>
 						</div>
@@ -627,10 +615,8 @@
 			</section>
 		</div>
 
-		<!-- Right Column: Buy Card -->
 		<aside class="buy-card-container">
 			<div class="buy-card">
-				<!-- Market Title -->
 				<div class="buy-card-header">
 					{#if event.image}
 						<div class="buy-card-icon">
@@ -646,7 +632,6 @@
 					</span>
 				</div>
 
-				<!-- Outcome Selection Pills -->
 				{#if selectedMarketData}
 					<div class="outcome-pills">
 						{#each selectedMarketData as outcome, index (index)}
@@ -664,7 +649,6 @@
 					</div>
 				{/if}
 
-				<!-- Amount Input -->
 				<div class="amount-section">
 					<label class="amount-label" for="amount-input">Amount</label>
 					<div class="amount-input-wrapper">
@@ -685,7 +669,6 @@
 					</div>
 				</div>
 
-				<!-- Trade Button -->
 				<button class="trade-button" disabled>Trade</button>
 
 				<p class="terms-text">By trading, you agree to the <a href="/terms">Terms of Use</a></p>
