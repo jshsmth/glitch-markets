@@ -3,42 +3,11 @@
 	import type { Market } from '$lib/server/api/polymarket-client';
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
 	import CalendarIcon from '$lib/components/icons/CalendarIcon.svelte';
+	import ScrollIcon from '$lib/components/icons/ScrollIcon.svelte';
 
 	let { data }: { data: PageData } = $props();
 
 	const event = $derived(data.event);
-
-	// Selected market for the buy card
-	let selectedMarketIndex = $state(0);
-
-	const selectedMarket = $derived(event.markets?.[selectedMarketIndex] || null);
-
-	// Parse market data
-	function parseMarketData(market: Market) {
-		try {
-			const outcomes =
-				typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : market.outcomes;
-			const prices =
-				typeof market.outcomePrices === 'string'
-					? JSON.parse(market.outcomePrices)
-					: market.outcomePrices;
-
-			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
-
-			return outcomes.map((outcome: string, i: number) => ({
-				label: outcome,
-				price: parseFloat(prices[i]) * 100,
-				priceFormatted: (parseFloat(prices[i]) * 100).toFixed(0)
-			}));
-		} catch {
-			return null;
-		}
-	}
-
-	const selectedMarketData = $derived(selectedMarket ? parseMarketData(selectedMarket) : null);
-
-	// Selected outcome within the buy card (0 = first outcome, 1 = second)
-	let selectedOutcome = $state(0);
 
 	// Format numbers
 	function formatNumber(num: number | null | undefined): string {
@@ -66,9 +35,6 @@
 		}
 	}
 
-	// Check if multi-market event
-	const isMultiMarket = $derived((event.markets?.length || 0) > 1);
-
 	// Get display title for market (for multi-market events)
 	function getMarketDisplayTitle(market: Market): string {
 		if (market.groupItemTitle) return market.groupItemTitle;
@@ -81,6 +47,64 @@
 		}
 		return market.question || 'Unknown';
 	}
+
+	// Parse market data
+	function parseMarketData(market: Market) {
+		try {
+			const outcomes =
+				typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : market.outcomes;
+			const prices =
+				typeof market.outcomePrices === 'string'
+					? JSON.parse(market.outcomePrices)
+					: market.outcomePrices;
+
+			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
+
+			return outcomes.map((outcome: string, i: number) => ({
+				label: outcome,
+				price: parseFloat(prices[i]) * 100,
+				priceFormatted: (parseFloat(prices[i]) * 100).toFixed(0)
+			}));
+		} catch {
+			return null;
+		}
+	}
+
+	// Filter out placeholder markets (Person X, Candidate X, Other, etc.)
+	function isPlaceholderMarket(market: Market): boolean {
+		const title = getMarketDisplayTitle(market);
+		// Match placeholder patterns:
+		// - "Person X" where X is a single letter
+		// - "Candidate X" where X is a single letter
+		// - "Other" exactly
+		return /^(Person|Candidate) [A-Z]$/i.test(title) || /^Other$/i.test(title);
+	}
+
+	// Get the primary outcome price for sorting
+	function getMarketPrice(market: Market): number {
+		const data = parseMarketData(market);
+		return data?.[0]?.price ?? 0;
+	}
+
+	// Get filtered markets (excluding placeholders), sorted by highest chance
+	const filteredMarkets = $derived(
+		(event.markets || [])
+			.filter((market) => !isPlaceholderMarket(market))
+			.sort((a, b) => getMarketPrice(b) - getMarketPrice(a))
+	);
+
+	// Check if multi-market event
+	const isMultiMarket = $derived(filteredMarkets.length > 1);
+
+	// Selected market for the buy card
+	let selectedMarketIndex = $state(0);
+
+	const selectedMarket = $derived(filteredMarkets[selectedMarketIndex] || null);
+
+	const selectedMarketData = $derived(selectedMarket ? parseMarketData(selectedMarket) : null);
+
+	// Selected outcome within the buy card (0 = first outcome, 1 = second)
+	let selectedOutcome = $state(0);
 
 	// Handle market selection
 	function selectMarket(index: number) {
@@ -134,52 +158,64 @@
 			<section class="outcomes-section">
 				<div class="outcomes-header">
 					<h2 class="section-title">Outcomes</h2>
-					<span class="outcomes-label">Chance</span>
+					<div class="outcomes-header-right">
+						{#if filteredMarkets.length > 5}
+							<span class="scroll-hint">
+								<ScrollIcon size={14} />
+							</span>
+						{/if}
+						<span class="outcomes-label">Chance</span>
+					</div>
 				</div>
 
-				<div class="outcomes-list">
-					{#if isMultiMarket}
-						<!-- Multi-market: Show all markets as selectable options -->
-						{#each event.markets || [] as market, index (market.id)}
-							{@const marketData = parseMarketData(market)}
-							<button
-								class="outcome-row"
-								class:selected={selectedMarketIndex === index}
-								onclick={() => selectMarket(index)}
-							>
-								<div class="outcome-info">
-									<span class="outcome-label">{getMarketDisplayTitle(market)}</span>
-									{#if market.volume24hr}
-										<span class="outcome-volume"
-											>{formatNumber(market.volume24hr)} <span class="vol-label">Vol.</span></span
-										>
-									{/if}
-								</div>
-								<div class="outcome-odds">
-									{#if marketData && marketData[0]}
-										<span class="odds-value">{marketData[0].priceFormatted}%</span>
-									{:else}
-										<span class="odds-value">—</span>
-									{/if}
-								</div>
-							</button>
-						{/each}
-					{:else if selectedMarketData}
-						<!-- Binary market: Show outcomes -->
-						{#each selectedMarketData as outcome, index (index)}
-							<button
-								class="outcome-row"
-								class:selected={selectedOutcome === index}
-								onclick={() => (selectedOutcome = index)}
-							>
-								<div class="outcome-info">
-									<span class="outcome-label">{outcome.label}</span>
-								</div>
-								<div class="outcome-odds">
-									<span class="odds-value">{outcome.priceFormatted}%</span>
-								</div>
-							</button>
-						{/each}
+				<div class="outcomes-list-wrapper" class:has-more={filteredMarkets.length > 5}>
+					<div class="outcomes-list">
+						{#if isMultiMarket}
+							<!-- Multi-market: Show all markets as selectable options -->
+							{#each filteredMarkets as market, index (market.id)}
+								{@const marketData = parseMarketData(market)}
+								<button
+									class="outcome-row"
+									class:selected={selectedMarketIndex === index}
+									onclick={() => selectMarket(index)}
+								>
+									<div class="outcome-info">
+										<span class="outcome-label">{getMarketDisplayTitle(market)}</span>
+										{#if market.volume24hr}
+											<span class="outcome-volume"
+												>{formatNumber(market.volume24hr)} <span class="vol-label">Vol.</span></span
+											>
+										{/if}
+									</div>
+									<div class="outcome-odds">
+										{#if marketData && marketData[0]}
+											<span class="odds-value">{marketData[0].priceFormatted}%</span>
+										{:else}
+											<span class="odds-value">—</span>
+										{/if}
+									</div>
+								</button>
+							{/each}
+						{:else if selectedMarketData}
+							<!-- Binary market: Show outcomes -->
+							{#each selectedMarketData as outcome, index (index)}
+								<button
+									class="outcome-row"
+									class:selected={selectedOutcome === index}
+									onclick={() => (selectedOutcome = index)}
+								>
+									<div class="outcome-info">
+										<span class="outcome-label">{outcome.label}</span>
+									</div>
+									<div class="outcome-odds">
+										<span class="odds-value">{outcome.priceFormatted}%</span>
+									</div>
+								</button>
+							{/each}
+						{/if}
+					</div>
+					{#if filteredMarkets.length > 5}
+						<div class="scroll-fade"></div>
 					{/if}
 				</div>
 			</section>
@@ -382,6 +418,19 @@
 		margin: 0;
 	}
 
+	.outcomes-header-right {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.scroll-hint {
+		display: flex;
+		align-items: center;
+		color: var(--text-3);
+		opacity: 0.7;
+	}
+
 	.outcomes-label {
 		font-size: 12px;
 		font-weight: 500;
@@ -390,10 +439,27 @@
 		letter-spacing: 0.5px;
 	}
 
+	.outcomes-list-wrapper {
+		position: relative;
+	}
+
 	.outcomes-list {
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
+		max-height: 280px;
+		overflow-y: auto;
+	}
+
+	.scroll-fade {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: 50px;
+		background: linear-gradient(to bottom, transparent, var(--bg-1));
+		pointer-events: none;
+		border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 	}
 
 	.outcome-row {
