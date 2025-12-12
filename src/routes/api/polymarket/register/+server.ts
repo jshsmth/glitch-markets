@@ -1,165 +1,107 @@
 /**
- * Polymarket Registration Endpoint
- * Registers server wallet with Polymarket CLOB for automated trading
+ * API Endpoint: Register with Polymarket CLOB
+ * POST /api/polymarket/register
+ *
+ * Registers the authenticated user with Polymarket's CLOB and creates API credentials
+ * This enables the user to trade on Polymarket
  */
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { db } from '$lib/server/db';
-import { polymarketCredentials, users } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
-import { encryptWithAES } from '$lib/server/utils/crypto';
-import { POLYMARKET_CLOB_URL } from '$env/static/private';
-import { signTypedDataWithServerWallet } from '$lib/server/wallet/server-wallet';
-import { deriveProxyWalletAddress } from '$lib/server/utils/proxy-wallet';
-import { getAddress } from 'viem';
+import { registerWithPolymarket } from '$lib/server/polymarket/clob-registration';
+import { supabaseAdmin } from '$lib/supabase/admin';
+import { encryptData } from '$lib/server/utils/encryption';
+import { Logger } from '$lib/server/utils/logger';
+
+const logger = new Logger({ component: 'PolymarketRegistration' });
 
 export const POST: RequestHandler = async ({ locals }) => {
-	if (!locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
-
-	const userId = locals.user.userId;
-
 	try {
-		const existing = await db.query.polymarketCredentials.findFirst({
-			where: eq(polymarketCredentials.userId, userId)
-		});
+		// Get the authenticated user from Supabase Auth (secure server-side verification)
+		const {
+			data: { user: authUser },
+			error: authError
+		} = await locals.supabase.auth.getUser();
 
-		if (existing) {
-			return json({ error: 'Already registered with Polymarket' }, { status: 400 });
+		if (authError || !authUser) {
+			return json({ error: 'Unauthorized' }, { status: 401 });
 		}
 
-		const user = await db.query.users.findFirst({
-			where: eq(users.id, userId)
-		});
+		const userId = authUser.id;
 
-		if (!user || !user.serverWalletAddress || !user.encryptedServerKeyShares) {
-			return json({ error: 'Server wallet not found' }, { status: 400 });
-		}
+		logger.info('Polymarket registration requested', { userId });
 
-		const proxyWalletAddress = getAddress(await deriveProxyWalletAddress(user.serverWalletAddress));
+		// Check if user already has Polymarket credentials
+		const { data: existingCreds } = await supabaseAdmin
+			.from('polymarket_credentials')
+			.select('proxy_wallet_address')
+			.eq('user_id', userId)
+			.single();
 
-		const timestamp = Date.now();
-
-		const domain = {
-			name: 'ClobAuthDomain',
-			version: '1',
-			chainId: 137
-		};
-
-		const types = {
-			ClobAuth: [
-				{ name: 'address', type: 'address' },
-				{ name: 'timestamp', type: 'string' },
-				{ name: 'nonce', type: 'uint256' },
-				{ name: 'message', type: 'string' }
-			]
-		};
-
-		const message = {
-			address: user.serverWalletAddress.toLowerCase(),
-			timestamp: timestamp.toString(),
-			nonce: 0,
-			message: 'This message attests that I control the given wallet'
-		};
-
-		const signature = await signTypedDataWithServerWallet(
-			user.serverWalletAddress,
-			domain,
-			types,
-			message,
-			user.encryptedServerKeyShares
-		);
-
-		const clobUrl = POLYMARKET_CLOB_URL || 'https://clob.polymarket.com';
-
-		const requestHeaders = {
-			POLY_ADDRESS: getAddress(user.serverWalletAddress),
-			POLY_SIGNATURE: signature,
-			POLY_TIMESTAMP: timestamp.toString(),
-			POLY_NONCE: '0'
-		};
-
-		console.log('Polymarket CLOB request:', {
-			url: `${clobUrl}/auth/api-key`,
-			headers: requestHeaders,
-			proxyWalletAddress
-		});
-
-		const response = await fetch(`${clobUrl}/auth/api-key`, {
-			method: 'POST',
-			headers: requestHeaders
-		});
-
-		if (!response.ok) {
-			let errorData: string;
-			try {
-				const jsonError = await response.json();
-				errorData = JSON.stringify(jsonError);
-			} catch {
-				errorData = await response.text();
-			}
-			console.error('Polymarket CLOB registration failed:', errorData);
-			return json(
-				{
-					error: 'Failed to register with Polymarket',
-					details: errorData
-				},
-				{ status: 500 }
-			);
-		}
-
-		const responseData = await response.json();
-		const { apiKey, secret, passphrase } = responseData;
-
-		// Validate response has required fields
-		if (!apiKey || !secret || !passphrase) {
-			console.error('Missing credentials in Polymarket response:', {
-				hasApiKey: !!apiKey,
-				hasSecret: !!secret,
-				hasPassphrase: !!passphrase
+		if (existingCreds) {
+			logger.info('User already registered with Polymarket', {
+				userId,
+				proxyWallet: existingCreds.proxy_wallet_address
 			});
-			return json({ error: 'Invalid response from Polymarket API' }, { status: 500 });
-		}
 
-		// Type guard: Ensure credentials are strings
-		if (
-			typeof apiKey !== 'string' ||
-			typeof secret !== 'string' ||
-			typeof passphrase !== 'string'
-		) {
-			console.error('Invalid credential types from Polymarket API:', {
-				apiKeyType: typeof apiKey,
-				secretType: typeof secret,
-				passphraseType: typeof passphrase
+			return json({
+				success: true,
+				proxyWalletAddress: existingCreds.proxy_wallet_address,
+				message: 'Already registered with Polymarket'
 			});
-			return json({ error: 'Invalid credential types from Polymarket API' }, { status: 500 });
 		}
 
-		const encryptedApiKey = encryptWithAES(apiKey);
-		const encryptedSecret = encryptWithAES(secret);
-		const encryptedPassphrase = encryptWithAES(passphrase);
+		// Register with Polymarket CLOB
+		const credentials = await registerWithPolymarket(userId);
 
-		await db.insert(polymarketCredentials).values({
+		// Encrypt the API credentials before storing
+		const encryptedApiKey = encryptData(credentials.apiKey);
+		const encryptedSecret = encryptData(credentials.secret);
+		const encryptedPassphrase = encryptData(credentials.passphrase);
+
+		// Get user's server wallet address from database
+		const { data: dbUser } = await supabaseAdmin
+			.from('users')
+			.select('server_wallet_address')
+			.eq('id', userId)
+			.single();
+
+		if (!dbUser?.server_wallet_address) {
+			throw new Error('Server wallet not found');
+		}
+
+		// Save credentials to database
+		const { error: insertError } = await supabaseAdmin.from('polymarket_credentials').insert({
+			user_id: userId,
+			wallet_address: dbUser.server_wallet_address,
+			proxy_wallet_address: credentials.proxyWalletAddress,
+			encrypted_api_key: encryptedApiKey,
+			encrypted_secret: encryptedSecret,
+			encrypted_passphrase: encryptedPassphrase,
+			created_at: new Date().toISOString()
+		});
+
+		if (insertError) {
+			logger.error('Failed to save Polymarket credentials', {
+				userId,
+				error: insertError
+			});
+			throw new Error('Failed to save Polymarket credentials');
+		}
+
+		logger.info('Successfully registered with Polymarket', {
 			userId,
-			walletAddress: user.serverWalletAddress,
-			proxyWalletAddress,
-			encryptedApiKey,
-			encryptedSecret,
-			encryptedPassphrase,
-			createdAt: new Date()
+			proxyWallet: credentials.proxyWalletAddress
 		});
 
 		return json({
 			success: true,
-			message: 'Successfully registered with Polymarket',
-			proxyWalletAddress
+			proxyWalletAddress: credentials.proxyWalletAddress,
+			message: 'Successfully registered with Polymarket'
 		});
 	} catch (error) {
 		const errorId = crypto.randomUUID();
-		console.error('Polymarket registration error:', {
-			userId,
+		logger.error('Polymarket registration error', {
 			error: error instanceof Error ? error.message : 'Unknown error',
 			stack: error instanceof Error ? error.stack : undefined,
 			timestamp: new Date().toISOString(),

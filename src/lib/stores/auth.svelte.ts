@@ -1,19 +1,17 @@
 /**
- * Authentication store for Dynamic client (Svelte 5 Runes version)
+ * Authentication store for Supabase Auth (Svelte 5 Runes version)
  * Provides reactive access to auth state throughout the app
  */
 
-import type { DynamicClient } from '@dynamic-labs-sdk/client';
-import { onEvent } from '@dynamic-labs-sdk/client';
+import type { Session, User } from '@supabase/supabase-js';
 import { browser } from '$app/environment';
-import type { DynamicUser } from '$lib/types/dynamic';
 
 /**
  * Auth state using Svelte 5 runes
  */
 export const authState = $state({
-	client: null as DynamicClient | null,
-	user: null as DynamicUser | null,
+	session: null as Session | null,
+	user: null as User | null,
 	isInitializing: true
 });
 
@@ -25,50 +23,36 @@ export function isAuthenticated(): boolean {
 }
 
 /**
- * Function: Get JWT token
+ * Function: Get user ID
  */
-export function getToken(): string | null {
-	return authState.client?.token ?? null;
+export function getUserId(): string | null {
+	return authState.user?.id ?? null;
 }
 
 /**
- * Function: Get connected wallet accounts
+ * Function: Get user email
  */
-export function getWalletAccounts() {
-	return authState.user?.verifiedCredentials || [];
+export function getUserEmail(): string | null {
+	return authState.user?.email ?? null;
 }
 
 /**
- * Initialize Dynamic client event listeners
- * Call this once when the Dynamic client is created
+ * Initialize auth state from session
  */
-export function initializeAuthListeners(client: DynamicClient) {
+export function initializeAuth(session: Session | null) {
 	if (!browser) return;
 
-	authState.client = client;
-	authState.user = client.user as DynamicUser | null;
+	authState.session = session;
+	authState.user = session?.user ?? null;
+	authState.isInitializing = false;
+}
 
-	// Listen to user state changes for reactive updates
-	// userChanged event fires whenever user state changes (sign in, sign out, profile updates, wallet changes)
-	const unsubscribeUserChanged = onEvent({
-		event: 'userChanged',
-		listener: ({ user }) => {
-			authState.user = user as DynamicUser | null;
-		}
-	});
-
-	// Listen to logout event specifically
-	const unsubscribeLogout = onEvent({
-		event: 'logout',
-		listener: () => {
-			authState.user = null;
-		}
-	});
-
-	return () => {
-		unsubscribeUserChanged();
-		unsubscribeLogout();
-	};
+/**
+ * Update auth state when session changes
+ */
+export function updateAuthState(session: Session | null) {
+	authState.session = session;
+	authState.user = session?.user ?? null;
 }
 
 /**

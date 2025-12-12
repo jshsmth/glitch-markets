@@ -1,82 +1,54 @@
 /**
  * Server Wallet Utilities
- * Creates and manages backend-controlled MPC wallets using Dynamic's Node SDK
+ * Creates and manages server-side wallets using viem
+ * These wallets are used for automated Polymarket trading
  */
 
-import { DynamicEvmWalletClient } from '@dynamic-labs-wallet/node-evm';
-import { ThresholdSignatureScheme } from '@dynamic-labs-wallet/node';
-import { DYNAMIC_ENVIRONMENT_ID, DYNAMIC_API_TOKEN } from '$env/static/private';
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { createWalletClient, http } from 'viem';
+import { polygon } from 'viem/chains';
 import { Logger } from '$lib/server/utils/logger';
 import { encryptData, decryptData } from '$lib/server/utils/encryption';
 
 const logger = new Logger({ component: 'ServerWallet' });
 
-let evmClientInstance: DynamicEvmWalletClient | null = null;
-let instanceCreationTime: number = 0;
-// Refresh client after 1 hour to prevent stale connections
-const CLIENT_MAX_AGE = 3600000; // 1 hour in milliseconds
-
-async function getAuthenticatedEvmClient(): Promise<DynamicEvmWalletClient> {
-	const now = Date.now();
-
-	if (evmClientInstance && now - instanceCreationTime < CLIENT_MAX_AGE) {
-		return evmClientInstance;
-	}
-
-	if (evmClientInstance) {
-		logger.info('Recreating Dynamic EVM client due to age', {
-			age: now - instanceCreationTime,
-			maxAge: CLIENT_MAX_AGE
-		});
-	}
-
-	const client = new DynamicEvmWalletClient({
-		environmentId: DYNAMIC_ENVIRONMENT_ID,
-		enableMPCAccelerator: false
-	});
-
-	await client.authenticateApiToken(DYNAMIC_API_TOKEN);
-	evmClientInstance = client;
-	instanceCreationTime = now;
-
-	logger.info('Authenticated Dynamic EVM client', { timestamp: new Date(now).toISOString() });
-	return client;
-}
-
 export interface ServerWalletData {
 	accountAddress: string;
 	walletId: string;
 	publicKeyHex: string;
-	encryptedKeyShares: string; // Encrypted JSON string of external key shares
+	encryptedKeyShares: string; // Encrypted private key
 }
 
+/**
+ * Create a new server wallet using viem
+ * Generates a random private key and encrypts it for storage
+ */
 export async function createServerWallet(userId: string): Promise<ServerWalletData> {
 	try {
-		logger.info('Creating server wallet', { userId });
+		logger.info('Creating server wallet with viem', { userId });
 
-		const evmClient = await getAuthenticatedEvmClient();
+		// Generate a new random private key
+		const privateKey = generatePrivateKey();
 
-		const { accountAddress, walletId, publicKeyHex, externalServerKeyShares } =
-			await evmClient.createWalletAccount({
-				thresholdSignatureScheme: ThresholdSignatureScheme.TWO_OF_TWO,
-				backUpToClientShareService: true,
-				onError: (error: Error) => {
-					logger.error('Server wallet creation error', { error: error.message, userId });
-				}
-			});
+		// Create account from private key
+		const account = privateKeyToAccount(privateKey);
 
-		logger.info('Server wallet created', {
+		// Generate a unique wallet ID
+		const walletId = crypto.randomUUID();
+
+		// Encrypt the private key for secure storage
+		const encryptedKeyShares = encryptData(privateKey);
+
+		logger.info('Server wallet created successfully', {
 			userId,
-			accountAddress,
+			accountAddress: account.address,
 			walletId
 		});
 
-		const encryptedKeyShares = encryptData(JSON.stringify(externalServerKeyShares));
-
 		return {
-			accountAddress,
+			accountAddress: account.address,
 			walletId,
-			publicKeyHex,
+			publicKeyHex: account.publicKey,
 			encryptedKeyShares
 		};
 	} catch (error) {
@@ -88,6 +60,17 @@ export async function createServerWallet(userId: string): Promise<ServerWalletDa
 	}
 }
 
+/**
+ * Get viem account from encrypted private key
+ */
+function getAccountFromEncryptedKey(encryptedKeyShares: string) {
+	const privateKey = decryptData(encryptedKeyShares) as `0x${string}`;
+	return privateKeyToAccount(privateKey);
+}
+
+/**
+ * Sign a message with the server wallet
+ */
 export async function signMessageWithServerWallet(
 	accountAddress: string,
 	message: string,
@@ -96,19 +79,18 @@ export async function signMessageWithServerWallet(
 	try {
 		logger.info('Signing message with server wallet', { accountAddress });
 
-		const evmClient = await getAuthenticatedEvmClient();
-
-		let externalServerKeyShares;
-		if (encryptedKeyShares) {
-			const decrypted = decryptData(encryptedKeyShares);
-			externalServerKeyShares = JSON.parse(decrypted);
+		if (!encryptedKeyShares) {
+			throw new Error('Encrypted key shares required for signing');
 		}
 
-		const signature = await evmClient.signMessage({
-			message,
-			accountAddress,
-			externalServerKeyShares
-		});
+		const account = getAccountFromEncryptedKey(encryptedKeyShares);
+
+		// Verify the account matches
+		if (account.address.toLowerCase() !== accountAddress.toLowerCase()) {
+			throw new Error('Account address mismatch');
+		}
+
+		const signature = await account.signMessage({ message });
 
 		logger.info('Message signed successfully', { accountAddress });
 		return signature;
@@ -121,9 +103,16 @@ export async function signMessageWithServerWallet(
 	}
 }
 
+/**
+ * Sign typed data (EIP-712) with the server wallet
+ */
 export async function signTypedDataWithServerWallet(
 	accountAddress: string,
-	domain: Record<string, string | number>,
+	domain: {
+		name: string;
+		version: string;
+		chainId: number;
+	},
 	types: Record<string, Array<{ name: string; type: string }>>,
 	message: Record<string, string | number>,
 	encryptedKeyShares?: string
@@ -136,38 +125,23 @@ export async function signTypedDataWithServerWallet(
 			message
 		});
 
-		const evmClient = await getAuthenticatedEvmClient();
-
-		let externalServerKeyShares;
-		if (encryptedKeyShares) {
-			const decrypted = decryptData(encryptedKeyShares);
-			externalServerKeyShares = JSON.parse(decrypted);
+		if (!encryptedKeyShares) {
+			throw new Error('Encrypted key shares required for signing');
 		}
 
-		// Note: Dynamic SDK's type definition incorrectly expects only TypedData (types object),
-		// but it actually needs the full TypedDataDefinition structure (domain, types, primaryType, message)
-		// because it passes it to viem.hashTypedData() internally. We use 'as any' to work around the incorrect types.
-		const typedData = {
+		const account = getAccountFromEncryptedKey(encryptedKeyShares);
+
+		// Verify the account matches
+		if (account.address.toLowerCase() !== accountAddress.toLowerCase()) {
+			throw new Error('Account address mismatch');
+		}
+
+		// Sign the typed data using EIP-712
+		const signature = await account.signTypedData({
 			domain,
-			types: {
-				EIP712Domain: [
-					{ name: 'name', type: 'string' },
-					{ name: 'version', type: 'string' },
-					{ name: 'chainId', type: 'uint256' }
-				],
-				...types
-			},
+			types,
 			primaryType: 'ClobAuth',
 			message
-		};
-
-		logger.info('Prepared typed data for signing', { typedData });
-
-		const signature = await evmClient.signTypedData({
-			accountAddress,
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			typedData: typedData as any,
-			externalServerKeyShares
 		});
 
 		logger.info('Typed data signed successfully', { accountAddress, signature });
@@ -182,6 +156,9 @@ export async function signTypedDataWithServerWallet(
 	}
 }
 
+/**
+ * Get a viem wallet client for the server wallet
+ */
 export async function getServerWalletClient(
 	accountAddress: string,
 	chainId: number,
@@ -189,19 +166,21 @@ export async function getServerWalletClient(
 	encryptedKeyShares?: string
 ) {
 	try {
-		const evmClient = await getAuthenticatedEvmClient();
-
-		let externalServerKeyShares;
-		if (encryptedKeyShares) {
-			const decrypted = decryptData(encryptedKeyShares);
-			externalServerKeyShares = JSON.parse(decrypted);
+		if (!encryptedKeyShares) {
+			throw new Error('Encrypted key shares required');
 		}
 
-		const walletClient = await evmClient.getWalletClient({
-			accountAddress,
-			chainId,
-			rpcUrl,
-			externalServerKeyShares
+		const account = getAccountFromEncryptedKey(encryptedKeyShares);
+
+		// Verify the account matches
+		if (account.address.toLowerCase() !== accountAddress.toLowerCase()) {
+			throw new Error('Account address mismatch');
+		}
+
+		const walletClient = createWalletClient({
+			account,
+			chain: polygon,
+			transport: http(rpcUrl)
 		});
 
 		logger.info('Viem wallet client created', { accountAddress, chainId });
