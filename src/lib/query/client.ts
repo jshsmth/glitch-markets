@@ -58,5 +58,21 @@ export const queryKeys = {
 		byCategory: (category: string, filters: Record<string, unknown>) =>
 			['events', 'category', category, filters] as const,
 		detail: (slug: string) => ['events', 'detail', slug] as const
+	},
+	traders: {
+		all: ['traders'] as const,
+		leaderboard: (
+			category: string,
+			timePeriod: string,
+			orderBy: string,
+			limit: number,
+			offset: number
+		) => ['traders', 'leaderboard', category, timePeriod, orderBy, limit, offset] as const
+	},
+	builders: {
+		all: ['builders'] as const,
+		leaderboard: (timePeriod: string, limit: number, offset: number) =>
+			['builders', 'leaderboard', timePeriod, limit, offset] as const,
+		volume: (timePeriod: string) => ['builders', 'volume', timePeriod] as const
 	}
 };

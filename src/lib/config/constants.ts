@@ -13,6 +13,8 @@ export const CACHE_TTL = {
 	DEFAULT: 60000,
 	/** 5 minutes - for less frequently changing data (bridge assets, builder leaderboard) */
 	EXTENDED: 300000,
+	/** 5 minutes - for trader leaderboard (rankings change frequently) */
+	TRADERS_LEADERBOARD: 300000,
 	/** 5 minutes - for builder leaderboard (rankings change frequently) */
 	BUILDERS_LEADERBOARD: 300000,
 	/** 10 minutes - for builder volume time-series (historical data, less volatile) */
