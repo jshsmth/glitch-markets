@@ -12,7 +12,9 @@ import { browser } from '$app/environment';
 export const authState = $state({
 	session: null as Session | null,
 	user: null as User | null,
-	isInitializing: true
+	isInitializing: true,
+	/** Incremented when profile data should be refetched (e.g., after wallet creation) */
+	profileVersion: 0
 });
 
 /**
@@ -60,4 +62,12 @@ export function updateAuthState(session: Session | null) {
  */
 export function setInitializationComplete() {
 	authState.isInitializing = false;
+}
+
+/**
+ * Trigger a profile refetch by incrementing the version
+ * Call this after wallet creation or profile updates
+ */
+export function refreshProfile() {
+	authState.profileVersion++;
 }

@@ -5,7 +5,7 @@
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { dev } from '$app/environment';
 	import { createQueryClient } from '$lib/query/client';
-	import { initializeAuth, updateAuthState } from '$lib/stores/auth.svelte';
+	import { initializeAuth, updateAuthState, refreshProfile } from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
 	import { signInModalState, closeSignInModal } from '$lib/stores/modal.svelte';
 	import { onMount } from 'svelte';
@@ -59,6 +59,9 @@
 
 			if (!response.ok) {
 				console.error('Failed to register user in database:', await response.text());
+			} else {
+				// Registration successful - trigger profile refetch to update wallet display
+				refreshProfile();
 			}
 		} catch (error) {
 			console.error('Error registering user:', error);
