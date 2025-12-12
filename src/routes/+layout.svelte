@@ -23,44 +23,33 @@
 
 	onMount(() => {
 		initializeTheme();
-
-		// Initialize auth state from server session
 		initializeAuth(data?.session);
 
-		// Listen for auth state changes from Supabase
+		if (data?.session?.user) {
+			handleUserSignIn();
+		}
+
 		const {
 			data: { subscription }
 		} = supabase.auth.onAuthStateChange((_event, session) => {
-			// Update local auth state
 			updateAuthState(session);
-
-			// Invalidate all load functions that depend on session
 			invalidate('supabase:auth');
 
-			// Trigger wallet creation for new sign-ups
-			if (session?.user && _event === 'SIGNED_IN') {
-				handleUserSignIn(session.user.id);
+			if (session?.user && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED')) {
+				handleUserSignIn();
 			}
 		});
 
-		return () => {
-			subscription.unsubscribe();
-		};
+		return () => subscription.unsubscribe();
 	});
 
-	/**
-	 * Handle user sign-in by creating server wallet if needed
-	 */
-	async function handleUserSignIn(userId: string) {
+	async function handleUserSignIn() {
 		try {
-			const response = await fetch('/api/auth/register', {
-				method: 'POST'
-			});
+			const response = await fetch('/api/auth/register', { method: 'POST' });
 
 			if (!response.ok) {
 				console.error('Failed to register user in database:', await response.text());
 			} else {
-				// Registration successful - trigger profile refetch to update wallet display
 				refreshProfile();
 			}
 		} catch (error) {

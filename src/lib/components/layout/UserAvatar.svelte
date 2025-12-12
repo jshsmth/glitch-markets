@@ -73,10 +73,8 @@
 		}
 	});
 
-	// Fetch profile when session exists or profileVersion changes (after wallet creation)
 	$effect(() => {
-		// Access profileVersion to create reactive dependency
-		const _version = authState.profileVersion;
+		void authState.profileVersion;
 
 		if (authState.session) {
 			fetch('/api/user/profile')
