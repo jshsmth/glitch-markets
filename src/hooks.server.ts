@@ -1,18 +1,14 @@
 /**
  * Server-side hooks for SvelteKit
- * Includes rate limiting and JWT authentication
+ * Includes rate limiting and Supabase Auth
  */
 
 import type { Handle } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
 import { Logger } from '$lib/server/utils/logger';
-import { jwtVerify, createRemoteJWKSet } from 'jose';
-import { DYNAMIC_ENVIRONMENT_ID } from '$env/static/private';
+import { createSupabaseServerClient } from '$lib/supabase/server';
 
 const logger = new Logger({ component: 'ServerHooks' });
-
-const JWKS = createRemoteJWKSet(
-	new URL(`https://app.dynamic.xyz/api/v0/sdk/${DYNAMIC_ENVIRONMENT_ID}/.well-known/jwks`)
-);
 
 interface RateLimitConfig {
 	windowMs: number; // Time window in milliseconds
@@ -108,53 +104,39 @@ if (cleanupInterval) {
 
 cleanupInterval = setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
 
-async function verifyJWT(request: Request): Promise<{
-	userId: string;
-	walletAddress: string;
-	email: string;
-} | null> {
-	const authHeader = request.headers.get('authorization');
+const supabaseHandle: Handle = async ({ event, resolve }) => {
+	event.locals.supabase = createSupabaseServerClient(event);
 
-	if (!authHeader?.startsWith('Bearer ')) {
-		return null;
-	}
+	/**
+	 * Unlike getSession(), getUser() sends a request to the Supabase Auth server
+	 * every time to revalidate the Auth token. This is important for security
+	 * because the session from getSession() comes from cookies and could be spoofed.
+	 *
+	 * For performance, we only do this for API routes that need auth.
+	 * The layout uses getSession() which is fine for non-sensitive UI rendering.
+	 */
+	const {
+		data: { user },
+		error: authError
+	} = await event.locals.supabase.auth.getUser();
 
-	const token = authHeader.slice(7);
-
-	try {
-		const { payload } = await jwtVerify(token, JWKS, {
-			algorithms: ['RS256']
-		});
-
-		const verifiedCredentials = payload.verified_credentials as
-			| Array<{ address?: string }>
-			| undefined;
-
-		return {
-			userId: payload.sub as string,
-			walletAddress: (verifiedCredentials?.[0]?.address || payload.wallet_address) as string,
-			email: payload.email as string
+	if (!authError && user) {
+		event.locals.user = {
+			userId: user.id,
+			email: user.email || '',
+			walletAddress: '' // Will be fetched from database when needed
 		};
-	} catch (error) {
-		logger.warn('JWT verification failed', { error });
-		return null;
 	}
-}
 
-export const handle: Handle = async ({ event, resolve }) => {
-	const { url, request } = event;
-
-	if (
-		url.pathname.startsWith('/api/auth/') ||
-		url.pathname.startsWith('/api/polymarket/') ||
-		url.pathname.startsWith('/api/wallet/') ||
-		url.pathname.startsWith('/api/user/')
-	) {
-		const user = await verifyJWT(request);
-		if (user) {
-			event.locals.user = user;
+	return resolve(event, {
+		filterSerializedResponseHeaders(name) {
+			return name === 'content-range' || name === 'x-supabase-api-version';
 		}
-	}
+	});
+};
+
+const rateLimitHandle: Handle = async ({ event, resolve }) => {
+	const { url, request } = event;
 
 	if (url.pathname.startsWith('/api/')) {
 		const clientId = getClientId(request);
@@ -188,11 +170,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 			"style-src 'self' 'unsafe-inline'; " +
 			"img-src 'self' data: https:; " +
 			"font-src 'self' data:; " +
-			"connect-src 'self' https://gamma-api.polymarket.com https://data-api.polymarket.com https://clob.polymarket.com https://app.dynamic.xyz https://app.dynamicauth.com https://*.dynamic.xyz https://*.dynamicauth.com wss://ws-subscriptions-clob.polymarket.com; " +
-			"frame-src 'self' https://app.dynamicauth.com https://*.dynamicauth.com; " +
+			"connect-src 'self' https://gamma-api.polymarket.com https://data-api.polymarket.com https://clob.polymarket.com https://*.supabase.co; " +
 			"object-src 'none'; " +
 			"base-uri 'self';"
 	);
 
 	return response;
 };
+
+export const handle = sequence(supabaseHandle, rateLimitHandle);

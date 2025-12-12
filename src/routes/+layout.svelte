@@ -5,13 +5,11 @@
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { dev } from '$app/environment';
 	import { createQueryClient } from '$lib/query/client';
-	import { createDynamicClient, initializeClient, onEvent } from '@dynamic-labs-sdk/client';
-	import { PUBLIC_DYNAMIC_ENVIRONMENT_ID } from '$env/static/public';
-	import { initializeAuthListeners, setInitializationComplete } from '$lib/stores/auth.svelte';
+	import { initializeAuth, updateAuthState, refreshProfile } from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
 	import { signInModalState, closeSignInModal } from '$lib/stores/modal.svelte';
 	import { onMount } from 'svelte';
-	import { TIMEOUTS } from '$lib/config/constants';
+	import { invalidate } from '$app/navigation';
 	import TopHeader from '$lib/components/layout/TopHeader.svelte';
 	import BottomNav from '$lib/components/layout/BottomNav.svelte';
 	import SignInModal from '$lib/components/auth/SignInModal.svelte';
@@ -21,95 +19,41 @@
 	let { children, data } = $props();
 
 	const queryClient = $derived(data?.queryClient || createQueryClient());
+	const supabase = $derived(data?.supabase);
 
 	onMount(() => {
 		initializeTheme();
+		initializeAuth(data?.session);
 
-		// Defer Dynamic SDK initialization to after initial render
-		// Use requestIdleCallback to not block user interactions
-		if ('requestIdleCallback' in window) {
-			requestIdleCallback(() => initializeDynamicSDK(), { timeout: TIMEOUTS.IDLE_CALLBACK_LONG });
-		} else {
-			// Fallback: defer to allow first paint
-			setTimeout(() => initializeDynamicSDK(), TIMEOUTS.SDK_INIT_FALLBACK);
+		if (data?.session?.user) {
+			handleUserSignIn();
 		}
+
+		const {
+			data: { subscription }
+		} = supabase.auth.onAuthStateChange((_event, session) => {
+			updateAuthState(session);
+			invalidate('supabase:auth');
+
+			if (session?.user && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED')) {
+				handleUserSignIn();
+			}
+		});
+
+		return () => subscription.unsubscribe();
 	});
 
-	/**
-	 * Initialize Dynamic SDK for authentication
-	 * Runs asynchronously to avoid blocking initial render
-	 */
-	async function initializeDynamicSDK() {
+	async function handleUserSignIn() {
 		try {
-			// Use Promise.all to load all SDK modules in parallel
-			const [{ detectOAuthRedirect, completeSocialAuthentication }, { addEvmExtension }] =
-				await Promise.all([import('@dynamic-labs-sdk/client'), import('@dynamic-labs-sdk/evm')]);
+			const response = await fetch('/api/auth/register', { method: 'POST' });
 
-			const client = createDynamicClient({
-				environmentId: PUBLIC_DYNAMIC_ENVIRONMENT_ID,
-				metadata: {
-					name: 'Glitch Markets',
-					url: window.location.origin,
-					iconUrl: `${window.location.origin}/favicon.png`
-				},
-				autoInitialize: false
-			});
-
-			// Setup event listeners
-			onEvent({
-				event: 'initStatusChanged',
-				listener: ({ initStatus }) => {
-					if (dev) {
-						console.log('Dynamic init status:', initStatus);
-					}
-
-					if (initStatus === 'finished') {
-						setInitializationComplete();
-						if (dev) {
-							console.log('Dynamic client fully initialized');
-						}
-					} else if (initStatus === 'failed') {
-						console.error('Dynamic client initialization failed');
-						setInitializationComplete();
-					}
-				}
-			});
-
-			// Add EVM extension and initialize listeners
-			addEvmExtension(client);
-			initializeAuthListeners(client);
-
-			if (dev) {
-				console.log('Dynamic client created with EVM extension');
+			if (!response.ok) {
+				console.error('Failed to register user in database:', await response.text());
+			} else {
+				refreshProfile();
 			}
-
-			await initializeClient();
-
-			const currentUrl = new URL(window.location.href);
-			const isReturning = await detectOAuthRedirect({ url: currentUrl });
-
-			if (isReturning) {
-				if (dev) {
-					console.log('Detected OAuth redirect, completing authentication...');
-				}
-				try {
-					await completeSocialAuthentication({ url: currentUrl });
-					if (dev) {
-						console.log('Authentication completed!', {
-							userId: client.user?.id,
-							authenticated: !!client.user
-						});
-					}
-				} catch (err) {
-					console.error('Failed to complete authentication:', err);
-				}
-			}
-		} catch (importError) {
-			console.error('Failed to load Dynamic SDK modules:', importError);
-			setInitializationComplete();
-			if (dev) {
-				console.error('Critical: Dynamic SDK failed to load. Authentication features unavailable.');
-			}
+		} catch (error) {
+			console.error('Error registering user:', error);
 		}
 	}
 

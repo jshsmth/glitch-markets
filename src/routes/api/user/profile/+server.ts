@@ -1,45 +1,53 @@
-import { json, error } from '@sveltejs/kit';
+/**
+ * User Profile Endpoint
+ * GET /api/user/profile
+ * Returns user profile data including proxy wallet address
+ */
+
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { db } from '$lib/server/db';
-import { users, polymarketCredentials } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
 
 export const GET: RequestHandler = async ({ locals }) => {
-	if (!locals.user) {
-		return error(401, { message: 'Unauthorized' });
-	}
-
 	try {
-		const [user] = await db
-			.select({
-				id: users.id,
-				email: users.email,
-				serverWalletAddress: users.serverWalletAddress
-			})
-			.from(users)
-			.where(eq(users.id, locals.user.userId))
-			.limit(1);
+		// Get the authenticated user from Supabase Auth (secure server-side verification)
+		const {
+			data: { user: authUser },
+			error: authError
+		} = await locals.supabase.auth.getUser();
 
-		if (!user) {
-			return error(404, { message: 'User not found' });
+		if (authError || !authUser) {
+			return json({ error: 'Unauthorized' }, { status: 401 });
 		}
 
-		const [polymarketCreds] = await db
-			.select({
-				proxyWalletAddress: polymarketCredentials.proxyWalletAddress
-			})
-			.from(polymarketCredentials)
-			.where(eq(polymarketCredentials.userId, locals.user.userId))
-			.limit(1);
+		const userId = authUser.id;
+
+		// Fetch user from Supabase
+		const { data: dbUser, error: userError } = await locals.supabase
+			.from('users')
+			.select('id, email, server_wallet_address')
+			.eq('id', userId)
+			.single();
+
+		if (userError || !dbUser) {
+			console.error('User not found in database:', { userId, error: userError });
+			return json({ error: 'User not found' }, { status: 404 });
+		}
+
+		// Fetch polymarket credentials if they exist
+		const { data: credentials } = await locals.supabase
+			.from('polymarket_credentials')
+			.select('proxy_wallet_address')
+			.eq('user_id', userId)
+			.single();
 
 		return json({
-			id: user.id,
-			email: user.email,
-			serverWalletAddress: user.serverWalletAddress,
-			proxyWalletAddress: polymarketCreds?.proxyWalletAddress || null
+			id: dbUser.id,
+			email: dbUser.email,
+			serverWalletAddress: dbUser.server_wallet_address,
+			proxyWalletAddress: credentials?.proxy_wallet_address || null
 		});
 	} catch (err) {
 		console.error('Error fetching user profile:', err);
-		return error(500, { message: 'Failed to fetch user profile' });
+		return json({ error: 'Failed to fetch user profile' }, { status: 500 });
 	}
 };

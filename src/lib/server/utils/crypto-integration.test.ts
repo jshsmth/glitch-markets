@@ -15,7 +15,7 @@ const MOCK_SERVER_WALLET_KEY = crypto.randomBytes(32).toString('hex');
 // Mock the environment modules BEFORE importing crypto.ts and encryption.ts
 vi.mock('$env/static/private', () => ({
 	POLYMARKET_ENCRYPTION_KEY: MOCK_POLYMARKET_KEY,
-	DYNAMIC_SERVER_WALLET_ENCRYPTION_KEY: MOCK_SERVER_WALLET_KEY
+	SERVER_WALLET_ENCRYPTION_KEY: MOCK_SERVER_WALLET_KEY
 }));
 
 describe('Crypto Integration Tests', () => {
@@ -156,34 +156,18 @@ describe('Crypto Integration Tests', () => {
 			expect(() => decryptData(tampered)).toThrow();
 		});
 
-		it('should handle MPC wallet external key shares format', async () => {
+		it('should handle private key format', async () => {
 			const { encryptData, decryptData } = await import('./encryption');
 
-			// Simulate actual MPC wallet key share structure
-			const externalKeyShares = {
-				keyShares: [
-					{
-						id: 'share-1',
-						share: '0x' + crypto.randomBytes(64).toString('hex'),
-						index: 1
-					},
-					{
-						id: 'share-2',
-						share: '0x' + crypto.randomBytes(64).toString('hex'),
-						index: 2
-					}
-				],
-				threshold: 2,
-				totalShares: 2,
-				walletId: 'wallet-abc-123',
-				accountAddress: '0x' + crypto.randomBytes(20).toString('hex')
-			};
+			// Simulate actual private key format
+			const privateKey = '0x' + crypto.randomBytes(32).toString('hex');
 
-			const plaintext = JSON.stringify(externalKeyShares);
-			const encrypted = encryptData(plaintext);
+			const encrypted = encryptData(privateKey);
 			const decrypted = decryptData(encrypted);
 
-			expect(JSON.parse(decrypted)).toEqual(externalKeyShares);
+			expect(decrypted).toEqual(privateKey);
+			expect(decrypted.startsWith('0x')).toBe(true);
+			expect(decrypted.length).toBe(66); // 0x + 64 hex chars
 		});
 	});
 
@@ -251,37 +235,16 @@ describe('Crypto Integration Tests', () => {
 			expect(JSON.parse(decrypted)).toEqual(credentials);
 		});
 
-		it('should encrypt Dynamic MPC wallet data with correct format', async () => {
+		it('should encrypt server wallet private key with correct format', async () => {
 			const { encryptData, decryptData } = await import('./encryption');
 
-			// Simulate real Dynamic wallet structure
-			const walletData = {
-				walletId: 'wallet-' + crypto.randomBytes(16).toString('hex'),
-				accountAddress: '0x' + crypto.randomBytes(20).toString('hex'),
-				publicKeyHex: '0x' + crypto.randomBytes(33).toString('hex'),
-				externalServerKeyShares: {
-					shares: [
-						{
-							id: 'share-server',
-							value: '0x' + crypto.randomBytes(64).toString('hex'),
-							partyId: 1
-						},
-						{
-							id: 'share-client',
-							value: '0x' + crypto.randomBytes(64).toString('hex'),
-							partyId: 2
-						}
-					],
-					threshold: '2-of-2',
-					curve: 'secp256k1'
-				},
-				createdAt: new Date().toISOString()
-			};
+			// Simulate server wallet private key storage
+			const privateKey = '0x' + crypto.randomBytes(32).toString('hex');
 
-			const encrypted = encryptData(JSON.stringify(walletData));
+			const encrypted = encryptData(privateKey);
 			const decrypted = decryptData(encrypted);
 
-			expect(JSON.parse(decrypted)).toEqual(walletData);
+			expect(decrypted).toEqual(privateKey);
 		});
 	});
 

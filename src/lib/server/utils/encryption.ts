@@ -4,9 +4,9 @@
  */
 
 import { createEncryptor } from './encryption-base';
-import { DYNAMIC_SERVER_WALLET_ENCRYPTION_KEY } from '$env/static/private';
+import { SERVER_WALLET_ENCRYPTION_KEY } from '$env/static/private';
 
-const { encrypt, decrypt } = createEncryptor(DYNAMIC_SERVER_WALLET_ENCRYPTION_KEY);
+const { encrypt, decrypt } = createEncryptor(SERVER_WALLET_ENCRYPTION_KEY);
 
 /**
  * Encrypt data using AES-256-GCM

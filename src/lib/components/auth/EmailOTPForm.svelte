@@ -1,13 +1,9 @@
 <script lang="ts">
-	import type { OTPVerification } from '@dynamic-labs-sdk/client';
-	import { sendEmailOTP, verifyOTP } from '@dynamic-labs-sdk/client';
-	import { authState } from '$lib/stores/auth.svelte';
 	import { browser } from '$app/environment';
+	import { page } from '$app/stores';
 	import EmailIcon from '$lib/components/icons/EmailIcon.svelte';
 
-	const OTP_CODE_LENGTH = 6;
 	const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	const DEV = import.meta.env.DEV;
 
 	interface Props {
 		/**
@@ -29,11 +25,11 @@
 	let { onSuccess, onAuthStateChange, onError }: Props = $props();
 
 	let isAuthenticating = $state(false);
-
-	let emailStep = $state<'input' | 'verify'>('input');
 	let emailAddress = $state('');
-	let otpCode = $state('');
-	let otpVerification = $state<OTPVerification | null>(null);
+	let password = $state('');
+	let isSignUp = $state(false);
+	let emailSent = $state(false);
+	let sentToEmail = $state('');
 
 	function isValidEmail(email: string): boolean {
 		return EMAIL_PATTERN.test(email);
@@ -44,9 +40,9 @@
 		onAuthStateChange?.(value);
 	}
 
-	async function handleSendEmailOTP() {
-		if (!browser || !emailAddress.trim()) {
-			onError?.('Please enter a valid email address.');
+	async function handleSignUp() {
+		if (!browser || !emailAddress.trim() || !password.trim()) {
+			onError?.('Please enter both email and password.');
 			return;
 		}
 
@@ -55,10 +51,8 @@
 			return;
 		}
 
-		if (!authState.client) {
-			onError?.(
-				'Authentication service is still initializing. Please wait a moment and try again.'
-			);
+		if (password.length < 6) {
+			onError?.('Password must be at least 6 characters.');
 			return;
 		}
 
@@ -66,93 +60,39 @@
 		onError?.(null);
 
 		try {
-			if (DEV) {
-				const maskedEmail = emailAddress.trim().replace(/(.{2}).*(@.*)/, '$1***$2');
-				console.log('[EmailOTPForm] Attempting to send email OTP to:', maskedEmail);
-				console.log('[EmailOTPForm] Dynamic client initialized:', !!authState.client);
-			}
+			const supabase = $page.data.supabase;
+			const email = emailAddress.trim();
 
-			otpVerification = await sendEmailOTP(
-				{ email: emailAddress.trim() },
-				authState.client || undefined
-			);
+			const { error } = await supabase.auth.signUp({
+				email,
+				password: password.trim(),
+				options: {
+					emailRedirectTo: `${window.location.origin}/auth/callback`
+				}
+			});
 
-			if (DEV) {
-				console.log('[EmailOTPForm] OTP sent successfully');
-			}
-			emailStep = 'verify';
+			if (error) throw error;
+
+			// Show confirmation message instead of closing modal
+			sentToEmail = email;
+			emailSent = true;
 		} catch (err) {
-			console.error('[EmailOTPForm] Email OTP send failed:', err);
-			let userMessage = 'Failed to send verification code.';
-
-			try {
-				const errorObj = err as unknown;
-				if (errorObj instanceof Response && !errorObj.bodyUsed) {
-					const responseText = await errorObj.text();
-					if (DEV) {
-						console.error('[EmailOTPForm] Response body:', responseText);
-					}
-
-					try {
-						const responseJson = JSON.parse(responseText);
-						if (responseJson.error) {
-							if (
-								responseJson.error.toLowerCase().includes('invalid email') ||
-								responseJson.error.toLowerCase().includes('email address')
-							) {
-								userMessage =
-									'Invalid email address. Temporary or disposable email addresses are not allowed. Please use a valid personal or work email.';
-							} else {
-								userMessage = `Error: ${responseJson.error}`;
-							}
-						}
-					} catch {
-						// Not JSON
-					}
-				}
-			} catch (parseErr) {
-				if (DEV) {
-					console.warn('[EmailOTPForm] Could not parse error response:', parseErr);
-				}
-			}
-
-			const errorObj = err as Record<string, unknown>;
-			if (userMessage === 'Failed to send verification code.') {
-				if (errorObj?.status === 422) {
-					userMessage =
-						'Invalid email address. Please use a valid personal or work email (temporary emails are not allowed).';
-				} else if (
-					typeof errorObj?.message === 'string' &&
-					errorObj.message.includes('not enabled')
-				) {
-					userMessage = 'Email authentication is not enabled. Please try another sign-in method.';
-				} else if (
-					typeof errorObj?.message === 'string' &&
-					errorObj.message.includes('rate limit')
-				) {
-					userMessage = 'Too many attempts. Please wait 10 minutes and try again.';
-				} else if (typeof errorObj?.message === 'string') {
-					userMessage = `Error: ${errorObj.message}`;
-				} else if (errorObj?.status) {
-					userMessage = `Error ${errorObj.status}: Unable to send verification code. Please try Google sign-in.`;
-				}
-			}
-
-			onError?.(userMessage);
+			console.error('[EmailOTPForm] Sign up failed:', err);
+			const error = err as { message?: string };
+			onError?.(error.message || 'Failed to create account. Please try again.');
 		} finally {
 			setAuthenticating(false);
 		}
 	}
 
-	async function handleVerifyOTP() {
-		if (!browser || !otpCode.trim()) {
-			onError?.('Please enter the verification code.');
+	async function handleSignIn() {
+		if (!browser || !emailAddress.trim() || !password.trim()) {
+			onError?.('Please enter both email and password.');
 			return;
 		}
 
-		if (!otpVerification) {
-			onError?.('Verification session expired. Please request a new code.');
-			handleBackToEmail();
+		if (!isValidEmail(emailAddress.trim())) {
+			onError?.('Please enter a valid email address.');
 			return;
 		}
 
@@ -160,32 +100,66 @@
 		onError?.(null);
 
 		try {
-			await verifyOTP(
-				{ otpVerification, verificationToken: otpCode.trim() },
-				authState.client || undefined
-			);
+			const supabase = $page.data.supabase;
+
+			const { error } = await supabase.auth.signInWithPassword({
+				email: emailAddress.trim(),
+				password: password.trim()
+			});
+
+			if (error) throw error;
+
 			onSuccess?.();
 		} catch (err) {
-			if (DEV) {
-				console.error('[EmailOTPForm] OTP verification failed:', err);
-			}
-			onError?.('Invalid verification code. Please try again.');
+			console.error('[EmailOTPForm] Sign in failed:', err);
+			const error = err as { message?: string };
+			onError?.(error.message || 'Invalid email or password.');
 		} finally {
 			setAuthenticating(false);
 		}
 	}
 
-	function handleBackToEmail() {
-		emailStep = 'input';
-		otpCode = '';
-		onError?.(null);
-		otpVerification = null;
+	async function handleSubmit() {
+		if (isSignUp) {
+			await handleSignUp();
+		} else {
+			await handleSignIn();
+		}
 	}
 
-	let emailButtonText = $derived(isAuthenticating ? 'Sending code...' : 'Continue with Email');
+	let emailButtonText = $derived(
+		isAuthenticating
+			? isSignUp
+				? 'Creating account...'
+				: 'Signing in...'
+			: isSignUp
+				? 'Create Account'
+				: 'Sign In'
+	);
 </script>
 
-{#if emailStep === 'input'}
+{#if emailSent}
+	<div class="email-sent">
+		<div class="email-sent-icon">
+			<EmailIcon size={48} />
+		</div>
+		<h3 class="email-sent-title">Check your email</h3>
+		<p class="email-sent-message">
+			We've sent a confirmation link to <strong>{sentToEmail}</strong>. Click the link in the email
+			to verify your account.
+		</p>
+		<button
+			class="auth-button secondary"
+			onclick={() => {
+				emailSent = false;
+				emailAddress = '';
+				password = '';
+			}}
+		>
+			Back to sign in
+		</button>
+	</div>
+{:else}
 	<div class="email-form">
 		<!-- svelte-ignore a11y_autofocus -->
 		<input
@@ -197,15 +171,28 @@
 			autofocus
 			autocomplete="email"
 			onkeydown={(e) => {
+				if (e.key === 'Enter' && password.trim()) {
+					handleSubmit();
+				}
+			}}
+		/>
+		<input
+			type="password"
+			placeholder="Enter your password"
+			bind:value={password}
+			disabled={isAuthenticating}
+			class="email-input"
+			autocomplete={isSignUp ? 'new-password' : 'current-password'}
+			onkeydown={(e) => {
 				if (e.key === 'Enter') {
-					handleSendEmailOTP();
+					handleSubmit();
 				}
 			}}
 		/>
 		<button
 			class="auth-button primary"
-			onclick={handleSendEmailOTP}
-			disabled={isAuthenticating || !emailAddress.trim()}
+			onclick={handleSubmit}
+			disabled={isAuthenticating || !emailAddress.trim() || !password.trim()}
 			aria-busy={isAuthenticating}
 		>
 			{#if isAuthenticating}
@@ -215,58 +202,60 @@
 			{/if}
 			<span>{emailButtonText}</span>
 		</button>
-	</div>
-{:else}
-	<div class="otp-form">
-		<p class="otp-instruction">
-			Enter the verification code sent to <strong>{emailAddress}</strong>
-		</p>
-		<!-- svelte-ignore a11y_autofocus -->
-		<input
-			type="text"
-			placeholder="Enter 6-digit code"
-			bind:value={otpCode}
-			disabled={isAuthenticating}
-			class="otp-input"
-			maxlength={OTP_CODE_LENGTH}
-			inputmode="numeric"
-			pattern="[0-9]*"
-			autocomplete="one-time-code"
-			autofocus
-			onkeydown={(e) => {
-				if (e.key === 'Enter') {
-					handleVerifyOTP();
-				}
-			}}
-		/>
 		<button
-			class="auth-button primary"
-			onclick={handleVerifyOTP}
-			disabled={isAuthenticating || !otpCode.trim()}
-			aria-busy={isAuthenticating}
+			class="toggle-mode-button"
+			type="button"
+			onclick={() => {
+				isSignUp = !isSignUp;
+				onError?.(null);
+			}}
+			disabled={isAuthenticating}
 		>
-			{#if isAuthenticating}
-				<div class="spinner"></div>
-			{:else}
-				<span>Verify Code</span>
-			{/if}
-		</button>
-		<button class="back-button" onclick={handleBackToEmail} disabled={isAuthenticating}>
-			← Back to email
+			{isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
 		</button>
 	</div>
 {/if}
 
 <style>
-	.email-form,
-	.otp-form {
+	.email-sent {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: 16px;
+		padding: 24px 0;
+	}
+
+	.email-sent-icon {
+		color: var(--primary);
+		opacity: 0.9;
+	}
+
+	.email-sent-title {
+		font-size: 20px;
+		font-weight: 600;
+		color: var(--text-0);
+		margin: 0;
+	}
+
+	.email-sent-message {
+		font-size: 14px;
+		color: var(--text-2);
+		margin: 0;
+		line-height: 1.5;
+	}
+
+	.email-sent-message strong {
+		color: var(--text-1);
+	}
+
+	.email-form {
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
 	}
 
-	.email-input,
-	.otp-input {
+	.email-input {
 		width: 100%;
 		padding: 14px 16px;
 		border: 1px solid var(--bg-4);
@@ -277,74 +266,19 @@
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
-	.email-input:focus,
-	.otp-input:focus {
+	.email-input:focus {
 		outline: none;
 		border-color: var(--primary);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 10%, transparent);
 	}
 
-	.email-input:disabled,
-	.otp-input:disabled {
+	.email-input:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
 	}
 
 	.email-input::placeholder {
 		color: var(--text-3);
-	}
-
-	.otp-input::placeholder {
-		color: var(--text-3);
-		font-size: 14px;
-		letter-spacing: normal;
-		font-weight: 400;
-	}
-
-	.otp-instruction {
-		font-size: 14px;
-		color: var(--text-1);
-		text-align: center;
-		margin: 0;
-		line-height: 1.5;
-	}
-
-	.otp-instruction strong {
-		color: var(--text-0);
-	}
-
-	.otp-input {
-		text-align: center;
-		font-size: 24px;
-		letter-spacing: 0.5em;
-		font-weight: 600;
-		padding-left: 1em;
-	}
-
-	.otp-input:placeholder-shown {
-		letter-spacing: normal;
-		padding-left: 16px;
-		text-align: left;
-	}
-
-	.back-button {
-		background: none;
-		border: none;
-		color: var(--text-2);
-		font-size: 14px;
-		cursor: pointer;
-		padding: 8px;
-		transition: color 0.2s;
-		text-align: center;
-	}
-
-	.back-button:hover {
-		color: var(--text-0);
-	}
-
-	.back-button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
 	}
 
 	.auth-button {
@@ -384,6 +318,37 @@
 
 	.auth-button.primary:not(:disabled):hover {
 		background: var(--primary-hover);
+	}
+
+	.auth-button.secondary {
+		background: var(--bg-2);
+		color: var(--text-1);
+		border: 1px solid var(--bg-4);
+	}
+
+	.auth-button.secondary:not(:disabled):hover {
+		background: var(--bg-3);
+		color: var(--text-0);
+	}
+
+	.toggle-mode-button {
+		background: none;
+		border: none;
+		color: var(--text-2);
+		font-size: 14px;
+		cursor: pointer;
+		padding: 8px;
+		transition: color 0.2s;
+		text-align: center;
+	}
+
+	.toggle-mode-button:hover {
+		color: var(--text-0);
+	}
+
+	.toggle-mode-button:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
 	}
 
 	.spinner {

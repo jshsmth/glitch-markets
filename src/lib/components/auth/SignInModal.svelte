@@ -38,7 +38,7 @@
 
 	// Auto-close modal when user successfully authenticates
 	$effect(() => {
-		if (isOpen && authState.user) {
+		if (isOpen && authState.session) {
 			onClose();
 		}
 	});

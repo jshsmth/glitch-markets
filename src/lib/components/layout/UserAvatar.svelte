@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { authState } from '$lib/stores/auth.svelte';
 	import { themeState, toggleTheme } from '$lib/stores/theme.svelte';
-	import { logout } from '@dynamic-labs-sdk/client';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import MoonIcon from '$lib/components/icons/MoonIcon.svelte';
 	import SunIcon from '$lib/components/icons/SunIcon.svelte';
 	import ChevronDownIcon from '$lib/components/icons/ChevronDownIcon.svelte';
@@ -56,6 +56,7 @@
 	let showDropdown = $state(false);
 	let closeTimeout: ReturnType<typeof setTimeout> | null = null;
 	let windowWidth = $state(1024);
+	let serverWalletAddress = $state<string | null>(null);
 	let proxyWalletAddress = $state<string | null>(null);
 
 	let isMobile = $derived(windowWidth <= 767);
@@ -73,12 +74,10 @@
 	});
 
 	$effect(() => {
-		if (authState.user && authState.client?.token) {
-			fetch('/api/user/profile', {
-				headers: {
-					Authorization: `Bearer ${authState.client.token}`
-				}
-			})
+		void authState.profileVersion;
+
+		if (authState.session) {
+			fetch('/api/user/profile')
 				.then((res) => {
 					if (!res.ok) {
 						throw new Error(`HTTP ${res.status}`);
@@ -86,13 +85,19 @@
 					return res.json();
 				})
 				.then((data) => {
-					proxyWalletAddress = data.proxyWalletAddress;
+					console.log('[UserAvatar] Profile data:', data);
+					// Set server wallet address (always present after registration)
+					serverWalletAddress = data.serverWalletAddress || null;
+					// Set proxy wallet address (only if user has registered with Polymarket)
+					proxyWalletAddress = data.proxyWalletAddress || null;
 				})
 				.catch((err) => {
 					console.error('Failed to fetch user profile:', err);
+					serverWalletAddress = null;
 					proxyWalletAddress = null;
 				});
 		} else {
+			serverWalletAddress = null;
 			proxyWalletAddress = null;
 		}
 	});
@@ -137,11 +142,13 @@
 	}
 
 	async function handleLogout() {
-		if (!authState.client) return;
+		const supabase = $page.data.supabase;
+		if (!supabase) return;
 
 		try {
-			await logout(authState.client);
+			await supabase.auth.signOut();
 			showDropdown = false;
+			goto('/');
 		} catch (err) {
 			console.error('Logout error:', err);
 		}
@@ -160,11 +167,11 @@
 		toggleTheme();
 	}
 
-	async function handleCopyAddress() {
-		if (!proxyWalletAddress) return;
+	async function handleCopyAddress(address: string | null) {
+		if (!address) return;
 
 		try {
-			await navigator.clipboard.writeText(proxyWalletAddress);
+			await navigator.clipboard.writeText(address);
 		} catch (err) {
 			console.error('Failed to copy address:', err);
 		}
@@ -223,18 +230,21 @@
 				<div class="dropdown-header">
 					<div class="header-avatar" style="background: {gradient}"></div>
 					<div class="header-info">
-						{#if proxyWalletAddress}
+						{#if serverWalletAddress}
 							<div class="header-address">
-								<span class="address-text">{formatAddress(proxyWalletAddress)}</span>
+								<span class="address-text">{formatAddress(serverWalletAddress)}</span>
 								<button
 									class="copy-button"
-									onclick={handleCopyAddress}
+									onclick={() => handleCopyAddress(serverWalletAddress)}
 									aria-label="Copy wallet address"
 								>
 									<CopyIcon size={16} color="var(--text-2)" />
 								</button>
 							</div>
-						{:else if authState.user}
+							{#if proxyWalletAddress}
+								<div class="header-subtext">Polymarket: {formatAddress(proxyWalletAddress)}</div>
+							{/if}
+						{:else if authState.session}
 							<div class="loading-address">Loading wallet...</div>
 						{/if}
 					</div>
@@ -598,5 +608,12 @@
 		font-size: 12px;
 		color: var(--text-2);
 		padding: 6px 8px;
+	}
+
+	.header-subtext {
+		font-size: 11px;
+		color: var(--text-3);
+		padding: 4px 8px 0 8px;
+		font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
 	}
 </style>

@@ -1,12 +1,8 @@
 <script lang="ts">
 	import type { AuthProvider } from '$lib/types/modal';
 	import GoogleIcon from '$lib/components/icons/GoogleIcon.svelte';
-	import DiscordIcon from '$lib/components/icons/DiscordIcon.svelte';
-	import { authenticateWithSocial } from '@dynamic-labs-sdk/client';
-	import { authState } from '$lib/stores/auth.svelte';
 	import { browser } from '$app/environment';
-
-	const DEV = import.meta.env.DEV;
+	import { page } from '$app/stores';
 
 	interface Props {
 		/**
@@ -29,48 +25,32 @@
 
 	let isAuthenticating = $derived(authenticatingProvider !== null);
 
-	async function handleSocialAuth(provider: 'google' | 'discord') {
+	async function handleSocialAuth(provider: 'google') {
 		if (!browser) return;
-
-		if (!authState.client) {
-			onError?.(
-				'Authentication service is still initializing. Please wait a moment and try again.'
-			);
-			return;
-		}
 
 		onAuthStateChange?.(provider);
 		onError?.(null);
 
 		try {
-			const redirectUrl = window.location.origin + window.location.pathname;
-			if (DEV) {
-				console.log(`[SocialAuthButtons] Initiating ${provider} OAuth with redirect:`, redirectUrl);
-			}
+			const supabase = $page.data.supabase;
+			const redirectUrl = `${window.location.origin}/auth/callback`;
 
-			await authenticateWithSocial(
-				{
-					provider: provider as 'google',
-					redirectUrl
-				},
-				authState.client
-			);
+			const { error } = await supabase.auth.signInWithOAuth({
+				provider,
+				options: {
+					redirectTo: redirectUrl
+				}
+			});
 
-			if (DEV) {
-				console.log(`[SocialAuthButtons] OAuth redirect initiated for ${provider}`);
-			}
+			if (error) throw error;
 		} catch (err) {
-			if (DEV) {
-				console.error(`[SocialAuthButtons] ${provider} auth failed:`, err);
-			}
+			console.error(`[SocialAuthButtons] ${provider} auth failed:`, err);
 
-			const errorObj = err as Record<string, unknown>;
+			const error = err as { message?: string };
 			let userMessage = `Failed to authenticate with ${provider}.`;
 
-			if (typeof errorObj?.message === 'string' && errorObj.message.includes('not enabled')) {
-				userMessage = `${provider} authentication is not enabled. Please try another sign-in method.`;
-			} else if (typeof errorObj?.message === 'string') {
-				userMessage = `Error: ${errorObj.message}`;
+			if (error?.message) {
+				userMessage = `Error: ${error.message}`;
 			}
 
 			onError?.(userMessage);
@@ -80,9 +60,6 @@
 
 	let googleButtonText = $derived(
 		authenticatingProvider === 'google' ? 'Authenticating...' : 'Continue with Google'
-	);
-	let discordButtonText = $derived(
-		authenticatingProvider === 'discord' ? 'Authenticating...' : 'Continue with Discord'
 	);
 </script>
 
@@ -98,20 +75,6 @@
 		<GoogleIcon size={20} />
 	{/if}
 	<span>{googleButtonText}</span>
-</button>
-
-<button
-	class="auth-button discord"
-	onclick={() => handleSocialAuth('discord')}
-	disabled={isAuthenticating}
-	aria-busy={authenticatingProvider === 'discord'}
->
-	{#if authenticatingProvider === 'discord'}
-		<div class="spinner"></div>
-	{:else}
-		<DiscordIcon size={20} />
-	{/if}
-	<span>{discordButtonText}</span>
 </button>
 
 <style>
@@ -157,15 +120,6 @@
 
 	.auth-button.google:not(:disabled):hover {
 		background: color-mix(in srgb, var(--google-bg) 90%, white);
-	}
-
-	.auth-button.discord {
-		background: var(--discord-bg);
-		color: #ffffff;
-	}
-
-	.auth-button.discord:not(:disabled):hover {
-		background: color-mix(in srgb, var(--discord-bg) 85%, black);
 	}
 
 	.spinner {
