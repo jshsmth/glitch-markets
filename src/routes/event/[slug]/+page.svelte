@@ -73,11 +73,18 @@
 
 			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
 
-			return outcomes.map((outcome: string, i: number) => ({
-				label: outcome,
-				price: parseFloat(prices[i]) * 100,
-				priceFormatted: (parseFloat(prices[i]) * 100).toFixed(0)
-			}));
+			return outcomes.map((outcome: string, i: number) => {
+				const price = parseFloat(prices[i]) * 100;
+				const isResolved = market.closed && (price === 0 || price === 100);
+
+				return {
+					label: outcome,
+					price,
+					priceFormatted: isResolved ? (price === 100 ? 'Won' : 'Lost') : price.toFixed(0),
+					isResolved,
+					won: isResolved && price === 100
+				};
+			});
 		} catch {
 			return null;
 		}
@@ -135,6 +142,15 @@
 	const selectedMarket = $derived(filteredMarkets[selectedMarketIndex] || null);
 
 	const selectedMarketData = $derived(selectedMarket ? parseMarketData(selectedMarket) : null);
+
+	// Check if selected market is resolved
+	const isMarketResolved = $derived(selectedMarket?.closed || false);
+
+	// Get winning outcome for resolved markets
+	const winningOutcome = $derived.by(() => {
+		if (!isMarketResolved || !selectedMarketData) return null;
+		return selectedMarketData.find((outcome) => outcome.won);
+	});
 
 	// Selected outcome within the buy card (0 = first outcome, 1 = second)
 	let selectedOutcome = $state(0);
@@ -410,7 +426,13 @@
 									</div>
 									<div class="outcome-odds">
 										{#if marketData && marketData[0]}
-											<span class="odds-value">{marketData[0].priceFormatted}%</span>
+											{#if marketData[0].isResolved}
+												<span class="odds-value resolved" class:won={marketData[0].won}>
+													{marketData[0].priceFormatted}
+												</span>
+											{:else}
+												<span class="odds-value">{marketData[0].priceFormatted}%</span>
+											{/if}
 										{:else}
 											<span class="odds-value">—</span>
 										{/if}
@@ -428,7 +450,13 @@
 										<span class="outcome-label">{outcome.label}</span>
 									</div>
 									<div class="outcome-odds">
-										<span class="odds-value">{outcome.priceFormatted}%</span>
+										{#if outcome.isResolved}
+											<span class="odds-value resolved" class:won={outcome.won}>
+												{outcome.priceFormatted}
+											</span>
+										{:else}
+											<span class="odds-value">{outcome.priceFormatted}%</span>
+										{/if}
 									</div>
 								</button>
 							{/each}
@@ -613,61 +641,97 @@
 
 		<aside class="buy-card-container">
 			<div class="buy-card">
-				<div class="buy-card-header">
-					{#if event.image}
-						<div class="buy-card-icon">
-							<img src={event.image} alt="" />
+				{#if isMarketResolved}
+					<!-- Resolved Market State -->
+					<div class="resolved-card">
+						<div class="resolved-icon">
+							<svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+								<circle cx="24" cy="24" r="24" fill="var(--primary)" />
+								<path
+									d="M34 16L20 30L14 24"
+									stroke="white"
+									stroke-width="3"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								/>
+							</svg>
+						</div>
+						<h3 class="resolved-title">
+							Outcome: {winningOutcome?.label || 'Resolved'}
+						</h3>
+						<p class="resolved-subtitle">
+							{#if isMultiMarket && selectedMarket}
+								{getMarketDisplayTitle(selectedMarket)}
+							{:else}
+								{event.title || 'Market Resolved'}
+							{/if}
+						</p>
+					</div>
+				{:else}
+					<!-- Active Market Trading Interface -->
+					<div class="buy-card-header">
+						{#if event.image}
+							<div class="buy-card-icon">
+								<img src={event.image} alt="" />
+							</div>
+						{/if}
+						<span class="buy-card-title">
+							{#if isMultiMarket && selectedMarket}
+								{getMarketDisplayTitle(selectedMarket)}
+							{:else}
+								{event.title || 'Select Outcome'}
+							{/if}
+						</span>
+					</div>
+
+					{#if selectedMarketData}
+						<div class="outcome-pills">
+							{#each selectedMarketData as outcome, index (index)}
+								<button
+									class="outcome-pill"
+									class:selected={selectedOutcome === index}
+									class:yes={index === 0}
+									class:no={index === 1}
+									class:resolved={outcome.isResolved}
+									onclick={() => (selectedOutcome = index)}
+								>
+									<span class="pill-label">{outcome.label}</span>
+									{#if outcome.isResolved}
+										<span class="pill-price resolved" class:won={outcome.won}>
+											{outcome.priceFormatted}
+										</span>
+									{:else}
+										<span class="pill-price">{outcome.priceFormatted}¢</span>
+									{/if}
+								</button>
+							{/each}
 						</div>
 					{/if}
-					<span class="buy-card-title">
-						{#if isMultiMarket && selectedMarket}
-							{getMarketDisplayTitle(selectedMarket)}
-						{:else}
-							{event.title || 'Select Outcome'}
-						{/if}
-					</span>
-				</div>
 
-				{#if selectedMarketData}
-					<div class="outcome-pills">
-						{#each selectedMarketData as outcome, index (index)}
-							<button
-								class="outcome-pill"
-								class:selected={selectedOutcome === index}
-								class:yes={index === 0}
-								class:no={index === 1}
-								onclick={() => (selectedOutcome = index)}
-							>
-								<span class="pill-label">{outcome.label}</span>
-								<span class="pill-price">{outcome.priceFormatted}¢</span>
-							</button>
-						{/each}
-					</div>
-				{/if}
-
-				<div class="amount-section">
-					<label class="amount-label" for="amount-input">Amount</label>
-					<div class="amount-input-wrapper">
-						<input
-							id="amount-input"
-							type="number"
-							class="amount-input"
-							placeholder="$0"
-							min="0"
-							step="1"
-						/>
-						<div class="quick-amounts">
-							<button class="quick-amount">+$1</button>
-							<button class="quick-amount">+$20</button>
-							<button class="quick-amount">+$100</button>
-							<button class="quick-amount">Max</button>
+					<div class="amount-section">
+						<label class="amount-label" for="amount-input">Amount</label>
+						<div class="amount-input-wrapper">
+							<input
+								id="amount-input"
+								type="number"
+								class="amount-input"
+								placeholder="$0"
+								min="0"
+								step="1"
+							/>
+							<div class="quick-amounts">
+								<button class="quick-amount">+$1</button>
+								<button class="quick-amount">+$20</button>
+								<button class="quick-amount">+$100</button>
+								<button class="quick-amount">Max</button>
+							</div>
 						</div>
 					</div>
-				</div>
 
-				<button class="trade-button" disabled>Trade</button>
+					<button class="trade-button" disabled>Trade</button>
 
-				<p class="terms-text">By trading, you agree to the <a href="/terms">Terms of Use</a></p>
+					<p class="terms-text">By trading, you agree to the <a href="/terms">Terms of Use</a></p>
+				{/if}
 			</div>
 		</aside>
 	</div>
@@ -1055,6 +1119,19 @@
 		color: var(--text-0);
 	}
 
+	.odds-value.resolved {
+		font-size: 14px;
+		padding: 4px 10px;
+		border-radius: var(--radius-sm);
+		background: var(--bg-3);
+		color: var(--text-2);
+	}
+
+	.odds-value.resolved.won {
+		background: rgba(0, 196, 71, 0.15);
+		color: var(--success);
+	}
+
 	/* ============================================
 	   RIGHT COLUMN - BUY CARD
 	   ============================================ */
@@ -1073,6 +1150,39 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-md);
+	}
+
+	/* Resolved Card */
+	.resolved-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		padding: var(--space-xl) var(--space-md);
+		gap: var(--space-md);
+	}
+
+	.resolved-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: var(--space-sm);
+	}
+
+	.resolved-title {
+		font-size: 18px;
+		font-weight: 700;
+		color: var(--primary);
+		margin: 0;
+		line-height: 1.3;
+	}
+
+	.resolved-subtitle {
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--text-2);
+		margin: 0;
+		line-height: 1.4;
 	}
 
 	.buy-card-header {
@@ -1156,6 +1266,25 @@
 
 	.outcome-pill.selected.no .pill-price {
 		color: var(--danger);
+	}
+
+	.outcome-pill.resolved {
+		opacity: 0.8;
+		cursor: default;
+	}
+
+	.pill-price.resolved {
+		font-size: 12px;
+		font-weight: 600;
+		padding: 2px 8px;
+		border-radius: var(--radius-sm);
+		background: var(--bg-3);
+		color: var(--text-2);
+	}
+
+	.pill-price.resolved.won {
+		background: rgba(0, 196, 71, 0.15);
+		color: var(--success);
 	}
 
 	/* Amount Section */
