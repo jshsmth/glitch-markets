@@ -114,15 +114,14 @@ export async function signTypedDataWithServerWallet(
 		chainId: number;
 	},
 	types: Record<string, Array<{ name: string; type: string }>>,
-	message: Record<string, string | number>,
+	message: Record<string, unknown>,
 	encryptedKeyShares?: string
 ): Promise<string> {
 	try {
+		// Log without BigInt values (which can't be serialized to JSON)
 		logger.info('Signing typed data with server wallet', {
 			accountAddress,
-			domain,
-			types,
-			message
+			domain
 		});
 
 		if (!encryptedKeyShares) {

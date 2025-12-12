@@ -25,20 +25,22 @@ export interface PolymarketCredentials {
 
 /**
  * Create EIP-712 signature for CLOB authentication
+ * Following exact Polymarket clob-client implementation
  */
 async function createClobAuthSignature(
 	walletAddress: string,
 	timestamp: number,
+	nonce: number,
 	encryptedKeyShares?: string
 ): Promise<string> {
-	// EIP-712 domain for Polymarket CLOB
+	// EIP-712 domain for Polymarket CLOB - matches clob-client exactly
 	const domain = {
 		name: 'ClobAuthDomain',
 		version: '1',
 		chainId: CHAIN_ID
-	};
+	} as const;
 
-	// EIP-712 types
+	// EIP-712 types - matches clob-client buildClobEip712Signature exactly
 	const types = {
 		ClobAuth: [
 			{ name: 'address', type: 'address' },
@@ -48,15 +50,15 @@ async function createClobAuthSignature(
 		]
 	};
 
-	// Message to sign
+	// Message to sign - matches clob-client exactly
 	const message = {
-		address: walletAddress,
-		timestamp: timestamp.toString(),
-		nonce: 0,
+		address: walletAddress as `0x${string}`,
+		timestamp: `${timestamp}`,
+		nonce: BigInt(nonce),
 		message: 'This message attests that I control the given wallet'
 	};
 
-	// Sign using Dynamic's server wallet
+	// Sign using viem server wallet
 	const signature = await signTypedDataWithServerWallet(
 		walletAddress,
 		domain,
@@ -105,23 +107,26 @@ export async function registerWithPolymarket(userId: string): Promise<Polymarket
 
 		// Create EIP-712 signature for L1 authentication
 		const timestamp = Math.floor(Date.now() / 1000);
+		const nonce = 0; // Default nonce is 0 for first-time registration
 		const signature = await createClobAuthSignature(
 			server_wallet_address,
 			timestamp,
+			nonce,
 			encrypted_server_key_shares || undefined
 		);
 
 		logger.info('Created CLOB auth signature', { userId });
 
 		// Call Polymarket CLOB API to create/derive API key
+		// Header names must use underscores per Polymarket docs
 		const response = await fetch(`${CLOB_API_URL}/auth/api-key`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'POLY-ADDRESS': server_wallet_address,
-				'POLY-SIGNATURE': signature,
-				'POLY-TIMESTAMP': timestamp.toString(),
-				'POLY-NONCE': '0'
+				POLY_ADDRESS: server_wallet_address,
+				POLY_SIGNATURE: signature,
+				POLY_TIMESTAMP: timestamp.toString(),
+				POLY_NONCE: nonce.toString()
 			}
 		});
 
