@@ -36,6 +36,7 @@ import type {
 	DepositAddressMap,
 	Team,
 	SportsMetadata,
+	TraderLeaderboardEntry,
 	BuilderLeaderboardEntry,
 	BuilderVolumeEntry
 } from '../api/polymarket-client.js';
@@ -2373,6 +2374,96 @@ export function validateSportsMetadataList(data: unknown): SportsMetadata[] {
 		} catch (error) {
 			if (error instanceof ValidationError) {
 				throw new ValidationError(`Invalid sports metadata at index ${index}`, {
+					index,
+					originalError: error.message
+				});
+			}
+			throw error;
+		}
+	});
+}
+
+/**
+ * Validates a single trader leaderboard entry
+ * @param data - Raw data from API
+ * @returns Validated TraderLeaderboardEntry
+ * @throws {ValidationError} If validation fails
+ */
+export function validateTraderLeaderboardEntry(data: unknown): TraderLeaderboardEntry {
+	if (!isObject(data)) {
+		throw new ValidationError('TraderLeaderboardEntry must be an object', { data });
+	}
+
+	const entry = data as Record<string, unknown>;
+
+	// Validate required string fields
+	if (!isString(entry.rank)) {
+		throw new ValidationError('rank must be a string', { rank: entry.rank });
+	}
+
+	if (!isString(entry.proxyWallet)) {
+		throw new ValidationError('proxyWallet must be a string', { proxyWallet: entry.proxyWallet });
+	}
+
+	if (!isString(entry.userName)) {
+		throw new ValidationError('userName must be a string', { userName: entry.userName });
+	}
+
+	if (!isString(entry.xUsername)) {
+		throw new ValidationError('xUsername must be a string', { xUsername: entry.xUsername });
+	}
+
+	if (!isString(entry.profileImage)) {
+		throw new ValidationError('profileImage must be a string', {
+			profileImage: entry.profileImage
+		});
+	}
+
+	// Validate required boolean field
+	if (!isBoolean(entry.verifiedBadge)) {
+		throw new ValidationError('verifiedBadge must be a boolean', {
+			verifiedBadge: entry.verifiedBadge
+		});
+	}
+
+	// Validate required number fields
+	if (!isNumber(entry.vol)) {
+		throw new ValidationError('vol must be a number', { vol: entry.vol });
+	}
+
+	if (!isNumber(entry.pnl)) {
+		throw new ValidationError('pnl must be a number', { pnl: entry.pnl });
+	}
+
+	return {
+		rank: entry.rank,
+		proxyWallet: entry.proxyWallet,
+		userName: entry.userName,
+		xUsername: entry.xUsername,
+		verifiedBadge: entry.verifiedBadge,
+		vol: entry.vol,
+		pnl: entry.pnl,
+		profileImage: entry.profileImage
+	};
+}
+
+/**
+ * Validates trader leaderboard response array
+ * @param data - Raw data from API
+ * @returns Validated array of TraderLeaderboardEntry
+ * @throws {ValidationError} If validation fails
+ */
+export function validateTraderLeaderboard(data: unknown): TraderLeaderboardEntry[] {
+	if (!isArray(data)) {
+		throw new ValidationError('TraderLeaderboard response must be an array', { data });
+	}
+
+	return data.map((item, index) => {
+		try {
+			return validateTraderLeaderboardEntry(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`Invalid trader leaderboard entry at index ${index}`, {
 					index,
 					originalError: error.message
 				});

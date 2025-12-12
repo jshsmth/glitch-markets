@@ -62,6 +62,7 @@ import {
 	validateDepositAddresses,
 	validateTeams,
 	validateSportsMetadataList,
+	validateTraderLeaderboard,
 	validateBuilderLeaderboard,
 	validateBuilderVolume
 } from '../validation/response-validator.js';
@@ -208,6 +209,43 @@ export interface SportsMetadata {
 	ordering: string;
 	tags: string;
 	series: string;
+}
+
+/**
+ * Query parameters for trader leaderboard endpoint
+ */
+export interface TraderLeaderboardParams {
+	category?:
+		| 'OVERALL'
+		| 'POLITICS'
+		| 'SPORTS'
+		| 'CRYPTO'
+		| 'CULTURE'
+		| 'MENTIONS'
+		| 'WEATHER'
+		| 'ECONOMICS'
+		| 'TECH'
+		| 'FINANCE';
+	timePeriod?: 'DAY' | 'WEEK' | 'MONTH' | 'ALL';
+	orderBy?: 'PNL' | 'VOL';
+	limit?: number;
+	offset?: number;
+	user?: string;
+	userName?: string;
+}
+
+/**
+ * Single entry in trader leaderboard response
+ */
+export interface TraderLeaderboardEntry {
+	rank: string;
+	proxyWallet: string;
+	userName: string;
+	xUsername: string;
+	verifiedBadge: boolean;
+	vol: number;
+	pnl: number;
+	profileImage: string;
 }
 
 /**
@@ -1790,6 +1828,71 @@ export class PolymarketClient {
 		}
 
 		return parts.join('&');
+	}
+
+	/**
+	 * Fetches trader leaderboard from Polymarket Data API
+	 * Returns individual trader rankings filtered by category and time period
+	 *
+	 * @param params - Query parameters (category, timePeriod, orderBy, limit, offset, user, userName)
+	 * @returns Promise resolving to array of trader leaderboard entries
+	 * @throws {ValidationError} When parameters are invalid
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error
+	 *
+	 * @example
+	 * ```typescript
+	 * const leaderboard = await client.fetchTraderLeaderboard({
+	 *   category: 'OVERALL',
+	 *   timePeriod: 'WEEK',
+	 *   orderBy: 'PNL',
+	 *   limit: 25
+	 * });
+	 * console.log(leaderboard); // [{ rank: "1", userName: "...", pnl: ..., ... }]
+	 * ```
+	 */
+	async fetchTraderLeaderboard(
+		params: TraderLeaderboardParams = {}
+	): Promise<TraderLeaderboardEntry[]> {
+		const queryParams = new URLSearchParams();
+
+		if (params.category) {
+			queryParams.set('category', params.category);
+		}
+
+		if (params.timePeriod) {
+			queryParams.set('timePeriod', params.timePeriod);
+		}
+
+		if (params.orderBy) {
+			queryParams.set('orderBy', params.orderBy);
+		}
+
+		if (params.limit !== undefined) {
+			queryParams.set('limit', params.limit.toString());
+		}
+
+		if (params.offset !== undefined) {
+			queryParams.set('offset', params.offset.toString());
+		}
+
+		if (params.user) {
+			queryParams.set('user', params.user);
+		}
+
+		if (params.userName) {
+			queryParams.set('userName', params.userName);
+		}
+
+		const url = `${this.dataApiBaseUrl}/v1/leaderboard?${queryParams}`;
+		this.logger.info('Fetching trader leaderboard', { url, params });
+
+		const data = await this.request<unknown>(url);
+
+		const validated = validateTraderLeaderboard(data);
+		this.logger.info('Trader leaderboard fetched successfully', { count: validated.length });
+
+		return validated;
 	}
 
 	/**
