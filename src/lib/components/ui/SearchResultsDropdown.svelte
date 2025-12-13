@@ -25,8 +25,6 @@
 	// Popular topics for browse state
 	const popularTopics = [
 		{ label: 'Politics', slug: 'politics', icon: '🏛️' },
-		{ label: 'Crypto', slug: 'crypto', icon: '₿' },
-		{ label: 'Sports', slug: 'sports', icon: '⚽' },
 		{ label: 'Tech', slug: 'tech', icon: '💻' },
 		{ label: 'Finance', slug: 'finance', icon: '💰' },
 		{ label: 'Pop Culture', slug: 'pop-culture', icon: '🎬' }

@@ -24,15 +24,11 @@
 	// Map of category paths to their tag slugs for API calls
 	const categoryTagMap: Record<string, string> = {
 		'/politics': 'politics',
-		'/sports': 'sports',
 		'/finance': 'finance',
-		'/crypto': 'crypto',
 		'/tech': 'tech',
 		'/pop-culture': 'pop-culture',
 		'/world': 'world',
 		'/economy': 'economy',
-		'/elections': 'elections',
-		'/earnings': 'earnings',
 		'/geopolitics': 'geopolitics'
 	};
 
