@@ -5,6 +5,10 @@
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
 	import PokerChipIcon from '$lib/components/icons/PokerChipIcon.svelte';
 	import MenuIcon from '$lib/components/icons/MenuIcon.svelte';
+	import DollarCircleIcon from '$lib/components/icons/DollarCircleIcon.svelte';
+	import SettingsIcon from '$lib/components/icons/SettingsIcon.svelte';
+	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import { openDepositModal } from '$lib/stores/modal.svelte';
 	import { TIMEOUTS } from '$lib/config/constants';
 
 	import type { Component } from 'svelte';
@@ -13,35 +17,34 @@
 		label: string;
 		href: string;
 		icon: Component;
-		isPlaceholder: boolean;
+		isMore?: boolean;
 	}
 
 	const navItems: NavItem[] = [
 		{
 			label: 'Home',
 			href: '/',
-			icon: HomeIcon,
-			isPlaceholder: false
+			icon: HomeIcon
 		},
 		{
 			label: 'Search',
 			href: '/search',
-			icon: SearchIcon,
-			isPlaceholder: false
+			icon: SearchIcon
 		},
 		{
 			label: 'Portfolio',
 			href: '/portfolio',
-			icon: PokerChipIcon,
-			isPlaceholder: false
+			icon: PokerChipIcon
 		},
 		{
 			label: 'More',
 			href: '#',
 			icon: MenuIcon,
-			isPlaceholder: true
+			isMore: true
 		}
 	];
+
+	let moreMenuOpen = $state(false);
 
 	function isActive(href: string): boolean {
 		if (href === '#') return false;
@@ -49,9 +52,19 @@
 	}
 
 	function handleNavClick(event: MouseEvent, item: NavItem) {
-		if (item.isPlaceholder) {
+		if (item.isMore) {
 			event.preventDefault();
+			moreMenuOpen = true;
 		}
+	}
+
+	function handleDeposit() {
+		moreMenuOpen = false;
+		openDepositModal();
+	}
+
+	function closeMoreMenu() {
+		moreMenuOpen = false;
 	}
 
 	// Eagerly preload all navigation routes when the component mounts
@@ -59,7 +72,7 @@
 		// Use requestIdleCallback to preload during idle time
 		const preloadRoutes = () => {
 			navItems.forEach((item) => {
-				if (!item.isPlaceholder && item.href !== $page.url.pathname) {
+				if (!item.isMore && item.href !== $page.url.pathname) {
 					preloadData(item.href).catch(() => {
 						// Silently fail if preload fails (route might not exist yet)
 					});
@@ -82,8 +95,7 @@
 		<a
 			href={item.href}
 			class="nav-item"
-			class:active={isActive(item.href)}
-			class:placeholder={item.isPlaceholder}
+			class:active={isActive(item.href) || (item.isMore && moreMenuOpen)}
 			aria-current={isActive(item.href) ? 'page' : undefined}
 			aria-label={item.label}
 			onclick={(e) => handleNavClick(e, item)}
@@ -97,6 +109,19 @@
 		</a>
 	{/each}
 </nav>
+
+<BottomSheet open={moreMenuOpen} title="More" onClose={closeMoreMenu}>
+	<div class="menu-list">
+		<button class="menu-item" onclick={handleDeposit}>
+			<DollarCircleIcon size={22} color="currentColor" />
+			<span>Deposit</span>
+		</button>
+		<a href="/settings" class="menu-item" onclick={closeMoreMenu}>
+			<SettingsIcon size={22} color="currentColor" />
+			<span>Settings</span>
+		</a>
+	</div>
+</BottomSheet>
 
 <style>
 	.bottom-nav {
@@ -147,15 +172,6 @@
 		color: var(--primary);
 	}
 
-	.nav-item.placeholder {
-		cursor: not-allowed;
-		opacity: 0.6;
-	}
-
-	.nav-item.placeholder:hover {
-		background-color: transparent;
-	}
-
 	.nav-icon {
 		display: flex;
 		align-items: center;
@@ -191,5 +207,37 @@
 		.nav-label {
 			font-size: 12px;
 		}
+	}
+
+	/* More menu styles */
+	.menu-list {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.menu-item {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		width: 100%;
+		padding: 14px 16px;
+		background: transparent;
+		border: none;
+		border-radius: 12px;
+		font-size: 16px;
+		font-weight: 500;
+		color: var(--text-0);
+		text-decoration: none;
+		cursor: pointer;
+		transition: background 0.15s ease;
+	}
+
+	.menu-item:hover {
+		background: var(--bg-2);
+	}
+
+	.menu-item:active {
+		background: var(--bg-3);
 	}
 </style>
