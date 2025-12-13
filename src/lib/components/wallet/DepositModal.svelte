@@ -619,7 +619,7 @@
 	.skeleton-banner {
 		width: 100%;
 		height: 48px;
-		border-radius: 10px;
+		border-radius: 12px;
 		background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
 		background-size: 200% 100%;
 		animation: shimmer 1.5s infinite;
@@ -811,7 +811,7 @@
 		padding: 12px 16px;
 		background: var(--bg-2);
 		border: 1px solid var(--bg-4);
-		border-radius: 10px;
+		border-radius: 12px;
 		font-size: 14px;
 		font-weight: 500;
 		color: var(--text-1);
@@ -840,7 +840,7 @@
 		align-items: flex-start;
 		gap: 10px;
 		padding: 12px 14px;
-		border-radius: 10px;
+		border-radius: 12px;
 		font-size: 13px;
 		color: var(--text-1);
 		line-height: 1.4;
