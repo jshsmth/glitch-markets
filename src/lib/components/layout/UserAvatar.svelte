@@ -102,8 +102,6 @@
 					return res.json();
 				})
 				.then((data) => {
-					console.log('[UserAvatar] Profile data:', data);
-					// Set server wallet address (always present after registration)
 					serverWalletAddress = data.serverWalletAddress || null;
 					// Set proxy wallet address (only if user has registered with Polymarket)
 					proxyWalletAddress = data.proxyWalletAddress || null;

@@ -36,8 +36,8 @@
 	$effect(() => {
 		if (open) {
 			document.addEventListener('keydown', handleKeydown);
-			return () => document.removeEventListener('keydown', handleKeydown);
 		}
+		return () => document.removeEventListener('keydown', handleKeydown);
 	});
 </script>
 

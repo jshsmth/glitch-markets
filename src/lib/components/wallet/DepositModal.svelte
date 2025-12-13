@@ -1,5 +1,4 @@
 <script lang="ts">
-	import QRCode from 'qrcode';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
@@ -32,6 +31,7 @@
 	}
 
 	let assetsCache: CacheEntry<SupportedAsset[]> | null = null;
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- module-level cache, not reactive state
 	let depositAddressCache: Map<string, CacheEntry<string>> = new Map();
 	let userWalletCache: CacheEntry<string> | null = null;
 
@@ -146,7 +146,6 @@
 
 	async function fetchSupportedAssets() {
 		if (isCacheValid(assetsCache)) {
-			console.log('[DepositModal] Using cached supported assets');
 			supportedAssets = assetsCache.data;
 			if (supportedAssets.length > 0 && !selectedAsset) {
 				selectedAsset = supportedAssets[0];
@@ -165,8 +164,6 @@
 			}
 
 			const data: SupportedAssetsResponse = await response.json();
-			console.log('[DepositModal] Supported assets response:', data);
-
 			const evmChainIds = ['1', '10', '137', '42161', '56', '8453', '43114'];
 			supportedAssets = (data.supportedAssets || []).filter((asset) => {
 				const isUSDC = asset.token.symbol.toUpperCase() === 'USDC';
@@ -178,7 +175,6 @@
 						!asset.chainId.includes('btc'));
 				return isUSDC && isEVM;
 			});
-			console.log('[DepositModal] Filtered USDC assets:', supportedAssets);
 			assetsCache = { data: supportedAssets, timestamp: Date.now() };
 
 			if (supportedAssets.length > 0 && !selectedAsset) {
@@ -194,7 +190,6 @@
 
 	async function fetchUserWalletAddress() {
 		if (isCacheValid(userWalletCache)) {
-			console.log('[DepositModal] Using cached user wallet address');
 			userWalletAddress = userWalletCache.data;
 			return;
 		}
@@ -220,7 +215,6 @@
 
 		const cachedEntry = depositAddressCache.get(cacheKey);
 		if (isCacheValid(cachedEntry)) {
-			console.log('[DepositModal] Using cached deposit address for', asset.chainName);
 			depositAddress = cachedEntry.data;
 			addressError = null;
 			return;
@@ -241,10 +235,7 @@
 			}
 
 			const data: DepositAddressResponse = await response.json();
-			console.log('[DepositModal] Deposit address response:', data);
-			console.log('[DepositModal] Chain type for', asset.chainName, ':', chainType);
 			const address = data.address[chainType];
-			console.log('[DepositModal] Selected address:', address);
 
 			if (!address) {
 				throw new Error('No deposit address available for this chain');
@@ -262,6 +253,7 @@
 		if (!qrCanvas) return;
 
 		try {
+			const QRCode = await import('qrcode');
 			await QRCode.toCanvas(qrCanvas, address, {
 				width: 180,
 				margin: 2,
@@ -269,8 +261,7 @@
 				errorCorrectionLevel: 'M'
 			});
 			qrError = false;
-		} catch (err) {
-			console.error('QR code generation failed:', err);
+		} catch {
 			qrError = true;
 		}
 	}
@@ -448,7 +439,7 @@
 							Your deposit address
 							<span class="info-tooltip">ⓘ</span>
 						</span>
-						<a href="#terms" class="terms-link">Terms apply</a>
+						<a href="https://fun.xyz/terms" target="_blank" rel="noopener noreferrer" class="terms-link">Terms apply</a>
 					</div>
 					<p class="address-text">{depositAddress}</p>
 					<button
@@ -517,9 +508,11 @@
 	}
 
 	.selector-label {
-		font-size: 13px;
-		font-weight: 500;
+		font-size: 11px;
+		font-weight: 600;
 		color: var(--text-2);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 
 	.selector-button {
@@ -715,6 +708,7 @@
 		justify-content: center;
 		padding: 16px;
 		background: #ffffff;
+		border: 1px solid var(--bg-4);
 		border-radius: 16px;
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 	}
@@ -760,7 +754,7 @@
 	.address-section {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
+		gap: 8px;
 	}
 
 	.address-header {
@@ -777,12 +771,13 @@
 
 	.terms-link {
 		font-size: 13px;
+		font-weight: 600;
 		color: var(--primary);
-		text-decoration: none;
+		text-decoration: underline;
 	}
 
 	.terms-link:hover {
-		text-decoration: underline;
+		opacity: 0.8;
 	}
 
 	.info-tooltip {
@@ -809,7 +804,7 @@
 		gap: 8px;
 		width: 100%;
 		padding: 12px 16px;
-		background: transparent;
+		background: var(--bg-2);
 		border: 1px solid var(--bg-4);
 		border-radius: 10px;
 		font-size: 14px;
@@ -820,7 +815,7 @@
 	}
 
 	.copy-button:hover {
-		background: var(--bg-2);
+		background: var(--bg-3);
 		border-color: var(--bg-5);
 	}
 
@@ -855,10 +850,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 20px;
-		height: 20px;
-		min-width: 20px;
-		font-size: 11px;
+		width: 18px;
+		height: 18px;
+		min-width: 18px;
+		font-size: 10px;
 		font-weight: 700;
 		border-radius: 50%;
 	}
