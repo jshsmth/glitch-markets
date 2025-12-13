@@ -12,7 +12,9 @@
 		signInModalState,
 		closeSignInModal,
 		depositModalState,
-		closeDepositModal
+		closeDepositModal,
+		withdrawModalState,
+		closeWithdrawModal
 	} from '$lib/stores/modal.svelte';
 	import { onMount } from 'svelte';
 	import { invalidate } from '$app/navigation';
@@ -20,6 +22,7 @@
 	import BottomNav from '$lib/components/layout/BottomNav.svelte';
 	import SignInModal from '$lib/components/auth/SignInModal.svelte';
 	import DepositModal from '$lib/components/wallet/DepositModal.svelte';
+	import WithdrawModal from '$lib/components/wallet/WithdrawModal.svelte';
 	// @ts-expect-error - virtual module from vite-plugin-pwa
 	import { pwaInfo } from 'virtual:pwa-info';
 
@@ -109,6 +112,7 @@
 	<!-- Global modals rendered at root level -->
 	<SignInModal isOpen={signInModalState.isOpen} onClose={closeSignInModal} />
 	<DepositModal isOpen={depositModalState.isOpen} onClose={closeDepositModal} />
+	<WithdrawModal isOpen={withdrawModalState.isOpen} onClose={closeWithdrawModal} />
 
 	{#if dev}
 		<SvelteQueryDevtools buttonPosition="bottom-right" />
