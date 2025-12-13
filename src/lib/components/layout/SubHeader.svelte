@@ -295,7 +295,7 @@
 		-ms-overflow-style: none; /* IE/Edge */
 		-webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 		flex: 1;
-		padding: 0 20px;
+		padding: 0 12px;
 	}
 
 	@media (min-width: 768px) {

@@ -11,6 +11,11 @@
 		value?: string;
 
 		/**
+		 * Input element reference (bindable)
+		 */
+		inputElement?: HTMLInputElement;
+
+		/**
 		 * Placeholder text
 		 */
 		placeholder?: string;
@@ -48,6 +53,7 @@
 
 	let {
 		value = $bindable(''),
+		inputElement = $bindable<HTMLInputElement | undefined>(),
 		placeholder = 'Search...',
 		oninput,
 		onfocus,
@@ -56,8 +62,6 @@
 		inputSize = 'medium',
 		class: className
 	}: Props = $props();
-
-	let inputElement = $state<HTMLInputElement | undefined>();
 	let hasValue = $derived(value.length > 0);
 
 	// Create debounced input handler if oninput is provided
