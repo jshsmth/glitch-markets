@@ -122,7 +122,7 @@
 		if (!isMobile) {
 			closeTimeout = setTimeout(() => {
 				showDropdown = false;
-			}, 200);
+			}, 150);
 		}
 	}
 
@@ -137,7 +137,7 @@
 		if (!isMobile) {
 			closeTimeout = setTimeout(() => {
 				showDropdown = false;
-			}, 200);
+			}, 150);
 		}
 	}
 
@@ -242,7 +242,7 @@
 								</button>
 							</div>
 							{#if proxyWalletAddress}
-								<div class="header-subtext">Polymarket: {formatAddress(proxyWalletAddress)}</div>
+								<div class="header-subtext ready-badge">Ready to Trade</div>
 							{/if}
 						{:else if authState.session}
 							<div class="loading-address">Loading wallet...</div>
@@ -434,17 +434,17 @@
 		z-index: var(--z-popover);
 		overflow: hidden;
 		padding: 12px;
-		animation: dropdown-appear 0.15s ease-out;
+		animation: dropdown-appear 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	@keyframes dropdown-appear {
 		from {
 			opacity: 0;
-			transform: translateY(-8px);
+			transform: translateY(-4px) scale(0.97);
 		}
 		to {
 			opacity: 1;
-			transform: translateY(0);
+			transform: translateY(0) scale(1);
 		}
 	}
 
@@ -459,7 +459,7 @@
 		cursor: pointer;
 		font-size: 14px;
 		font-weight: 500;
-		transition: background-color 0.15s ease;
+		transition: all 0.1s ease;
 		display: flex;
 		align-items: center;
 		gap: 12px;
@@ -472,10 +472,15 @@
 		justify-content: center;
 		line-height: 1;
 		color: var(--text-1);
+		transition: color 0.1s ease;
 	}
 
 	.dropdown-item:hover {
 		background-color: var(--primary-hover-bg);
+	}
+
+	.dropdown-item:hover .dropdown-item-icon {
+		color: var(--primary);
 	}
 
 	.dropdown-item:active {
@@ -615,5 +620,11 @@
 		color: var(--text-3);
 		padding: 4px 8px 0 8px;
 		font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+	}
+
+	.ready-badge {
+		color: var(--success);
+		font-weight: 600;
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	}
 </style>

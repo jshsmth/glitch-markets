@@ -5,9 +5,10 @@
 
 	interface Props {
 		event: Event;
+		variant?: 'default' | 'compact';
 	}
 
-	let { event }: Props = $props();
+	let { event, variant = 'default' }: Props = $props();
 
 	function formatNumber(num: number | null | undefined): string {
 		if (num === null || num === undefined) return '$0';
@@ -104,7 +105,7 @@
 	});
 </script>
 
-<div class="event-card">
+<div class="event-card" class:compact={variant === 'compact'}>
 	<div class="card-content">
 		<!-- Header with Icon + Title -->
 		<div class="card-header">
@@ -144,7 +145,7 @@
 		{/if}
 
 		<!-- Multi-Market Preview -->
-		{#if topMarkets}
+		{#if topMarkets && variant !== 'compact'}
 			<div class="markets-scroll-container">
 				<div class="markets-preview">
 					{#each topMarkets as market, i (i)}
@@ -176,20 +177,22 @@
 		{/if}
 
 		<!-- Footer Stats -->
-		<div class="card-footer">
-			<div class="stats">
-				<div class="stat">
-					<MoneyIcon size={16} class="stat-icon" />
-					<span class="stat-value">{formatNumber(event.volume24hr)}</span>
-					<span class="stat-label">24h</span>
-				</div>
-				<div class="stat">
-					<WaterLiquidIcon size={16} class="stat-icon" />
-					<span class="stat-value">{formatNumber(event.liquidity)}</span>
-					<span class="stat-label">Liq</span>
+		{#if variant !== 'compact'}
+			<div class="card-footer">
+				<div class="stats">
+					<div class="stat">
+						<MoneyIcon size={16} class="stat-icon" />
+						<span class="stat-value">{formatNumber(event.volume24hr)}</span>
+						<span class="stat-label">24h</span>
+					</div>
+					<div class="stat">
+						<WaterLiquidIcon size={16} class="stat-icon" />
+						<span class="stat-value">{formatNumber(event.liquidity)}</span>
+						<span class="stat-label">Liq</span>
+					</div>
 				</div>
 			</div>
-		</div>
+		{/if}
 	</div>
 </div>
 
@@ -206,6 +209,33 @@
 			box-shadow var(--transition-fast);
 		color: inherit;
 		height: 100%;
+	}
+
+	/* Compact variant for search dropdown */
+	.event-card.compact {
+		padding: 12px;
+	}
+
+	.event-card.compact .card-content {
+		gap: 12px;
+	}
+
+	.event-card.compact .event-icon {
+		width: 32px;
+		height: 32px;
+	}
+
+	.event-card.compact .event-title {
+		font-size: 15px;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.event-card.compact .outcome-odds {
+		font-size: 18px;
 	}
 
 	.event-card:focus-within {
