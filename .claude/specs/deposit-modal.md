@@ -1,14 +1,14 @@
 ╔══════════════════════════════════════════════╗
-║ 📋 DEPOSIT MODAL - SPECIFICATION             ║
-║ Created: 2025-12-13 15:00                    ║
+║ 📋 DEPOSIT MODAL - SPECIFICATION ║
+║ Created: 2025-12-13 15:00 ║
 ╚══════════════════════════════════════════════╝
 
 ┌──────────────────────────────────────────────┐
-│ 📍 SPECIFICATION PROGRESS                    │
+│ 📍 SPECIFICATION PROGRESS │
 ├──────────────────────────────────────────────┤
-│ ✅ Requirements [████████████] APPROVED      │
-│ ✅ Design       [████████████] APPROVED      │
-│ ✅ Tasks        [████████████] COMPLETE      │
+│ ✅ Requirements [████████████] APPROVED │
+│ ✅ Design [████████████] APPROVED │
+│ ✅ Tasks [████████████] COMPLETE │
 └──────────────────────────────────────────────┘
 
 ═══════════════════════════════════════════════
@@ -202,7 +202,7 @@ As a mobile user, I want to see the deposit address as a QR code, So that I can 
 • State Management: Use Svelte 5 runes ($state, $derived, $effect)
 • Global Modal State: Follow pattern from modal.svelte.ts (depositModalState)
 • Copy Functionality: Follow pattern from UserAvatar.svelte (handleCopyAddress)
-• Colors: Use CSS variables from design system (--primary, --bg-*, --text-*)
+• Colors: Use CSS variables from design system (--primary, --bg-_, --text-_)
 • Icons: Create new icons in src/lib/components/icons/ if needed
 • Error Handling: Show user-friendly error messages, log technical details
 
@@ -286,28 +286,32 @@ As a mobile user, I want to see the deposit address as a QR code, So that I can 
 **Key Architectural Decisions:**
 
 • **Decision 1: Single Modal Component vs Separate Components**
-  - **What:** Keep all deposit modal logic in one DepositModal.svelte component with child sections
-  - **Rationale:** Simpler state management, clearer data flow, easier to maintain
-  - **Alternatives:** Split into AssetSelectorModal + AddressDisplayModal (rejected: adds complexity)
-  - **Trade-offs:** Larger single file but better state cohesion vs smaller distributed files
+
+- **What:** Keep all deposit modal logic in one DepositModal.svelte component with child sections
+- **Rationale:** Simpler state management, clearer data flow, easier to maintain
+- **Alternatives:** Split into AssetSelectorModal + AddressDisplayModal (rejected: adds complexity)
+- **Trade-offs:** Larger single file but better state cohesion vs smaller distributed files
 
 • **Decision 2: Global Modal State Pattern**
-  - **What:** Use global store (modal.svelte.ts) following SignInModal pattern
-  - **Rationale:** Consistency with existing codebase, can trigger from anywhere
-  - **Alternatives:** Props-based modal (rejected: harder to trigger from multiple locations)
-  - **Trade-offs:** Global state is more flexible but requires careful cleanup
+
+- **What:** Use global store (modal.svelte.ts) following SignInModal pattern
+- **Rationale:** Consistency with existing codebase, can trigger from anywhere
+- **Alternatives:** Props-based modal (rejected: harder to trigger from multiple locations)
+- **Trade-offs:** Global state is more flexible but requires careful cleanup
 
 • **Decision 3: Mobile-First Modal Strategy**
-  - **What:** Use responsive approach - BottomSheet on mobile (<768px), Modal on desktop
-  - **Rationale:** Better mobile UX, follows PWA-first principle, matches existing patterns
-  - **Alternatives:** Single modal style for all sizes (rejected: poor mobile UX)
-  - **Trade-offs:** Slightly more complex responsive logic but better user experience
+
+- **What:** Use responsive approach - BottomSheet on mobile (<768px), Modal on desktop
+- **Rationale:** Better mobile UX, follows PWA-first principle, matches existing patterns
+- **Alternatives:** Single modal style for all sizes (rejected: poor mobile UX)
+- **Trade-offs:** Slightly more complex responsive logic but better user experience
 
 • **Decision 4: QR Code Library Selection**
-  - **What:** Use 'qrcode' npm package (lightweight, no dependencies)
-  - **Rationale:** Simple API, small bundle size (~10KB), widely used, canvas-based rendering
-  - **Alternatives:** qr-code-styling (rejected: heavier), manual implementation (rejected: complexity)
-  - **Trade-offs:** External dependency but saves significant development time
+
+- **What:** Use 'qrcode' npm package (lightweight, no dependencies)
+- **Rationale:** Simple API, small bundle size (~10KB), widely used, canvas-based rendering
+- **Alternatives:** qr-code-styling (rejected: heavier), manual implementation (rejected: complexity)
+- **Trade-offs:** External dependency but saves significant development time
 
 ## 2. Component Design
 
@@ -352,14 +356,16 @@ DepositModal.svelte
 **Purpose:** Main modal container orchestrating the deposit flow
 
 **Props Interface:**
+
 ```typescript
 interface DepositModalProps {
-  isOpen: boolean;        // Controls modal visibility
-  onClose: () => void;    // Callback to close modal
+	isOpen: boolean; // Controls modal visibility
+	onClose: () => void; // Callback to close modal
 }
 ```
 
 **State Management:**
+
 ```typescript
 // Supported assets
 let supportedAssets = $state<SupportedAsset[]>([]);
@@ -388,27 +394,28 @@ let showAddressDisplay = $derived(!!selectedAsset && !!depositAddress);
 ```
 
 **Side Effects:**
+
 ```typescript
 // Effect 1: Fetch supported assets on modal open
 $effect(() => {
-  if (isOpen) {
-    fetchSupportedAssets();
-    fetchUserWalletAddress();
-  }
+	if (isOpen) {
+		fetchSupportedAssets();
+		fetchUserWalletAddress();
+	}
 });
 
 // Effect 2: Reset state on modal close
 $effect(() => {
-  if (!isOpen) {
-    resetModalState();
-  }
+	if (!isOpen) {
+		resetModalState();
+	}
 });
 
 // Effect 3: Fetch deposit address when asset selected
 $effect(() => {
-  if (selectedAsset && userWalletAddress) {
-    fetchDepositAddress(selectedAsset, userWalletAddress);
-  }
+	if (selectedAsset && userWalletAddress) {
+		fetchDepositAddress(selectedAsset, userWalletAddress);
+	}
 });
 ```
 
@@ -421,30 +428,28 @@ $effect(() => {
 **Purpose:** Display individual asset option in the selector list
 
 **Props:**
+
 ```typescript
 interface AssetListItemProps {
-  asset: SupportedAsset;
-  isSelected: boolean;
-  onSelect: (asset: SupportedAsset) => void;
+	asset: SupportedAsset;
+	isSelected: boolean;
+	onSelect: (asset: SupportedAsset) => void;
 }
 ```
 
 **State:** None (stateless component)
 
 **Rendering:**
+
 ```svelte
-<button 
-  class="asset-item" 
-  class:selected={isSelected}
-  onclick={() => onSelect(asset)}
->
-  <div class="asset-info">
-    <div class="asset-name">{asset.chainName}</div>
-    <div class="asset-token">{asset.token.symbol}</div>
-  </div>
-  <div class="asset-minimum">
-    Min: ${asset.minCheckoutUsd.toFixed(2)}
-  </div>
+<button class="asset-item" class:selected={isSelected} onclick={() => onSelect(asset)}>
+	<div class="asset-info">
+		<div class="asset-name">{asset.chainName}</div>
+		<div class="asset-token">{asset.token.symbol}</div>
+	</div>
+	<div class="asset-minimum">
+		Min: ${asset.minCheckoutUsd.toFixed(2)}
+	</div>
 </button>
 ```
 
@@ -455,51 +460,55 @@ interface AssetListItemProps {
 **Purpose:** Generate and display QR code for deposit address
 
 **Props:**
+
 ```typescript
 interface QRCodeDisplayProps {
-  address: string;
-  size?: number; // Default: 240px
+	address: string;
+	size?: number; // Default: 240px
 }
 ```
 
 **State:**
+
 ```typescript
 let qrCanvas = $state<HTMLCanvasElement | null>(null);
 let qrError = $state<boolean>(false);
 ```
 
 **Side Effects:**
+
 ```typescript
 $effect(() => {
-  if (address && qrCanvas) {
-    try {
-      // Using 'qrcode' library
-      QRCode.toCanvas(qrCanvas, address, {
-        width: size,
-        margin: 2,
-        color: {
-          dark: 'var(--text-0)',
-          light: 'var(--bg-0)'
-        },
-        errorCorrectionLevel: 'M'
-      });
-      qrError = false;
-    } catch (err) {
-      console.error('QR code generation failed:', err);
-      qrError = true;
-    }
-  }
+	if (address && qrCanvas) {
+		try {
+			// Using 'qrcode' library
+			QRCode.toCanvas(qrCanvas, address, {
+				width: size,
+				margin: 2,
+				color: {
+					dark: 'var(--text-0)',
+					light: 'var(--bg-0)'
+				},
+				errorCorrectionLevel: 'M'
+			});
+			qrError = false;
+		} catch (err) {
+			console.error('QR code generation failed:', err);
+			qrError = true;
+		}
+	}
 });
 ```
 
 **Rendering:**
+
 ```svelte
 <div class="qr-code-container">
-  {#if qrError}
-    <div class="qr-error">QR code unavailable</div>
-  {:else}
-    <canvas bind:this={qrCanvas} class="qr-canvas"></canvas>
-  {/if}
+	{#if qrError}
+		<div class="qr-error">QR code unavailable</div>
+	{:else}
+		<canvas bind:this={qrCanvas} class="qr-canvas"></canvas>
+	{/if}
 </div>
 ```
 
@@ -515,37 +524,39 @@ $effect(() => {
  * Token information for a supported bridge asset
  */
 interface BridgeToken {
-  name: string;      // "Ether", "Matic", "Bitcoin"
-  symbol: string;    // "ETH", "MATIC", "BTC"
-  address: string;   // Token contract address (0x... for EVM)
-  decimals: number;  // 18 for ETH, 8 for BTC, etc.
+	name: string; // "Ether", "Matic", "Bitcoin"
+	symbol: string; // "ETH", "MATIC", "BTC"
+	address: string; // Token contract address (0x... for EVM)
+	decimals: number; // 18 for ETH, 8 for BTC, etc.
 }
 
 /**
  * A single supported asset for bridging from a specific chain
  */
 interface SupportedAsset {
-  chainId: string;        // "1", "137", "bitcoin"
-  chainName: string;      // "Ethereum", "Polygon", "Bitcoin"
-  token: BridgeToken;     // Token details
-  minCheckoutUsd: number; // Minimum deposit in USD (e.g., 10.00)
+	chainId: string; // "1", "137", "bitcoin"
+	chainName: string; // "Ethereum", "Polygon", "Bitcoin"
+	token: BridgeToken; // Token details
+	minCheckoutUsd: number; // Minimum deposit in USD (e.g., 10.00)
 }
 
 /**
  * Response from GET /supported-assets endpoint
  */
 interface SupportedAssetsResponse {
-  supportedAssets: SupportedAsset[];
+	supportedAssets: SupportedAsset[];
 }
 ```
 
 **Validation Rules:**
+
 - chainId: Non-empty string
 - chainName: Non-empty string
 - token.symbol: 2-10 characters
 - minCheckoutUsd: Positive number >= 0
 
 **Related Models:**
+
 - DepositAddressResponse: Used after asset selection
 
 ### 3.2 DepositAddressResponse
@@ -558,25 +569,27 @@ interface SupportedAssetsResponse {
  * Deposit addresses grouped by chain type
  */
 interface DepositAddressMap {
-  evm?: string;  // EVM chains (Ethereum, Polygon, etc.)
-  svm?: string;  // Solana Virtual Machine
-  btc?: string;  // Bitcoin
+	evm?: string; // EVM chains (Ethereum, Polygon, etc.)
+	svm?: string; // Solana Virtual Machine
+	btc?: string; // Bitcoin
 }
 
 /**
  * Response from POST /deposit endpoint
  */
 interface DepositAddressResponse {
-  address: DepositAddressMap;
-  note?: string; // Optional note from API
+	address: DepositAddressMap;
+	note?: string; // Optional note from API
 }
 ```
 
 **Validation Rules:**
+
 - At least one of evm, svm, or btc must be present
 - Addresses must match expected format (0x... for EVM, base58 for Solana, etc.)
 
 **Usage Notes:**
+
 - Need to determine which address to show based on selected asset's chainId
 - EVM chains (chainId "1", "137", etc.) → use address.evm
 - Solana → use address.svm
@@ -592,21 +605,21 @@ interface DepositAddressResponse {
  * Deposit modal state
  */
 export const depositModalState = $state({
-  isOpen: false
+	isOpen: false
 });
 
 /**
  * Opens the deposit modal
  */
 export function openDepositModal() {
-  depositModalState.isOpen = true;
+	depositModalState.isOpen = true;
 }
 
 /**
  * Closes the deposit modal
  */
 export function closeDepositModal() {
-  depositModalState.isOpen = false;
+	depositModalState.isOpen = false;
 }
 ```
 
@@ -620,40 +633,46 @@ export function closeDepositModal() {
 • **Auth:** Not required (public endpoint, but typically called by authenticated users)
 • **Request:** None (no parameters)
 • **Response:**
+
 ```typescript
 {
-  supportedAssets: [
-    {
-      chainId: "1",
-      chainName: "Ethereum",
-      token: {
-        name: "Ether",
-        symbol: "ETH",
-        address: "0x0000000000000000000000000000000000000000",
-        decimals: 18
-      },
-      minCheckoutUsd: 10.0
-    },
-    // ... more assets
-  ]
+	supportedAssets: [
+		{
+			chainId: '1',
+			chainName: 'Ethereum',
+			token: {
+				name: 'Ether',
+				symbol: 'ETH',
+				address: '0x0000000000000000000000000000000000000000',
+				decimals: 18
+			},
+			minCheckoutUsd: 10.0
+		}
+		// ... more assets
+	];
 }
 ```
+
 • **Error Cases:**
-  - 500: Server error (show retry button)
-  - Network timeout (show retry button)
-  - Empty response (show "No assets available" message)
+
+- 500: Server error (show retry button)
+- Network timeout (show retry button)
+- Empty response (show "No assets available" message)
 
 **POST /api/bridge/deposit**
 • **Purpose:** Generate unique deposit addresses for a user's wallet
 • **Addresses:** Requirement 2.2
 • **Auth:** Not strictly required, but user must provide their wallet address
 • **Request Body:**
+
 ```typescript
 {
-  address: string  // User's wallet address (e.g., "0x123...")
+	address: string; // User's wallet address (e.g., "0x123...")
 }
 ```
+
 • **Response:**
+
 ```typescript
 {
   address: {
@@ -664,100 +683,105 @@ export function closeDepositModal() {
   note?: string    // Optional note
 }
 ```
+
 • **Error Cases:**
-  - 400: Invalid address format (show error: "Invalid wallet address")
-  - 401: Unauthorized (shouldn't happen, but show "Please log in")
-  - 500: Server error (show retry button)
-  - Network error (show retry button)
+
+- 400: Invalid address format (show error: "Invalid wallet address")
+- 401: Unauthorized (shouldn't happen, but show "Please log in")
+- 500: Server error (show retry button)
+- Network error (show retry button)
 
 ### 4.2 API Integration Pattern
 
 **Fetch Supported Assets:**
+
 ```typescript
 async function fetchSupportedAssets() {
-  assetsLoading = true;
-  assetsError = null;
-  
-  try {
-    const response = await fetch('/api/bridge/supported-assets');
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    supportedAssets = data.supportedAssets || [];
-  } catch (err) {
-    console.error('Failed to fetch supported assets:', err);
-    assetsError = err instanceof Error ? err.message : 'Failed to load assets';
-  } finally {
-    assetsLoading = false;
-  }
+	assetsLoading = true;
+	assetsError = null;
+
+	try {
+		const response = await fetch('/api/bridge/supported-assets');
+
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+		supportedAssets = data.supportedAssets || [];
+	} catch (err) {
+		console.error('Failed to fetch supported assets:', err);
+		assetsError = err instanceof Error ? err.message : 'Failed to load assets';
+	} finally {
+		assetsLoading = false;
+	}
 }
 ```
 
 **Fetch Deposit Address:**
+
 ```typescript
 async function fetchDepositAddress(asset: SupportedAsset, userAddress: string) {
-  addressLoading = true;
-  addressError = null;
-  depositAddress = null;
-  
-  try {
-    const response = await fetch('/api/bridge/deposit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: userAddress })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    
-    // Determine which address to use based on chain type
-    const addressMap = data.address;
-    const chainType = determineChainType(asset.chainId);
-    
-    depositAddress = addressMap[chainType] || null;
-    
-    if (!depositAddress) {
-      throw new Error('No deposit address available for this chain');
-    }
-  } catch (err) {
-    console.error('Failed to fetch deposit address:', err);
-    addressError = err instanceof Error ? err.message : 'Failed to generate address';
-  } finally {
-    addressLoading = false;
-  }
+	addressLoading = true;
+	addressError = null;
+	depositAddress = null;
+
+	try {
+		const response = await fetch('/api/bridge/deposit', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ address: userAddress })
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+
+		// Determine which address to use based on chain type
+		const addressMap = data.address;
+		const chainType = determineChainType(asset.chainId);
+
+		depositAddress = addressMap[chainType] || null;
+
+		if (!depositAddress) {
+			throw new Error('No deposit address available for this chain');
+		}
+	} catch (err) {
+		console.error('Failed to fetch deposit address:', err);
+		addressError = err instanceof Error ? err.message : 'Failed to generate address';
+	} finally {
+		addressLoading = false;
+	}
 }
 
 function determineChainType(chainId: string): 'evm' | 'svm' | 'btc' {
-  if (chainId === 'bitcoin') return 'btc';
-  if (chainId === 'solana') return 'svm';
-  return 'evm'; // Default to EVM for Ethereum, Polygon, etc.
+	if (chainId === 'bitcoin') return 'btc';
+	if (chainId === 'solana') return 'svm';
+	return 'evm'; // Default to EVM for Ethereum, Polygon, etc.
 }
 ```
 
 **Get User Wallet Address:**
+
 ```typescript
 async function fetchUserWalletAddress() {
-  try {
-    // Fetch from profile endpoint (already implemented)
-    const response = await fetch('/api/user/profile');
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch user profile');
-    }
-    
-    const profile = await response.json();
-    userWalletAddress = profile.serverWalletAddress || null;
-  } catch (err) {
-    console.error('Failed to fetch user wallet address:', err);
-    // Don't set error state - just log it
-    // User might not be logged in, which is handled elsewhere
-  }
+	try {
+		// Fetch from profile endpoint (already implemented)
+		const response = await fetch('/api/user/profile');
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch user profile');
+		}
+
+		const profile = await response.json();
+		userWalletAddress = profile.serverWalletAddress || null;
+	} catch (err) {
+		console.error('Failed to fetch user wallet address:', err);
+		// Don't set error state - just log it
+		// User might not be logged in, which is handled elsewhere
+	}
 }
 ```
 
@@ -784,6 +808,7 @@ async function fetchUserWalletAddress() {
 • showAddressDisplay: Show address/QR when asset selected AND address generated
 
 **State Transitions:**
+
 ```
 [Modal Closed]
     ↓ (openDepositModal)
@@ -820,6 +845,7 @@ async function fetchUserWalletAddress() {
 **User-Facing Errors:**
 
 **Network Errors:**
+
 ```typescript
 if (assetsError) {
   return (
@@ -833,6 +859,7 @@ if (assetsError) {
 ```
 
 **Validation Errors:**
+
 ```typescript
 if (addressError) {
   return (
@@ -848,6 +875,7 @@ if (addressError) {
 ```
 
 **Empty States:**
+
 ```typescript
 if (!assetsLoading && supportedAssets.length === 0) {
   return (
@@ -860,18 +888,21 @@ if (!assetsLoading && supportedAssets.length === 0) {
 ```
 
 **Clipboard Errors:**
+
 ```typescript
 async function copyToClipboard(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-    copySuccess = true;
-    copyTimeout = setTimeout(() => { copySuccess = false; }, 2000);
-  } catch (err) {
-    // Fallback: Select text for manual copy
-    console.error('Clipboard API failed:', err);
-    // Show manual copy instructions
-    showManualCopyInstructions(text);
-  }
+	try {
+		await navigator.clipboard.writeText(text);
+		copySuccess = true;
+		copyTimeout = setTimeout(() => {
+			copySuccess = false;
+		}, 2000);
+	} catch (err) {
+		// Fallback: Select text for manual copy
+		console.error('Clipboard API failed:', err);
+		// Show manual copy instructions
+		showManualCopyInstructions(text);
+	}
 }
 ```
 
@@ -954,7 +985,7 @@ After asset selection:
 
 ```
                 [Backdrop blur + dark overlay]
-                          
+
         ╔═════════════════════════════════════════╗
         ║ Deposit Funds              [X Close]    ║
         ╠═════════════════════════════════════════╣
@@ -999,6 +1030,7 @@ After selection (desktop):
 ### 7.3 Loading States
 
 **Assets Loading:**
+
 ```
 ┌─────────────────────────────────┐
 │ Deposit Funds       [X Close]   │
@@ -1017,6 +1049,7 @@ After selection (desktop):
 ```
 
 **Address Loading:**
+
 ```
 ┌─────────────────────────────────┐
 │ Deposit Ethereum    [X Close]   │
@@ -1033,6 +1066,7 @@ After selection (desktop):
 ### 7.4 Color & Style Guidelines
 
 **From Design System:**
+
 ```css
 /* Backgrounds */
 --modal-bg: var(--bg-1);
@@ -1068,6 +1102,7 @@ After selection (desktop):
 ```
 
 **Typography:**
+
 - Modal title: 20px, font-weight: 700
 - Section headers: 14px, font-weight: 600, color: text-2
 - Asset names: 16px, font-weight: 500
@@ -1076,6 +1111,7 @@ After selection (desktop):
 - Address text: 14px, monospace font
 
 **Spacing:**
+
 - Modal padding: 24px
 - Asset items gap: 12px
 - Asset item padding: 16px
@@ -1083,6 +1119,7 @@ After selection (desktop):
 - QR code margin: 16px
 
 **Animations:**
+
 - Modal fade in: 200ms ease
 - BottomSheet slide up: 250ms ease-out
 - Asset hover: 150ms ease
@@ -1093,20 +1130,20 @@ After selection (desktop):
 
 **Requirement → Design Mapping:**
 
-| Requirement | Design Element | Correctness Property | How to Verify |
-|-------------|----------------|---------------------|---------------|
-| 2.1: View Supported Assets | AssetSelector + fetch | All supported chains are displayed | Check supportedAssets.length > 0 after fetch |
-| 2.1: Show min deposit | AssetListItem display | Each asset shows minCheckoutUsd | Verify asset.minCheckoutUsd is rendered |
-| 2.2: Select chain | Asset click handler | selectedAsset is set correctly | Check selectedAsset === clicked asset |
-| 2.2: Generate address | fetchDepositAddress() | Correct address type returned | Verify determineChainType() logic |
-| 2.2: Show loading | addressLoading state | Loading indicator shows during fetch | Test loading state rendering |
-| 2.3: Copy address | copyToClipboard() | Full address copied to clipboard | Test clipboard.writeText() is called |
-| 2.3: Copy confirmation | copySuccess state | Success indicator shows for 2s | Test timeout clears after 2000ms |
-| 2.4: QR code display | QRCodeDisplay component | QR contains correct address | Verify QRCode.toCanvas() receives address |
-| 2.4: QR size | QR canvas dimensions | Minimum 200x200px on mobile | Test canvas width/height >= 200 |
-| NFR: Accessibility | aria-labels, focus trap | All interactive elements labeled | Run axe-core accessibility tests |
-| NFR: Keyboard nav | Tab/Enter/Esc handlers | Can navigate without mouse | Test keyboard-only interaction |
-| NFR: Error recovery | Retry buttons | Errors don't crash modal | Test error states + retry |
+| Requirement                | Design Element          | Correctness Property                 | How to Verify                                |
+| -------------------------- | ----------------------- | ------------------------------------ | -------------------------------------------- |
+| 2.1: View Supported Assets | AssetSelector + fetch   | All supported chains are displayed   | Check supportedAssets.length > 0 after fetch |
+| 2.1: Show min deposit      | AssetListItem display   | Each asset shows minCheckoutUsd      | Verify asset.minCheckoutUsd is rendered      |
+| 2.2: Select chain          | Asset click handler     | selectedAsset is set correctly       | Check selectedAsset === clicked asset        |
+| 2.2: Generate address      | fetchDepositAddress()   | Correct address type returned        | Verify determineChainType() logic            |
+| 2.2: Show loading          | addressLoading state    | Loading indicator shows during fetch | Test loading state rendering                 |
+| 2.3: Copy address          | copyToClipboard()       | Full address copied to clipboard     | Test clipboard.writeText() is called         |
+| 2.3: Copy confirmation     | copySuccess state       | Success indicator shows for 2s       | Test timeout clears after 2000ms             |
+| 2.4: QR code display       | QRCodeDisplay component | QR contains correct address          | Verify QRCode.toCanvas() receives address    |
+| 2.4: QR size               | QR canvas dimensions    | Minimum 200x200px on mobile          | Test canvas width/height >= 200              |
+| NFR: Accessibility         | aria-labels, focus trap | All interactive elements labeled     | Run axe-core accessibility tests             |
+| NFR: Keyboard nav          | Tab/Enter/Esc handlers  | Can navigate without mouse           | Test keyboard-only interaction               |
+| NFR: Error recovery        | Retry buttons           | Errors don't crash modal             | Test error states + retry                    |
 
 ## 9. Security Considerations
 
@@ -1137,7 +1174,6 @@ After selection (desktop):
 • CORS headers already configured on backend
 • Rate limiting on backend (if not already, should add)
 
-
 ═══════════════════════════════════════════════
 📝 PHASE 3: TASKS BREAKDOWN
 ═══════════════════════════════════════════════
@@ -1153,6 +1189,7 @@ After selection (desktop):
 ### Rules for Dependencies
 
 Task depends on another if it requires:
+
 1. **Types/Interfaces** from other task
 2. **Components/Services** from other task
 3. **Data/Infrastructure** from other task
@@ -1192,7 +1229,8 @@ Task #3 (Modal State) ┤                       │
 ```
 
 **Critical Path:** #1 → #2 → #5 → #7 → #9 → #13 → #14 → #15 (Est: 9h)
-**Parallel Opportunities:** 
+**Parallel Opportunities:**
+
 - Tasks #2, #3, #4 can start after #1
 - Tasks #6, #7, #8 can run parallel after #5
 - Tasks #10, #11, #12 can run parallel after #5
@@ -1203,11 +1241,12 @@ Task #3 (Modal State) ┤                       │
 ⏱️ **Last Updated:** 2025-12-13 15:00
 
 ### Phase Breakdown
+
 ┌──────────────────────────────────────────────┐
-│ Foundation    [░░░░░░░░░░] 0% (0/4)  2.5h   │
-│ Core Features [░░░░░░░░░░] 0% (0/6)  6.5h   │
-│ Polish & UX   [░░░░░░░░░░] 0% (0/3)  2.5h   │
-│ Testing       [░░░░░░░░░░] 0% (0/2)  1.5h   │
+│ Foundation [░░░░░░░░░░] 0% (0/4) 2.5h │
+│ Core Features [░░░░░░░░░░] 0% (0/6) 6.5h │
+│ Polish & UX [░░░░░░░░░░] 0% (0/3) 2.5h │
+│ Testing [░░░░░░░░░░] 0% (0/2) 1.5h │
 └──────────────────────────────────────────────┘
 
 ═══════════════════════════════════════════════
@@ -1217,143 +1256,143 @@ Task #3 (Modal State) ┤                       │
 Tasks establishing foundational dependencies, types, and infrastructure.
 
 ┌──────────────────────────────────────────────┐
-│ Task #1: Install QR Code Package             │
+│ Task #1: Install QR Code Package │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 0.5 hours                       │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 0.5 hours │
 │ 🎯 Addresses: Req 2.4, Design 1 (Decision 4) │
-│ 🔗 Dependencies: None                        │
-│ 📂 Files: package.json                       │
-│                                              │
-│ **Description:**                             │
-│ Install the 'qrcode' npm package for QR     │
-│ code generation. This is a lightweight,     │
-│ dependency-free package that renders QR     │
-│ codes to canvas elements.                   │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Run: npm install qrcode               │
+│ 🔗 Dependencies: None │
+│ 📂 Files: package.json │
+│ │
+│ **Description:** │
+│ Install the 'qrcode' npm package for QR │
+│ code generation. This is a lightweight, │
+│ dependency-free package that renders QR │
+│ codes to canvas elements. │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Run: npm install qrcode │
 │ • [ ] Run: npm install --save-dev @types/qrcode │
-│ • [ ] Verify package.json includes both     │
-│ • [ ] TypeScript compiles without errors    │
-│ • [ ] Can import QRCode in .ts files        │
-│                                              │
-│ **Correctness Property:**                    │
-│ Import statement works: import QRCode from  │
-│ 'qrcode' without TypeScript errors          │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • Package size: ~10KB (minified + gzipped)  │
-│ • API: QRCode.toCanvas(canvas, text, opts)  │
-│ • No need for configuration files           │
+│ • [ ] Verify package.json includes both │
+│ • [ ] TypeScript compiles without errors │
+│ • [ ] Can import QRCode in .ts files │
+│ │
+│ **Correctness Property:** │
+│ Import statement works: import QRCode from │
+│ 'qrcode' without TypeScript errors │
+│ │
+│ **Implementation Notes:** │
+│ • Package size: ~10KB (minified + gzipped) │
+│ • API: QRCode.toCanvas(canvas, text, opts) │
+│ • No need for configuration files │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ Task #2: Create Bridge Type Definitions      │
+│ Task #2: Create Bridge Type Definitions │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 1 hour                          │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 1 hour │
 │ 🎯 Addresses: Design Section 3 (Data Models) │
-│ 🔗 Dependencies: None                        │
-│ 📂 Files: src/lib/types/bridge.ts (new)     │
-│                                              │
-│ **Description:**                             │
-│ Create TypeScript interfaces for bridge     │
-│ API requests and responses. These types     │
+│ 🔗 Dependencies: None │
+│ 📂 Files: src/lib/types/bridge.ts (new) │
+│ │
+│ **Description:** │
+│ Create TypeScript interfaces for bridge │
+│ API requests and responses. These types │
 │ will be used throughout the modal component │
-│ for type safety.                            │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Create src/lib/types/bridge.ts        │
-│ • [ ] Define BridgeToken interface          │
-│ • [ ] Define SupportedAsset interface       │
-│ • [ ] Define SupportedAssetsResponse        │
-│ • [ ] Define DepositAddressMap interface    │
-│ • [ ] Define DepositAddressResponse         │
-│ • [ ] Export all interfaces                 │
-│ • [ ] TypeScript compiles without errors    │
-│ • [ ] Add JSDoc comments to all interfaces  │
-│                                              │
-│ **Correctness Property:**                    │
-│ All API response shapes match actual        │
-│ responses from /api/bridge/* endpoints      │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • Reference existing types in               │
-│   polymarket-client.ts for consistency      │
-│ • Make fields optional (?) where API might  │
-│   not always return them                    │
-│ • Use descriptive JSDoc for each field      │
+│ for type safety. │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Create src/lib/types/bridge.ts │
+│ • [ ] Define BridgeToken interface │
+│ • [ ] Define SupportedAsset interface │
+│ • [ ] Define SupportedAssetsResponse │
+│ • [ ] Define DepositAddressMap interface │
+│ • [ ] Define DepositAddressResponse │
+│ • [ ] Export all interfaces │
+│ • [ ] TypeScript compiles without errors │
+│ • [ ] Add JSDoc comments to all interfaces │
+│ │
+│ **Correctness Property:** │
+│ All API response shapes match actual │
+│ responses from /api/bridge/\* endpoints │
+│ │
+│ **Implementation Notes:** │
+│ • Reference existing types in │
+│ polymarket-client.ts for consistency │
+│ • Make fields optional (?) where API might │
+│ not always return them │
+│ • Use descriptive JSDoc for each field │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ Task #3: Add Deposit Modal Global State      │
+│ Task #3: Add Deposit Modal Global State │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 0.5 hours                       │
-│ 🎯 Addresses: Design Section 5 (State Mgmt)  │
-│ 🔗 Dependencies: None                        │
-│ 📂 Files: src/lib/stores/modal.svelte.ts    │
-│                                              │
-│ **Description:**                             │
-│ Extend the existing modal state store to    │
-│ include deposit modal state and helper      │
-│ functions, following the pattern used for   │
-│ signInModalState.                           │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Add depositModalState = $state({      │
-│       isOpen: false })                      │
-│ • [ ] Add openDepositModal() function       │
-│ • [ ] Add closeDepositModal() function      │
-│ • [ ] Export all three                      │
-│ • [ ] TypeScript compiles without errors    │
-│ • [ ] Matches pattern of signInModalState   │
-│                                              │
-│ **Correctness Property:**                    │
-│ Calling openDepositModal() sets isOpen to   │
-│ true; closeDepositModal() sets it to false  │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • File already exists, just add 3 exports   │
-│ • Keep consistent naming with SignInModal   │
-│ • No complex logic needed                   │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 0.5 hours │
+│ 🎯 Addresses: Design Section 5 (State Mgmt) │
+│ 🔗 Dependencies: None │
+│ 📂 Files: src/lib/stores/modal.svelte.ts │
+│ │
+│ **Description:** │
+│ Extend the existing modal state store to │
+│ include deposit modal state and helper │
+│ functions, following the pattern used for │
+│ signInModalState. │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Add depositModalState = $state({ │
+│ isOpen: false }) │
+│ • [ ] Add openDepositModal() function │
+│ • [ ] Add closeDepositModal() function │
+│ • [ ] Export all three │
+│ • [ ] TypeScript compiles without errors │
+│ • [ ] Matches pattern of signInModalState │
+│ │
+│ **Correctness Property:** │
+│ Calling openDepositModal() sets isOpen to │
+│ true; closeDepositModal() sets it to false │
+│ │
+│ **Implementation Notes:** │
+│ • File already exists, just add 3 exports │
+│ • Keep consistent naming with SignInModal │
+│ • No complex logic needed │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
 │ Task #4: Create Wallet/Money Icon (Optional) │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 0.5 hours                       │
-│ 🎯 Addresses: Design Section 2.1             │
-│ 🔗 Dependencies: None                        │
-│ 📂 Files: src/lib/components/icons/         │
-│           WalletIcon.svelte (new)           │
-│                                              │
-│ **Description:**                             │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 0.5 hours │
+│ 🎯 Addresses: Design Section 2.1 │
+│ 🔗 Dependencies: None │
+│ 📂 Files: src/lib/components/icons/ │
+│ WalletIcon.svelte (new) │
+│ │
+│ **Description:** │
 │ Create a Wallet or Money icon component for │
-│ the deposit button (if not using existing   │
-│ MoneyIcon.svelte). Follow existing icon     │
-│ component patterns.                         │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Create WalletIcon.svelte OR decide    │
-│       to use existing MoneyIcon.svelte      │
-│ • [ ] If creating: Match existing icon      │
-│       component structure (Props interface) │
-│ • [ ] Accept size and color props           │
-│ • [ ] SVG viewBox is 0 0 24 24              │
-│ • [ ] Test renders at different sizes       │
-│ • [ ] Accessible (has aria-hidden="true")   │
-│                                              │
-│ **Correctness Property:**                    │
-│ Icon renders correctly at 16px, 20px, 24px  │
-│ sizes and adapts to color prop              │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • MoneyIcon already exists, can reuse it    │
-│ • Or use DollarCircleIcon.svelte            │
-│ • If creating new: find SVG from iconsax    │
+│ the deposit button (if not using existing │
+│ MoneyIcon.svelte). Follow existing icon │
+│ component patterns. │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Create WalletIcon.svelte OR decide │
+│ to use existing MoneyIcon.svelte │
+│ • [ ] If creating: Match existing icon │
+│ component structure (Props interface) │
+│ • [ ] Accept size and color props │
+│ • [ ] SVG viewBox is 0 0 24 24 │
+│ • [ ] Test renders at different sizes │
+│ • [ ] Accessible (has aria-hidden="true") │
+│ │
+│ **Correctness Property:** │
+│ Icon renders correctly at 16px, 20px, 24px │
+│ sizes and adapts to color prop │
+│ │
+│ **Implementation Notes:** │
+│ • MoneyIcon already exists, can reuse it │
+│ • Or use DollarCircleIcon.svelte │
+│ • If creating new: find SVG from iconsax │
 └──────────────────────────────────────────────┘
 
 ═══════════════════════════════════════════════
@@ -1365,309 +1404,309 @@ Core modal functionality: component structure, API integration, user flows.
 ┌──────────────────────────────────────────────┐
 │ Task #5: Create DepositModal Component Shell │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 1.5 hours                       │
-│ 🎯 Addresses: Design Section 2.1             │
-│ 🔗 Dependencies: #2 (types), #3 (state)     │
-│ 📂 Files: src/lib/components/wallet/        │
-│           DepositModal.svelte (new)         │
-│                                              │
-│ **Description:**                             │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 1.5 hours │
+│ 🎯 Addresses: Design Section 2.1 │
+│ 🔗 Dependencies: #2 (types), #3 (state) │
+│ 📂 Files: src/lib/components/wallet/ │
+│ DepositModal.svelte (new) │
+│ │
+│ **Description:** │
 │ Create the main DepositModal component with │
-│ props, state variables, responsive wrapper  │
-│ logic (Modal vs BottomSheet), and basic     │
+│ props, state variables, responsive wrapper │
+│ logic (Modal vs BottomSheet), and basic │
 │ structure. No API calls yet, just the shell.│
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Create DepositModal.svelte            │
-│ • [ ] Define Props interface (isOpen,       │
-│       onClose)                              │
-│ • [ ] Initialize all state variables        │
-│       ($state declarations)                 │
-│ • [ ] Add windowWidth tracking for          │
-│       responsive logic                      │
-│ • [ ] Implement isDesktop $derived          │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Create DepositModal.svelte │
+│ • [ ] Define Props interface (isOpen, │
+│ onClose) │
+│ • [ ] Initialize all state variables │
+│ ($state declarations) │
+│ • [ ] Add windowWidth tracking for │
+│ responsive logic │
+│ • [ ] Implement isDesktop $derived │
 │ • [ ] Render Modal (desktop) or BottomSheet │
-│       (mobile) based on isDesktop           │
-│ • [ ] Add modal title and close button      │
-│ • [ ] Import types from bridge.ts           │
-│ • [ ] Component compiles without errors     │
-│                                              │
-│ **Subtasks:**                                │
-│   5.1 [ ] Set up component file structure   │
-│   5.2 [ ] Define all props and state vars   │
-│   5.3 [ ] Add window resize listener        │
-│   5.4 [ ] Implement responsive wrapper      │
-│                                              │
-│ **Correctness Property:**                    │
-│ Modal shows on desktop (width >= 768px),    │
-│ BottomSheet shows on mobile (< 768px)       │
-│                                              │
-│ **Implementation Notes:**                    │
+│ (mobile) based on isDesktop │
+│ • [ ] Add modal title and close button │
+│ • [ ] Import types from bridge.ts │
+│ • [ ] Component compiles without errors │
+│ │
+│ **Subtasks:** │
+│ 5.1 [ ] Set up component file structure │
+│ 5.2 [ ] Define all props and state vars │
+│ 5.3 [ ] Add window resize listener │
+│ 5.4 [ ] Implement responsive wrapper │
+│ │
+│ **Correctness Property:** │
+│ Modal shows on desktop (width >= 768px), │
+│ BottomSheet shows on mobile (< 768px) │
+│ │
+│ **Implementation Notes:** │
 │ • Reference SignInModal.svelte for patterns │
-│ • Use existing Modal.svelte and             │
-│   BottomSheet.svelte components             │
-│ • Window width pattern from UserAvatar      │
+│ • Use existing Modal.svelte and │
+│ BottomSheet.svelte components │
+│ • Window width pattern from UserAvatar │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
 │ Task #6: Implement User Wallet Address Fetch │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 1 hour                          │
-│ 🎯 Addresses: Design Section 4.2             │
-│ 🔗 Dependencies: #5 (component shell)       │
-│ 📂 Files: src/lib/components/wallet/        │
-│           DepositModal.svelte               │
-│                                              │
-│ **Description:**                             │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 1 hour │
+│ 🎯 Addresses: Design Section 4.2 │
+│ 🔗 Dependencies: #5 (component shell) │
+│ 📂 Files: src/lib/components/wallet/ │
+│ DepositModal.svelte │
+│ │
+│ **Description:** │
 │ Add function to fetch user's wallet address │
-│ from /api/user/profile when modal opens.    │
-│ Store in userWalletAddress state variable.  │
-│                                              │
-│ **Completion Criteria:**                     │
+│ from /api/user/profile when modal opens. │
+│ Store in userWalletAddress state variable. │
+│ │
+│ **Completion Criteria:** │
 │ • [ ] Create fetchUserWalletAddress() async │
-│       function                              │
-│ • [ ] Call fetch('/api/user/profile')       │
-│ • [ ] Extract serverWalletAddress from      │
-│       response                              │
-│ • [ ] Set userWalletAddress state           │
-│ • [ ] Handle errors gracefully (log only)   │
-│ • [ ] Add $effect to call on modal open     │
-│ • [ ] Test with authenticated user          │
-│ • [ ] Test with unauthenticated user        │
-│                                              │
-│ **Correctness Property:**                    │
-│ userWalletAddress is populated when modal   │
-│ opens for authenticated users               │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • Pattern from UserAvatar.svelte profile    │
-│   fetch                                     │
-│ • Don't show error to user if fetch fails   │
-│ • Will need this address for deposit API    │
+│ function │
+│ • [ ] Call fetch('/api/user/profile') │
+│ • [ ] Extract serverWalletAddress from │
+│ response │
+│ • [ ] Set userWalletAddress state │
+│ • [ ] Handle errors gracefully (log only) │
+│ • [ ] Add $effect to call on modal open │
+│ • [ ] Test with authenticated user │
+│ • [ ] Test with unauthenticated user │
+│ │
+│ **Correctness Property:** │
+│ userWalletAddress is populated when modal │
+│ opens for authenticated users │
+│ │
+│ **Implementation Notes:** │
+│ • Pattern from UserAvatar.svelte profile │
+│ fetch │
+│ • Don't show error to user if fetch fails │
+│ • Will need this address for deposit API │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ Task #7: Implement Supported Assets Fetch    │
+│ Task #7: Implement Supported Assets Fetch │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 1.5 hours                       │
-│ 🎯 Addresses: Req 2.1, Design Section 4.2    │
-│ 🔗 Dependencies: #5 (component shell)       │
-│ 📂 Files: src/lib/components/wallet/        │
-│           DepositModal.svelte               │
-│                                              │
-│ **Description:**                             │
-│ Implement the fetchSupportedAssets()        │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 1.5 hours │
+│ 🎯 Addresses: Req 2.1, Design Section 4.2 │
+│ 🔗 Dependencies: #5 (component shell) │
+│ 📂 Files: src/lib/components/wallet/ │
+│ DepositModal.svelte │
+│ │
+│ **Description:** │
+│ Implement the fetchSupportedAssets() │
 │ function to call GET /api/bridge/supported- │
-│ assets and populate the supportedAssets     │
-│ state array with proper error handling.     │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Create fetchSupportedAssets() async   │
-│       function                              │
-│ • [ ] Set assetsLoading = true at start     │
-│ • [ ] Call fetch('/api/bridge/supported-    │
-│       assets')                              │
-│ • [ ] Parse JSON response                   │
-│ • [ ] Set supportedAssets from response     │
+│ assets and populate the supportedAssets │
+│ state array with proper error handling. │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Create fetchSupportedAssets() async │
+│ function │
+│ • [ ] Set assetsLoading = true at start │
+│ • [ ] Call fetch('/api/bridge/supported- │
+│ assets') │
+│ • [ ] Parse JSON response │
+│ • [ ] Set supportedAssets from response │
 │ • [ ] Handle HTTP errors (show assetsError) │
-│ • [ ] Handle network errors (retry option)  │
-│ • [ ] Set assetsLoading = false in finally  │
-│ • [ ] Add $effect to call on modal open     │
-│ • [ ] Test with network success             │
-│ • [ ] Test with network error               │
-│                                              │
-│ **Correctness Property:**                    │
-│ supportedAssets array is populated with     │
-│ valid SupportedAsset objects on success     │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • API already returns cached data (5min)    │
-│ • Reference Design Section 4.2 for pattern  │
-│ • Use try/catch for error handling          │
+│ • [ ] Handle network errors (retry option) │
+│ • [ ] Set assetsLoading = false in finally │
+│ • [ ] Add $effect to call on modal open │
+│ • [ ] Test with network success │
+│ • [ ] Test with network error │
+│ │
+│ **Correctness Property:** │
+│ supportedAssets array is populated with │
+│ valid SupportedAsset objects on success │
+│ │
+│ **Implementation Notes:** │
+│ • API already returns cached data (5min) │
+│ • Reference Design Section 4.2 for pattern │
+│ • Use try/catch for error handling │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ Task #8: Implement Deposit Address API Call  │
+│ Task #8: Implement Deposit Address API Call │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 1.5 hours                       │
-│ 🎯 Addresses: Req 2.2, Design Section 4.2    │
-│ 🔗 Dependencies: #5 (component shell)       │
-│ 📂 Files: src/lib/components/wallet/        │
-│           DepositModal.svelte               │
-│                                              │
-│ **Description:**                             │
-│ Implement fetchDepositAddress() to call     │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 1.5 hours │
+│ 🎯 Addresses: Req 2.2, Design Section 4.2 │
+│ 🔗 Dependencies: #5 (component shell) │
+│ 📂 Files: src/lib/components/wallet/ │
+│ DepositModal.svelte │
+│ │
+│ **Description:** │
+│ Implement fetchDepositAddress() to call │
 │ POST /api/bridge/deposit with user's wallet │
-│ address and extract the correct deposit     │
-│ address based on selected asset's chain.    │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Create fetchDepositAddress(asset,     │
-│       userAddress) async function           │
-│ • [ ] Set addressLoading = true at start    │
-│ • [ ] POST to /api/bridge/deposit with      │
-│       { address: userAddress }              │
-│ • [ ] Parse response.address map            │
-│ • [ ] Create determineChainType() helper    │
+│ address and extract the correct deposit │
+│ address based on selected asset's chain. │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Create fetchDepositAddress(asset, │
+│ userAddress) async function │
+│ • [ ] Set addressLoading = true at start │
+│ • [ ] POST to /api/bridge/deposit with │
+│ { address: userAddress } │
+│ • [ ] Parse response.address map │
+│ • [ ] Create determineChainType() helper │
 │ • [ ] Extract correct address (evm/svm/btc) │
-│ • [ ] Set depositAddress state              │
-│ • [ ] Handle errors (show addressError)     │
+│ • [ ] Set depositAddress state │
+│ • [ ] Handle errors (show addressError) │
 │ • [ ] Set addressLoading = false in finally │
-│ • [ ] Add $effect to call when asset        │
-│       selected                              │
-│ • [ ] Test with EVM chain selection         │
-│ • [ ] Test with error response              │
-│                                              │
-│ **Subtasks:**                                │
-│   8.1 [ ] Implement determineChainType()    │
-│   8.2 [ ] Implement fetchDepositAddress()   │
-│   8.3 [ ] Add $effect for auto-trigger      │
-│                                              │
-│ **Correctness Property:**                    │
-│ Correct address type (evm/svm/btc) is       │
-│ extracted based on asset.chainId            │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • determineChainType: "bitcoin" → btc,      │
-│   "solana" → svm, else → evm                │
-│ • Reference Design Section 4.2              │
+│ • [ ] Add $effect to call when asset │
+│ selected │
+│ • [ ] Test with EVM chain selection │
+│ • [ ] Test with error response │
+│ │
+│ **Subtasks:** │
+│ 8.1 [ ] Implement determineChainType() │
+│ 8.2 [ ] Implement fetchDepositAddress() │
+│ 8.3 [ ] Add $effect for auto-trigger │
+│ │
+│ **Correctness Property:** │
+│ Correct address type (evm/svm/btc) is │
+│ extracted based on asset.chainId │
+│ │
+│ **Implementation Notes:** │
+│ • determineChainType: "bitcoin" → btc, │
+│ "solana" → svm, else → evm │
+│ • Reference Design Section 4.2 │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ Task #9: Build Asset Selector UI             │
+│ Task #9: Build Asset Selector UI │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 1.5 hours                       │
-│ 🎯 Addresses: Req 2.1, Design Section 7.1    │
-│ 🔗 Dependencies: #5, #7 (component + fetch)  │
-│ 📂 Files: src/lib/components/wallet/        │
-│           DepositModal.svelte               │
-│                                              │
-│ **Description:**                             │
-│ Build the asset selector section that       │
-│ displays the list of supported chains/      │
-│ tokens with loading, error, and empty       │
-│ states. Handle asset selection.             │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Create asset selector section in      │
-│       markup                                │
-│ • [ ] Show loading skeleton while           │
-│       assetsLoading is true                 │
-│ • [ ] Show error message + retry button     │
-│       when assetsError exists               │
-│ • [ ] Show empty state when no assets       │
-│ • [ ] Render asset list items when loaded   │
-│ • [ ] Each item shows: chainName, token     │
-│       symbol, minCheckoutUsd                │
-│ • [ ] Implement handleAssetSelect(asset)    │
-│ • [ ] Visual feedback on selection          │
-│ • [ ] Retry button calls                    │
-│       fetchSupportedAssets()                │
-│ • [ ] Test all states (loading, error,      │
-│       empty, success)                       │
-│                                              │
-│ **Subtasks:**                                │
-│   9.1 [ ] Create loading skeleton           │
-│   9.2 [ ] Create error state with retry     │
-│   9.3 [ ] Create empty state                │
-│   9.4 [ ] Create asset list items           │
-│   9.5 [ ] Implement selection handler       │
-│                                              │
-│ **Correctness Property:**                    │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 1.5 hours │
+│ 🎯 Addresses: Req 2.1, Design Section 7.1 │
+│ 🔗 Dependencies: #5, #7 (component + fetch) │
+│ 📂 Files: src/lib/components/wallet/ │
+│ DepositModal.svelte │
+│ │
+│ **Description:** │
+│ Build the asset selector section that │
+│ displays the list of supported chains/ │
+│ tokens with loading, error, and empty │
+│ states. Handle asset selection. │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Create asset selector section in │
+│ markup │
+│ • [ ] Show loading skeleton while │
+│ assetsLoading is true │
+│ • [ ] Show error message + retry button │
+│ when assetsError exists │
+│ • [ ] Show empty state when no assets │
+│ • [ ] Render asset list items when loaded │
+│ • [ ] Each item shows: chainName, token │
+│ symbol, minCheckoutUsd │
+│ • [ ] Implement handleAssetSelect(asset) │
+│ • [ ] Visual feedback on selection │
+│ • [ ] Retry button calls │
+│ fetchSupportedAssets() │
+│ • [ ] Test all states (loading, error, │
+│ empty, success) │
+│ │
+│ **Subtasks:** │
+│ 9.1 [ ] Create loading skeleton │
+│ 9.2 [ ] Create error state with retry │
+│ 9.3 [ ] Create empty state │
+│ 9.4 [ ] Create asset list items │
+│ 9.5 [ ] Implement selection handler │
+│ │
+│ **Correctness Property:** │
 │ All supported assets are displayed; clicking│
-│ an asset sets selectedAsset state           │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • Reference Design Section 7.1 wireframes   │
-│ • Use Button component for retry            │
-│ • Skeleton can be simple shimmer divs       │
+│ an asset sets selectedAsset state │
+│ │
+│ **Implementation Notes:** │
+│ • Reference Design Section 7.1 wireframes │
+│ • Use Button component for retry │
+│ • Skeleton can be simple shimmer divs │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ Task #10: Implement QR Code Generation       │
+│ Task #10: Implement QR Code Generation │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 1 hour                          │
-│ 🎯 Addresses: Req 2.4, Design Section 2.3    │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 1 hour │
+│ 🎯 Addresses: Req 2.4, Design Section 2.3 │
 │ 🔗 Dependencies: #1 (qrcode pkg), #5 (shell)│
-│ 📂 Files: src/lib/components/wallet/        │
-│           DepositModal.svelte               │
-│                                              │
-│ **Description:**                             │
-│ Create inline QRCodeDisplay component that  │
-│ generates and renders a QR code for the     │
+│ 📂 Files: src/lib/components/wallet/ │
+│ DepositModal.svelte │
+│ │
+│ **Description:** │
+│ Create inline QRCodeDisplay component that │
+│ generates and renders a QR code for the │
 │ deposit address using the 'qrcode' library. │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Import QRCode from 'qrcode'           │
-│ • [ ] Create qrCanvas state variable        │
-│ • [ ] Create qrError state variable         │
-│ • [ ] Add <canvas> element with bind:this   │
-│ • [ ] Add $effect to generate QR when       │
-│       depositAddress changes                │
-│ • [ ] Call QRCode.toCanvas() with options   │
-│ • [ ] Set QR size to 240px                  │
-│ • [ ] Use CSS variables for colors          │
-│ • [ ] Handle generation errors gracefully   │
-│ • [ ] Show error message if QR fails        │
-│ • [ ] Test QR code scans correctly          │
-│                                              │
-│ **Correctness Property:**                    │
-│ QR code contains the exact depositAddress   │
-│ string and is scannable by wallet apps      │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • QRCode.toCanvas(canvas, text, {           │
-│     width: 240, margin: 2,                  │
-│     color: { dark: 'var(--text-0)',         │
-│              light: 'var(--bg-0)' },        │
-│     errorCorrectionLevel: 'M' })            │
-│ • Test with phone camera QR scanner         │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Import QRCode from 'qrcode' │
+│ • [ ] Create qrCanvas state variable │
+│ • [ ] Create qrError state variable │
+│ • [ ] Add <canvas> element with bind:this │
+│ • [ ] Add $effect to generate QR when │
+│ depositAddress changes │
+│ • [ ] Call QRCode.toCanvas() with options │
+│ • [ ] Set QR size to 240px │
+│ • [ ] Use CSS variables for colors │
+│ • [ ] Handle generation errors gracefully │
+│ • [ ] Show error message if QR fails │
+│ • [ ] Test QR code scans correctly │
+│ │
+│ **Correctness Property:** │
+│ QR code contains the exact depositAddress │
+│ string and is scannable by wallet apps │
+│ │
+│ **Implementation Notes:** │
+│ • QRCode.toCanvas(canvas, text, { │
+│ width: 240, margin: 2, │
+│ color: { dark: 'var(--text-0)', │
+│ light: 'var(--bg-0)' }, │
+│ errorCorrectionLevel: 'M' }) │
+│ • Test with phone camera QR scanner │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ Task #11: Implement Copy to Clipboard        │
+│ Task #11: Implement Copy to Clipboard │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 1 hour                          │
-│ 🎯 Addresses: Req 2.3, Design Section 6      │
-│ 🔗 Dependencies: #5 (component shell)       │
-│ 📂 Files: src/lib/components/wallet/        │
-│           DepositModal.svelte               │
-│                                              │
-│ **Description:**                             │
-│ Implement copy-to-clipboard functionality   │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 1 hour │
+│ 🎯 Addresses: Req 2.3, Design Section 6 │
+│ 🔗 Dependencies: #5 (component shell) │
+│ 📂 Files: src/lib/components/wallet/ │
+│ DepositModal.svelte │
+│ │
+│ **Description:** │
+│ Implement copy-to-clipboard functionality │
 │ with visual feedback, following the pattern │
-│ from UserAvatar.svelte's copy handler.      │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Create handleCopyAddress() async      │
-│       function                              │
-│ • [ ] Use navigator.clipboard.writeText()   │
-│ • [ ] Set copySuccess = true on success     │
-│ • [ ] Show success indicator (2s timeout)   │
-│ • [ ] Reset copySuccess after 2 seconds     │
-│ • [ ] Handle clipboard permission errors    │
-│ • [ ] Implement fallback for unsupported    │
-│       browsers (manual copy instructions)   │
-│ • [ ] Add copy button with CopyIcon         │
-│ • [ ] Show checkmark when copySuccess       │
+│ from UserAvatar.svelte's copy handler. │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Create handleCopyAddress() async │
+│ function │
+│ • [ ] Use navigator.clipboard.writeText() │
+│ • [ ] Set copySuccess = true on success │
+│ • [ ] Show success indicator (2s timeout) │
+│ • [ ] Reset copySuccess after 2 seconds │
+│ • [ ] Handle clipboard permission errors │
+│ • [ ] Implement fallback for unsupported │
+│ browsers (manual copy instructions) │
+│ • [ ] Add copy button with CopyIcon │
+│ • [ ] Show checkmark when copySuccess │
 │ • [ ] Clean up timeout on component unmount │
-│ • [ ] Test copy functionality works         │
-│                                              │
-│ **Correctness Property:**                    │
-│ Clipboard contains exact depositAddress     │
-│ after successful copy operation             │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • Reference UserAvatar handleCopyAddress    │
-│ • Use CopyIcon component (already exists)   │
-│ • Consider CheckCircleIcon for success      │
+│ • [ ] Test copy functionality works │
+│ │
+│ **Correctness Property:** │
+│ Clipboard contains exact depositAddress │
+│ after successful copy operation │
+│ │
+│ **Implementation Notes:** │
+│ • Reference UserAvatar handleCopyAddress │
+│ • Use CopyIcon component (already exists) │
+│ • Consider CheckCircleIcon for success │
 └──────────────────────────────────────────────┘
 
 ═══════════════════════════════════════════════
@@ -1679,136 +1718,136 @@ Styling, responsive design, loading states, and user experience refinements.
 ┌──────────────────────────────────────────────┐
 │ Task #12: Style Components with Design System│
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 2 hours                         │
-│ 🎯 Addresses: Design Section 7.4             │
-│ 🔗 Dependencies: #5, #9, #10, #11 (all UI)  │
-│ 📂 Files: src/lib/components/wallet/        │
-│           DepositModal.svelte               │
-│                                              │
-│ **Description:**                             │
-│ Apply comprehensive styling using CSS       │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 2 hours │
+│ 🎯 Addresses: Design Section 7.4 │
+│ 🔗 Dependencies: #5, #9, #10, #11 (all UI) │
+│ 📂 Files: src/lib/components/wallet/ │
+│ DepositModal.svelte │
+│ │
+│ **Description:** │
+│ Apply comprehensive styling using CSS │
 │ variables from the design system. Implement │
-│ responsive layouts for mobile and desktop.  │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Use CSS variables (--bg-*, --text-*,  │
-│       --primary-*, etc.)                    │
-│ • [ ] Style asset selector section          │
-│ • [ ] Style asset list items with hover     │
-│ • [ ] Style selected asset highlight        │
+│ responsive layouts for mobile and desktop. │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Use CSS variables (--bg-_, --text-_, │
+│ --primary-_, etc.) │
+│ • [ ] Style asset selector section │
+│ • [ ] Style asset list items with hover │
+│ • [ ] Style selected asset highlight │
 │ • [ ] Style deposit address display section │
-│ • [ ] Style QR code container               │
-│ • [ ] Style address text (monospace font)   │
-│ • [ ] Style copy button with hover/active   │
-│ • [ ] Add animations (fade, slide)          │
-│ • [ ] Respect prefers-reduced-motion        │
-│ • [ ] Ensure 44px minimum touch targets     │
-│ • [ ] Test responsive layouts (mobile/      │
-│       desktop)                              │
-│ • [ ] Verify WCAG AA color contrast         │
-│                                              │
-│ **Subtasks:**                                │
-│   12.1 [ ] Style asset selector section     │
-│   12.2 [ ] Style deposit display section    │
-│   12.3 [ ] Add animations and transitions   │
-│   12.4 [ ] Test responsive breakpoints      │
-│                                              │
-│ **Correctness Property:**                    │
-│ All colors use CSS variables; contrast      │
-│ ratios meet WCAG AA (4.5:1 for text)        │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • Reference brand-colors.md for variables   │
-│ • Reference existing Modal/BottomSheet      │
-│   styles                                    │
-│ • Use design system spacing (--space-*)     │
-│ • Mobile: bottom sheet slides up            │
-│ • Desktop: modal fades in with backdrop     │
+│ • [ ] Style QR code container │
+│ • [ ] Style address text (monospace font) │
+│ • [ ] Style copy button with hover/active │
+│ • [ ] Add animations (fade, slide) │
+│ • [ ] Respect prefers-reduced-motion │
+│ • [ ] Ensure 44px minimum touch targets │
+│ • [ ] Test responsive layouts (mobile/ │
+│ desktop) │
+│ • [ ] Verify WCAG AA color contrast │
+│ │
+│ **Subtasks:** │
+│ 12.1 [ ] Style asset selector section │
+│ 12.2 [ ] Style deposit display section │
+│ 12.3 [ ] Add animations and transitions │
+│ 12.4 [ ] Test responsive breakpoints │
+│ │
+│ **Correctness Property:** │
+│ All colors use CSS variables; contrast │
+│ ratios meet WCAG AA (4.5:1 for text) │
+│ │
+│ **Implementation Notes:** │
+│ • Reference brand-colors.md for variables │
+│ • Reference existing Modal/BottomSheet │
+│ styles │
+│ • Use design system spacing (--space-_) │
+│ • Mobile: bottom sheet slides up │
+│ • Desktop: modal fades in with backdrop │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ Task #13: Integrate with Application Layout  │
+│ Task #13: Integrate with Application Layout │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 0.5 hours                       │
-│ 🎯 Addresses: Design Section 1               │
-│ 🔗 Dependencies: #5 (component complete)    │
-│ 📂 Files: src/routes/+layout.svelte,        │
-│           src/lib/components/layout/        │
-│           TopHeader.svelte OR BottomNav     │
-│                                              │
-│ **Description:**                             │
-│ Add DepositModal to root layout and add a   │
-│ "Deposit" button to TopHeader or BottomNav  │
-│ that opens the modal.                       │
-│                                              │
-│ **Completion Criteria:**                     │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 0.5 hours │
+│ 🎯 Addresses: Design Section 1 │
+│ 🔗 Dependencies: #5 (component complete) │
+│ 📂 Files: src/routes/+layout.svelte, │
+│ src/lib/components/layout/ │
+│ TopHeader.svelte OR BottomNav │
+│ │
+│ **Description:** │
+│ Add DepositModal to root layout and add a │
+│ "Deposit" button to TopHeader or BottomNav │
+│ that opens the modal. │
+│ │
+│ **Completion Criteria:** │
 │ • [ ] Import DepositModal in +layout.svelte │
-│ • [ ] Import depositModalState,             │
-│       closeDepositModal from stores         │
-│ • [ ] Render <DepositModal isOpen={...}     │
-│       onClose={...} />                      │
-│ • [ ] Decide placement: TopHeader or        │
-│       BottomNav (or both)                   │
-│ • [ ] Import openDepositModal in chosen     │
-│       component                             │
-│ • [ ] Add Button with "Deposit" text/icon   │
-│ • [ ] Set onclick={openDepositModal}        │
-│ • [ ] Test modal opens when button clicked  │
-│ • [ ] Test modal closes with X button       │
-│                                              │
-│ **Correctness Property:**                    │
-│ Clicking Deposit button opens modal;        │
-│ clicking close/backdrop closes it           │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • Follow SignInModal integration pattern    │
-│ • +layout.svelte likely has SignInModal,    │
-│   add DepositModal similarly                │
+│ • [ ] Import depositModalState, │
+│ closeDepositModal from stores │
+│ • [ ] Render <DepositModal isOpen={...} │
+│ onClose={...} /> │
+│ • [ ] Decide placement: TopHeader or │
+│ BottomNav (or both) │
+│ • [ ] Import openDepositModal in chosen │
+│ component │
+│ • [ ] Add Button with "Deposit" text/icon │
+│ • [ ] Set onclick={openDepositModal} │
+│ • [ ] Test modal opens when button clicked │
+│ • [ ] Test modal closes with X button │
+│ │
+│ **Correctness Property:** │
+│ Clicking Deposit button opens modal; │
+│ clicking close/backdrop closes it │
+│ │
+│ **Implementation Notes:** │
+│ • Follow SignInModal integration pattern │
+│ • +layout.svelte likely has SignInModal, │
+│ add DepositModal similarly │
 │ • Suggest: TopHeader for desktop, BottomNav │
-│   for mobile (or both)                      │
+│ for mobile (or both) │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ Task #14: Implement Error Handling & States  │
+│ Task #14: Implement Error Handling & States │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 1 hour                          │
-│ 🎯 Addresses: Design Section 6               │
-│ 🔗 Dependencies: #7, #8, #9 (API calls)     │
-│ 📂 Files: src/lib/components/wallet/        │
-│           DepositModal.svelte               │
-│                                              │
-│ **Description:**                             │
-│ Enhance error handling with user-friendly   │
-│ error messages, retry mechanisms, and       │
-│ fallback states for all possible failures.  │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Add user-friendly error messages for  │
-│       network failures                      │
-│ • [ ] Add retry buttons for all API errors  │
-│ • [ ] Implement retryFetchAssets() helper   │
-│ • [ ] Implement retryFetchAddress() helper  │
-│ • [ ] Add "Back to Assets" button when      │
-│       address fetch fails                   │
-│ • [ ] Handle clipboard API not available    │
-│       (show manual copy instructions)       │
-│ • [ ] Handle no user wallet address         │
-│       (shouldn't happen but show error)     │
-│ • [ ] Test all error scenarios              │
-│ • [ ] Ensure errors don't crash modal       │
-│                                              │
-│ **Correctness Property:**                    │
-│ All error states are recoverable; user can  │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 1 hour │
+│ 🎯 Addresses: Design Section 6 │
+│ 🔗 Dependencies: #7, #8, #9 (API calls) │
+│ 📂 Files: src/lib/components/wallet/ │
+│ DepositModal.svelte │
+│ │
+│ **Description:** │
+│ Enhance error handling with user-friendly │
+│ error messages, retry mechanisms, and │
+│ fallback states for all possible failures. │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Add user-friendly error messages for │
+│ network failures │
+│ • [ ] Add retry buttons for all API errors │
+│ • [ ] Implement retryFetchAssets() helper │
+│ • [ ] Implement retryFetchAddress() helper │
+│ • [ ] Add "Back to Assets" button when │
+│ address fetch fails │
+│ • [ ] Handle clipboard API not available │
+│ (show manual copy instructions) │
+│ • [ ] Handle no user wallet address │
+│ (shouldn't happen but show error) │
+│ • [ ] Test all error scenarios │
+│ • [ ] Ensure errors don't crash modal │
+│ │
+│ **Correctness Property:** │
+│ All error states are recoverable; user can │
 │ retry or navigate back without closing modal│
-│                                              │
-│ **Implementation Notes:**                    │
-│ • Reference Design Section 6 for error      │
-│   handling patterns                         │
-│ • Don't auto-close modal on errors          │
-│ • Show specific messages, not generic       │
+│ │
+│ **Implementation Notes:** │
+│ • Reference Design Section 6 for error │
+│ handling patterns │
+│ • Don't auto-close modal on errors │
+│ • Show specific messages, not generic │
 └──────────────────────────────────────────────┘
 
 ═══════════════════════════════════════════════
@@ -1818,107 +1857,108 @@ Styling, responsive design, loading states, and user experience refinements.
 Ensure quality, accessibility, and proper functionality.
 
 ┌──────────────────────────────────────────────┐
-│ Task #15: Add Accessibility Features         │
+│ Task #15: Add Accessibility Features │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 1 hour                          │
-│ 🎯 Addresses: Design Section 8, NFR 3.3      │
-│ 🔗 Dependencies: #5, #9, #10, #11 (all UI)  │
-│ 📂 Files: src/lib/components/wallet/        │
-│           DepositModal.svelte               │
-│                                              │
-│ **Description:**                             │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 1 hour │
+│ 🎯 Addresses: Design Section 8, NFR 3.3 │
+│ 🔗 Dependencies: #5, #9, #10, #11 (all UI) │
+│ 📂 Files: src/lib/components/wallet/ │
+│ DepositModal.svelte │
+│ │
+│ **Description:** │
 │ Add ARIA labels, keyboard navigation, focus │
-│ management, and screen reader support to    │
-│ ensure WCAG AA compliance.                  │
-│                                              │
-│ **Completion Criteria:**                     │
-│ • [ ] Add aria-label to all buttons         │
-│ • [ ] Add aria-live for loading states      │
-│ • [ ] Add aria-describedby for error msgs   │
-│ • [ ] Ensure Tab navigation works through   │
-│       asset list                            │
-│ • [ ] Enter key selects asset               │
-│ • [ ] Escape key closes modal (already in   │
-│       Modal/BottomSheet)                    │
-│ • [ ] Focus trap works (handled by Modal)   │
-│ • [ ] Return focus to trigger on close      │
-│ • [ ] QR code has alt text or aria-label    │
+│ management, and screen reader support to │
+│ ensure WCAG AA compliance. │
+│ │
+│ **Completion Criteria:** │
+│ • [ ] Add aria-label to all buttons │
+│ • [ ] Add aria-live for loading states │
+│ • [ ] Add aria-describedby for error msgs │
+│ • [ ] Ensure Tab navigation works through │
+│ asset list │
+│ • [ ] Enter key selects asset │
+│ • [ ] Escape key closes modal (already in │
+│ Modal/BottomSheet) │
+│ • [ ] Focus trap works (handled by Modal) │
+│ • [ ] Return focus to trigger on close │
+│ • [ ] QR code has alt text or aria-label │
 │ • [ ] Address text is selectable for manual │
-│       copy                                  │
-│ • [ ] Test with keyboard only (no mouse)    │
-│ • [ ] Test with screen reader (VoiceOver/   │
-│       NVDA)                                 │
-│                                              │
-│ **Subtasks:**                                │
-│   15.1 [ ] Add all ARIA labels              │
-│   15.2 [ ] Test keyboard navigation         │
-│   15.3 [ ] Test screen reader compatibility │
-│                                              │
-│ **Correctness Property:**                    │
-│ Can complete entire deposit flow (view      │
-│ assets, select, copy) using only keyboard   │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • Modal/BottomSheet already handle focus    │
-│   trap and Esc key                          │
-│ • Add role="listbox" to asset list          │
-│ • Add role="option" to asset items          │
-│ • Use aria-selected for selected asset      │
+│ copy │
+│ • [ ] Test with keyboard only (no mouse) │
+│ • [ ] Test with screen reader (VoiceOver/ │
+│ NVDA) │
+│ │
+│ **Subtasks:** │
+│ 15.1 [ ] Add all ARIA labels │
+│ 15.2 [ ] Test keyboard navigation │
+│ 15.3 [ ] Test screen reader compatibility │
+│ │
+│ **Correctness Property:** │
+│ Can complete entire deposit flow (view │
+│ assets, select, copy) using only keyboard │
+│ │
+│ **Implementation Notes:** │
+│ • Modal/BottomSheet already handle focus │
+│ trap and Esc key │
+│ • Add role="listbox" to asset list │
+│ • Add role="option" to asset items │
+│ • Use aria-selected for selected asset │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ Task #16: End-to-End Testing & QA            │
+│ Task #16: End-to-End Testing & QA │
 ├──────────────────────────────────────────────┤
-│ ⏳ Status: PENDING                           │
-│ ⏱️ Estimate: 1 hour                          │
-│ 🎯 Addresses: All requirements               │
-│ 🔗 Dependencies: All previous tasks         │
-│ 📂 Files: All components                    │
-│                                              │
-│ **Description:**                             │
-│ Comprehensive end-to-end testing of the     │
-│ entire deposit modal flow across different  │
-│ scenarios, devices, and edge cases.         │
-│                                              │
-│ **Completion Criteria:**                     │
+│ ⏳ Status: PENDING │
+│ ⏱️ Estimate: 1 hour │
+│ 🎯 Addresses: All requirements │
+│ 🔗 Dependencies: All previous tasks │
+│ 📂 Files: All components │
+│ │
+│ **Description:** │
+│ Comprehensive end-to-end testing of the │
+│ entire deposit modal flow across different │
+│ scenarios, devices, and edge cases. │
+│ │
+│ **Completion Criteria:** │
 │ • [ ] Test happy path: open → select → copy│
-│ • [ ] Test on mobile viewport (<768px)     │
-│ • [ ] Test on desktop viewport (>=768px)   │
-│ • [ ] Test with real QR scanner app         │
-│ • [ ] Test network error scenarios          │
-│ • [ ] Test with no supported assets         │
-│ • [ ] Test copy with different browsers     │
-│ • [ ] Test clipboard permission denied      │
-│ • [ ] Test rapid asset switching            │
-│ • [ ] Test "Back to Assets" navigation      │
-│ • [ ] Test modal close and reopen           │
-│ • [ ] Verify no console errors              │
-│ • [ ] Verify no memory leaks (timeouts      │
-│       cleaned up)                           │
-│ • [ ] Cross-browser testing (Chrome,        │
-│       Safari, Firefox)                      │
-│                                              │
-│ **Subtasks:**                                │
-│   16.1 [ ] Test happy path flows            │
-│   16.2 [ ] Test error scenarios             │
-│   16.3 [ ] Test responsive layouts          │
-│   16.4 [ ] Cross-browser testing            │
-│                                              │
-│ **Correctness Property:**                    │
-│ All user stories complete successfully; no  │
-│ errors in console; QR codes scan correctly  │
-│                                              │
-│ **Implementation Notes:**                    │
-│ • Use actual wallet app to scan QR codes    │
-│ • Test in Chrome DevTools device mode       │
-│ • Test clipboard API in different browsers  │
-│ • Verify iOS safe area insets               │
+│ • [ ] Test on mobile viewport (<768px) │
+│ • [ ] Test on desktop viewport (>=768px) │
+│ • [ ] Test with real QR scanner app │
+│ • [ ] Test network error scenarios │
+│ • [ ] Test with no supported assets │
+│ • [ ] Test copy with different browsers │
+│ • [ ] Test clipboard permission denied │
+│ • [ ] Test rapid asset switching │
+│ • [ ] Test "Back to Assets" navigation │
+│ • [ ] Test modal close and reopen │
+│ • [ ] Verify no console errors │
+│ • [ ] Verify no memory leaks (timeouts │
+│ cleaned up) │
+│ • [ ] Cross-browser testing (Chrome, │
+│ Safari, Firefox) │
+│ │
+│ **Subtasks:** │
+│ 16.1 [ ] Test happy path flows │
+│ 16.2 [ ] Test error scenarios │
+│ 16.3 [ ] Test responsive layouts │
+│ 16.4 [ ] Cross-browser testing │
+│ │
+│ **Correctness Property:** │
+│ All user stories complete successfully; no │
+│ errors in console; QR codes scan correctly │
+│ │
+│ **Implementation Notes:** │
+│ • Use actual wallet app to scan QR codes │
+│ • Test in Chrome DevTools device mode │
+│ • Test clipboard API in different browsers │
+│ • Verify iOS safe area insets │
 └──────────────────────────────────────────────┘
 
 ## Change Log
 
 ### 2025-12-13 15:00
+
 - Initial task breakdown created
 - 16 tasks across 4 phases (Foundation, Core, Polish, Testing)
 - Total estimated time: 13-17 hours
@@ -1935,4 +1975,3 @@ Ensure quality, accessibility, and proper functionality.
      - Blockers and resolutions
      - API quirks or surprises
 -->
-
