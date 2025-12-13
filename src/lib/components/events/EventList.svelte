@@ -38,6 +38,7 @@
 	 */
 	function infiniteScroll(node: HTMLElement) {
 		let isLoading = false;
+		let abortController: AbortController | null = null;
 
 		const observer = new IntersectionObserver(
 			async (entries) => {
@@ -45,11 +46,21 @@
 				if (entry.isIntersecting && !isLoading && !loading && hasMore && onLoadMore) {
 					isLoading = true;
 					loadingMore = true;
+
+					// Create abort controller for this load operation
+					abortController = new AbortController();
+
 					try {
 						await onLoadMore();
+					} catch (error) {
+						// Only log errors that aren't from abort
+						if (error instanceof Error && error.name !== 'AbortError') {
+							console.error('Error loading more:', error);
+						}
 					} finally {
 						isLoading = false;
 						loadingMore = false;
+						abortController = null;
 					}
 				}
 			},
@@ -63,6 +74,10 @@
 		return {
 			destroy() {
 				observer.disconnect();
+				// Cancel any pending load operation
+				if (abortController) {
+					abortController.abort();
+				}
 			}
 		};
 	}

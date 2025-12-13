@@ -69,7 +69,14 @@
 				windowWidth = window.innerWidth;
 			};
 			window.addEventListener('resize', handleResize);
-			return () => window.removeEventListener('resize', handleResize);
+			return () => {
+				window.removeEventListener('resize', handleResize);
+				// Clean up any pending timeouts on unmount
+				if (closeTimeout) {
+					clearTimeout(closeTimeout);
+					closeTimeout = null;
+				}
+			};
 		}
 	});
 

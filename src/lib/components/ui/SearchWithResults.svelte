@@ -2,6 +2,7 @@
 	import Search from './Search.svelte';
 	import SearchResultsDropdown from './SearchResultsDropdown.svelte';
 	import type { SearchResults } from '$lib/server/api/polymarket-client';
+	import { debounceCancellable } from '$lib/utils/debounce';
 
 	interface Props {
 		class?: string;
@@ -20,15 +21,10 @@
 		showDropdown = true;
 	}
 
-	async function handleSearchInput(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const query = target.value.trim();
-
-		searchQuery = query;
-		showDropdown = true;
-
+	async function performSearch(query: string) {
 		if (query.length < 2) {
 			searchResults = null;
+			isLoading = false;
 			return;
 		}
 
@@ -60,6 +56,36 @@
 			isLoading = false;
 		}
 	}
+
+	const { debounced: debouncedSearch, cancel: cancelSearch } = debounceCancellable(
+		performSearch,
+		300
+	);
+
+	async function handleSearchInput(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const query = target.value.trim();
+
+		searchQuery = query;
+		showDropdown = true;
+
+		if (query.length < 2) {
+			searchResults = null;
+			isLoading = false;
+			return;
+		}
+
+		isLoading = true;
+		debouncedSearch(query);
+	}
+
+	// Cleanup on unmount
+	$effect(() => {
+		return () => {
+			cancelSearch();
+			abortController?.abort();
+		};
+	});
 
 	function handleClickOutside(event: MouseEvent) {
 		const target = event.target as HTMLElement;

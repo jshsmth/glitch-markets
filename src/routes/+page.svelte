@@ -6,6 +6,7 @@
 	import { browser } from '$app/environment';
 
 	const PAGE_SIZE = 20;
+	const MAX_EVENTS = 200; // Cap at 200 events to prevent unbounded memory growth
 	let offset = $state(0);
 	let allEvents = $state<Event[]>([]);
 	let hasMore = $state(true);
@@ -40,7 +41,14 @@
 			} else {
 				allEvents = [...allEvents, ...query.data];
 			}
-			hasMore = query.data.length === PAGE_SIZE;
+
+			// Stop loading more if we've hit the maximum
+			if (allEvents.length >= MAX_EVENTS) {
+				hasMore = false;
+			} else {
+				hasMore = query.data.length === PAGE_SIZE;
+			}
+
 			isInitialLoad = false;
 		}
 	});
