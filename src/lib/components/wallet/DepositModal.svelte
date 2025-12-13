@@ -119,6 +119,8 @@
 		depositAddress = null;
 		addressError = null;
 		assetsError = null;
+		assetsLoading = true;
+		addressLoading = false;
 		copySuccess = false;
 		qrError = false;
 		chainDropdownOpen = false;
@@ -368,11 +370,7 @@
 			</div>
 
 			<div class="qr-section">
-				{#if addressLoading}
-					<div class="qr-container loading">
-						<div class="spinner"></div>
-					</div>
-				{:else if addressError}
+				{#if addressError}
 					<div class="qr-error-state">
 						<p class="error-message">Failed to generate address</p>
 						<Button variant="secondary" size="small" onclick={retryFetchAddress}>Retry</Button>
@@ -394,10 +392,14 @@
 							{/if}
 						</div>
 					</div>
+				{:else}
+					<div class="qr-container skeleton-qr"></div>
 				{/if}
 			</div>
 
-			{#if depositAddress}
+			{#if addressError}
+				<!-- Error state handled in QR section -->
+			{:else if depositAddress}
 				<div class="address-section">
 					<div class="address-header">
 						<span class="address-label">Your deposit address</span>
@@ -430,6 +432,16 @@
 						>
 					</div>
 				{/if}
+			{:else}
+				<div class="address-section">
+					<div class="address-header">
+						<div class="skeleton-text-sm"></div>
+						<div class="skeleton-text-xs"></div>
+					</div>
+					<div class="skeleton-address"></div>
+					<div class="skeleton-button"></div>
+				</div>
+				<div class="skeleton-banner"></div>
 			{/if}
 		{/if}
 	</div>
@@ -662,11 +674,6 @@
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 	}
 
-	.qr-container.loading {
-		width: 180px;
-		height: 180px;
-	}
-
 	.qr-canvas {
 		display: block;
 		border-radius: 4px;
@@ -703,21 +710,6 @@
 		align-items: center;
 		gap: 12px;
 		padding: 32px;
-	}
-
-	.spinner {
-		width: 32px;
-		height: 32px;
-		border: 3px solid var(--bg-4);
-		border-top-color: var(--primary);
-		border-radius: 50%;
-		animation: spin 1s linear infinite;
-	}
-
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
 	}
 
 	.address-section {
@@ -852,7 +844,6 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.spinner,
 		.skeleton-circle,
 		.skeleton-text,
 		.skeleton-text-sm,
