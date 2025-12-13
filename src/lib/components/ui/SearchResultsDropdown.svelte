@@ -28,15 +28,14 @@
 		{ label: 'Crypto', slug: 'crypto', icon: '₿' },
 		{ label: 'Sports', slug: 'sports', icon: '⚽' },
 		{ label: 'Tech', slug: 'tech', icon: '💻' },
-		{ label: 'AI', slug: 'ai', icon: '🤖' },
+		{ label: 'Finance', slug: 'finance', icon: '💰' },
 		{ label: 'Pop Culture', slug: 'pop-culture', icon: '🎬' }
 	];
 
 	// Browse filters
 	const browseFilters = [
 		{ label: 'New', href: '/new', icon: '✨' },
-		{ label: 'Trending', href: '/trending', icon: '📈' },
-		{ label: 'Popular', href: '/', icon: '🔥' }
+		{ label: 'Trending', href: '/trending', icon: '📈' }
 	];
 
 	function handleLinkClick() {
@@ -105,7 +104,7 @@
 			<section class="browse-section">
 				<h3 class="section-title">Browse</h3>
 				<div class="browse-filters">
-					{#each browseFilters as filter}
+					{#each browseFilters as filter (filter.label)}
 						<a href={filter.href} class="browse-filter" onclick={handleLinkClick}>
 							<span class="filter-icon">{filter.icon}</span>
 							<span class="filter-label">{filter.label}</span>
@@ -117,7 +116,7 @@
 			<section class="browse-section">
 				<h3 class="section-title">Popular Topics</h3>
 				<div class="topics-grid">
-					{#each popularTopics as topic}
+					{#each popularTopics as topic (topic.slug)}
 						<a href="/{topic.slug}" class="topic-card" onclick={handleLinkClick}>
 							<span class="topic-icon">{topic.icon}</span>
 							<span class="topic-label">{topic.label}</span>

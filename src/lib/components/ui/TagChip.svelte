@@ -23,9 +23,9 @@
 		'middle-east'
 	];
 
-	const slug = tag.slug || '';
-	const isMainCategory = mainCategories.includes(slug.toLowerCase());
-	const href = isMainCategory ? `/${slug}` : `/search?q=${encodeURIComponent(slug)}`;
+	const slug = $derived(tag.slug || '');
+	const isMainCategory = $derived(mainCategories.includes(slug.toLowerCase()));
+	const href = $derived(isMainCategory ? `/${slug}` : `/search?q=${encodeURIComponent(slug)}`);
 </script>
 
 <a {href} class="tag-chip" {onclick} role="button" tabindex="0">
