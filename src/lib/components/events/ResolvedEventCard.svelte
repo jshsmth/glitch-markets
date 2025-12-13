@@ -138,7 +138,6 @@
 		box-shadow: var(--shadow-primary-md);
 	}
 
-
 	.card-content {
 		display: flex;
 		flex-direction: column;

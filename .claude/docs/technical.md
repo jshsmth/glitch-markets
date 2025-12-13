@@ -167,9 +167,9 @@ Glitch Markets uses **Supabase Auth** for user authentication.
 
 ### Supported Authentication Methods
 
-| Method | Status | Description |
-|--------|--------|-------------|
-| Google OAuth | Active | Sign in with Google account |
+| Method         | Status | Description                  |
+| -------------- | ------ | ---------------------------- |
+| Google OAuth   | Active | Sign in with Google account  |
 | Email/Password | Active | Traditional email + password |
 
 ### Authentication Flow
@@ -200,14 +200,14 @@ Glitch Markets uses **Supabase Auth** for user authentication.
 
 ### Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/lib/stores/auth.svelte.ts` | Client-side auth state (Svelte 5 runes) |
-| `src/hooks.server.ts` | Server-side session verification |
-| `src/routes/auth/callback/+server.ts` | OAuth callback handler |
-| `src/routes/api/auth/register/+server.ts` | User registration endpoint |
-| `src/lib/server/wallet/server-wallet.ts` | Server wallet management |
-| `src/lib/components/auth/SignInModal.svelte` | Auth UI component |
+| File                                         | Purpose                                 |
+| -------------------------------------------- | --------------------------------------- |
+| `src/lib/stores/auth.svelte.ts`              | Client-side auth state (Svelte 5 runes) |
+| `src/hooks.server.ts`                        | Server-side session verification        |
+| `src/routes/auth/callback/+server.ts`        | OAuth callback handler                  |
+| `src/routes/api/auth/register/+server.ts`    | User registration endpoint              |
+| `src/lib/server/wallet/server-wallet.ts`     | Server wallet management                |
+| `src/lib/components/auth/SignInModal.svelte` | Auth UI component                       |
 
 ### Security Considerations
 
@@ -326,16 +326,16 @@ POLYMARKET_CACHE_ENABLED="true"
 WALLET_ENCRYPTION_KEY="your-encryption-key"
 ```
 
-| Variable                   | Type    | Default                            | Description                    |
-| -------------------------- | ------- | ---------------------------------- | ------------------------------ |
-| `PUBLIC_SUPABASE_URL`      | string  | _required_                         | Supabase project URL           |
-| `PUBLIC_SUPABASE_ANON_KEY` | string  | _required_                         | Supabase anonymous key         |
-| `SUPABASE_SERVICE_ROLE_KEY`| string  | _required_                         | Supabase service role key      |
-| `WALLET_ENCRYPTION_KEY`    | string  | _required_                         | Key for encrypting private keys|
-| `POLYMARKET_API_URL`       | string  | `https://gamma-api.polymarket.com` | Polymarket API base URL        |
-| `POLYMARKET_API_TIMEOUT`   | number  | `10000`                            | Request timeout (milliseconds) |
-| `POLYMARKET_CACHE_TTL`     | number  | `60`                               | Cache TTL (seconds)            |
-| `POLYMARKET_CACHE_ENABLED` | boolean | `true`                             | Enable/disable caching         |
+| Variable                    | Type    | Default                            | Description                     |
+| --------------------------- | ------- | ---------------------------------- | ------------------------------- |
+| `PUBLIC_SUPABASE_URL`       | string  | _required_                         | Supabase project URL            |
+| `PUBLIC_SUPABASE_ANON_KEY`  | string  | _required_                         | Supabase anonymous key          |
+| `SUPABASE_SERVICE_ROLE_KEY` | string  | _required_                         | Supabase service role key       |
+| `WALLET_ENCRYPTION_KEY`     | string  | _required_                         | Key for encrypting private keys |
+| `POLYMARKET_API_URL`        | string  | `https://gamma-api.polymarket.com` | Polymarket API base URL         |
+| `POLYMARKET_API_TIMEOUT`    | number  | `10000`                            | Request timeout (milliseconds)  |
+| `POLYMARKET_CACHE_TTL`      | number  | `60`                               | Cache TTL (seconds)             |
+| `POLYMARKET_CACHE_ENABLED`  | boolean | `true`                             | Enable/disable caching          |
 
 ### Caching Strategy
 

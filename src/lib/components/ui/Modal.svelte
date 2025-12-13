@@ -217,6 +217,7 @@
 	}
 
 	.modal-title {
+		flex: 1;
 		font-size: var(--text-lg);
 		font-weight: 600;
 		color: var(--text-0);
@@ -224,6 +225,8 @@
 	}
 
 	.close-button {
+		flex-shrink: 0;
+		margin-left: auto;
 		background: none;
 		border: 1px solid transparent;
 		color: var(--text-2);

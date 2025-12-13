@@ -265,7 +265,7 @@
 	<header class="event-header">
 		<div class="header-row">
 			{#if event.image}
-				<img src={event.image} alt="" class="event-icon" />
+				<img src={event.image} alt={event.title || 'Event icon'} class="event-icon" />
 			{/if}
 			<div class="header-text">
 				<h1 class="event-title">{event.title || 'Untitled Event'}</h1>
@@ -467,7 +467,10 @@
 									<div class="comment">
 										<div class="comment-avatar">
 											{#if comment.profile?.profileImage}
-												<img src={comment.profile.profileImage} alt="" />
+												<img
+													src={comment.profile.profileImage}
+													alt={comment.profile?.name || comment.profile?.pseudonym || 'User avatar'}
+												/>
 											{/if}
 										</div>
 										<div class="comment-body">
@@ -551,7 +554,7 @@
 				{:else}
 					<div class="sidebar-header">
 						{#if event.image}
-							<img src={event.image} alt="" class="sidebar-icon" />
+							<img src={event.image} alt={event.title || 'Event icon'} class="sidebar-icon" />
 						{/if}
 						<span class="sidebar-title">
 							{isMultiMarket && selectedMarket
