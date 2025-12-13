@@ -18,6 +18,7 @@
 	let wrapperElement = $state<HTMLDivElement | undefined>();
 
 	function handleFocus() {
+		// Always show dropdown on focus (will show browse state if empty)
 		showDropdown = true;
 	}
 
@@ -67,11 +68,11 @@
 		const query = target.value.trim();
 
 		searchQuery = query;
-		showDropdown = true;
 
 		if (query.length < 2) {
 			searchResults = null;
 			isLoading = false;
+			// Keep dropdown open to show browse state
 			return;
 		}
 
@@ -105,19 +106,7 @@
 		showDropdown = false;
 	}
 
-	const shouldClearResults = $derived(searchQuery.length === 0);
-
-	$effect(() => {
-		if (shouldClearResults && searchResults !== null) {
-			searchResults = null;
-		}
-	});
-
-	$effect(() => {
-		if (shouldClearResults && showDropdown) {
-			showDropdown = false;
-		}
-	});
+	// No need for effects - we handle clearing in handleSearchInput
 </script>
 
 <svelte:window onkeydown={handleEscape} onclick={handleClickOutside} />

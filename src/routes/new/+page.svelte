@@ -5,6 +5,7 @@
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import { browser } from '$app/environment';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import { untrack } from 'svelte';
 
 	const PAGE_SIZE = 20;
 	const MAX_EVENTS = 200; // Cap at 200 events to prevent unbounded memory growth
@@ -38,22 +39,33 @@
 		}
 	}));
 
+	// Track last processed offset to prevent reprocessing same data
+	let lastProcessedOffset = -1;
+
 	$effect(() => {
-		if (browser && query.data) {
-			if (offset === 0) {
-				allEvents = query.data;
-			} else {
-				allEvents = [...allEvents, ...query.data];
-			}
+		const currentOffset = offset;
+		const data = query.data;
 
-			// Stop loading more if we've hit the maximum
-			if (allEvents.length >= MAX_EVENTS) {
-				hasMore = false;
-			} else {
-				hasMore = query.data.length === PAGE_SIZE;
-			}
+		// Only process new data
+		if (browser && data && currentOffset !== lastProcessedOffset) {
+			untrack(() => {
+				lastProcessedOffset = currentOffset;
 
-			isInitialLoad = false;
+				if (currentOffset === 0) {
+					allEvents = data;
+				} else {
+					allEvents = [...allEvents, ...data];
+				}
+
+				// Stop loading more if we've hit the maximum
+				if (allEvents.length >= MAX_EVENTS) {
+					hasMore = false;
+				} else {
+					hasMore = data.length === PAGE_SIZE;
+				}
+
+				isInitialLoad = false;
+			});
 		}
 	});
 
@@ -68,6 +80,7 @@
 			offset = 0;
 			allEvents = [];
 			hasMore = true;
+			lastProcessedOffset = -1;
 			query.refetch();
 		}
 	}
