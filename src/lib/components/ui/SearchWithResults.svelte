@@ -2,6 +2,7 @@
 	import Search from './Search.svelte';
 	import SearchResultsDropdown from './SearchResultsDropdown.svelte';
 	import type { SearchResults } from '$lib/server/api/polymarket-client';
+	import { debounceCancellable } from '$lib/utils/debounce';
 
 	interface Props {
 		class?: string;
@@ -17,18 +18,14 @@
 	let wrapperElement = $state<HTMLDivElement | undefined>();
 
 	function handleFocus() {
+		// Always show dropdown on focus (will show browse state if empty)
 		showDropdown = true;
 	}
 
-	async function handleSearchInput(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const query = target.value.trim();
-
-		searchQuery = query;
-		showDropdown = true;
-
+	async function performSearch(query: string) {
 		if (query.length < 2) {
 			searchResults = null;
+			isLoading = false;
 			return;
 		}
 
@@ -61,6 +58,36 @@
 		}
 	}
 
+	const { debounced: debouncedSearch, cancel: cancelSearch } = debounceCancellable(
+		performSearch,
+		300
+	);
+
+	async function handleSearchInput(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const query = target.value.trim();
+
+		searchQuery = query;
+
+		if (query.length < 2) {
+			searchResults = null;
+			isLoading = false;
+			// Keep dropdown open to show browse state
+			return;
+		}
+
+		isLoading = true;
+		debouncedSearch(query);
+	}
+
+	// Cleanup on unmount
+	$effect(() => {
+		return () => {
+			cancelSearch();
+			abortController?.abort();
+		};
+	});
+
 	function handleClickOutside(event: MouseEvent) {
 		const target = event.target as HTMLElement;
 		if (wrapperElement && !wrapperElement.contains(target)) {
@@ -79,19 +106,7 @@
 		showDropdown = false;
 	}
 
-	const shouldClearResults = $derived(searchQuery.length === 0);
-
-	$effect(() => {
-		if (shouldClearResults && searchResults !== null) {
-			searchResults = null;
-		}
-	});
-
-	$effect(() => {
-		if (shouldClearResults && showDropdown) {
-			showDropdown = false;
-		}
-	});
+	// No need for effects - we handle clearing in handleSearchInput
 </script>
 
 <svelte:window onkeydown={handleEscape} onclick={handleClickOutside} />

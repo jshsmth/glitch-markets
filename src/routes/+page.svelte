@@ -4,8 +4,10 @@
 	import EventList from '$lib/components/events/EventList.svelte';
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import { browser } from '$app/environment';
+	import { untrack } from 'svelte';
 
 	const PAGE_SIZE = 20;
+	const MAX_EVENTS = 200; // Cap at 200 events to prevent unbounded memory growth
 	let offset = $state(0);
 	let allEvents = $state<Event[]>([]);
 	let hasMore = $state(true);
@@ -33,15 +35,35 @@
 		}
 	}));
 
+	// Track last processed offset to prevent reprocessing same data
+	let lastProcessedOffset = -1;
+
 	$effect(() => {
-		if (browser && query.data) {
-			if (offset === 0) {
-				allEvents = query.data;
-			} else {
-				allEvents = [...allEvents, ...query.data];
-			}
-			hasMore = query.data.length === PAGE_SIZE;
-			isInitialLoad = false;
+		// Read offset to track it
+		const currentOffset = offset;
+		const data = query.data;
+
+		// Only process new data
+		if (browser && data && currentOffset !== lastProcessedOffset) {
+			// Use untrack to prevent writes from retriggering the effect
+			untrack(() => {
+				lastProcessedOffset = currentOffset;
+
+				if (currentOffset === 0) {
+					allEvents = data;
+				} else {
+					allEvents = [...allEvents, ...data];
+				}
+
+				// Stop loading more if we've hit the maximum
+				if (allEvents.length >= MAX_EVENTS) {
+					hasMore = false;
+				} else {
+					hasMore = data.length === PAGE_SIZE;
+				}
+
+				isInitialLoad = false;
+			});
 		}
 	});
 
@@ -56,6 +78,7 @@
 			offset = 0;
 			allEvents = [];
 			hasMore = true;
+			lastProcessedOffset = -1;
 			query.refetch();
 		}
 	}

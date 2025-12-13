@@ -5,8 +5,10 @@
 	import FilterBar from '$lib/components/filters/FilterBar.svelte';
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import { browser } from '$app/environment';
+	import { untrack } from 'svelte';
 
 	const PAGE_SIZE = 20;
+	const MAX_EVENTS = 200; // Cap at 200 events to prevent unbounded memory growth
 	let offset = $state(0);
 	let allEvents = $state<Event[]>([]);
 	let hasMore = $state(true);
@@ -34,14 +36,38 @@
 		}
 	}));
 
+	// Track last processed offset and sort to prevent reprocessing same data
+	let lastProcessedOffset = -1;
+	let lastProcessedSort = '';
+
 	$effect(() => {
-		if (browser && query.data) {
-			if (offset === 0) {
-				allEvents = query.data;
-			} else {
-				allEvents = [...allEvents, ...query.data];
-			}
-			hasMore = query.data.length === PAGE_SIZE;
+		const currentOffset = offset;
+		const currentSortValue = currentSort;
+		const data = query.data;
+
+		// Only process new data (either new offset or sort changed)
+		if (
+			browser &&
+			data &&
+			(currentOffset !== lastProcessedOffset || currentSortValue !== lastProcessedSort)
+		) {
+			untrack(() => {
+				lastProcessedOffset = currentOffset;
+				lastProcessedSort = currentSortValue;
+
+				if (currentOffset === 0) {
+					allEvents = data;
+				} else {
+					allEvents = [...allEvents, ...data];
+				}
+
+				// Stop loading more if we've hit the maximum
+				if (allEvents.length >= MAX_EVENTS) {
+					hasMore = false;
+				} else {
+					hasMore = data.length === PAGE_SIZE;
+				}
+			});
 		}
 	});
 
@@ -56,6 +82,8 @@
 			offset = 0;
 			allEvents = [];
 			hasMore = true;
+			lastProcessedOffset = -1;
+			lastProcessedSort = '';
 			query.refetch();
 		}
 	}
@@ -65,6 +93,8 @@
 		offset = 0;
 		allEvents = [];
 		hasMore = true;
+		lastProcessedOffset = -1;
+		lastProcessedSort = '';
 	}
 
 	const isPending = $derived(browser ? query.isPending : false);

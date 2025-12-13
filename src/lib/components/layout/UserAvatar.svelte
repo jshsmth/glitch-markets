@@ -58,6 +58,7 @@
 	let windowWidth = $state(1024);
 	let serverWalletAddress = $state<string | null>(null);
 	let proxyWalletAddress = $state<string | null>(null);
+	let profileAbortController: AbortController | null = null;
 
 	let isMobile = $derived(windowWidth <= 767);
 
@@ -69,15 +70,31 @@
 				windowWidth = window.innerWidth;
 			};
 			window.addEventListener('resize', handleResize);
-			return () => window.removeEventListener('resize', handleResize);
+			return () => {
+				window.removeEventListener('resize', handleResize);
+				// Clean up any pending timeouts on unmount
+				if (closeTimeout) {
+					clearTimeout(closeTimeout);
+					closeTimeout = null;
+				}
+			};
 		}
 	});
 
 	$effect(() => {
 		void authState.profileVersion;
 
+		// Cancel any pending profile fetch
+		if (profileAbortController) {
+			profileAbortController.abort();
+		}
+
 		if (authState.session) {
-			fetch('/api/user/profile')
+			profileAbortController = new AbortController();
+
+			fetch('/api/user/profile', {
+				signal: profileAbortController.signal
+			})
 				.then((res) => {
 					if (!res.ok) {
 						throw new Error(`HTTP ${res.status}`);
@@ -92,6 +109,9 @@
 					proxyWalletAddress = data.proxyWalletAddress || null;
 				})
 				.catch((err) => {
+					if (err.name === 'AbortError') {
+						return; // Ignore abort errors
+					}
 					console.error('Failed to fetch user profile:', err);
 					serverWalletAddress = null;
 					proxyWalletAddress = null;
@@ -100,6 +120,14 @@
 			serverWalletAddress = null;
 			proxyWalletAddress = null;
 		}
+
+		return () => {
+			// Cleanup: abort fetch on effect cleanup
+			if (profileAbortController) {
+				profileAbortController.abort();
+				profileAbortController = null;
+			}
+		};
 	});
 
 	function handleAvatarClick() {
