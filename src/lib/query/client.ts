@@ -6,6 +6,44 @@ import { QUERY_CACHE } from '$lib/config/constants';
 let browserQueryClient: QueryClient | undefined;
 
 /**
+ * Smart retry logic for queries
+ * Don't retry on client errors (4xx) or specific server errors
+ */
+function shouldRetry(failureCount: number, error: unknown): boolean {
+	// Don't retry if we've already tried the max times
+	if (failureCount >= QUERY_CACHE.RETRY_COUNT) {
+		return false;
+	}
+
+	// Check if error has a status code
+	if (error && typeof error === 'object') {
+		// Handle Response objects
+		if ('status' in error && typeof error.status === 'number') {
+			const status = error.status;
+			// Don't retry on client errors (400-499) except for 429 (rate limit)
+			if (status >= 400 && status < 500 && status !== 429) {
+				return false;
+			}
+		}
+
+		// Handle Error objects with status in message
+		if (error instanceof Error) {
+			// Don't retry on 404 Not Found
+			if (error.message.includes('404') || error.message.includes('Not Found')) {
+				return false;
+			}
+			// Don't retry on 400 Bad Request
+			if (error.message.includes('400') || error.message.includes('Bad Request')) {
+				return false;
+			}
+		}
+	}
+
+	// Retry on network errors and 5xx server errors
+	return true;
+}
+
+/**
  * Gets or creates a QueryClient instance with SSR-safe defaults for SvelteKit.
  * Uses a singleton pattern on the client to persist cache across navigations.
  * Queries are disabled on the server to prevent async execution after HTML is sent.
@@ -34,7 +72,7 @@ export function createQueryClient(): QueryClient {
 					enabled: true,
 					staleTime: QUERY_CACHE.STALE_TIME,
 					gcTime: QUERY_CACHE.GC_TIME,
-					retry: QUERY_CACHE.RETRY_COUNT,
+					retry: shouldRetry,
 					refetchOnWindowFocus: false
 				}
 			}

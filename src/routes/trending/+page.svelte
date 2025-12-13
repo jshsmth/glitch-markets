@@ -67,7 +67,6 @@
 		hasMore = true;
 	}
 
-	// Get isPending and error safely
 	const isPending = $derived(browser ? query.isPending : false);
 	const error = $derived(browser ? (query.error as Error | null) : null);
 </script>

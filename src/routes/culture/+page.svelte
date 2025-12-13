@@ -1,5 +1,4 @@
 <script lang="ts">
-	// Culture markets page - entertainment and cultural prediction markets
 </script>
 
 <div class="page-container">
