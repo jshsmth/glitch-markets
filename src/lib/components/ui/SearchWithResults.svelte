@@ -25,17 +25,13 @@
 		const query = target.value.trim();
 
 		searchQuery = query;
-
-		// Show dropdown even for empty queries (browse state)
 		showDropdown = true;
 
-		// Don't search for queries less than 2 characters
 		if (query.length < 2) {
 			searchResults = null;
 			return;
 		}
 
-		// Cancel previous request
 		abortController?.abort();
 		abortController = new AbortController();
 
@@ -54,12 +50,10 @@
 			searchResults = data;
 			showDropdown = true;
 		} catch (error) {
-			// Ignore abort errors (expected when canceling requests)
 			if (error instanceof Error && error.name === 'AbortError') {
 				return;
 			}
 
-			console.error('Search failed:', error);
 			searchResults = null;
 			showDropdown = false;
 		} finally {
@@ -85,16 +79,17 @@
 		showDropdown = false;
 	}
 
-	function handleClear() {
-		searchQuery = '';
-		searchResults = null;
-		showDropdown = false;
-	}
+	const shouldClearResults = $derived(searchQuery.length === 0);
 
-	// Watch for value changes to handle clear button
 	$effect(() => {
-		if (searchQuery.length === 0) {
-			handleClear();
+		if (shouldClearResults && searchResults !== null) {
+			searchResults = null;
+		}
+	});
+
+	$effect(() => {
+		if (shouldClearResults && showDropdown) {
+			showDropdown = false;
 		}
 	});
 </script>

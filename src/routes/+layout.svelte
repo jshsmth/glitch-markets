@@ -4,6 +4,7 @@
 	import { QueryClientProvider } from '@tanstack/svelte-query';
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { dev } from '$app/environment';
+	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import { createQueryClient } from '$lib/query/client';
 	import { initializeAuth, updateAuthState, refreshProfile } from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
@@ -15,6 +16,8 @@
 	import SignInModal from '$lib/components/auth/SignInModal.svelte';
 	// @ts-expect-error - virtual module from vite-plugin-pwa
 	import { pwaInfo } from 'virtual:pwa-info';
+
+	injectAnalytics({ mode: dev ? 'development' : 'production' });
 
 	let { children, data } = $props();
 
@@ -48,12 +51,12 @@
 			const response = await fetch('/api/auth/register', { method: 'POST' });
 
 			if (!response.ok) {
-				console.error('Failed to register user in database:', await response.text());
-			} else {
-				refreshProfile();
+				return;
 			}
-		} catch (error) {
-			console.error('Error registering user:', error);
+
+			refreshProfile();
+		} catch {
+			// Silent fail - user can still use the app
 		}
 	}
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-	// Elections markets page - election and voting prediction markets
 </script>
 
 <div class="page-container">

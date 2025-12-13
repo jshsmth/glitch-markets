@@ -64,7 +64,6 @@
 		}
 	}
 
-	// Get error safely
 	const error = $derived(browser ? (query.error as Error | null) : null);
 </script>
 

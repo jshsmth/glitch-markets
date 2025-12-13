@@ -347,16 +347,16 @@
 		z-index: 0;
 	}
 
-	/* Yes row: Green-to-cyan gradient */
+	/* Yes row: Uses shared gradient variables */
 	.odds-row.is-yes {
-		--row-gradient-start: rgba(0, 196, 71, 0.12);
-		--row-gradient-end: rgba(0, 217, 255, 0.08);
+		--row-gradient-start: var(--gradient-yes-start);
+		--row-gradient-end: var(--gradient-yes-end);
 	}
 
-	/* No row: Red-to-cyan gradient */
+	/* No row: Uses shared gradient variables (red-to-cyan for binary) */
 	.odds-row.is-no {
-		--row-gradient-start: rgba(255, 51, 102, 0.12);
-		--row-gradient-end: rgba(0, 217, 255, 0.08);
+		--row-gradient-start: var(--gradient-no-alt-start);
+		--row-gradient-end: var(--gradient-no-alt-end);
 	}
 
 	.odds-row:hover {
@@ -473,16 +473,16 @@
 		z-index: 0;
 	}
 
-	/* First chip: Green-to-cyan gradient */
+	/* First chip: Uses shared gradient variables */
 	.odds-chip.chip-first {
-		--chip-gradient-start: rgba(0, 196, 71, 0.1);
-		--chip-gradient-end: rgba(0, 217, 255, 0.06);
+		--chip-gradient-start: var(--gradient-yes-start);
+		--chip-gradient-end: var(--gradient-yes-end);
 	}
 
-	/* Second chip: Cyan-to-purple gradient */
+	/* Second chip: Uses shared gradient variables */
 	.odds-chip.chip-second {
-		--chip-gradient-start: rgba(0, 217, 255, 0.1);
-		--chip-gradient-end: rgba(139, 92, 246, 0.08);
+		--chip-gradient-start: var(--gradient-no-start);
+		--chip-gradient-end: var(--gradient-no-end);
 	}
 
 	.odds-chip:hover {

@@ -30,20 +30,25 @@
 		return (event.markets?.length || 0) > 1;
 	}
 
-	let sentinel: HTMLDivElement | undefined = $state();
 	let loadingMore = $state(false);
 
-	$effect(() => {
-		if (!sentinel || !onLoadMore || !hasMore) return;
+	/**
+	 * Infinite scroll action using IntersectionObserver
+	 * Triggers onLoadMore when the sentinel element becomes visible
+	 */
+	function infiniteScroll(node: HTMLElement) {
+		let isLoading = false;
 
 		const observer = new IntersectionObserver(
 			async (entries) => {
 				const entry = entries[0];
-				if (entry.isIntersecting && !loadingMore && !loading && hasMore && onLoadMore) {
+				if (entry.isIntersecting && !isLoading && !loading && hasMore && onLoadMore) {
+					isLoading = true;
 					loadingMore = true;
 					try {
 						await onLoadMore();
 					} finally {
+						isLoading = false;
 						loadingMore = false;
 					}
 				}
@@ -53,12 +58,14 @@
 			}
 		);
 
-		observer.observe(sentinel);
+		observer.observe(node);
 
-		return () => {
-			observer.disconnect();
+		return {
+			destroy() {
+				observer.disconnect();
+			}
 		};
-	});
+	}
 </script>
 
 <div class="event-list-container">
@@ -111,7 +118,7 @@
 		</div>
 
 		{#if hasMore}
-			<div bind:this={sentinel} class="sentinel">
+			<div use:infiniteScroll class="sentinel">
 				{#if loadingMore}
 					<div class="loading-more">
 						<div class="spinner"></div>

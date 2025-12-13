@@ -52,6 +52,7 @@
 		"@supabase/ssr": "^0.8.0",
 		"@supabase/supabase-js": "^2.87.1",
 		"@tanstack/svelte-query": "^6.0.8",
+		"@vercel/analytics": "^1.6.1",
 		"ethers": "^6.16.0",
 		"jose": "^6.1.2",
 		"lottie-web": "^5.13.0",

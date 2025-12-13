@@ -8,13 +8,13 @@
 	import SearchWithResults from '$lib/components/ui/SearchWithResults.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
 
+	// TODO: Implement deposit modal
 	function handleDepositClick() {
-		// Future: open deposit modal
+		// Will open a modal for depositing funds via the bridge
 	}
 
-	function handleNotificationsClick() {
-		// Future: navigate to /notifications or open dropdown
-	}
+	// TODO: Implement notifications dropdown or page navigation
+	function handleNotificationsClick() {}
 </script>
 
 <header class="site-header">

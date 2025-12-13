@@ -120,6 +120,23 @@
 	--gradient-fade-left: linear-gradient(to right, var(--bg-0) 60%, transparent);
 
 	/* ============================================
+	   ODDS/MARKET GRADIENT VARIABLES
+	   Shared gradients for EventCard odds rows and chips
+	   ============================================ */
+
+	/* Yes/First outcome: Green-to-cyan gradient */
+	--gradient-yes-start: rgba(0, 196, 71, 0.12);
+	--gradient-yes-end: rgba(0, 217, 255, 0.08);
+
+	/* No/Second outcome: Cyan-to-purple gradient */
+	--gradient-no-start: rgba(0, 217, 255, 0.1);
+	--gradient-no-end: rgba(139, 92, 246, 0.08);
+
+	/* Alternative second outcome (red-to-cyan) for binary markets */
+	--gradient-no-alt-start: rgba(255, 51, 102, 0.12);
+	--gradient-no-alt-end: rgba(0, 217, 255, 0.08);
+
+	/* ============================================
      TARGET SIZES (WCAG 2.2 AA Compliance)
      ============================================ */
 
