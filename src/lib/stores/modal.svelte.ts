@@ -14,3 +14,16 @@ export function openSignInModal() {
 export function closeSignInModal() {
 	signInModalState.isOpen = false;
 }
+
+// Deposit Modal State
+export const depositModalState = $state({
+	isOpen: false
+});
+
+export function openDepositModal() {
+	depositModalState.isOpen = true;
+}
+
+export function closeDepositModal() {
+	depositModalState.isOpen = false;
+}

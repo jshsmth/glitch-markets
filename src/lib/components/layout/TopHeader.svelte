@@ -7,10 +7,10 @@
 	import PortfolioStat from '$lib/components/ui/PortfolioStat.svelte';
 	import SearchWithResults from '$lib/components/ui/SearchWithResults.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
+	import { openDepositModal } from '$lib/stores/modal.svelte';
 
-	// TODO: Implement deposit modal
 	function handleDepositClick() {
-		// Will open a modal for depositing funds via the bridge
+		openDepositModal();
 	}
 
 	// TODO: Implement notifications dropdown or page navigation

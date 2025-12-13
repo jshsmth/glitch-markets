@@ -8,12 +8,18 @@
 	import { createQueryClient } from '$lib/query/client';
 	import { initializeAuth, updateAuthState, refreshProfile } from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
-	import { signInModalState, closeSignInModal } from '$lib/stores/modal.svelte';
+	import {
+		signInModalState,
+		closeSignInModal,
+		depositModalState,
+		closeDepositModal
+	} from '$lib/stores/modal.svelte';
 	import { onMount } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import TopHeader from '$lib/components/layout/TopHeader.svelte';
 	import BottomNav from '$lib/components/layout/BottomNav.svelte';
 	import SignInModal from '$lib/components/auth/SignInModal.svelte';
+	import DepositModal from '$lib/components/wallet/DepositModal.svelte';
 	// @ts-expect-error - virtual module from vite-plugin-pwa
 	import { pwaInfo } from 'virtual:pwa-info';
 
@@ -102,6 +108,7 @@
 
 	<!-- Global modals rendered at root level -->
 	<SignInModal isOpen={signInModalState.isOpen} onClose={closeSignInModal} />
+	<DepositModal isOpen={depositModalState.isOpen} onClose={closeDepositModal} />
 
 	{#if dev}
 		<SvelteQueryDevtools buttonPosition="bottom-right" />
