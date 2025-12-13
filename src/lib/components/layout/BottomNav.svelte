@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { preloadData } from '$app/navigation';
+	import { untrack } from 'svelte';
 	import HomeIcon from '$lib/components/icons/HomeIcon.svelte';
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
 	import PokerChipIcon from '$lib/components/icons/PokerChipIcon.svelte';
@@ -76,15 +77,15 @@
 		moreMenuOpen = false;
 	}
 
-	// Eagerly preload all navigation routes once on mount
-	let hasPreloaded = false;
+	let hasPreloaded = $state(false);
 	$effect(() => {
-		if (hasPreloaded) return;
+		if (untrack(() => hasPreloaded)) return;
 		hasPreloaded = true;
 
+		const currentPath = $page.url.pathname;
 		const preloadRoutes = () => {
 			navItems.forEach((item) => {
-				if (!item.isMore && item.href !== $page.url.pathname) {
+				if (!item.isMore && item.href !== currentPath) {
 					preloadData(item.href).catch(() => {});
 				}
 			});

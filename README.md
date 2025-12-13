@@ -38,28 +38,6 @@ Glitch Markets aims to democratize access to prediction markets by:
 - **Stay Secure** - Modern authentication without compromising on security
 - **Move Fast** - Real-time updates and optimized performance for when milliseconds matter
 
-## Features
-
-### Available Now ✅
-
-- 🔍 **Market Discovery** - Search and filter across thousands of markets
-- 📊 **Real-time Data** - Live pricing, volume, and liquidity updates
-- 🏷️ **Category Browsing** - Explore by crypto, politics, sports, and more
-- 📈 **Event Tracking** - Follow recurring markets and event series
-- 💬 **Community Insights** - See what traders are saying
-- 👥 **User Analytics** - Track positions, trades, and portfolio performance
-- ⚡ **Lightning Fast** - Sub-second response times with smart caching
-- 🛡️ **Battle Tested** - Rate limiting and security hardening
-
-### Coming Soon 🚧
-
-- 🔐 **Passkey Auth** - Passwordless login with biometrics
-- 👤 **Smart Portfolios** - AI-powered insights on your positions
-- 📱 **Mobile Apps** - Trade on the go (iOS/Android)
-- 🔔 **Price Alerts** - Never miss a move
-- 📊 **Advanced Charts** - Technical analysis tools
-- 🌐 **Go Global** - Multi-language support
-
 ## Why Glitch Markets?
 
 **Actually Simple**

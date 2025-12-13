@@ -147,31 +147,30 @@
 	}
 
 	$effect(() => {
-		if (scrollContainer) {
+		if (!scrollContainer) return;
+
+		handleScroll();
+
+		const resizeObserver = new ResizeObserver(() => {
 			handleScroll();
+		});
 
-			// Create ResizeObserver to update overflow state on window resize
-			const resizeObserver = new ResizeObserver(() => {
-				handleScroll();
-			});
+		resizeObserver.observe(scrollContainer);
 
-			resizeObserver.observe(scrollContainer);
+		return () => {
+			resizeObserver.disconnect();
+		};
+	});
 
-			// Show swipe hint only if there's overflow
-			let timeout: ReturnType<typeof setTimeout> | undefined;
-			if (hasOverflow) {
-				showSwipeHint = true;
-				// Auto-hide swipe hint after 3 seconds
-				timeout = setTimeout(() => {
-					showSwipeHint = false;
-				}, 3000);
-			}
+	$effect(() => {
+		if (!hasOverflow) return;
 
-			return () => {
-				resizeObserver.disconnect();
-				if (timeout) clearTimeout(timeout);
-			};
-		}
+		showSwipeHint = true;
+		const timeout = setTimeout(() => {
+			showSwipeHint = false;
+		}, 3000);
+
+		return () => clearTimeout(timeout);
 	});
 </script>
 
@@ -295,7 +294,8 @@
 		-ms-overflow-style: none; /* IE/Edge */
 		-webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 		flex: 1;
-		padding: 0 12px;
+		padding: 0 max(12px, env(safe-area-inset-right, 12px)) 0
+			max(12px, env(safe-area-inset-left, 12px));
 	}
 
 	@media (min-width: 768px) {
@@ -315,6 +315,7 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
+		padding-right: max(12px, env(safe-area-inset-right, 12px));
 		min-height: 40px;
 	}
 

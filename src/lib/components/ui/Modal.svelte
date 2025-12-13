@@ -210,6 +210,7 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 20px 24px;
+		padding-top: max(20px, env(safe-area-inset-top, 20px));
 		background: linear-gradient(
 			180deg,
 			var(--bg-1) 0%,
@@ -255,11 +256,13 @@
 
 	.modal-content {
 		padding: 0 24px 24px;
+		padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
 	}
 
 	@media (min-width: 768px) {
 		.modal-header {
 			padding: 20px 28px;
+			padding-top: 20px;
 		}
 
 		.modal-content {

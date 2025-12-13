@@ -59,6 +59,7 @@
 	let copySuccess = $state(false);
 	let copyTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
 	let chainDropdownOpen = $state(false);
+	let addressTextRef = $state<HTMLParagraphElement | null>(null);
 
 	let modalTitle = $derived(selectedAsset ? `Deposit USDC` : 'Deposit Funds');
 
@@ -279,11 +280,10 @@
 			}, 2000);
 		} catch (err) {
 			console.error('Failed to copy address:', err);
-			const textElement = document.querySelector('.address-full');
-			if (textElement) {
+			if (addressTextRef) {
 				const selection = window.getSelection();
 				const range = document.createRange();
-				range.selectNodeContents(textElement);
+				range.selectNodeContents(addressTextRef);
 				selection?.removeAllRanges();
 				selection?.addRange(range);
 			}
@@ -446,7 +446,7 @@
 							class="terms-link">Terms apply</a
 						>
 					</div>
-					<p class="address-text">{depositAddress}</p>
+					<p class="address-text" bind:this={addressTextRef}>{depositAddress}</p>
 					<button
 						class="copy-button"
 						class:success={copySuccess}

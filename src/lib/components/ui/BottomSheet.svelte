@@ -34,9 +34,8 @@
 	}
 
 	$effect(() => {
-		if (open) {
-			document.addEventListener('keydown', handleKeydown);
-		}
+		if (!open) return;
+		document.addEventListener('keydown', handleKeydown);
 		return () => document.removeEventListener('keydown', handleKeydown);
 	});
 </script>
@@ -91,7 +90,7 @@
 		right: 0;
 		bottom: 0;
 		background: rgba(0, 0, 0, 0.5);
-		z-index: var(--z-overlay);
+		z-index: 10000;
 		animation: fadeIn 0.2s ease-out;
 	}
 
@@ -105,7 +104,7 @@
 		box-shadow:
 			0 -4px 20px rgba(0, 0, 0, 0.15),
 			0 -1px 3px rgba(0, 0, 0, 0.1);
-		z-index: var(--z-modal);
+		z-index: 10001;
 		display: flex;
 		flex-direction: column;
 		animation: slideUp 0.25s ease-out;

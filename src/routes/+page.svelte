@@ -35,27 +35,22 @@
 		}
 	}));
 
-	// Track last processed offset to prevent reprocessing same data
 	let lastProcessedOffset = -1;
 
 	$effect(() => {
-		// Read offset to track it
 		const currentOffset = offset;
 		const data = query.data;
 
-		// Only process new data
 		if (browser && data && currentOffset !== lastProcessedOffset) {
-			// Use untrack to prevent writes from retriggering the effect
 			untrack(() => {
 				lastProcessedOffset = currentOffset;
 
 				if (currentOffset === 0) {
 					allEvents = data;
 				} else {
-					allEvents = [...allEvents, ...data];
+					allEvents = allEvents.concat(data);
 				}
 
-				// Stop loading more if we've hit the maximum
 				if (allEvents.length >= MAX_EVENTS) {
 					hasMore = false;
 				} else {
