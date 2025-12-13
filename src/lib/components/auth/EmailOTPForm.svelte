@@ -269,7 +269,7 @@
 	.email-input:focus {
 		outline: none;
 		border-color: var(--primary);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 10%, transparent);
+		box-shadow: var(--shadow-input-focus);
 	}
 
 	.email-input:disabled {
@@ -304,7 +304,7 @@
 
 	.auth-button:not(:disabled):hover {
 		transform: translateY(-1px);
-		box-shadow: 0 4px 12px color-mix(in srgb, var(--text-0) 10%, transparent);
+		box-shadow: var(--shadow-button-lift);
 	}
 
 	.auth-button:not(:disabled):active {

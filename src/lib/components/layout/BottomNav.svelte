@@ -150,7 +150,7 @@
 		padding: 0 var(--spacing-2); /* 8px */
 		padding-top: 6px;
 		padding-bottom: env(safe-area-inset-bottom, 8px);
-		z-index: 9999;
+		z-index: var(--z-bottom-nav);
 	}
 
 	.nav-item {
@@ -192,11 +192,11 @@
 	}
 
 	.nav-label {
-		font-size: 11px;
-		font-weight: var(--font-semibold); /* Use design token instead of 500 */
+		font-size: var(--text-xs);
+		font-weight: var(--font-semibold);
 		white-space: nowrap;
 		line-height: 1;
-		letter-spacing: 0.01em; /* Slight spacing for small text readability */
+		letter-spacing: var(--tracking-wide);
 	}
 
 	/* Hide bottom nav on desktop */

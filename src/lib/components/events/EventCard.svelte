@@ -211,7 +211,7 @@
 		border: 1px solid var(--bg-4);
 		border-radius: var(--radius-card);
 		padding: 18px;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		box-shadow: var(--shadow-sm);
 		transition:
 			all var(--transition-fast),
 			box-shadow var(--transition-fast);
@@ -221,11 +221,11 @@
 
 	/* Compact variant for search dropdown */
 	.event-card.compact {
-		padding: 12px;
+		padding: var(--spacing-3);
 	}
 
 	.event-card.compact .card-content {
-		gap: 12px;
+		gap: var(--spacing-3);
 	}
 
 	.event-card.compact .event-icon {
@@ -252,14 +252,11 @@
 		box-shadow: var(--shadow-primary-md);
 	}
 
-	:global([data-theme='dark']) .event-card {
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-	}
 
 	.card-content {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: var(--spacing-4);
 		width: 100%;
 	}
 
@@ -270,7 +267,7 @@
 	.title-row {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: var(--spacing-3);
 	}
 
 	.event-icon {
@@ -323,15 +320,15 @@
 	.odds-board {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--spacing-2);
 	}
 
 	.odds-row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 12px;
-		padding: 10px 12px;
+		gap: var(--spacing-3);
+		padding: 10px var(--spacing-3);
 		background: var(--bg-2);
 		border: 1px solid var(--bg-4);
 		border-radius: var(--radius-sm);

@@ -350,7 +350,7 @@
 		background: var(--bg-3);
 		border-color: var(--text-3);
 		transform: translateY(-1px);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+		box-shadow: var(--shadow-button-hover);
 	}
 
 	.option-button:active {
@@ -362,7 +362,7 @@
 		color: var(--bg-0);
 		border-color: var(--primary);
 		font-weight: 700;
-		box-shadow: 0 2px 12px rgba(var(--primary-rgb), 0.3);
+		box-shadow: var(--shadow-button-primary-glow);
 	}
 
 	.option-button.active::before {
@@ -376,16 +376,16 @@
 
 	.apply-button {
 		width: 100%;
-		padding: 12px;
+		padding: var(--spacing-3);
 		background: var(--primary);
 		color: var(--bg-0);
 		border: none;
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		font-size: 15px;
 		font-weight: 700;
 		cursor: pointer;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		box-shadow: 0 2px 12px rgba(var(--primary-rgb), 0.3);
+		box-shadow: var(--shadow-button-primary-glow);
 		position: relative;
 		overflow: hidden;
 	}
@@ -400,12 +400,12 @@
 
 	.apply-button:hover {
 		transform: translateY(-1px);
-		box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.4);
+		box-shadow: var(--shadow-button-primary-glow-hover);
 	}
 
 	.apply-button:active {
 		transform: translateY(0);
-		box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+		box-shadow: var(--shadow-button-primary-hover);
 	}
 
 	/* Desktop Styles */
@@ -511,7 +511,7 @@
 			color: var(--bg-0);
 			border-color: var(--primary);
 			font-weight: 600;
-			box-shadow: 0 1px 3px rgba(var(--primary-rgb), 0.2);
+			box-shadow: var(--shadow-button-primary);
 		}
 	}
 </style>

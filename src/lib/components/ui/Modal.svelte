@@ -158,14 +158,12 @@
 	.modal-container {
 		background: var(--bg-1);
 		border: 1px solid var(--bg-4);
-		box-shadow:
-			0 20px 25px -5px rgba(0, 0, 0, 0.1),
-			0 10px 10px -5px rgba(0, 0, 0, 0.04);
+		box-shadow: var(--shadow-modal);
 		position: relative;
 		width: 100%;
 		max-height: 90vh;
 		overflow-y: auto;
-		animation: modalFadeIn 200ms cubic-bezier(0.4, 0, 0.2, 1);
+		animation: modalFadeIn var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
 	@keyframes modalFadeIn {
@@ -189,11 +187,11 @@
 	/* Tablet and Desktop: Centered with border radius */
 	@media (min-width: 768px) {
 		.modal-backdrop {
-			padding: 24px;
+			padding: var(--spacing-6);
 		}
 
 		.modal-container {
-			border-radius: 16px;
+			border-radius: var(--radius-xl);
 			height: auto;
 			max-height: 90vh;
 		}
@@ -201,7 +199,7 @@
 		.modal-container.full-screen-mobile {
 			height: auto;
 			max-height: 90vh;
-			border-radius: 16px;
+			border-radius: var(--radius-xl);
 		}
 	}
 
@@ -209,8 +207,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 20px 24px;
-		padding-top: max(20px, env(safe-area-inset-top, 20px));
+		padding: var(--spacing-5) var(--spacing-6);
+		padding-top: max(var(--spacing-5), env(safe-area-inset-top, var(--spacing-5)));
 		background: linear-gradient(
 			180deg,
 			var(--bg-1) 0%,
@@ -219,7 +217,7 @@
 	}
 
 	.modal-title {
-		font-size: 18px;
+		font-size: var(--text-lg);
 		font-weight: 600;
 		color: var(--text-0);
 		margin: 0;
@@ -230,9 +228,9 @@
 		border: 1px solid transparent;
 		color: var(--text-2);
 		cursor: pointer;
-		padding: 8px;
-		border-radius: 8px;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		padding: var(--spacing-2);
+		border-radius: var(--radius-md);
+		transition: var(--transition-all);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -241,7 +239,7 @@
 	.close-button:hover {
 		background: var(--primary-hover-bg);
 		color: var(--primary);
-		border-color: rgba(var(--primary-rgb), 0.2);
+		border-color: var(--primary-hover-border);
 	}
 
 	.close-button:focus-visible {
@@ -255,18 +253,18 @@
 	}
 
 	.modal-content {
-		padding: 0 24px 24px;
-		padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+		padding: 0 var(--spacing-6) var(--spacing-6);
+		padding-bottom: max(var(--spacing-6), env(safe-area-inset-bottom, var(--spacing-6)));
 	}
 
 	@media (min-width: 768px) {
 		.modal-header {
-			padding: 20px 28px;
-			padding-top: 20px;
+			padding: var(--spacing-5) var(--spacing-8);
+			padding-top: var(--spacing-5);
 		}
 
 		.modal-content {
-			padding: 0 28px 28px;
+			padding: 0 var(--spacing-8) var(--spacing-8);
 		}
 	}
 

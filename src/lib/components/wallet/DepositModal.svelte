@@ -650,9 +650,9 @@
 		width: max-content;
 		background: var(--bg-1);
 		border: 1px solid var(--bg-4);
-		border-radius: 12px;
-		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-		z-index: 100;
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-popover);
+		z-index: var(--z-dropdown);
 		max-height: 280px;
 		overflow-y: auto;
 		padding: 6px;
@@ -711,11 +711,11 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 16px;
+		padding: var(--spacing-4);
 		background: #ffffff;
 		border: 1px solid var(--bg-4);
-		border-radius: 16px;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+		border-radius: var(--radius-xl);
+		box-shadow: var(--shadow-qr);
 	}
 
 	.qr-canvas {
@@ -731,11 +731,11 @@
 		width: 44px;
 		height: 44px;
 		background: #ffffff;
-		border-radius: 12px;
+		border-radius: var(--radius-lg);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+		box-shadow: var(--shadow-qr-badge);
 	}
 
 	.qr-error {

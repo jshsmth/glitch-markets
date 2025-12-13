@@ -101,7 +101,7 @@
 
 	.auth-button:not(:disabled):hover {
 		transform: translateY(-1px);
-		box-shadow: 0 4px 12px color-mix(in srgb, var(--text-0) 10%, transparent);
+		box-shadow: var(--shadow-button-lift);
 	}
 
 	.auth-button:not(:disabled):active {

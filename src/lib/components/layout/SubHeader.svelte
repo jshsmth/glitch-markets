@@ -279,12 +279,12 @@
 
 	.nav-arrow:focus-visible {
 		outline: none;
-		box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
+		box-shadow: var(--focus-ring);
 	}
 
 	.nav-link:focus-visible {
 		outline: none;
-		box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
+		box-shadow: var(--focus-ring);
 	}
 
 	.nav-scroll {
@@ -322,15 +322,15 @@
 	.nav-link {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--spacing-2);
 		text-decoration: none;
 		color: var(--text-2);
-		font-size: 14px;
-		font-weight: 500;
+		font-size: var(--text-md);
+		font-weight: var(--font-semibold);
 		white-space: nowrap;
-		padding: 8px 14px;
+		padding: var(--spacing-2) var(--spacing-4);
 		border-radius: var(--radius-md);
-		transition: all 0.2s ease;
+		transition: all var(--transition-base);
 	}
 
 	.nav-link:hover {
