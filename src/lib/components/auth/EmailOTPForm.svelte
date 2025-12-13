@@ -161,8 +161,10 @@
 	</div>
 {:else}
 	<div class="email-form">
+		<label for="email-input" class="sr-only">Email address</label>
 		<!-- svelte-ignore a11y_autofocus -->
 		<input
+			id="email-input"
 			type="email"
 			placeholder="Enter your email"
 			bind:value={emailAddress}
@@ -170,19 +172,23 @@
 			class="email-input"
 			autofocus
 			autocomplete="email"
+			aria-label="Email address"
 			onkeydown={(e) => {
 				if (e.key === 'Enter' && password.trim()) {
 					handleSubmit();
 				}
 			}}
 		/>
+		<label for="password-input" class="sr-only">Password</label>
 		<input
+			id="password-input"
 			type="password"
 			placeholder="Enter your password"
 			bind:value={password}
 			disabled={isAuthenticating}
 			class="email-input"
 			autocomplete={isSignUp ? 'new-password' : 'current-password'}
+			aria-label="Password"
 			onkeydown={(e) => {
 				if (e.key === 'Enter') {
 					handleSubmit();

@@ -69,7 +69,7 @@
 			<div class="title-row">
 				{#if event.image}
 					<div class="event-icon">
-						<img src={event.image} alt="" />
+						<img src={event.image} alt={event.title || 'Event icon'} />
 					</div>
 				{/if}
 				<a

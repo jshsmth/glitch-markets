@@ -130,8 +130,8 @@
 			{/each}
 		</div>
 	{:else if error}
-		<div class="empty-state">
-			<div class="empty-icon">⚠️</div>
+		<div class="empty-state" role="alert" aria-live="polite">
+			<div class="empty-icon" aria-hidden="true">⚠️</div>
 			<h3>Failed to load events</h3>
 			<p>{error.message || 'An unexpected error occurred'}</p>
 			{#if onRetry}

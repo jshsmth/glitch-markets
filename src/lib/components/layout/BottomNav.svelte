@@ -121,16 +121,22 @@
 </nav>
 
 <BottomSheet open={moreMenuOpen} title="More" onClose={closeMoreMenu}>
-	<div class="menu-list">
-		<button class="menu-item" onclick={handleDeposit}>
-			<DollarCircleIcon size={22} color="currentColor" />
-			<span>Deposit</span>
-		</button>
-		<a href="/settings" class="menu-item" onclick={closeMoreMenu}>
-			<SettingsIcon size={22} color="currentColor" />
-			<span>Settings</span>
-		</a>
-	</div>
+	<nav aria-label="More options">
+		<ul class="menu-list" role="menu">
+			<li role="menuitem">
+				<button class="menu-item" onclick={handleDeposit}>
+					<DollarCircleIcon size={22} color="currentColor" />
+					<span>Deposit</span>
+				</button>
+			</li>
+			<li role="menuitem">
+				<a href="/settings" class="menu-item" onclick={closeMoreMenu}>
+					<SettingsIcon size={22} color="currentColor" />
+					<span>Settings</span>
+				</a>
+			</li>
+		</ul>
+	</nav>
 </BottomSheet>
 
 <style>
