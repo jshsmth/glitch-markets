@@ -96,13 +96,8 @@ function cleanupRateLimitStore(): void {
 	}
 }
 
-let cleanupInterval: NodeJS.Timeout | null = null;
-
-if (cleanupInterval) {
-	clearInterval(cleanupInterval);
-}
-
-cleanupInterval = setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
+// Runs every 5 minutes to clean expired rate limit entries
+setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
 
 const supabaseHandle: Handle = async ({ event, resolve }) => {
 	event.locals.supabase = createSupabaseServerClient(event);

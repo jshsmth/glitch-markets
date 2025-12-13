@@ -67,20 +67,20 @@
 		moreMenuOpen = false;
 	}
 
-	// Eagerly preload all navigation routes when the component mounts
+	// Eagerly preload all navigation routes once on mount
+	let hasPreloaded = false;
 	$effect(() => {
-		// Use requestIdleCallback to preload during idle time
+		if (hasPreloaded) return;
+		hasPreloaded = true;
+
 		const preloadRoutes = () => {
 			navItems.forEach((item) => {
 				if (!item.isMore && item.href !== $page.url.pathname) {
-					preloadData(item.href).catch(() => {
-						// Silently fail if preload fails (route might not exist yet)
-					});
+					preloadData(item.href).catch(() => {});
 				}
 			});
 		};
 
-		// Preload after a short delay to not interfere with initial page load
 		if ('requestIdleCallback' in window) {
 			requestIdleCallback(preloadRoutes, { timeout: TIMEOUTS.IDLE_CALLBACK_SHORT });
 		} else {

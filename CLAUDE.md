@@ -75,6 +75,7 @@ You have access to the Svelte MCP server with comprehensive Svelte 5 and SvelteK
 6. **Accessibility** - Use semantic HTML and ARIA labels
 7. **Performance** - Lazy load routes and optimize images
 8. **Security** - Sanitize input, use environment variables for secrets
+9. **Comments** - Only add comments that explain _why_, not _what_. Never write comments that restate the code (e.g., `// Cache the result` before a cache assignment, `// Check cache first` before an if statement). Let clear code speak for itself.
 
 ---
 

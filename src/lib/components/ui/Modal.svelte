@@ -106,8 +106,8 @@
 					{#if showCloseButton}
 						<button class="close-button" onclick={onClose} aria-label="Close modal">
 							<svg
-								width="24"
-								height="24"
+								width="20"
+								height="20"
 								viewBox="0 0 24 24"
 								fill="none"
 								xmlns="http://www.w3.org/2000/svg"
@@ -209,7 +209,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 24px;
+		padding: 20px 24px;
 		background: linear-gradient(
 			180deg,
 			var(--bg-1) 0%,
@@ -218,7 +218,7 @@
 	}
 
 	.modal-title {
-		font-size: 24px;
+		font-size: 18px;
 		font-weight: 600;
 		color: var(--text-0);
 		margin: 0;
@@ -259,11 +259,11 @@
 
 	@media (min-width: 768px) {
 		.modal-header {
-			padding: 32px 32px 24px;
+			padding: 20px 28px;
 		}
 
 		.modal-content {
-			padding: 0 32px 32px;
+			padding: 0 28px 28px;
 		}
 	}
 

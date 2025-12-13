@@ -1,5 +1,4 @@
 <script lang="ts">
-	import QRCode from 'qrcode';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
@@ -22,6 +21,24 @@
 		ChainType
 	} from '$lib/types/bridge';
 	import { determineChainType } from '$lib/types/bridge';
+
+	// Module-level cache persists across modal open/close
+	const CACHE_DURATION_MS = 5 * 60 * 1000;
+
+	interface CacheEntry<T> {
+		data: T;
+		timestamp: number;
+	}
+
+	let assetsCache: CacheEntry<SupportedAsset[]> | null = null;
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- module-level cache, not reactive state
+	let depositAddressCache: Map<string, CacheEntry<string>> = new Map();
+	let userWalletCache: CacheEntry<string> | null = null;
+
+	function isCacheValid<T>(cache: CacheEntry<T> | null | undefined): cache is CacheEntry<T> {
+		if (!cache) return false;
+		return Date.now() - cache.timestamp < CACHE_DURATION_MS;
+	}
 
 	interface Props {
 		isOpen: boolean;
@@ -75,7 +92,9 @@
 
 	$effect(() => {
 		if (isOpen) {
-			assetsLoading = true;
+			if (!isCacheValid(assetsCache)) {
+				assetsLoading = true;
+			}
 			assetsError = null;
 			fetchSupportedAssets();
 			fetchUserWalletAddress();
@@ -114,11 +133,6 @@
 	});
 
 	function resetModalState() {
-		selectedAsset = null;
-		depositAddress = null;
-		addressError = null;
-		assetsError = null;
-		assetsLoading = true;
 		copySuccess = false;
 		qrError = false;
 		chainDropdownOpen = false;
@@ -126,9 +140,20 @@
 			clearTimeout(copyTimeout);
 			copyTimeout = null;
 		}
+		addressError = null;
+		assetsError = null;
 	}
 
 	async function fetchSupportedAssets() {
+		if (isCacheValid(assetsCache)) {
+			supportedAssets = assetsCache.data;
+			if (supportedAssets.length > 0 && !selectedAsset) {
+				selectedAsset = supportedAssets[0];
+			}
+			assetsLoading = false;
+			return;
+		}
+
 		assetsLoading = true;
 		assetsError = null;
 
@@ -139,8 +164,6 @@
 			}
 
 			const data: SupportedAssetsResponse = await response.json();
-			console.log('[DepositModal] Supported assets response:', data);
-
 			const evmChainIds = ['1', '10', '137', '42161', '56', '8453', '43114'];
 			supportedAssets = (data.supportedAssets || []).filter((asset) => {
 				const isUSDC = asset.token.symbol.toUpperCase() === 'USDC';
@@ -152,7 +175,7 @@
 						!asset.chainId.includes('btc'));
 				return isUSDC && isEVM;
 			});
-			console.log('[DepositModal] Filtered USDC assets:', supportedAssets);
+			assetsCache = { data: supportedAssets, timestamp: Date.now() };
 
 			if (supportedAssets.length > 0 && !selectedAsset) {
 				selectedAsset = supportedAssets[0];
@@ -166,6 +189,11 @@
 	}
 
 	async function fetchUserWalletAddress() {
+		if (isCacheValid(userWalletCache)) {
+			userWalletAddress = userWalletCache.data;
+			return;
+		}
+
 		try {
 			const response = await fetch('/api/user/profile');
 			if (!response.ok) {
@@ -173,12 +201,25 @@
 			}
 			const profile = await response.json();
 			userWalletAddress = profile.serverWalletAddress || null;
+			if (userWalletAddress) {
+				userWalletCache = { data: userWalletAddress, timestamp: Date.now() };
+			}
 		} catch (err) {
 			console.error('Failed to fetch user wallet address:', err);
 		}
 	}
 
 	async function fetchDepositAddress(asset: SupportedAsset, userAddress: string) {
+		const chainType: ChainType = determineChainType(asset.chainId);
+		const cacheKey = `${userAddress}-${chainType}`;
+
+		const cachedEntry = depositAddressCache.get(cacheKey);
+		if (isCacheValid(cachedEntry)) {
+			depositAddress = cachedEntry.data;
+			addressError = null;
+			return;
+		}
+
 		addressError = null;
 		depositAddress = null;
 
@@ -194,16 +235,13 @@
 			}
 
 			const data: DepositAddressResponse = await response.json();
-			console.log('[DepositModal] Deposit address response:', data);
-			const chainType: ChainType = determineChainType(asset.chainId);
-			console.log('[DepositModal] Chain type for', asset.chainName, ':', chainType);
 			const address = data.address[chainType];
-			console.log('[DepositModal] Selected address:', address);
 
 			if (!address) {
 				throw new Error('No deposit address available for this chain');
 			}
 
+			depositAddressCache.set(cacheKey, { data: address, timestamp: Date.now() });
 			depositAddress = address;
 		} catch (err) {
 			console.error('Failed to fetch deposit address:', err);
@@ -215,6 +253,7 @@
 		if (!qrCanvas) return;
 
 		try {
+			const QRCode = await import('qrcode');
 			await QRCode.toCanvas(qrCanvas, address, {
 				width: 180,
 				margin: 2,
@@ -222,8 +261,7 @@
 				errorCorrectionLevel: 'M'
 			});
 			qrError = false;
-		} catch (err) {
-			console.error('QR code generation failed:', err);
+		} catch {
 			qrError = true;
 		}
 	}
@@ -397,10 +435,18 @@
 			{:else if depositAddress}
 				<div class="address-section">
 					<div class="address-header">
-						<span class="address-label">Your deposit address</span>
-						<a href="#terms" class="terms-link">Terms apply</a>
+						<span class="address-label">
+							Your deposit address
+							<span class="info-tooltip">ⓘ</span>
+						</span>
+						<a
+							href="https://fun.xyz/terms"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="terms-link">Terms apply</a
+						>
 					</div>
-					<p class="address-full">{depositAddress}</p>
+					<p class="address-text">{depositAddress}</p>
 					<button
 						class="copy-button"
 						class:success={copySuccess}
@@ -408,18 +454,18 @@
 						aria-label={copySuccess ? 'Address copied' : 'Copy address'}
 					>
 						{#if copySuccess}
-							<CheckCircleIcon size={18} color="var(--success)" />
+							<CheckCircleIcon size={16} color="var(--success)" />
 							<span>Copied!</span>
 						{:else}
-							<CopyIcon size={18} color="var(--text-2)" />
+							<CopyIcon size={16} color="var(--text-2)" />
 							<span>Copy address</span>
 						{/if}
 					</button>
 				</div>
 
 				{#if selectedAsset}
-					<div class="info-banner">
-						<span class="info-icon">i</span>
+					<div class="info-banner warning">
+						<span class="info-icon warning-icon">!</span>
 						<span
 							>Send only USDC on {selectedAsset.chainName}. Minimum deposit: ${selectedAsset.minCheckoutUsd.toFixed(
 								2
@@ -442,7 +488,7 @@
 	</div>
 {/snippet}
 
-<Modal {isOpen} onClose={handleModalClose} title={modalTitle} maxWidth="440px">
+<Modal {isOpen} onClose={handleModalClose} title={modalTitle} maxWidth="480px">
 	{@render modalContent()}
 </Modal>
 
@@ -467,9 +513,11 @@
 	}
 
 	.selector-label {
-		font-size: 13px;
-		font-weight: 500;
+		font-size: 11px;
+		font-weight: 600;
 		color: var(--text-2);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 
 	.selector-button {
@@ -665,6 +713,7 @@
 		justify-content: center;
 		padding: 16px;
 		background: #ffffff;
+		border: 1px solid var(--bg-4);
 		border-radius: 16px;
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 	}
@@ -710,7 +759,7 @@
 	.address-section {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
+		gap: 8px;
 	}
 
 	.address-header {
@@ -727,24 +776,28 @@
 
 	.terms-link {
 		font-size: 13px;
+		font-weight: 600;
 		color: var(--primary);
-		text-decoration: none;
-	}
-
-	.terms-link:hover {
 		text-decoration: underline;
 	}
 
-	.address-full {
+	.terms-link:hover {
+		opacity: 0.8;
+	}
+
+	.info-tooltip {
+		color: var(--text-3);
+		font-size: 14px;
+		margin-left: 4px;
+		cursor: help;
+	}
+
+	.address-text {
 		font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 		font-size: 13px;
 		color: var(--text-1);
 		word-break: break-all;
 		margin: 0;
-		padding: 14px 16px;
-		background: var(--bg-2);
-		border-radius: 12px;
-		border: 1px solid var(--bg-4);
 		user-select: all;
 		line-height: 1.5;
 	}
@@ -754,10 +807,11 @@
 		align-items: center;
 		justify-content: center;
 		gap: 8px;
-		padding: 14px;
+		width: 100%;
+		padding: 12px 16px;
 		background: var(--bg-2);
 		border: 1px solid var(--bg-4);
-		border-radius: 12px;
+		border-radius: 10px;
 		font-size: 14px;
 		font-weight: 500;
 		color: var(--text-1);
@@ -776,7 +830,7 @@
 	}
 
 	.copy-button.success {
-		background: color-mix(in srgb, var(--success) 10%, transparent);
+		background: color-mix(in srgb, var(--success) 8%, transparent);
 		border-color: color-mix(in srgb, var(--success) 30%, transparent);
 		color: var(--success);
 	}
@@ -785,13 +839,16 @@
 		display: flex;
 		align-items: flex-start;
 		gap: 10px;
-		padding: 12px;
-		background: color-mix(in srgb, var(--warning) 8%, transparent);
-		border: 1px solid color-mix(in srgb, var(--warning) 20%, transparent);
+		padding: 12px 14px;
 		border-radius: 10px;
 		font-size: 13px;
 		color: var(--text-1);
 		line-height: 1.4;
+	}
+
+	.info-banner.warning {
+		background: color-mix(in srgb, var(--warning) 12%, transparent);
+		border: none;
 	}
 
 	.info-icon {
@@ -801,11 +858,14 @@
 		width: 18px;
 		height: 18px;
 		min-width: 18px;
-		background: var(--warning);
-		color: var(--bg-0);
-		font-size: 11px;
+		font-size: 10px;
 		font-weight: 700;
 		border-radius: 50%;
+	}
+
+	.info-icon.warning-icon {
+		background: var(--warning);
+		color: var(--bg-0);
 	}
 
 	.error-state {
