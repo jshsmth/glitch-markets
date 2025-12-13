@@ -8,7 +8,8 @@
 	import DollarCircleIcon from '$lib/components/icons/DollarCircleIcon.svelte';
 	import SettingsIcon from '$lib/components/icons/SettingsIcon.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
-	import { openDepositModal } from '$lib/stores/modal.svelte';
+	import { openDepositModal, openSignInModal } from '$lib/stores/modal.svelte';
+	import { authState } from '$lib/stores/auth.svelte';
 	import { TIMEOUTS } from '$lib/config/constants';
 
 	import type { Component } from 'svelte';
@@ -18,6 +19,7 @@
 		href: string;
 		icon: Component;
 		isMore?: boolean;
+		requiresAuth?: boolean;
 	}
 
 	const navItems: NavItem[] = [
@@ -34,7 +36,8 @@
 		{
 			label: 'Portfolio',
 			href: '/portfolio',
-			icon: PokerChipIcon
+			icon: PokerChipIcon,
+			requiresAuth: true
 		},
 		{
 			label: 'More',
@@ -55,6 +58,12 @@
 		if (item.isMore) {
 			event.preventDefault();
 			moreMenuOpen = true;
+			return;
+		}
+
+		if (item.requiresAuth && !authState.user) {
+			event.preventDefault();
+			openSignInModal();
 		}
 	}
 
@@ -129,16 +138,18 @@
 		bottom: 0;
 		left: 0;
 		right: 0;
-		height: var(--target-large); /* 64px - comfortable tap height */
+		height: calc(var(--target-large) + env(safe-area-inset-bottom, 0px)); /* 64px + safe area */
 		background-color: var(--bg-1);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
 		border-top: 1px solid var(--bg-4);
 		display: flex;
 		justify-content: space-around;
-		align-items: center;
+		align-items: flex-start;
 		padding: 0 var(--spacing-2); /* 8px */
-		z-index: var(--z-fixed);
+		padding-top: 6px;
+		padding-bottom: env(safe-area-inset-bottom, 8px);
+		z-index: 9999;
 	}
 
 	.nav-item {
@@ -197,7 +208,7 @@
 	/* Tablet size - slightly larger */
 	@media (min-width: 375px) and (max-width: 767px) {
 		.bottom-nav {
-			height: 68px;
+			height: calc(68px + env(safe-area-inset-bottom, 0px));
 		}
 
 		.nav-icon {
