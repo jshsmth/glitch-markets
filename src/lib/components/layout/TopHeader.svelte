@@ -32,7 +32,7 @@
 				{#if authState.user}
 					<div class="portfolio-stats">
 						<PortfolioStat label="Portfolio" value="$0.00" valueColor="success" href="/portfolio" />
-						<PortfolioStat label="Cash" value="$0.00" valueColor="success" href="/wallet" />
+						<PortfolioStat label="Cash" value="$0.00" valueColor="success" href="/portfolio" />
 					</div>
 
 					<Button variant="primary" size="small" onclick={handleDepositClick}>Deposit</Button>
