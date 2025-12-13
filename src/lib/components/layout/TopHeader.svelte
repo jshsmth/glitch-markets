@@ -5,16 +5,8 @@
 	import Logo from './Logo.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import PortfolioStat from '$lib/components/ui/PortfolioStat.svelte';
-	import Search from '$lib/components/ui/Search.svelte';
+	import SearchWithResults from '$lib/components/ui/SearchWithResults.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
-
-	let searchQuery = $state('');
-
-	function handleSearchInput(event: Event) {
-		const target = event.target as HTMLInputElement;
-		searchQuery = target.value;
-		// Future: trigger search endpoint
-	}
 
 	function handleDepositClick() {
 		// Future: open deposit modal
@@ -33,12 +25,7 @@
 					<Logo />
 				</a>
 
-				<Search
-					bind:value={searchQuery}
-					placeholder="Find the Glitch"
-					oninput={handleSearchInput}
-					class="search-container"
-				/>
+				<SearchWithResults class="search-container" />
 			</div>
 
 			<div class="right-section">

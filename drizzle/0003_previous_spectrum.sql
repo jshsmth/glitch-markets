@@ -1,1 +1,0 @@
-ALTER TABLE "polymarket_credentials" ADD COLUMN "proxy_wallet_address" text NOT NULL;
