@@ -21,6 +21,11 @@
 		oninput?: (event: Event) => void;
 
 		/**
+		 * Focus handler
+		 */
+		onfocus?: (event: FocusEvent) => void;
+
+		/**
 		 * Debounce delay in milliseconds (default: 300)
 		 */
 		debounceDelay?: number;
@@ -45,6 +50,7 @@
 		value = $bindable(''),
 		placeholder = 'Search...',
 		oninput,
+		onfocus,
 		debounceDelay = DEBOUNCE_DELAYS.SEARCH,
 		showShortcut = true,
 		inputSize = 'medium',
@@ -90,6 +96,7 @@
 		type="text"
 		{placeholder}
 		oninput={handleInput}
+		{onfocus}
 		{inputSize}
 		variant="search"
 		aria-label="Search"

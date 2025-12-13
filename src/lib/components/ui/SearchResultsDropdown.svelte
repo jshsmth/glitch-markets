@@ -20,6 +20,24 @@
 
 	const totalResults = $derived(results?.pagination.totalResults || 0);
 	const hasMore = $derived(results?.pagination.hasMore || false);
+	const showBrowse = $derived(!isLoading && !hasResults && query.length === 0);
+
+	// Popular topics for browse state
+	const popularTopics = [
+		{ label: 'Politics', slug: 'politics', icon: '🏛️' },
+		{ label: 'Crypto', slug: 'crypto', icon: '₿' },
+		{ label: 'Sports', slug: 'sports', icon: '⚽' },
+		{ label: 'Tech', slug: 'tech', icon: '💻' },
+		{ label: 'AI', slug: 'ai', icon: '🤖' },
+		{ label: 'Pop Culture', slug: 'pop-culture', icon: '🎬' }
+	];
+
+	// Browse filters
+	const browseFilters = [
+		{ label: 'New', href: '/new', icon: '✨' },
+		{ label: 'Trending', href: '/trending', icon: '📈' },
+		{ label: 'Popular', href: '/', icon: '🔥' }
+	];
 
 	function handleLinkClick() {
 		onClose?.();
@@ -81,8 +99,35 @@
 				</a>
 			</div>
 		{/if}
+	{:else if showBrowse}
+		<!-- Browse State (Empty/Initial) -->
+		<div class="browse-state">
+			<section class="browse-section">
+				<h3 class="section-title">Browse</h3>
+				<div class="browse-filters">
+					{#each browseFilters as filter}
+						<a href={filter.href} class="browse-filter" onclick={handleLinkClick}>
+							<span class="filter-icon">{filter.icon}</span>
+							<span class="filter-label">{filter.label}</span>
+						</a>
+					{/each}
+				</div>
+			</section>
+
+			<section class="browse-section">
+				<h3 class="section-title">Popular Topics</h3>
+				<div class="topics-grid">
+					{#each popularTopics as topic}
+						<a href="/{topic.slug}" class="topic-card" onclick={handleLinkClick}>
+							<span class="topic-icon">{topic.icon}</span>
+							<span class="topic-label">{topic.label}</span>
+						</a>
+					{/each}
+				</div>
+			</section>
+		</div>
 	{:else}
-		<!-- Empty State -->
+		<!-- Empty State (No Results) -->
 		<div class="empty-state">
 			<SearchIcon size={32} color="var(--text-3)" />
 			<p class="empty-title">No results found</p>
@@ -269,5 +314,100 @@
 
 	.search-results-dropdown::-webkit-scrollbar-thumb:hover {
 		background: var(--text-3);
+	}
+
+	/* Browse State */
+	.browse-state {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.browse-section {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.browse-filters {
+		display: flex;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+
+	.browse-filter {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 16px;
+		background: var(--bg-2);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-md);
+		text-decoration: none;
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--text-0);
+		transition: all 0.15s ease;
+	}
+
+	.browse-filter:hover {
+		background-color: var(--primary-hover-bg);
+		border-color: var(--primary);
+		transform: translateY(-1px);
+	}
+
+	.browse-filter:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
+	.filter-icon {
+		font-size: 16px;
+		line-height: 1;
+	}
+
+	.filter-label {
+		font-weight: 600;
+	}
+
+	.topics-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 8px;
+	}
+
+	.topic-card {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 12px 14px;
+		background: var(--bg-2);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-md);
+		text-decoration: none;
+		color: var(--text-0);
+		transition: all 0.15s ease;
+	}
+
+	.topic-card:hover {
+		background-color: var(--primary-hover-bg);
+		border-color: var(--primary);
+		transform: translateY(-1px);
+	}
+
+	.topic-card:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
+	.topic-icon {
+		font-size: 24px;
+		line-height: 1;
+		flex-shrink: 0;
+	}
+
+	.topic-label {
+		font-size: 14px;
+		font-weight: 600;
 	}
 </style>

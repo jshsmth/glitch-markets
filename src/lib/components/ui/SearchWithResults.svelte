@@ -16,16 +16,22 @@
 	let abortController: AbortController | null = null;
 	let wrapperElement = $state<HTMLDivElement | undefined>();
 
+	function handleFocus() {
+		showDropdown = true;
+	}
+
 	async function handleSearchInput(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const query = target.value.trim();
 
 		searchQuery = query;
 
+		// Show dropdown even for empty queries (browse state)
+		showDropdown = true;
+
 		// Don't search for queries less than 2 characters
 		if (query.length < 2) {
 			searchResults = null;
-			showDropdown = false;
 			return;
 		}
 
@@ -36,10 +42,9 @@
 		isLoading = true;
 
 		try {
-			const response = await fetch(
-				`/api/search?q=${encodeURIComponent(query)}&limit_per_type=5`,
-				{ signal: abortController.signal }
-			);
+			const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit_per_type=5`, {
+				signal: abortController.signal
+			});
 
 			if (!response.ok) {
 				throw new Error(`Search failed: ${response.statusText}`);
@@ -101,6 +106,7 @@
 		bind:value={searchQuery}
 		placeholder="Find the Glitch"
 		oninput={handleSearchInput}
+		onfocus={handleFocus}
 		showShortcut={true}
 		inputSize="medium"
 	/>
