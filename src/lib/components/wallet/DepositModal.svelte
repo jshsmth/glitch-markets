@@ -439,7 +439,12 @@
 							Your deposit address
 							<span class="info-tooltip">ⓘ</span>
 						</span>
-						<a href="https://fun.xyz/terms" target="_blank" rel="noopener noreferrer" class="terms-link">Terms apply</a>
+						<a
+							href="https://fun.xyz/terms"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="terms-link">Terms apply</a
+						>
 					</div>
 					<p class="address-text">{depositAddress}</p>
 					<button
