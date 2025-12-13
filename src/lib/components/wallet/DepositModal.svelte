@@ -35,7 +35,6 @@
 	let assetsError = $state<string | null>(null);
 	let selectedAsset = $state<SupportedAsset | null>(null);
 	let depositAddress = $state<string | null>(null);
-	let addressLoading = $state(false);
 	let addressError = $state<string | null>(null);
 	let userWalletAddress = $state<string | null>(null);
 	let qrCanvas = $state<HTMLCanvasElement | null>(null);
@@ -120,7 +119,6 @@
 		addressError = null;
 		assetsError = null;
 		assetsLoading = true;
-		addressLoading = false;
 		copySuccess = false;
 		qrError = false;
 		chainDropdownOpen = false;
@@ -181,7 +179,6 @@
 	}
 
 	async function fetchDepositAddress(asset: SupportedAsset, userAddress: string) {
-		addressLoading = true;
 		addressError = null;
 		depositAddress = null;
 
@@ -211,8 +208,6 @@
 		} catch (err) {
 			console.error('Failed to fetch deposit address:', err);
 			addressError = err instanceof Error ? err.message : 'Failed to generate address';
-		} finally {
-			addressLoading = false;
 		}
 	}
 
