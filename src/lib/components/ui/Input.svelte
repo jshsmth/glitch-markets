@@ -125,7 +125,7 @@
 		inset: 1px;
 		border-radius: calc(var(--radius-md) - 1px);
 		background-color: var(--bg-1);
-		box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+		box-shadow: var(--shadow-input);
 		z-index: -2;
 		transition: background-color var(--transition-base);
 	}
@@ -198,13 +198,13 @@
 		width: 100%;
 		height: 100%;
 		border-radius: var(--radius-md);
-		padding: 0 14px;
+		padding: 0 var(--spacing-4);
 
 		/* Typography */
 		color: var(--text-0);
-		font-size: 14px;
+		font-size: var(--text-md);
 		font-family: var(--font-sans);
-		line-height: 1.5;
+		line-height: var(--leading-normal);
 		-webkit-font-smoothing: antialiased;
 
 		/* Transitions */
@@ -281,7 +281,7 @@
      ============================================ */
 
 	.error-message {
-		font-size: 12px;
+		font-size: var(--text-sm);
 		color: var(--danger);
 		padding-left: 2px;
 	}

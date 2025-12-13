@@ -172,13 +172,13 @@
 		position: fixed;
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
-		border-radius: 8px;
-		padding: 16px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		border-radius: var(--radius-md);
+		padding: var(--spacing-4);
+		box-shadow: var(--shadow-dropdown);
 		z-index: var(--z-popover);
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: var(--spacing-4);
 	}
 
 	.filter-group {
@@ -259,9 +259,9 @@
 			bottom: 0;
 			left: 0;
 			right: 0;
-			border-radius: 16px 16px 0 0;
-			padding: 20px 16px 24px;
-			box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+			border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+			padding: var(--spacing-5) var(--spacing-4) var(--spacing-6);
+			box-shadow: var(--shadow-sheet);
 			animation: slideUp 0.2s ease-out;
 			z-index: var(--z-popover);
 		}

@@ -27,10 +27,8 @@
 		event.markets?.find((m) => m.outcomes && m.outcomePrices) || event.markets?.[0]
 	);
 
-	const primaryOdds = $derived.by(() => {
-		if (isMultiMarket) return null;
-		if (!primaryMarket?.outcomePrices || !primaryMarket?.outcomes) return null;
-
+	const parsedPrimaryMarket = $derived.by(() => {
+		if (!primaryMarket?.outcomes || !primaryMarket?.outcomePrices) return null;
 		try {
 			const outcomes =
 				typeof primaryMarket.outcomes === 'string'
@@ -40,31 +38,38 @@
 				typeof primaryMarket.outcomePrices === 'string'
 					? JSON.parse(primaryMarket.outcomePrices)
 					: primaryMarket.outcomePrices;
-
-			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
-			if (outcomes.length < 2 || prices.length < 2) return null;
-
-			const percentages = prices.map((p: string) => parseFloat(p) * 100);
-
-			return [
-				{
-					label: outcomes[0] || 'Yes',
-					price: percentages[0]?.toFixed(0) || '—',
-					percentage: percentages[0] || 0
-				},
-				{
-					label: outcomes[1] || 'No',
-					price: percentages[1]?.toFixed(0) || '—',
-					percentage: percentages[1] || 0
-				}
-			];
+			return { outcomes, prices };
 		} catch {
 			return null;
 		}
 	});
 
-	const topMarkets = $derived.by(() => {
-		if (!isMultiMarket || !event.markets) return null;
+	const primaryOdds = $derived.by(() => {
+		if (isMultiMarket) return null;
+		if (!parsedPrimaryMarket) return null;
+
+		const { outcomes, prices } = parsedPrimaryMarket;
+		if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
+		if (outcomes.length < 2 || prices.length < 2) return null;
+
+		const percentages = prices.map((p: string) => parseFloat(p) * 100);
+
+		return [
+			{
+				label: outcomes[0] || 'Yes',
+				price: percentages[0]?.toFixed(0) || '—',
+				percentage: percentages[0] || 0
+			},
+			{
+				label: outcomes[1] || 'No',
+				price: percentages[1]?.toFixed(0) || '—',
+				percentage: percentages[1] || 0
+			}
+		];
+	});
+
+	const parsedMarkets = $derived.by(() => {
+		if (!event.markets) return null;
 		return event.markets.map((market) => {
 			try {
 				const outcomes =
@@ -73,34 +78,37 @@
 					typeof market.outcomePrices === 'string'
 						? JSON.parse(market.outcomePrices)
 						: market.outcomePrices;
-
-				const displayTitle =
-					market.groupItemTitle || (Array.isArray(outcomes) && outcomes[0]) || market.question;
-
-				return {
-					question: displayTitle,
-					outcomes:
-						Array.isArray(outcomes) && Array.isArray(prices) && outcomes.length >= 2
-							? [
-									{
-										label: outcomes[0],
-										price: (parseFloat(prices[0]) * 100).toFixed(0),
-										percentage: parseFloat(prices[0]) * 100
-									},
-									{
-										label: outcomes[1],
-										price: (parseFloat(prices[1]) * 100).toFixed(0),
-										percentage: parseFloat(prices[1]) * 100
-									}
-								]
-							: null
-				};
+				return { market, outcomes, prices };
 			} catch {
-				return {
-					question: market.question,
-					outcomes: null
-				};
+				return { market, outcomes: null, prices: null };
 			}
+		});
+	});
+
+	const topMarkets = $derived.by(() => {
+		if (!isMultiMarket || !parsedMarkets) return null;
+		return parsedMarkets.map(({ market, outcomes, prices }) => {
+			const displayTitle =
+				market.groupItemTitle || (Array.isArray(outcomes) && outcomes[0]) || market.question;
+
+			return {
+				question: displayTitle,
+				outcomes:
+					Array.isArray(outcomes) && Array.isArray(prices) && outcomes.length >= 2
+						? [
+								{
+									label: outcomes[0],
+									price: (parseFloat(prices[0]) * 100).toFixed(0),
+									percentage: parseFloat(prices[0]) * 100
+								},
+								{
+									label: outcomes[1],
+									price: (parseFloat(prices[1]) * 100).toFixed(0),
+									percentage: parseFloat(prices[1]) * 100
+								}
+							]
+						: null
+			};
 		});
 	});
 </script>
@@ -112,7 +120,7 @@
 			<div class="title-row">
 				{#if event.image}
 					<div class="event-icon">
-						<img src={event.image} alt="" />
+						<img src={event.image} alt={event.title || 'Event icon'} />
 					</div>
 				{/if}
 				<a
@@ -203,7 +211,7 @@
 		border: 1px solid var(--bg-4);
 		border-radius: var(--radius-card);
 		padding: 18px;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		box-shadow: var(--shadow-sm);
 		transition:
 			all var(--transition-fast),
 			box-shadow var(--transition-fast);
@@ -213,11 +221,11 @@
 
 	/* Compact variant for search dropdown */
 	.event-card.compact {
-		padding: 12px;
+		padding: var(--spacing-3);
 	}
 
 	.event-card.compact .card-content {
-		gap: 12px;
+		gap: var(--spacing-3);
 	}
 
 	.event-card.compact .event-icon {
@@ -244,14 +252,10 @@
 		box-shadow: var(--shadow-primary-md);
 	}
 
-	:global([data-theme='dark']) .event-card {
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-	}
-
 	.card-content {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: var(--spacing-4);
 		width: 100%;
 	}
 
@@ -262,7 +266,7 @@
 	.title-row {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: var(--spacing-3);
 	}
 
 	.event-icon {
@@ -315,15 +319,15 @@
 	.odds-board {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--spacing-2);
 	}
 
 	.odds-row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 12px;
-		padding: 10px 12px;
+		gap: var(--spacing-3);
+		padding: 10px var(--spacing-3);
 		background: var(--bg-2);
 		border: 1px solid var(--bg-4);
 		border-radius: var(--radius-sm);

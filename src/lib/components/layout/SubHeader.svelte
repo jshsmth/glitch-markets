@@ -147,31 +147,30 @@
 	}
 
 	$effect(() => {
-		if (scrollContainer) {
+		if (!scrollContainer) return;
+
+		handleScroll();
+
+		const resizeObserver = new ResizeObserver(() => {
 			handleScroll();
+		});
 
-			// Create ResizeObserver to update overflow state on window resize
-			const resizeObserver = new ResizeObserver(() => {
-				handleScroll();
-			});
+		resizeObserver.observe(scrollContainer);
 
-			resizeObserver.observe(scrollContainer);
+		return () => {
+			resizeObserver.disconnect();
+		};
+	});
 
-			// Show swipe hint only if there's overflow
-			let timeout: ReturnType<typeof setTimeout> | undefined;
-			if (hasOverflow) {
-				showSwipeHint = true;
-				// Auto-hide swipe hint after 3 seconds
-				timeout = setTimeout(() => {
-					showSwipeHint = false;
-				}, 3000);
-			}
+	$effect(() => {
+		if (!hasOverflow) return;
 
-			return () => {
-				resizeObserver.disconnect();
-				if (timeout) clearTimeout(timeout);
-			};
-		}
+		showSwipeHint = true;
+		const timeout = setTimeout(() => {
+			showSwipeHint = false;
+		}, 3000);
+
+		return () => clearTimeout(timeout);
 	});
 </script>
 
@@ -280,12 +279,12 @@
 
 	.nav-arrow:focus-visible {
 		outline: none;
-		box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
+		box-shadow: var(--focus-ring);
 	}
 
 	.nav-link:focus-visible {
 		outline: none;
-		box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
+		box-shadow: var(--focus-ring);
 	}
 
 	.nav-scroll {
@@ -295,7 +294,8 @@
 		-ms-overflow-style: none; /* IE/Edge */
 		-webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 		flex: 1;
-		padding: 0 12px;
+		padding: 0 max(12px, env(safe-area-inset-right, 12px)) 0
+			max(12px, env(safe-area-inset-left, 12px));
 	}
 
 	@media (min-width: 768px) {
@@ -315,21 +315,22 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
+		padding-right: max(12px, env(safe-area-inset-right, 12px));
 		min-height: 40px;
 	}
 
 	.nav-link {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--spacing-2);
 		text-decoration: none;
 		color: var(--text-2);
-		font-size: 14px;
-		font-weight: 500;
+		font-size: var(--text-md);
+		font-weight: var(--font-semibold);
 		white-space: nowrap;
-		padding: 8px 14px;
+		padding: var(--spacing-2) var(--spacing-4);
 		border-radius: var(--radius-md);
-		transition: all 0.2s ease;
+		transition: all var(--transition-base);
 	}
 
 	.nav-link:hover {

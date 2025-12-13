@@ -64,7 +64,7 @@
 	<div class="item-left">
 		{#if event.image || event.icon}
 			<div class="item-icon">
-				<img src={event.image || event.icon} alt="" loading="lazy" />
+				<img src={event.image || event.icon} alt={event.title || 'Event icon'} loading="lazy" />
 			</div>
 		{/if}
 		<div class="item-title">{event.title || 'Untitled Event'}</div>

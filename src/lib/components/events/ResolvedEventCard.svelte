@@ -61,7 +61,7 @@
 			<div class="title-row">
 				{#if event.image}
 					<div class="event-icon">
-						<img src={event.image} alt="" />
+						<img src={event.image} alt={event.title || 'Event icon'} />
 					</div>
 				{/if}
 				<a
@@ -124,7 +124,7 @@
 		border: 1px solid var(--bg-4);
 		border-radius: var(--radius-card);
 		padding: 18px;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		box-shadow: var(--shadow-sm);
 		transition:
 			all var(--transition-fast),
 			box-shadow var(--transition-fast);
@@ -136,10 +136,6 @@
 		outline: none;
 		border-color: var(--primary);
 		box-shadow: var(--shadow-primary-md);
-	}
-
-	:global([data-theme='dark']) .event-card {
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 	}
 
 	.card-content {

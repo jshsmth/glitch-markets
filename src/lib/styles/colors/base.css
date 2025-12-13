@@ -91,6 +91,30 @@
 	--focus-ring: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
 	--focus-ring-error: 0 0 0 3px rgba(239, 68, 68, 0.3);
 
+	/* Dropdown/popover shadows */
+	--shadow-dropdown: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+	--shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.15);
+
+	/* Modal/sheet shadows */
+	--shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+	--shadow-sheet: 0 -4px 20px rgba(0, 0, 0, 0.15), 0 -1px 3px rgba(0, 0, 0, 0.1);
+
+	/* Interactive element shadows */
+	--shadow-button: 0 1px 3px rgba(0, 0, 0, 0.08);
+	--shadow-button-hover: 0 2px 8px rgba(0, 0, 0, 0.12);
+	--shadow-button-lift: 0 4px 12px rgba(0, 0, 0, 0.1);
+	--shadow-button-primary: 0 1px 3px rgba(var(--primary-rgb), 0.2);
+	--shadow-button-primary-hover: 0 2px 8px rgba(var(--primary-rgb), 0.25);
+	--shadow-button-primary-active: 0 1px 4px rgba(var(--primary-rgb), 0.2);
+	--shadow-button-primary-glow: 0 2px 12px rgba(var(--primary-rgb), 0.3);
+	--shadow-button-primary-glow-hover: 0 4px 16px rgba(var(--primary-rgb), 0.4);
+	--shadow-input: 0 1px 2px rgba(0, 0, 0, 0.05);
+	--shadow-input-focus: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+
+	/* QR code / card shadows */
+	--shadow-qr: 0 4px 20px rgba(0, 0, 0, 0.08);
+	--shadow-qr-badge: 0 2px 8px rgba(0, 0, 0, 0.12);
+
 	/* ============================================
 	   BRAND HIGHLIGHT UTILITIES
 	   ============================================ */
@@ -158,17 +182,12 @@
 	--z-tooltip: 600;
 	--z-toast: 700;
 
-	/* Component-specific z-index (uses calc() for clarity) */
-	.dropdown {
-		z-index: var(--z-dropdown);
-	}
-	.modal {
-		z-index: var(--z-modal);
-	}
-	.tooltip {
-		z-index: var(--z-tooltip);
-	}
-	/* Tooltips ALWAYS above modals - documented and predictable */
+	/* Fixed position navigation (above content, below modals) */
+	--z-bottom-nav: 800;
+
+	/* Bottom sheet (above bottom nav) */
+	--z-bottom-sheet-backdrop: 900;
+	--z-bottom-sheet: 901;
 
 	/* ============================================
      TRANSITIONS

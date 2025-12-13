@@ -34,9 +34,8 @@
 	}
 
 	$effect(() => {
-		if (open) {
-			document.addEventListener('keydown', handleKeydown);
-		}
+		if (!open) return;
+		document.addEventListener('keydown', handleKeydown);
 		return () => document.removeEventListener('keydown', handleKeydown);
 	});
 </script>
@@ -44,8 +43,8 @@
 {#if open}
 	<div
 		class="backdrop"
-		role="button"
-		tabindex="-1"
+		role="presentation"
+		aria-hidden="true"
 		onclick={handleBackdropClick}
 		onkeydown={(e) => e.key === 'Enter' && handleBackdropClick()}
 	></div>
@@ -90,9 +89,9 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(0, 0, 0, 0.5);
-		z-index: var(--z-overlay);
-		animation: fadeIn 0.2s ease-out;
+		background: var(--overlay-backdrop-light);
+		z-index: var(--z-bottom-sheet-backdrop);
+		animation: fadeIn var(--transition-base);
 	}
 
 	.bottom-sheet {
@@ -101,21 +100,19 @@
 		left: 0;
 		right: 0;
 		background: var(--bg-1);
-		border-radius: 20px 20px 0 0;
-		box-shadow:
-			0 -4px 20px rgba(0, 0, 0, 0.15),
-			0 -1px 3px rgba(0, 0, 0, 0.1);
-		z-index: var(--z-modal);
+		border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+		box-shadow: var(--shadow-sheet);
+		z-index: var(--z-bottom-sheet);
 		display: flex;
 		flex-direction: column;
-		animation: slideUp 0.25s ease-out;
+		animation: slideUp var(--transition-slow);
 		max-height: 80vh;
 	}
 
 	.bottom-sheet::before {
 		content: '';
 		position: absolute;
-		top: 8px;
+		top: var(--spacing-2);
 		left: 50%;
 		transform: translateX(-50%);
 		width: 36px;
@@ -128,17 +125,17 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 24px 16px 16px;
+		padding: var(--spacing-6) var(--spacing-4) var(--spacing-4);
 		border-bottom: 1px solid var(--bg-3);
 		flex-shrink: 0;
 	}
 
 	.sheet-header h3 {
-		font-size: 20px;
-		font-weight: 700;
+		font-size: var(--text-xl);
+		font-weight: var(--font-bold);
 		color: var(--text-0);
 		margin: 0;
-		letter-spacing: -0.3px;
+		letter-spacing: var(--tracking-snug);
 	}
 
 	.close-button {
@@ -149,10 +146,10 @@
 		height: 36px;
 		background: transparent;
 		border: 1px solid transparent;
-		border-radius: 8px;
+		border-radius: var(--radius-md);
 		color: var(--text-2);
 		cursor: pointer;
-		transition: all 0.15s;
+		transition: var(--transition-all);
 	}
 
 	.close-button:hover {
@@ -174,14 +171,14 @@
 	.sheet-content {
 		flex: 1;
 		overflow-y: auto;
-		padding: 16px;
-		padding-bottom: 8px;
+		padding: var(--spacing-4);
+		padding-bottom: var(--spacing-2);
 		-webkit-overflow-scrolling: touch;
 	}
 
 	.sheet-footer {
-		padding: 16px;
-		padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+		padding: var(--spacing-4);
+		padding-bottom: max(var(--spacing-6), env(safe-area-inset-bottom, var(--spacing-6)));
 		border-top: 1px solid var(--bg-3);
 		flex-shrink: 0;
 		background: var(--bg-1);

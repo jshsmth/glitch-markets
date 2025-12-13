@@ -176,32 +176,32 @@
 
 	/* Small - Compact actions (touch target expanded via ::before) */
 	.button.size-small {
-		padding: 6px 16px;
-		font-size: 14px;
+		padding: 6px var(--spacing-4);
+		font-size: var(--text-md);
 		border-radius: var(--radius-md);
 		min-height: 36px;
-		line-height: 1.5;
-		letter-spacing: 0.02em;
+		line-height: var(--leading-normal);
+		letter-spacing: var(--tracking-wide);
 	}
 
 	/* Medium - Default size (WCAG 2.1 AA / comfortable) */
 	.button.size-medium {
-		padding: 10px 20px;
+		padding: 10px var(--spacing-5);
 		font-size: 15px;
 		border-radius: var(--radius-button);
 		min-height: var(--target-comfortable); /* 44px */
-		line-height: 1.5;
-		letter-spacing: 0.02em;
+		line-height: var(--leading-normal);
+		letter-spacing: var(--tracking-wide);
 	}
 
 	/* Large - Important CTAs (enhanced usability) */
 	.button.size-large {
-		padding: 14px 28px;
-		font-size: 16px;
+		padding: var(--spacing-4) var(--spacing-8);
+		font-size: var(--text-base);
 		border-radius: var(--radius-lg);
 		min-height: var(--target-large); /* 56px */
-		line-height: 1.5;
-		letter-spacing: 0.02em;
+		line-height: var(--leading-normal);
+		letter-spacing: var(--tracking-wide);
 	}
 
 	/* ============================================
@@ -212,7 +212,7 @@
 		background-color: var(--primary);
 		color: var(--bg-0);
 		border: none;
-		box-shadow: 0 1px 3px rgba(var(--primary-rgb), 0.2);
+		box-shadow: var(--shadow-button-primary);
 		position: relative;
 		overflow: hidden;
 	}
@@ -228,12 +228,12 @@
 
 	.button.variant-primary:hover:not(:disabled) {
 		transform: translateY(-1px);
-		box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.25);
+		box-shadow: var(--shadow-button-primary-hover);
 	}
 
 	.button.variant-primary:active:not(:disabled) {
 		transform: translateY(0);
-		box-shadow: 0 1px 4px rgba(var(--primary-rgb), 0.2);
+		box-shadow: var(--shadow-button-primary-active);
 	}
 
 	.button.variant-primary:disabled {

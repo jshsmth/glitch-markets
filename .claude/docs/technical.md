@@ -56,12 +56,13 @@ Visit `http://localhost:5173` to see the application.
 
 ## Tech Stack
 
-- **Framework**: [SvelteKit](https://kit.svelte.dev/) - Fast, modern web framework
+- **Framework**: [SvelteKit](https://kit.svelte.dev/) - Fast, modern web framework with Svelte 5 runes
 - **Language**: [TypeScript](https://www.typescriptlang.org/) - Type-safe JavaScript
-- **Database**: [PostgreSQL](https://www.postgresql.org/) with [Drizzle ORM](https://orm.drizzle.team/)
+- **Database**: [Supabase](https://supabase.com/) (PostgreSQL) with Drizzle ORM
+- **Authentication**: [Supabase Auth](https://supabase.com/auth) - Google OAuth & Email/Password
+- **Wallet**: [viem](https://viem.sh/) - Server-side wallet management for Polygon
 - **Testing**: [Vitest](https://vitest.dev/) + [fast-check](https://fast-check.dev/) for property-based testing
-- **Data Source**: [Polymarket Gamma API](https://docs.polymarket.com/)
-- **Future Auth**: [WebAuthn/Passkeys](https://webauthn.io/)
+- **Data Source**: [Polymarket Gamma API](https://docs.polymarket.com/) + CLOB API
 
 ---
 
@@ -110,34 +111,36 @@ glitch-markets/
 ```
 ┌─────────────────────────────────┐
 │     SvelteKit Frontend          │
-│  (Coming Soon - Passkey Auth)   │
+│  Svelte 5 • TanStack Query      │
 └───────────────┬─────────────────┘
                 │
-                │ HTTP/WebSocket
+                │ HTTP
                 │
 ┌───────────────▼─────────────────┐
 │      API Layer (SvelteKit)      │
 │  Rate Limiting • Validation     │
 └───────────────┬─────────────────┘
                 │
-        ┌───────┴───────┐
-        │               │
-┌───────▼──────┐ ┌─────▼──────┐
-│   Services   │ │   Cache    │
-│   Layer      │ │   Manager  │
-└───────┬──────┘ └─────┬──────┘
-        │               │
-        └───────┬───────┘
-                │
-┌───────────────▼─────────────────┐
-│    Polymarket Client            │
-│  HTTP Client • Error Handling   │
-└───────────────┬─────────────────┘
-                │
-┌───────────────▼─────────────────┐
-│    Polymarket Gamma API         │
-│    (External Data Source)       │
-└─────────────────────────────────┘
+    ┌───────────┼───────────┐
+    │           │           │
+┌───▼───┐ ┌─────▼─────┐ ┌───▼───┐
+│Supabase│ │ Services  │ │ Cache │
+│  Auth  │ │  Layer    │ │Manager│
+└───┬───┘ └─────┬─────┘ └───┬───┘
+    │           │           │
+    │   ┌───────┴───────┐   │
+    │   │               │   │
+┌───▼───▼───┐   ┌───────▼───┐
+│   Users   │   │ Polymarket│
+│   Table   │   │  Client   │
+└───────────┘   └─────┬─────┘
+                      │
+        ┌─────────────┼─────────────┐
+        │             │             │
+┌───────▼────┐ ┌──────▼─────┐ ┌─────▼─────┐
+│ Gamma API  │ │  CLOB API  │ │  Polygon  │
+│   (Data)   │ │  (Trading) │ │   (RPC)   │
+└────────────┘ └────────────┘ └───────────┘
 ```
 
 ### Key Components
@@ -155,6 +158,63 @@ glitch-markets/
 - **Cache Manager**: In-memory LRU cache with TTL support
 - **Validators**: Input and response validation
 - **Error Handlers**: Consistent error formatting and logging
+
+---
+
+## Authentication
+
+Glitch Markets uses **Supabase Auth** for user authentication.
+
+### Supported Authentication Methods
+
+| Method         | Status | Description                  |
+| -------------- | ------ | ---------------------------- |
+| Google OAuth   | Active | Sign in with Google account  |
+| Email/Password | Active | Traditional email + password |
+
+### Authentication Flow
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   User      │     │  Frontend   │     │  Supabase   │
+│   Action    │────▶│  Modal      │────▶│    Auth     │
+└─────────────┘     └─────────────┘     └──────┬──────┘
+                                               │
+                          ┌────────────────────┘
+                          │
+                          ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Polymarket │◀────│   Server    │◀────│  /auth/     │
+│    CLOB     │     │   Wallet    │     │  callback   │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
+
+1. **User initiates login** via SignInModal (Google OAuth or Email/Password)
+2. **Supabase Auth** handles authentication and returns session
+3. **OAuth callback** (`/auth/callback`) exchanges code for session
+4. **User registration** (`/api/auth/register`) creates:
+   - Server-side wallet (viem on Polygon)
+   - Database user record
+   - Polymarket CLOB credentials (async)
+5. **Session managed** via `authState` store (Svelte 5 runes)
+
+### Key Files
+
+| File                                         | Purpose                                 |
+| -------------------------------------------- | --------------------------------------- |
+| `src/lib/stores/auth.svelte.ts`              | Client-side auth state (Svelte 5 runes) |
+| `src/hooks.server.ts`                        | Server-side session verification        |
+| `src/routes/auth/callback/+server.ts`        | OAuth callback handler                  |
+| `src/routes/api/auth/register/+server.ts`    | User registration endpoint              |
+| `src/lib/server/wallet/server-wallet.ts`     | Server wallet management                |
+| `src/lib/components/auth/SignInModal.svelte` | Auth UI component                       |
+
+### Security Considerations
+
+- **`getUser()`** - Used for API security (verifies with Supabase server)
+- **`getSession()`** - Used for UI rendering (reads from cookies)
+- **Private keys** - Encrypted before database storage
+- **Service role** - Server-only, never exposed to client
 
 ---
 
@@ -251,23 +311,31 @@ test('should filter markets by category', async () => {
 Create a `.env` file in the root directory:
 
 ```env
-# Database (required)
-DATABASE_URL="postgres://username:password@localhost:5432/glitch_markets"
+# Supabase (required)
+PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 
 # Polymarket API (optional - uses defaults if not specified)
 POLYMARKET_API_URL="https://gamma-api.polymarket.com"
 POLYMARKET_API_TIMEOUT="10000"
 POLYMARKET_CACHE_TTL="60"
 POLYMARKET_CACHE_ENABLED="true"
+
+# Wallet Encryption (required for production)
+WALLET_ENCRYPTION_KEY="your-encryption-key"
 ```
 
-| Variable                   | Type    | Default                            | Description                    |
-| -------------------------- | ------- | ---------------------------------- | ------------------------------ |
-| `DATABASE_URL`             | string  | _required_                         | PostgreSQL connection string   |
-| `POLYMARKET_API_URL`       | string  | `https://gamma-api.polymarket.com` | Polymarket API base URL        |
-| `POLYMARKET_API_TIMEOUT`   | number  | `10000`                            | Request timeout (milliseconds) |
-| `POLYMARKET_CACHE_TTL`     | number  | `60`                               | Cache TTL (seconds)            |
-| `POLYMARKET_CACHE_ENABLED` | boolean | `true`                             | Enable/disable caching         |
+| Variable                    | Type    | Default                            | Description                     |
+| --------------------------- | ------- | ---------------------------------- | ------------------------------- |
+| `PUBLIC_SUPABASE_URL`       | string  | _required_                         | Supabase project URL            |
+| `PUBLIC_SUPABASE_ANON_KEY`  | string  | _required_                         | Supabase anonymous key          |
+| `SUPABASE_SERVICE_ROLE_KEY` | string  | _required_                         | Supabase service role key       |
+| `WALLET_ENCRYPTION_KEY`     | string  | _required_                         | Key for encrypting private keys |
+| `POLYMARKET_API_URL`        | string  | `https://gamma-api.polymarket.com` | Polymarket API base URL         |
+| `POLYMARKET_API_TIMEOUT`    | number  | `10000`                            | Request timeout (milliseconds)  |
+| `POLYMARKET_CACHE_TTL`      | number  | `60`                               | Cache TTL (seconds)             |
+| `POLYMARKET_CACHE_ENABLED`  | boolean | `true`                             | Enable/disable caching          |
 
 ### Caching Strategy
 
@@ -374,13 +442,15 @@ Glitch Markets takes security seriously. See [SECURITY_AUDIT_REPORT.md](../SECUR
 
 ### Security Features
 
+- ✅ **Supabase Auth**: Google OAuth and Email/Password authentication
+- ✅ **Server-side Verification**: Uses `getUser()` for API security
+- ✅ **Encrypted Wallets**: Private keys encrypted before storage
 - ✅ **Input Validation**: All user inputs validated and sanitized
 - ✅ **Rate Limiting**: Prevents abuse with IP-based throttling
 - ✅ **Error Handling**: Sanitized error messages, no info leakage
 - ✅ **Type Safety**: TypeScript throughout the stack
 - ✅ **Security Headers**: Proper HTTP security headers configured
 - ✅ **Dependency Scanning**: Regular security audits
-- 🚧 **Passkey Auth**: Passwordless authentication (coming soon)
 
 ### Before Making Repository Public
 
@@ -409,12 +479,14 @@ Glitch Markets takes security seriously. See [SECURITY_AUDIT_REPORT.md](../SECUR
 
 ## Roadmap
 
-### Q1 2025 - Authentication & User Features 🚧
+### Q1 2025 - Authentication & User Features ✅
 
-- [ ] Passkey authentication system
-- [ ] User registration and login
-- [ ] User profile pages
-- [ ] Portfolio dashboard
+- [x] Supabase Auth (Google OAuth + Email/Password)
+- [x] User registration and login
+- [x] Server wallet creation (Polygon via viem)
+- [x] Polymarket CLOB integration
+- [x] User profile pages
+- [x] Portfolio dashboard
 - [ ] Market watchlists
 
 ### Q2 2025 - Trading & Interactions
@@ -540,6 +612,7 @@ npm run prepare
 
 - [Polymarket API Documentation](https://docs.polymarket.com/)
 - [SvelteKit Documentation](https://kit.svelte.dev/)
+- [Supabase Auth Documentation](https://supabase.com/docs/guides/auth)
+- [viem Documentation](https://viem.sh/)
 - [Drizzle ORM Documentation](https://orm.drizzle.team/)
-- [WebAuthn Guide](https://webauthn.guide/)
 - [Security Audit Report](../SECURITY_AUDIT_REPORT.md)
