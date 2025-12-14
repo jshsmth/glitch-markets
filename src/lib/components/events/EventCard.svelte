@@ -12,17 +12,6 @@
 
 	let { event, variant = 'default' }: Props = $props();
 
-	const OUTCOME_COLORS = [
-		'#8b5cf6', // Purple
-		'#ec4899', // Pink
-		'#f59e0b', // Amber
-		'#00d9ff', // Cyan (brand)
-		'#10b981', // Green
-		'#f97316', // Orange
-		'#6366f1', // Indigo
-		'#14b8a6'  // Teal
-	];
-
 	function formatNumber(num: number | null | undefined): string {
 		if (num === null || num === undefined) return '$0';
 		if (num >= 1000000) {
@@ -60,10 +49,10 @@
 	interface OutcomeData {
 		label: string;
 		percentage: number;
-		color: string;
 	}
 
-	const binaryOutcomes = $derived.by((): OutcomeData[] | null => {
+	// Binary market: Yes percentage determines color (green if ≥50%, red if <50%)
+	const binaryData = $derived.by((): { yes: OutcomeData; no: OutcomeData; leansYes: boolean } | null => {
 		if (isMultiMarket) return null;
 		if (!parsedPrimaryMarket) return null;
 
@@ -74,12 +63,14 @@
 		const yesPercentage = parseFloat(prices[0]) * 100;
 		const noPercentage = parseFloat(prices[1]) * 100;
 
-		return [
-			{ label: outcomes[0] || 'Yes', percentage: yesPercentage, color: '#10b981' },
-			{ label: outcomes[1] || 'No', percentage: noPercentage, color: '#ef4444' }
-		];
+		return {
+			yes: { label: outcomes[0] || 'Yes', percentage: yesPercentage },
+			no: { label: outcomes[1] || 'No', percentage: noPercentage },
+			leansYes: yesPercentage >= 50
+		};
 	});
 
+	// Multi-market outcomes sorted by percentage
 	const multiOutcomes = $derived.by((): OutcomeData[] | null => {
 		if (!isMultiMarket || !event.markets) return null;
 
@@ -95,14 +86,9 @@
 						: market.outcomePrices;
 
 				if (Array.isArray(outcomes) && Array.isArray(prices) && outcomes.length >= 1) {
-					const displayTitle =
-						market.groupItemTitle || outcomes[0] || market.question;
+					const displayTitle = market.groupItemTitle || outcomes[0] || market.question;
 					const percentage = parseFloat(prices[0]) * 100;
-					allOutcomes.push({
-						label: displayTitle,
-						percentage,
-						color: OUTCOME_COLORS[allOutcomes.length % OUTCOME_COLORS.length]
-					});
+					allOutcomes.push({ label: displayTitle, percentage });
 				}
 			} catch {
 				// Skip invalid markets
@@ -114,10 +100,29 @@
 			: null;
 	});
 
-	const displayOutcomes = $derived(multiOutcomes || binaryOutcomes);
-	const leadingOutcome = $derived(displayOutcomes?.[0] || null);
-	const outcomeCount = $derived(displayOutcomes?.length || 0);
-	const isEffectivelyResolved = $derived(leadingOutcome && leadingOutcome.percentage >= 99);
+	const leadingOutcome = $derived(multiOutcomes?.[0] || null);
+	const secondOutcome = $derived(multiOutcomes?.[1] || null);
+	const outcomeCount = $derived(multiOutcomes?.length || 0);
+
+	// Resolved detection
+	const isEffectivelyResolved = $derived.by(() => {
+		if (binaryData) return binaryData.yes.percentage >= 99 || binaryData.no.percentage >= 99;
+		if (leadingOutcome) return leadingOutcome.percentage >= 99;
+		return false;
+	});
+
+	// Closing soon detection (within 7 days)
+	const closingSoon = $derived.by((): { days: number } | null => {
+		if (!event.endDate || isEffectivelyResolved) return null;
+		const endDate = new Date(event.endDate);
+		const now = new Date();
+		const diffMs = endDate.getTime() - now.getTime();
+		const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+		if (diffDays > 0 && diffDays <= 7) {
+			return { days: diffDays };
+		}
+		return null;
+	});
 </script>
 
 <a
@@ -127,6 +132,18 @@
 	class:resolved={isEffectivelyResolved}
 	data-sveltekit-preload-data="hover"
 >
+	<!-- Resolved badge (top-right corner) -->
+	{#if isEffectivelyResolved}
+		<div class="corner-badge resolved-badge">
+			<CheckCircleIcon size={12} />
+			<span>Resolved</span>
+		</div>
+	{:else if closingSoon}
+		<div class="corner-badge closing-badge">
+			<span>Closes in {closingSoon.days}d</span>
+		</div>
+	{/if}
+
 	<div class="card-content">
 		<!-- Header: Icon + Title -->
 		<div class="card-header">
@@ -137,51 +154,52 @@
 					</div>
 				{/if}
 				<h3 class="event-title">{event.title || 'Untitled Event'}</h3>
-				{#if isEffectivelyResolved}
-					<div class="resolved-badge">
-						<CheckCircleIcon size={14} />
-						<span>Resolved</span>
-					</div>
-				{/if}
 			</div>
-
-			<!-- Binary: Inline bar next to title -->
-			{#if !isMultiMarket && displayOutcomes && leadingOutcome && !isEffectivelyResolved}
-				<div class="probability-inline">
-					<div class="probability-bar">
-						{#each displayOutcomes as outcome, i (i)}
-							<div
-								class="bar-segment"
-								style="width: {outcome.percentage}%; background-color: {outcome.color};"
-								title="{outcome.label}: {outcome.percentage.toFixed(0)}%"
-							></div>
-						{/each}
-					</div>
-					<span class="outcome-percentage" style="color: {leadingOutcome.color}">
-						{leadingOutcome.percentage.toFixed(0)}%
-					</span>
-				</div>
-			{/if}
 		</div>
 
-		<!-- Multi-market: Leading outcome highlight (hide if resolved) -->
-		{#if isMultiMarket && displayOutcomes && leadingOutcome && !isEffectivelyResolved}
-			<div class="multi-highlight">
-				<div class="leading-text">
-					<span class="leader-name">{leadingOutcome.label}</span>
-					<span class="leader-odds">
-						{leadingOutcome.percentage.toFixed(0)}%
+		<!-- Binary Market Display -->
+		{#if binaryData && !isEffectivelyResolved}
+			<div class="binary-display">
+				<div class="binary-header">
+					<span class="binary-label">{binaryData.yes.label}</span>
+					<span class="binary-percentage" class:leans-yes={binaryData.leansYes} class:leans-no={!binaryData.leansYes}>
+						{binaryData.yes.percentage.toFixed(0)}%
 					</span>
 				</div>
-				<div class="probability-bar full">
+				<div class="probability-bar" class:bar-yes={binaryData.leansYes} class:bar-no={!binaryData.leansYes}>
 					<div
-						class="bar-segment leader"
+						class="bar-fill"
+						style="width: {binaryData.yes.percentage}%;"
+					></div>
+				</div>
+			</div>
+		{:else if binaryData && isEffectivelyResolved}
+			<div class="resolved-winner">
+				<CheckCircleIcon size={16} />
+				<span class="winner-name">
+					{binaryData.yes.percentage >= 99 ? binaryData.yes.label : binaryData.no.label}
+				</span>
+			</div>
+		{/if}
+
+		<!-- Multi-market Display -->
+		{#if isMultiMarket && leadingOutcome && !isEffectivelyResolved}
+			<div class="multi-display">
+				<div class="multi-header">
+					<span class="leader-name">{leadingOutcome.label}</span>
+					<span class="leader-percentage">{leadingOutcome.percentage.toFixed(0)}%</span>
+				</div>
+				<div class="probability-bar bar-multi">
+					<div
+						class="bar-fill"
 						style="width: {leadingOutcome.percentage}%;"
-						title="{leadingOutcome.label}: {leadingOutcome.percentage.toFixed(0)}%"
 					></div>
 				</div>
 				<div class="multi-meta">
 					<span>{outcomeCount} outcomes</span>
+					{#if secondOutcome}
+						<span class="second-place">2nd: {secondOutcome.label} ({secondOutcome.percentage.toFixed(0)}%)</span>
+					{/if}
 				</div>
 			</div>
 		{:else if isMultiMarket && isEffectivelyResolved && leadingOutcome}
@@ -223,6 +241,7 @@
 
 <style>
 	.event-card {
+		position: relative;
 		display: flex;
 		background: var(--bg-1);
 		border: 1px solid var(--bg-4);
@@ -249,26 +268,38 @@
 
 	/* Resolved state */
 	.event-card.resolved {
-		opacity: 0.7;
+		opacity: 0.65;
 		background: var(--bg-2);
 	}
 
 	.event-card.resolved:hover {
-		opacity: 0.85;
+		opacity: 0.8;
 	}
 
-	.resolved-badge {
+	/* Corner badges */
+	.corner-badge {
+		position: absolute;
+		top: 8px;
+		right: 8px;
 		display: flex;
 		align-items: center;
 		gap: 4px;
 		padding: 3px 8px;
-		background: rgba(0, 196, 71, 0.12);
 		border-radius: var(--radius-sm);
-		color: var(--success);
-		font-size: 11px;
+		font-size: 10px;
 		font-weight: 600;
 		white-space: nowrap;
-		flex-shrink: 0;
+		z-index: 1;
+	}
+
+	.resolved-badge {
+		background: var(--bg-3);
+		color: var(--success);
+	}
+
+	.closing-badge {
+		background: rgba(245, 158, 11, 0.15);
+		color: #f59e0b;
 	}
 
 	/* Compact variant */
@@ -297,9 +328,8 @@
 	/* Header */
 	.card-header {
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--spacing-3);
+		align-items: flex-start;
+		padding-right: 70px; /* Space for corner badge */
 	}
 
 	.title-row {
@@ -308,13 +338,6 @@
 		gap: var(--spacing-3);
 		flex: 1;
 		min-width: 0;
-	}
-
-	.probability-inline {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		flex-shrink: 0;
 	}
 
 	.event-icon {
@@ -346,70 +369,72 @@
 		overflow: hidden;
 	}
 
-	.bookmark-btn {
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		padding: 0;
-		background: transparent;
-		border: none;
-		border-radius: var(--radius-sm);
-		color: var(--text-3);
-		cursor: pointer;
-		transition: all var(--transition-fast);
-	}
-
-	.bookmark-btn:hover {
-		background: var(--bg-2);
-		color: var(--primary);
-	}
-
-	.bookmark-btn:focus-visible {
-		outline: none;
-		box-shadow: var(--focus-ring);
-	}
-
-	/* Probability Bar */
-	.probability-bar {
-		display: flex;
-		width: 60px;
-		height: 16px;
-		overflow: hidden;
-		background: var(--bg-3);
-	}
-
-	.probability-bar.full {
-		width: 100%;
-		height: 12px;
-	}
-
-	.bar-segment {
-		height: 100%;
-		min-width: 2px;
-		transition: width 0.3s ease;
-	}
-
-	.bar-segment.leader {
-		background-color: var(--primary);
-	}
-
-	.outcome-percentage {
-		font-size: 14px;
-		font-weight: 700;
-		white-space: nowrap;
-	}
-
-	/* Multi-market highlight */
-	.multi-highlight {
+	/* Binary Market Display */
+	.binary-display {
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
 	}
 
-	.leading-text {
+	.binary-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--spacing-2);
+	}
+
+	.binary-label {
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--text-1);
+	}
+
+	.binary-percentage {
+		font-size: 15px;
+		font-weight: 700;
+	}
+
+	.binary-percentage.leans-yes {
+		color: var(--success);
+	}
+
+	.binary-percentage.leans-no {
+		color: var(--danger);
+	}
+
+	/* Probability Bar */
+	.probability-bar {
+		width: 100%;
+		height: 8px;
+		background: var(--bg-3);
+		overflow: hidden;
+	}
+
+	.bar-fill {
+		height: 100%;
+		transition: width 0.3s ease;
+	}
+
+	.probability-bar.bar-yes .bar-fill {
+		background-color: var(--success);
+	}
+
+	.probability-bar.bar-no .bar-fill {
+		background-color: var(--danger);
+	}
+
+	.probability-bar.bar-multi .bar-fill {
+		background-color: var(--primary);
+	}
+
+	/* Multi-market Display */
+	.multi-display {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.multi-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -427,19 +452,30 @@
 		min-width: 0;
 	}
 
-	.leader-odds {
-		font-size: 14px;
+	.leader-percentage {
+		font-size: 15px;
 		font-weight: 700;
-		white-space: nowrap;
 		color: var(--primary);
+		white-space: nowrap;
 	}
 
 	.multi-meta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 		font-size: 12px;
 		color: var(--text-3);
 	}
 
-	/* Resolved winner display */
+	.second-place {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		max-width: 60%;
+		text-align: right;
+	}
+
+	/* Resolved winner */
 	.resolved-winner {
 		display: flex;
 		align-items: center;
@@ -453,7 +489,7 @@
 		color: var(--text-1);
 	}
 
-	/* Footer Stats */
+	/* Footer */
 	.card-footer {
 		margin-top: auto;
 		padding-top: var(--spacing-3);
@@ -492,6 +528,32 @@
 		font-weight: 500;
 	}
 
+	.bookmark-btn {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		padding: 0;
+		background: transparent;
+		border: none;
+		border-radius: var(--radius-sm);
+		color: var(--text-3);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.bookmark-btn:hover {
+		background: var(--bg-2);
+		color: var(--primary);
+	}
+
+	.bookmark-btn:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
 	/* Mobile */
 	@media (max-width: 768px) {
 		.event-card {
@@ -509,6 +571,15 @@
 
 		.stats {
 			gap: var(--spacing-4);
+		}
+
+		.card-header {
+			padding-right: 60px;
+		}
+
+		.corner-badge {
+			font-size: 9px;
+			padding: 2px 6px;
 		}
 	}
 </style>
