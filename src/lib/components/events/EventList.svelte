@@ -13,6 +13,7 @@
 		hasMore?: boolean;
 		loadMoreInterval?: number;
 		loadMoreRootMargin?: string;
+		title?: string;
 	}
 
 	let {
@@ -23,7 +24,8 @@
 		onLoadMore,
 		hasMore = false,
 		loadMoreInterval = 500,
-		loadMoreRootMargin = '200px'
+		loadMoreRootMargin = '200px',
+		title = 'Trending'
 	}: Props = $props();
 
 	function isResolved(event: Event): boolean {
@@ -96,6 +98,7 @@
 </script>
 
 <div class="event-list-container">
+	<h2 class="section-title">{title}</h2>
 	{#if loading && events.length === 0}
 		<div class="event-grid">
 			{#each { length: 6 }, i (i)}
@@ -161,6 +164,19 @@
 <style>
 	.event-list-container {
 		width: 100%;
+	}
+
+	.section-title {
+		font-size: 20px;
+		font-weight: 700;
+		color: var(--text-0);
+		margin: 0 0 var(--space-md) 0;
+	}
+
+	@media (max-width: 640px) {
+		.section-title {
+			font-size: 18px;
+		}
 	}
 
 	.event-grid {
