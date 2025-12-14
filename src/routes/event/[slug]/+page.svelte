@@ -795,34 +795,32 @@
 
 	.time-controls {
 		display: flex;
-		gap: 4px;
-		padding: 12px;
-		background: var(--bg-1);
-		border-top: 1px solid var(--bg-3);
+		gap: 8px;
+		padding: 12px 0;
+		justify-content: flex-end;
 	}
 
 	.time-btn {
-		flex: 1;
-		padding: 8px;
-		font-size: 12px;
-		font-weight: 600;
-		background: var(--bg-2);
-		border: 1px solid var(--bg-3);
+		padding: 6px 12px;
+		font-size: 13px;
+		font-weight: 500;
+		background: transparent;
+		border: none;
 		border-radius: 6px;
-		color: var(--text-2);
+		color: var(--text-3);
 		cursor: pointer;
 		transition: all var(--transition-fast);
 	}
 
 	.time-btn:hover {
-		background: var(--bg-3);
+		background: var(--bg-2);
 		color: var(--text-0);
 	}
 
 	.time-btn.active {
-		background: var(--primary);
-		color: var(--bg-0);
-		border-color: var(--primary);
+		background: var(--bg-2);
+		color: var(--text-0);
+		font-weight: 600;
 	}
 
 	.rules-link {
