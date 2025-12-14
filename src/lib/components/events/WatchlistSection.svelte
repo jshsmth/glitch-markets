@@ -161,7 +161,7 @@
 			<div class="prompt-content">
 				<h3>Create Your Watchlist</h3>
 				<p>Sign in to bookmark markets and track your favorites</p>
-				<button class="sign-in-btn" onclick={openSignInModal}> Sign In to Bookmark </button>
+				<button class="sign-in-btn" onclick={() => openSignInModal()}> Sign In to Bookmark </button>
 			</div>
 		</div>
 	</div>

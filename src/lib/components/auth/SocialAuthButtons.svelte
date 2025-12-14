@@ -83,20 +83,21 @@
 		align-items: center;
 		justify-content: center;
 		gap: 12px;
-		padding: 14px 24px;
+		padding: 16px 24px;
 		border: none;
-		border-radius: 8px;
+		border-radius: 10px;
 		font-size: 16px;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		height: 52px;
+		height: 54px;
 		width: 100%;
 	}
 
 	.auth-button:disabled {
 		cursor: not-allowed;
-		opacity: 0.6;
+		opacity: 0.5;
+		filter: saturate(0.8);
 	}
 
 	.auth-button:not(:disabled):hover {
@@ -110,16 +111,18 @@
 
 	.auth-button:focus-visible {
 		outline: none;
-		box-shadow: var(--focus-ring);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--google-bg) 25%, transparent);
 	}
 
 	.auth-button.google {
 		background: var(--google-bg);
 		color: #ffffff;
+		box-shadow: 0 2px 8px color-mix(in srgb, var(--google-bg) 25%, transparent);
 	}
 
 	.auth-button.google:not(:disabled):hover {
 		background: color-mix(in srgb, var(--google-bg) 90%, white);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--google-bg) 35%, transparent);
 	}
 
 	.spinner {
@@ -139,7 +142,7 @@
 
 	@media (min-width: 768px) {
 		.auth-button {
-			height: 50px;
+			height: 52px;
 		}
 	}
 

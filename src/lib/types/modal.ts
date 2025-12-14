@@ -30,6 +30,8 @@ export interface SignInModalProps {
 	isOpen: boolean;
 	/** Callback when modal should close */
 	onClose: () => void;
+	/** Initial authentication mode - 'signin' or 'signup' */
+	initialMode?: 'signin' | 'signup';
 }
 
 /**

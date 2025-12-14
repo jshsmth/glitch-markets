@@ -5,7 +5,7 @@
 	import SocialAuthButtons from './SocialAuthButtons.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
 
-	let { isOpen, onClose }: SignInModalProps = $props();
+	let { isOpen, onClose, initialMode = 'signin' }: SignInModalProps = $props();
 
 	let isAuthenticating = $state<AuthProvider | null>(null);
 	let errorMessage = $state<string | null>(null);
@@ -44,7 +44,7 @@
 <Modal {isOpen} onClose={handleModalClose} title="Welcome to Glitch Markets">
 	<div class="modal-subtitle">Sign in or create your account to get started</div>
 	<div class="sign-in-content">
-		<EmailOTPForm onAuthStateChange={handleEmailAuthChange} onError={handleError} />
+		<EmailOTPForm {initialMode} onAuthStateChange={handleEmailAuthChange} onError={handleError} />
 
 		{#if showSocialButtons}
 			<div class="divider">
@@ -81,53 +81,65 @@
 <style>
 	.modal-subtitle {
 		color: var(--text-2);
-		font-size: 14px;
-		margin-top: -16px;
-		margin-bottom: 24px;
-		line-height: 1.5;
+		font-size: 15px;
+		font-weight: 400;
+		margin-top: 0;
+		margin-bottom: 28px;
+		padding-top: 20px;
+		line-height: 1.6;
 	}
 
 	.sign-in-content {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: 20px;
 	}
 
 	.divider {
 		display: flex;
 		align-items: center;
 		gap: 16px;
-		margin: 4px 0;
+		margin: 8px 0;
 	}
 
 	.divider-line {
 		flex: 1;
 		height: 1px;
-		background: var(--bg-4);
+		background: linear-gradient(
+			to right,
+			transparent,
+			var(--bg-4) 20%,
+			var(--bg-4) 80%,
+			transparent
+		);
 	}
 
 	.divider-text {
-		font-size: 14px;
-		font-weight: 400;
-		color: var(--text-2);
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--text-3);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 
 	.error-message {
-		padding: 12px 16px;
-		background: color-mix(in srgb, var(--danger) 10%, transparent);
-		border: 1px solid var(--danger);
-		border-radius: 8px;
+		padding: 14px 18px;
+		background: color-mix(in srgb, var(--danger) 8%, transparent);
+		border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+		border-radius: 10px;
 		color: var(--danger);
 		font-size: 14px;
+		font-weight: 500;
 		text-align: center;
+		line-height: 1.5;
 	}
 
 	.privacy-text {
-		font-size: 12px;
+		font-size: 12.5px;
 		color: var(--text-3);
 		text-align: center;
-		margin: var(--spacing-2) 0 0 0;
-		line-height: 1.5;
+		margin: 4px 0 0 0;
+		line-height: 1.6;
 	}
 
 	.privacy-text a {
