@@ -113,37 +113,29 @@
 		return diffDays > 0 && diffDays <= 7;
 	});
 
-	const BOOKMARKS_KEY = 'glitch-bookmarks';
+	import { isBookmarked, addToWatchlist, removeFromWatchlist } from '$lib/stores/watchlist.svelte';
+	import { openSignInModal } from '$lib/stores/modal.svelte';
+	import { authState } from '$lib/stores/auth.svelte';
 
-	function getBookmarkedEvents(): Set<string> {
-		if (typeof window === 'undefined') return new Set();
-		try {
-			const stored = localStorage.getItem(BOOKMARKS_KEY);
-			return stored ? new Set(JSON.parse(stored)) : new Set();
-		} catch {
-			return new Set();
+	let isEventBookmarked = $derived(isBookmarked(event.id));
+
+	async function toggleBookmark() {
+		if (!authState.user) {
+			openSignInModal();
+			return;
 		}
-	}
 
-	function saveBookmarkedEvents(bookmarks: Set<string>): void {
-		if (typeof window === 'undefined') return;
-		try {
-			localStorage.setItem(BOOKMARKS_KEY, JSON.stringify([...bookmarks]));
-		} catch (error) {
-			console.error('Failed to save bookmarks:', error);
-		}
-	}
-
-	let bookmarkedEvents = new SvelteSet(getBookmarkedEvents());
-	let isBookmarked = $derived(bookmarkedEvents.has(event.id));
-
-	function toggleBookmark() {
-		if (isBookmarked) {
-			bookmarkedEvents.delete(event.id);
+		if (isEventBookmarked) {
+			await removeFromWatchlist(event.id);
 		} else {
-			bookmarkedEvents.add(event.id);
+			try {
+				await addToWatchlist(event.id);
+			} catch (error) {
+				if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+					openSignInModal();
+				}
+			}
 		}
-		saveBookmarkedEvents(bookmarkedEvents);
 	}
 </script>
 
@@ -308,12 +300,12 @@
 				</div>
 				<button
 					class="bookmark-btn"
-					class:bookmarked={isBookmarked}
+					class:bookmarked={isEventBookmarked}
 					onclick={toggleBookmark}
-					aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this event'}
-					aria-pressed={isBookmarked}
+					aria-label={isEventBookmarked ? 'Remove bookmark' : 'Bookmark this event'}
+					aria-pressed={isEventBookmarked}
 				>
-					<BookmarkIcon size={18} filled={isBookmarked} />
+					<BookmarkIcon size={18} filled={isEventBookmarked} />
 				</button>
 			</div>
 		{/if}

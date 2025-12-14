@@ -6,9 +6,14 @@
 	import { dev } from '$app/environment';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import { createQueryClient } from '$lib/query/client';
-	import { initializeAuth, updateAuthState, refreshProfile } from '$lib/stores/auth.svelte';
+	import { initializeAuth, updateAuthState, refreshProfile, authState } from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
 	import { initializeWalletSync } from '$lib/stores/wallet.svelte';
+	import { initializeWatchlist, clearWatchlist, setQueryClient } from '$lib/stores/watchlist.svelte';
+	import {
+		migrateLocalStorageBookmarks,
+		shouldOfferMigration
+	} from '$lib/utils/migrate-bookmarks';
 	import {
 		signInModalState,
 		closeSignInModal,
@@ -17,6 +22,7 @@
 		withdrawModalState,
 		closeWithdrawModal
 	} from '$lib/stores/modal.svelte';
+	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import TopHeader from '$lib/components/layout/TopHeader.svelte';
@@ -37,6 +43,7 @@
 	onMount(() => {
 		initializeTheme();
 		initializeAuth(data?.session);
+		setQueryClient(queryClient);
 
 		const cleanupWalletSync = initializeWalletSync();
 
@@ -59,6 +66,22 @@
 			subscription.unsubscribe();
 			cleanupWalletSync();
 		};
+	});
+
+	$effect(() => {
+		if (browser && authState.user) {
+			initializeWatchlist();
+
+			if (shouldOfferMigration()) {
+				migrateLocalStorageBookmarks().then((result) => {
+					if (result.migrated > 0) {
+						console.log(`Migrated ${result.migrated} bookmarks to database`);
+					}
+				});
+			}
+		} else if (browser) {
+			clearWatchlist();
+		}
 	});
 
 	async function handleUserSignIn() {

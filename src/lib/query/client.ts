@@ -112,5 +112,8 @@ export const queryKeys = {
 		leaderboard: (timePeriod: string, limit: number, offset: number) =>
 			['builders', 'leaderboard', timePeriod, limit, offset] as const,
 		volume: (timePeriod: string) => ['builders', 'volume', timePeriod] as const
+	},
+	watchlist: {
+		all: ['watchlist'] as const
 	}
 };
