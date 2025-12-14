@@ -4,6 +4,7 @@
 	import WaterLiquidIcon from '$lib/components/icons/WaterLiquidIcon.svelte';
 	import BookmarkIcon from '$lib/components/icons/BookmarkIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
+	import ClockIcon from '$lib/components/icons/ClockIcon.svelte';
 
 	interface Props {
 		event: Event;
@@ -125,12 +126,10 @@
 	});
 </script>
 
-<a
-	href={`/event/${event.slug || event.id}`}
+<div
 	class="event-card"
 	class:compact={variant === 'compact'}
 	class:resolved={isEffectivelyResolved}
-	data-sveltekit-preload-data="hover"
 >
 	<!-- Resolved badge (top-right corner) -->
 	{#if isEffectivelyResolved}
@@ -140,7 +139,8 @@
 		</div>
 	{:else if closingSoon}
 		<div class="corner-badge closing-badge">
-			<span>Closes in {closingSoon.days}d</span>
+			<ClockIcon size={10} />
+			<span>{closingSoon.days}d left</span>
 		</div>
 	{/if}
 
@@ -153,7 +153,13 @@
 						<img src={event.image} alt={event.title || 'Event icon'} />
 					</div>
 				{/if}
-				<h3 class="event-title">{event.title || 'Untitled Event'}</h3>
+				<a
+					href={`/event/${event.slug || event.id}`}
+					class="event-title-link"
+					data-sveltekit-preload-data="hover"
+				>
+					<h3 class="event-title">{event.title || 'Untitled Event'}</h3>
+				</a>
 			</div>
 		</div>
 
@@ -226,10 +232,6 @@
 				</div>
 				<button
 					class="bookmark-btn"
-					onclick={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-					}}
 					aria-label="Bookmark this event"
 				>
 					<BookmarkIcon size={18} />
@@ -237,7 +239,7 @@
 			</div>
 		{/if}
 	</div>
-</a>
+</div>
 
 <style>
 	.event-card {
@@ -248,22 +250,7 @@
 		border-radius: var(--radius-card);
 		padding: var(--spacing-4);
 		box-shadow: var(--shadow-sm);
-		transition: all var(--transition-fast);
-		color: inherit;
-		text-decoration: none;
 		height: 100%;
-	}
-
-	.event-card:hover {
-		border-color: var(--primary);
-		box-shadow: var(--shadow-primary-md);
-		transform: translateY(-1px);
-	}
-
-	.event-card:focus-visible {
-		outline: none;
-		border-color: var(--primary);
-		box-shadow: var(--focus-ring);
 	}
 
 	/* Resolved state */
@@ -276,16 +263,16 @@
 		opacity: 0.8;
 	}
 
-	/* Corner badges */
+	/* Corner badges - pill shaped for differentiation */
 	.corner-badge {
 		position: absolute;
 		top: 8px;
 		right: 8px;
 		display: flex;
 		align-items: center;
-		gap: 4px;
-		padding: 3px 8px;
-		border-radius: var(--radius-sm);
+		gap: 3px;
+		padding: 4px 10px;
+		border-radius: var(--radius-full);
 		font-size: 10px;
 		font-weight: 600;
 		white-space: nowrap;
@@ -293,13 +280,15 @@
 	}
 
 	.resolved-badge {
-		background: var(--bg-3);
-		color: var(--success);
+		background: var(--success-bg);
+		color: var(--success-dark);
+		border: 1px solid var(--success-light);
 	}
 
 	.closing-badge {
-		background: rgba(245, 158, 11, 0.15);
-		color: #f59e0b;
+		background: var(--warning-bg);
+		color: var(--warning-dark);
+		border: 1px solid var(--warning-light);
 	}
 
 	/* Compact variant */
@@ -342,8 +331,8 @@
 
 	.event-icon {
 		flex-shrink: 0;
-		width: 36px;
-		height: 36px;
+		width: 40px;
+		height: 40px;
 		border-radius: var(--radius-md);
 		overflow: hidden;
 		background: var(--bg-2);
@@ -356,9 +345,32 @@
 		object-fit: cover;
 	}
 
+	.event-title-link {
+		text-decoration: none;
+		color: inherit;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.event-title-link:hover .event-title {
+		color: var(--primary);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+	.event-title-link:focus-visible {
+		outline: none;
+	}
+
+	.event-title-link:focus-visible .event-title {
+		color: var(--primary);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
 	.event-title {
 		font-size: 15px;
-		font-weight: 600;
+		font-weight: 700;
 		color: var(--text-0);
 		line-height: 1.35;
 		margin: 0;
@@ -367,6 +379,7 @@
 		line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
+		transition: color var(--transition-fast);
 	}
 
 	/* Binary Market Display */
@@ -406,13 +419,15 @@
 	/* Probability Bar */
 	.probability-bar {
 		width: 100%;
-		height: 8px;
+		height: 10px;
 		background: var(--bg-3);
+		border-radius: var(--radius-full);
 		overflow: hidden;
 	}
 
 	.bar-fill {
 		height: 100%;
+		border-radius: var(--radius-full);
 		transition: width 0.3s ease;
 	}
 
@@ -503,7 +518,7 @@
 
 	.stats {
 		display: flex;
-		gap: var(--spacing-5);
+		gap: var(--spacing-4);
 		align-items: center;
 	}
 
@@ -511,6 +526,15 @@
 		display: flex;
 		align-items: center;
 		gap: 4px;
+	}
+
+	.stat:not(:last-child)::after {
+		content: '';
+		display: block;
+		width: 1px;
+		height: 12px;
+		background: var(--bg-4);
+		margin-left: var(--spacing-4);
 	}
 
 	.stat :global(.stat-icon) {
@@ -581,7 +605,11 @@
 
 		.corner-badge {
 			font-size: 9px;
-			padding: 2px 6px;
+			padding: 3px 8px;
+		}
+
+		.stat:not(:last-child)::after {
+			margin-left: var(--spacing-3);
 		}
 	}
 </style>

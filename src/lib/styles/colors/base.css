@@ -5,12 +5,12 @@
 
 :root {
 	/* ============================================
-     PRIMARY BRAND COLOR - Slate
+     PRIMARY BRAND COLOR - Zinc
      Shared across light and dark themes
      ============================================ */
 
-	--primary-base: #64748b; /* Main brand color */
-	--primary-rgb: 100, 116, 139; /* RGB values for rgba() usage */
+	--primary-base: #71717a; /* Main brand color */
+	--primary-rgb: 113, 113, 122; /* RGB values for rgba() usage */
 
 	/* ============================================
      THIRD-PARTY BRAND COLORS
@@ -148,17 +148,17 @@
 	   Shared gradients for EventCard odds rows and chips
 	   ============================================ */
 
-	/* Yes/First outcome: Green-to-slate gradient */
+	/* Yes/First outcome: Green-to-zinc gradient */
 	--gradient-yes-start: rgba(0, 196, 71, 0.12);
-	--gradient-yes-end: rgba(100, 116, 139, 0.08);
+	--gradient-yes-end: rgba(113, 113, 122, 0.08);
 
-	/* No/Second outcome: Slate gradient */
-	--gradient-no-start: rgba(100, 116, 139, 0.1);
-	--gradient-no-end: rgba(71, 85, 105, 0.08);
+	/* No/Second outcome: Zinc gradient */
+	--gradient-no-start: rgba(113, 113, 122, 0.1);
+	--gradient-no-end: rgba(82, 82, 91, 0.08);
 
-	/* Alternative second outcome (red-to-slate) for binary markets */
+	/* Alternative second outcome (red-to-zinc) for binary markets */
 	--gradient-no-alt-start: rgba(255, 51, 102, 0.12);
-	--gradient-no-alt-end: rgba(100, 116, 139, 0.08);
+	--gradient-no-alt-end: rgba(113, 113, 122, 0.08);
 
 	/* ============================================
      TARGET SIZES (WCAG 2.2 AA Compliance)

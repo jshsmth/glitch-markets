@@ -1,6 +1,6 @@
 /**
  * Glitch Markets - Light Theme Colors
- * Clean neutral palette with slate accents
+ * Clean neutral palette with zinc accents
  */
 
 :root {
@@ -38,19 +38,19 @@
 	--text-4: #aaaaaa; /* Disabled states */
 
 	/* ============================================
-     PRIMARY BRAND COLOR - Slate
+     PRIMARY BRAND COLOR - Zinc
      ============================================ */
 
-	--primary-50: #f8fafc;
-	--primary-100: #f1f5f9;
-	--primary-200: #e2e8f0;
-	--primary-300: #cbd5e1;
-	--primary-400: #94a3b8;
-	--primary-500: #64748b; /* Main brand color */
-	--primary-600: #475569;
-	--primary-700: #334155;
-	--primary-800: #1e293b;
-	--primary-900: #0f172a;
+	--primary-50: #fafafa;
+	--primary-100: #f4f4f5;
+	--primary-200: #e4e4e7;
+	--primary-300: #d4d4d8;
+	--primary-400: #a1a1aa;
+	--primary-500: #71717a; /* Main brand color */
+	--primary-600: #52525b;
+	--primary-700: #3f3f46;
+	--primary-800: #27272a;
+	--primary-900: #18181b;
 
 	/* Convenient aliases */
 	--primary: var(--primary-500);
@@ -58,7 +58,7 @@
 	--primary-active: var(--primary-700);
 
 	/* RGB for transparency effects */
-	--primary-rgb: 100, 116, 139;
+	--primary-rgb: 113, 113, 122;
 
 	/* ============================================
      TRADING INDICATORS - Improved vibrance and backgrounds
@@ -85,7 +85,7 @@
 
 	/* Button colors */
 	--button-primary-bg: var(--primary);
-	--button-primary-text: #ffffff; /* White text on slate */
+	--button-primary-text: #ffffff; /* White text on zinc */
 	--button-primary-hover-bg: var(--primary-hover);
 
 	/* Error states */

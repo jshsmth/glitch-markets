@@ -27,14 +27,14 @@
 	 * Generate a consistent gradient based on user ID using brand colors
 	 */
 	function generateAvatarGradient(userId: string): string {
-		// Brand color palette from design system (slate-based)
+		// Brand color palette from design system (zinc-based)
 		const brandColors = [
-			['#64748b', '#475569'], // Slate to dark slate (primary)
-			['#94a3b8', '#64748b'], // Light slate to slate
-			['#64748b', '#334155'], // Slate to deep slate
-			['#cbd5e1', '#94a3b8'], // Pale slate to light slate
-			['#475569', '#334155'], // Dark slate to deeper slate
-			['#94a3b8', '#475569'] // Light slate to dark slate
+			['#71717a', '#52525b'], // Zinc to dark zinc (primary)
+			['#a1a1aa', '#71717a'], // Light zinc to zinc
+			['#71717a', '#3f3f46'], // Zinc to deep zinc
+			['#d4d4d8', '#a1a1aa'], // Pale zinc to light zinc
+			['#52525b', '#3f3f46'], // Dark zinc to deeper zinc
+			['#a1a1aa', '#52525b'] // Light zinc to dark zinc
 		];
 
 		// Generate consistent hash from user ID

@@ -13,13 +13,14 @@
 	 * Same algorithm as UserAvatar.svelte
 	 */
 	function generateAvatarGradient(userId: string): string {
+		// Brand color palette from design system (zinc-based)
 		const brandColors = [
-			['#00d9ff', '#00aed9'], // Cyan gradient (primary)
-			['#00d9ff', '#0083a3'], // Cyan to darker cyan
-			['#33cfff', '#0083a3'], // Light cyan to dark cyan
-			['#00c447', '#00d9ff'], // Success to cyan
-			['#00d9ff', '#00c447'], // Cyan to success
-			['#66dbff', '#00aed9'] // Light cyan to medium cyan
+			['#71717a', '#52525b'], // Zinc to dark zinc (primary)
+			['#a1a1aa', '#71717a'], // Light zinc to zinc
+			['#71717a', '#3f3f46'], // Zinc to deep zinc
+			['#d4d4d8', '#a1a1aa'], // Pale zinc to light zinc
+			['#52525b', '#3f3f46'], // Dark zinc to deeper zinc
+			['#a1a1aa', '#52525b'] // Light zinc to dark zinc
 		];
 
 		let hash = 0;
