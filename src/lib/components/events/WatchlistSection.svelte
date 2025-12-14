@@ -108,14 +108,16 @@
 			</div>
 
 			<div class="watchlist-container">
-				<!-- Desktop Left Arrow -->
 				{#if showLeftArrow}
-					<button class="scroll-arrow scroll-arrow-left" onclick={scrollLeft} aria-label="Scroll left">
+					<button
+						class="scroll-arrow scroll-arrow-left"
+						onclick={scrollLeft}
+						aria-label="Scroll left"
+					>
 						<ChevronLeftIcon size={24} />
 					</button>
 				{/if}
 
-				<!-- Scrollable content -->
 				<div
 					class="watchlist-scroll"
 					class:show-all={showAllMode}
@@ -129,24 +131,25 @@
 					{/each}
 				</div>
 
-				<!-- Desktop Right Arrow -->
 				{#if showRightArrow && !showAllMode}
-					<button class="scroll-arrow scroll-arrow-right" onclick={scrollRight} aria-label="Scroll right">
+					<button
+						class="scroll-arrow scroll-arrow-right"
+						onclick={scrollRight}
+						aria-label="Scroll right"
+					>
 						<ChevronRightIcon size={24} />
 					</button>
 				{/if}
 
-				<!-- Gradient fade indicators -->
 				{#if !showAllMode}
 					<div class="scroll-fade scroll-fade-left" class:visible={showLeftArrow}></div>
 					<div class="scroll-fade scroll-fade-right" class:visible={showRightArrow}></div>
 				{/if}
 			</div>
 
-			<!-- Pagination dots -->
 			{#if !showAllMode && totalPages > 1}
 				<div class="pagination-dots">
-					{#each { length: Math.min(totalPages, 5) } as _, i}
+					{#each Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i) as i (i)}
 						<div class="dot" class:active={i === currentPage}></div>
 					{/each}
 				</div>

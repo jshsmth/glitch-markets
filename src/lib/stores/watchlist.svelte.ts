@@ -6,10 +6,12 @@
 import { SvelteSet } from 'svelte/reactivity';
 import { browser } from '$app/environment';
 import { queryKeys } from '$lib/query/client';
+import type { QueryClient } from '@tanstack/svelte-query';
+import type { Event } from '$lib/server/api/polymarket-client';
 
-let queryClient: any = null;
+let queryClient: QueryClient | null = null;
 
-export function setQueryClient(client: any) {
+export function setQueryClient(client: QueryClient) {
 	queryClient = client;
 }
 
@@ -65,7 +67,6 @@ export async function addToWatchlist(eventId: string): Promise<boolean> {
 	try {
 		bookmarkedEventIds.add(eventId);
 
-		// Haptic feedback
 		if ('vibrate' in navigator) {
 			navigator.vibrate(50);
 		}
@@ -111,15 +112,14 @@ export async function removeFromWatchlist(eventId: string): Promise<boolean> {
 	try {
 		bookmarkedEventIds.delete(eventId);
 
-		// Haptic feedback (slightly longer for removal)
 		if ('vibrate' in navigator) {
 			navigator.vibrate([30, 20, 30]);
 		}
 
 		if (queryClient) {
-			queryClient.setQueryData(queryKeys.watchlist.all, (old: any) => {
+			queryClient.setQueryData(queryKeys.watchlist.all, (old: Event[] | undefined) => {
 				if (!old) return old;
-				return old.filter((event: any) => event.id !== eventId);
+				return old.filter((event: Event) => event.id !== eventId);
 			});
 		}
 

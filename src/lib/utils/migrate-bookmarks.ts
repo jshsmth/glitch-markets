@@ -54,7 +54,6 @@ export async function migrateLocalStorageBookmarks(): Promise<{
 
 export function shouldOfferMigration(): boolean {
 	return (
-		!!localStorage.getItem(BOOKMARKS_KEY) &&
-		localStorage.getItem(MIGRATION_FLAG_KEY) !== 'true'
+		!!localStorage.getItem(BOOKMARKS_KEY) && localStorage.getItem(MIGRATION_FLAG_KEY) !== 'true'
 	);
 }

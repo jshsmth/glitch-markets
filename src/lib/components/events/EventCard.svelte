@@ -7,7 +7,6 @@
 	import FireIcon from '$lib/components/icons/FireIcon.svelte';
 	import CupIcon from '$lib/components/icons/CupIcon.svelte';
 	import { formatNumber } from '$lib/utils/format';
-	import { SvelteSet } from 'svelte/reactivity';
 
 	interface Props {
 		event: Event;
@@ -65,7 +64,6 @@
 		}
 	);
 
-	// Multi-market outcomes sorted by percentage
 	const multiOutcomes = $derived.by((): OutcomeData[] | null => {
 		if (!isMultiMarket || !event.markets) return null;
 
@@ -86,7 +84,7 @@
 					allOutcomes.push({ label: displayTitle, percentage });
 				}
 			} catch {
-				// Skip invalid markets
+				// Intentionally skip invalid markets
 			}
 		}
 
@@ -97,7 +95,6 @@
 	const secondOutcome = $derived(multiOutcomes?.[1] || null);
 	const outcomeCount = $derived(multiOutcomes?.length || 0);
 
-	// Resolved detection
 	const isEffectivelyResolved = $derived.by(() => {
 		if (binaryData) return binaryData.yes.percentage >= 99 || binaryData.no.percentage >= 99;
 		if (leadingOutcome) return leadingOutcome.percentage >= 99;
@@ -144,7 +141,6 @@
 	class:compact={variant === 'compact'}
 	class:resolved={isEffectivelyResolved}
 >
-	<!-- Resolved badge (top-right corner) -->
 	{#if isEffectivelyResolved}
 		<div class="corner-badge resolved-badge">
 			<CheckCircleIcon size={12} />
@@ -158,7 +154,6 @@
 	{/if}
 
 	<div class="card-content">
-		<!-- Header: Icon + Title -->
 		<div class="card-header">
 			<div class="title-row">
 				{#if event.image}
@@ -176,10 +171,8 @@
 			</div>
 		</div>
 
-		<!-- Binary Market Display -->
 		{#if binaryData && !isEffectivelyResolved}
 			<div class="binary-display">
-				<!-- Yes/Leading option -->
 				<div class="binary-row" class:leading={binaryData.leansYes}>
 					<div class="binary-option">
 						<span class="binary-label" class:label-yes={binaryData.leansYes}
@@ -201,7 +194,6 @@
 						<div class="bar-fill" style="width: {binaryData.yes.percentage}%;"></div>
 					</div>
 				</div>
-				<!-- No option -->
 				<div class="binary-row" class:leading={!binaryData.leansYes}>
 					<div class="binary-option">
 						<span class="binary-label" class:label-no={!binaryData.leansYes}
@@ -233,10 +225,8 @@
 			</div>
 		{/if}
 
-		<!-- Multi-market Display -->
 		{#if isMultiMarket && leadingOutcome && !isEffectivelyResolved}
 			<div class="multi-display">
-				<!-- 1st Place -->
 				<div class="outcome-row first-place">
 					<div class="rank-badge rank-1">
 						<CupIcon size={10} />
@@ -252,7 +242,6 @@
 					</div>
 				</div>
 
-				<!-- 2nd Place -->
 				{#if secondOutcome}
 					<div class="outcome-row second-place">
 						<div class="rank-badge rank-2">2</div>
@@ -269,7 +258,6 @@
 					</div>
 				{/if}
 
-				<!-- More outcomes indicator -->
 				{#if outcomeCount > 2}
 					<div class="more-outcomes">
 						+{outcomeCount - 2} more outcome{outcomeCount - 2 === 1 ? '' : 's'}
@@ -283,7 +271,6 @@
 			</div>
 		{/if}
 
-		<!-- Footer Stats -->
 		{#if variant !== 'compact'}
 			<div class="card-footer">
 				<div class="stats">

@@ -55,7 +55,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			eventIds.map(async (eventId) => {
 				try {
 					return await eventService.getEventById(eventId);
-				} catch (error) {
+				} catch {
 					console.warn('Event not found or unavailable:', eventId);
 					return null;
 				}

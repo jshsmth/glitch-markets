@@ -6,14 +6,20 @@
 	import { dev } from '$app/environment';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import { createQueryClient } from '$lib/query/client';
-	import { initializeAuth, updateAuthState, refreshProfile, authState } from '$lib/stores/auth.svelte';
+	import {
+		initializeAuth,
+		updateAuthState,
+		refreshProfile,
+		authState
+	} from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
 	import { initializeWalletSync } from '$lib/stores/wallet.svelte';
-	import { initializeWatchlist, clearWatchlist, setQueryClient } from '$lib/stores/watchlist.svelte';
 	import {
-		migrateLocalStorageBookmarks,
-		shouldOfferMigration
-	} from '$lib/utils/migrate-bookmarks';
+		initializeWatchlist,
+		clearWatchlist,
+		setQueryClient
+	} from '$lib/stores/watchlist.svelte';
+	import { migrateLocalStorageBookmarks, shouldOfferMigration } from '$lib/utils/migrate-bookmarks';
 	import {
 		signInModalState,
 		closeSignInModal,
