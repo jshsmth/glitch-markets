@@ -115,6 +115,13 @@
 		}
 		return null;
 	});
+
+	let isBookmarked = $state(false);
+
+	function toggleBookmark() {
+		isBookmarked = !isBookmarked;
+		// TODO: Persist to backend/localStorage
+	}
 </script>
 
 <div
@@ -276,8 +283,14 @@
 						<span class="stat-label">Liq</span>
 					</div>
 				</div>
-				<button class="bookmark-btn" aria-label="Bookmark this event">
-					<BookmarkIcon size={18} />
+				<button
+					class="bookmark-btn"
+					class:bookmarked={isBookmarked}
+					onclick={toggleBookmark}
+					aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this event'}
+					aria-pressed={isBookmarked}
+				>
+					<BookmarkIcon size={18} filled={isBookmarked} />
 				</button>
 			</div>
 		{/if}
@@ -347,8 +360,8 @@
 	}
 
 	.event-card.compact .event-icon {
-		width: 28px;
-		height: 28px;
+		width: 32px;
+		height: 32px;
 	}
 
 	.event-card.compact .event-title {
@@ -381,12 +394,13 @@
 
 	.event-icon {
 		flex-shrink: 0;
-		width: 40px;
-		height: 40px;
+		width: 44px;
+		height: 44px;
 		border-radius: var(--radius-md);
 		overflow: hidden;
 		background: var(--bg-2);
-		border: 1px solid var(--bg-3);
+		border: 1.5px solid var(--bg-3);
+		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
 	}
 
 	.event-icon img {
@@ -715,12 +729,30 @@
 
 	.bookmark-btn:hover {
 		background: var(--bg-2);
-		color: var(--primary);
+		color: #d4af37;
+	}
+
+	.bookmark-btn.bookmarked {
+		color: #d4af37;
+	}
+
+	.bookmark-btn.bookmarked:hover {
+		background: rgba(212, 175, 55, 0.1);
+		color: #e6c76a;
+	}
+
+	.bookmark-btn:active {
+		transform: scale(0.9);
 	}
 
 	.bookmark-btn:focus-visible {
 		outline: none;
 		box-shadow: var(--focus-ring);
+	}
+
+	/* Bookmark fill animation */
+	.bookmark-btn :global(svg) {
+		transition: fill var(--transition-fast);
 	}
 
 	/* Mobile */
@@ -730,8 +762,8 @@
 		}
 
 		.event-icon {
-			width: 32px;
-			height: 32px;
+			width: 36px;
+			height: 36px;
 		}
 
 		.event-title {

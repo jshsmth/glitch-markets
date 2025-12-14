@@ -181,7 +181,7 @@
 	.event-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-		gap: 14px;
+		gap: 12px;
 		align-items: start;
 	}
 
@@ -195,14 +195,14 @@
 	@media (min-width: 641px) and (max-width: 1024px) {
 		.event-grid {
 			grid-template-columns: repeat(2, 1fr);
-			gap: 14px;
+			gap: 12px;
 		}
 	}
 
 	@media (min-width: 1400px) {
 		.event-grid {
 			grid-template-columns: repeat(3, 1fr);
-			gap: 16px;
+			gap: 14px;
 		}
 	}
 
