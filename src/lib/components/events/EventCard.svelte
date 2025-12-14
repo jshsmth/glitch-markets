@@ -7,6 +7,7 @@
 	import FireIcon from '$lib/components/icons/FireIcon.svelte';
 	import CupIcon from '$lib/components/icons/CupIcon.svelte';
 	import { formatNumber } from '$lib/utils/format';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	interface Props {
 		event: Event;
@@ -133,18 +134,16 @@
 		}
 	}
 
-	let bookmarkedEvents = $state<Set<string>>(getBookmarkedEvents());
+	let bookmarkedEvents = new SvelteSet(getBookmarkedEvents());
 	let isBookmarked = $derived(bookmarkedEvents.has(event.id));
 
 	function toggleBookmark() {
-		const updatedBookmarks = new Set(bookmarkedEvents);
 		if (isBookmarked) {
-			updatedBookmarks.delete(event.id);
+			bookmarkedEvents.delete(event.id);
 		} else {
-			updatedBookmarks.add(event.id);
+			bookmarkedEvents.add(event.id);
 		}
-		saveBookmarkedEvents(updatedBookmarks);
-		bookmarkedEvents = updatedBookmarks;
+		saveBookmarkedEvents(bookmarkedEvents);
 	}
 </script>
 
