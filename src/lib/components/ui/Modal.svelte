@@ -201,6 +201,7 @@
 			color-mix(in srgb, var(--bg-1) 95%, var(--primary) 5%) 100%
 		);
 		flex-shrink: 0;
+		border-radius: 0;
 	}
 
 	.modal-title {
@@ -255,6 +256,7 @@
 		.modal-header {
 			padding: var(--spacing-5) var(--spacing-8);
 			padding-top: var(--spacing-5);
+			border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 		}
 
 		.modal-content {

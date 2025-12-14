@@ -72,9 +72,7 @@
 </script>
 
 {#if loading}
-	<div class="chart-state">
-		<span>Loading chart data...</span>
-	</div>
+	<div class="chart-skeleton"></div>
 {:else if error}
 	<div class="chart-state error">
 		<span>{error}</span>
@@ -129,5 +127,23 @@
 
 	.chart-state.error {
 		color: var(--danger);
+	}
+
+	.chart-skeleton {
+		width: 100%;
+		height: 100%;
+		border-radius: var(--radius-lg);
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
+		background-size: 200% 100%;
+		animation: shimmer 2.5s ease-in-out infinite;
+	}
+
+	@keyframes shimmer {
+		0% {
+			background-position: 100% 0;
+		}
+		100% {
+			background-position: -100% 0;
+		}
 	}
 </style>

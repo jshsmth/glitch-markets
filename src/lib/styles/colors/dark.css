@@ -36,6 +36,7 @@
 	--text-2: #a8a29e; /* Muted text - Stone 400 */
 	--text-3: #78716c; /* Hints/placeholders - Stone 500 */
 	--text-4: #57534e; /* Disabled states - Stone 600 */
+	--text-inverse: #0c0a09; /* Dark text for light backgrounds */
 
 	/* ============================================
      PRIMARY BRAND COLOR - Charcoal Gray (adjusted for dark)
@@ -136,6 +137,7 @@
 		--text-2: #a8a29e;
 		--text-3: #78716c;
 		--text-4: #57534e;
+		--text-inverse: #0c0a09;
 
 		/* Primary Brand Color - Charcoal Gray (adjusted for dark) */
 		--primary-50: #111827;

@@ -102,19 +102,7 @@
 	{#if loading && events.length === 0}
 		<div class="event-grid">
 			{#each { length: 6 }, i (i)}
-				<div class="skeleton-card">
-					<div class="skeleton-header">
-						<div class="skeleton-icon"></div>
-						<div class="skeleton-title"></div>
-					</div>
-					<div class="skeleton-text"></div>
-					<div class="skeleton-text short"></div>
-					<div class="skeleton-stats">
-						<div class="skeleton-stat"></div>
-						<div class="skeleton-stat"></div>
-						<div class="skeleton-stat"></div>
-					</div>
-				</div>
+				<div class="skeleton-card"></div>
 			{/each}
 		</div>
 	{:else if error}
@@ -202,81 +190,26 @@
 
 	@media (min-width: 1400px) {
 		.event-grid {
-			grid-template-columns: repeat(3, 1fr);
+			grid-template-columns: repeat(4, 1fr);
 			gap: 14px;
 		}
 	}
 
 	/* Loading skeleton styles */
 	.skeleton-card {
-		background: var(--bg-1);
-		border: 1px solid var(--bg-3);
+		min-height: 220px;
 		border-radius: var(--radius-card);
-		padding: var(--space-lg);
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-md);
-	}
-
-	.skeleton-header {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-		margin-bottom: var(--space-xs);
-	}
-
-	.skeleton-icon {
-		flex-shrink: 0;
-		width: 32px;
-		height: 32px;
 		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: var(--radius-sm);
-	}
-
-	.skeleton-title {
-		flex: 1;
-		height: 18px;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: var(--radius-sm);
-	}
-
-	.skeleton-text {
-		height: 14px;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: var(--radius-sm);
-	}
-
-	.skeleton-text.short {
-		width: 45%;
-	}
-
-	.skeleton-stats {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: var(--space-lg);
-		margin-top: var(--space-sm);
-	}
-
-	.skeleton-stat {
-		height: 36px;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: var(--radius-sm);
+		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	@keyframes shimmer {
 		0% {
-			background-position: 200% 0;
+			background-position: 100% 0;
 		}
 		100% {
-			background-position: -200% 0;
+			background-position: -100% 0;
 		}
 	}
 

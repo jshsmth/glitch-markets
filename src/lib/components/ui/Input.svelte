@@ -290,19 +290,30 @@
      SEARCH VARIANT
      ============================================ */
 
-	.input-container.variant-search::before {
-		border: 1px solid var(--bg-3);
-	}
-
 	.input-container.variant-search {
 		background-color: var(--bg-2);
+		border-radius: 999px;
+	}
+
+	.input-container.variant-search::before {
+		border: none;
+		border-radius: 999px;
+	}
+
+	.input-container.variant-search::after {
+		border-radius: 999px;
+	}
+
+	.input-container.variant-search .input {
+		border-radius: 999px;
+		border-color: transparent;
+	}
+
+	.input-container.variant-search .input:hover {
+		border-color: transparent;
 	}
 
 	.input-container.variant-search:hover {
 		background-color: var(--bg-1);
-	}
-
-	.input-container.variant-search:hover::before {
-		border-color: var(--bg-4);
 	}
 </style>

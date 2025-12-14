@@ -379,7 +379,7 @@
 			</section>
 
 			<!-- Tabs -->
-			<section class="card tabs-card">
+			<section class="tabs-section">
 				<div class="tabs-header">
 					<button
 						class="tab mobile-only"
@@ -833,13 +833,16 @@
 	}
 
 	/* Tabs */
-	.tabs-card {
-		padding: 0;
+	.tabs-section {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
 	}
 
 	.tabs-header {
 		display: flex;
 		border-bottom: 1px solid var(--bg-3);
+		gap: 4px;
 	}
 
 	.tab {
@@ -869,7 +872,6 @@
 	}
 
 	.tab-content {
-		padding: 16px;
 		min-height: 150px;
 	}
 

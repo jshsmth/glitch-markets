@@ -69,23 +69,20 @@
 {#if authState.user}
 	{#if watchlistQuery.isLoading}
 		<div class="watchlist-section">
-			<h2 class="section-title">Your Watchlist</h2>
+			<div class="section-header">
+				<h2 class="section-title">Your Watchlist</h2>
+			</div>
 			<div class="watchlist-scroll">
 				{#each { length: 3 }, i (i)}
-					<div class="skeleton-card">
-						<div class="skeleton-header">
-							<div class="skeleton-icon"></div>
-							<div class="skeleton-title"></div>
-						</div>
-						<div class="skeleton-text"></div>
-						<div class="skeleton-text short"></div>
-					</div>
+					<div class="skeleton-card"></div>
 				{/each}
 			</div>
 		</div>
 	{:else if watchlistQuery.error}
 		<div class="watchlist-section">
-			<h2 class="section-title">Your Watchlist</h2>
+			<div class="section-header">
+				<h2 class="section-title">Your Watchlist</h2>
+			</div>
 			<div class="error-state">
 				<p>Failed to load watchlist</p>
 				<button class="retry-btn" onclick={() => watchlistQuery.refetch()}> Retry </button>
@@ -424,57 +421,19 @@
 	.skeleton-card {
 		flex: 0 0 auto;
 		width: 320px;
-		background: var(--bg-1);
-		border: 1px solid var(--bg-3);
+		min-height: 200px;
 		border-radius: var(--radius-card);
-		padding: var(--spacing-3);
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-2);
-	}
-
-	.skeleton-header {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-2);
-	}
-
-	.skeleton-icon {
-		width: 32px;
-		height: 32px;
 		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: var(--radius-sm);
-	}
-
-	.skeleton-title {
-		flex: 1;
-		height: 16px;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: var(--radius-sm);
-	}
-
-	.skeleton-text {
-		height: 12px;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: var(--radius-sm);
-	}
-
-	.skeleton-text.short {
-		width: 60%;
+		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	@keyframes shimmer {
 		0% {
-			background-position: 200% 0;
+			background-position: 100% 0;
 		}
 		100% {
-			background-position: -200% 0;
+			background-position: -100% 0;
 		}
 	}
 

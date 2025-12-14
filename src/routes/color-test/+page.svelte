@@ -29,7 +29,7 @@
 
 	<!-- Background Shades -->
 	<section class="test-section">
-		<h2>Background Shades (Cyan-tinted)</h2>
+		<h2>Background Shades (Warm Stone Palette)</h2>
 		<div class="color-grid">
 			<div class="color-card bg-0">
 				<div class="color-label">bg-0</div>
@@ -56,7 +56,7 @@
 
 	<!-- Text Shades -->
 	<section class="test-section">
-		<h2>Text Shades (Cyan-tinted)</h2>
+		<h2>Text Shades (Neutral Grays)</h2>
 		<div class="text-examples">
 			<p class="text-0">text-0: Primary text - The quick brown fox jumps over the lazy dog</p>
 			<p class="text-1">text-1: Secondary text - The quick brown fox jumps over the lazy dog</p>
@@ -68,7 +68,7 @@
 
 	<!-- Primary Brand Color -->
 	<section class="test-section">
-		<h2>Primary Brand Color (Electric Cyan)</h2>
+		<h2>Primary Brand Color (Charcoal Gray)</h2>
 		<div class="color-grid">
 			<div class="color-card primary-50">
 				<div class="color-label">primary-50</div>
@@ -254,7 +254,7 @@
 
 	.theme-toggle {
 		background-color: var(--primary);
-		color: #111111;
+		color: var(--button-primary-text);
 		border: none;
 		padding: 0.75rem 1.5rem;
 		border-radius: 6px;
@@ -310,14 +310,14 @@
 
 	/* Text color for primary swatches - adaptive based on theme */
 	.primary-text {
-		color: #111111; /* Default: black text for light mode */
+		color: var(--text-0);
 	}
 
 	/* Light mode: white text on darker shades */
 	.primary-700 .primary-text,
 	.primary-800 .primary-text,
 	.primary-900 .primary-text {
-		color: #ffffff;
+		color: var(--bg-0);
 	}
 
 	/* Background variants */
@@ -486,7 +486,7 @@
 
 	.button-primary {
 		background-color: var(--primary);
-		color: #111111;
+		color: var(--button-primary-text);
 		border: none;
 		padding: 0.75rem 1.5rem;
 		border-radius: 6px;
@@ -588,10 +588,10 @@
 		[data-theme='dark'] .primary-50 .primary-text,
 		[data-theme='dark'] .primary-100 .primary-text,
 		[data-theme='dark'] .primary-200 .primary-text {
-			color: #ffffff;
+			color: var(--bg-0);
 		}
 
-		/* Bright backgrounds (300-900) need black text */
+		/* Bright backgrounds (300-900) need dark text */
 		[data-theme='dark'] .primary-300 .primary-text,
 		[data-theme='dark'] .primary-400 .primary-text,
 		[data-theme='dark'] .primary-500 .primary-text,
@@ -599,7 +599,7 @@
 		[data-theme='dark'] .primary-700 .primary-text,
 		[data-theme='dark'] .primary-800 .primary-text,
 		[data-theme='dark'] .primary-900 .primary-text {
-			color: #111111;
+			color: var(--text-0);
 		}
 	}
 </style>

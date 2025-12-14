@@ -145,13 +145,7 @@
 
 <div class="avatar-container" style="--size: {size}px">
 	{#if authState.isInitializing}
-		<!-- Skeleton placeholder matching exact dimensions of avatar-button -->
-		<div class="avatar-skeleton-wrapper">
-			<div class="avatar-skeleton"></div>
-			{#if !hideChevron}
-				<div class="chevron-skeleton"></div>
-			{/if}
-		</div>
+		<div class="avatar-skeleton"></div>
 	{:else if authState.user}
 		<button
 			class="avatar-button"
@@ -179,10 +173,7 @@
 					<div class="header-avatar" style="background: {avatarGradient}"></div>
 					<div class="header-info">
 						{#if walletState.isLoading}
-							<div class="wallet-skeleton">
-								<div class="skeleton-address"></div>
-								<div class="skeleton-badge"></div>
-							</div>
+							<div class="wallet-skeleton"></div>
 						{:else if walletState.serverWalletAddress}
 							<div class="header-address">
 								<span class="address-text">{formatAddress(walletState.serverWalletAddress)}</span>
@@ -301,40 +292,22 @@
 		display: inline-block;
 	}
 
-	.avatar-skeleton-wrapper {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		padding: 4px 6px 4px 4px;
-		border-radius: 24px;
-	}
-
 	.avatar-skeleton {
 		width: var(--size);
 		height: var(--size);
 		border-radius: 50%;
-		background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-3) 50%, var(--bg-2) 75%);
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s ease-in-out infinite;
-		flex-shrink: 0;
-	}
-
-	.chevron-skeleton {
-		width: 16px;
-		height: 16px;
-		background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-3) 50%, var(--bg-2) 75%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s ease-in-out infinite;
-		border-radius: 2px;
+		animation: shimmer 2.5s ease-in-out infinite;
 		flex-shrink: 0;
 	}
 
 	@keyframes shimmer {
 		0% {
-			background-position: 200% 0;
+			background-position: 100% 0;
 		}
 		100% {
-			background-position: -200% 0;
+			background-position: -100% 0;
 		}
 	}
 
@@ -571,28 +544,12 @@
 	}
 
 	.wallet-skeleton {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		padding: 6px 8px;
-	}
-
-	.skeleton-address {
 		width: 120px;
-		height: 24px;
-		background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-3) 50%, var(--bg-2) 75%);
+		height: 40px;
+		border-radius: 8px;
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s ease-in-out infinite;
-		border-radius: 6px;
-	}
-
-	.skeleton-badge {
-		width: 80px;
-		height: 14px;
-		background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-3) 50%, var(--bg-2) 75%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s ease-in-out infinite;
-		border-radius: 4px;
+		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	.header-subtext {

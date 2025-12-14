@@ -290,13 +290,9 @@
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		padding: 4px 10px;
-		border-radius: var(--radius-full);
 		font-size: 10px;
 		font-weight: 600;
 		color: var(--danger);
-		background: color-mix(in srgb, var(--danger) 10%, var(--bg-1));
-		border: 1px solid color-mix(in srgb, var(--danger) 20%, transparent);
 		white-space: nowrap;
 		z-index: 1;
 	}
@@ -561,7 +557,7 @@
 
 	.rank-1 {
 		background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%);
-		color: #5c4a15;
+		color: var(--gold-text);
 		box-shadow: 0 1px 2px rgba(var(--gold-rgb), 0.3);
 	}
 

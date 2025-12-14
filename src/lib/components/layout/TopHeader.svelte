@@ -29,7 +29,7 @@
 			</div>
 
 			<div class="right-section">
-				{#if authState.user}
+				{#if !authState.isInitializing && authState.user}
 					<div class="portfolio-stats">
 						<PortfolioStat label="Portfolio" value="$0.00" valueColor="success" href="/portfolio" />
 						<PortfolioStat label="Cash" value="$0.00" valueColor="success" href="/portfolio" />
@@ -39,7 +39,7 @@
 				{/if}
 
 				<div class="user-actions">
-					{#if authState.user}
+					{#if !authState.isInitializing && authState.user}
 						<button
 							class="icon-button"
 							onclick={handleNotificationsClick}
@@ -56,7 +56,7 @@
 			</div>
 
 			<div class="mobile-actions">
-				{#if authState.user}
+				{#if !authState.isInitializing && authState.user}
 					<button
 						class="icon-button"
 						onclick={handleNotificationsClick}
@@ -81,17 +81,11 @@
 		background-color: rgba(var(--bg-0-rgb), 0.95);
 		backdrop-filter: blur(16px);
 		-webkit-backdrop-filter: blur(16px);
-		border-bottom: 1px solid var(--bg-3);
-		box-shadow:
-			0 1px 2px rgba(0, 0, 0, 0.04),
-			0 1px 4px rgba(0, 0, 0, 0.02);
+		border-bottom: 1px solid var(--bg-2);
 	}
 
 	:global([data-theme='dark']) .site-header {
 		background-color: rgba(var(--bg-0-rgb), 0.9);
-		box-shadow:
-			0 1px 3px rgba(0, 0, 0, 0.3),
-			0 2px 8px rgba(0, 0, 0, 0.15);
 	}
 
 	.top-bar {
