@@ -60,7 +60,9 @@
 					loadingMore = true;
 					lastLoadTime = now;
 
-					observer.unobserve(sentinelElement);
+					if (sentinelElement) {
+						observer.unobserve(sentinelElement);
+					}
 
 					try {
 						await onLoadMore();

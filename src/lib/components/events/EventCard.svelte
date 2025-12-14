@@ -133,17 +133,18 @@
 		}
 	}
 
-	let isBookmarked = $state(getBookmarkedEvents().has(event.id));
+	let bookmarkedEvents = $state<Set<string>>(getBookmarkedEvents());
+	let isBookmarked = $derived(bookmarkedEvents.has(event.id));
 
 	function toggleBookmark() {
-		const bookmarks = getBookmarkedEvents();
+		const updatedBookmarks = new Set(bookmarkedEvents);
 		if (isBookmarked) {
-			bookmarks.delete(event.id);
+			updatedBookmarks.delete(event.id);
 		} else {
-			bookmarks.add(event.id);
+			updatedBookmarks.add(event.id);
 		}
-		saveBookmarkedEvents(bookmarks);
-		isBookmarked = !isBookmarked;
+		saveBookmarkedEvents(updatedBookmarks);
+		bookmarkedEvents = updatedBookmarks;
 	}
 </script>
 
