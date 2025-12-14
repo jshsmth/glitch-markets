@@ -100,6 +100,7 @@
 			onRetry={() => eventsQuery.refetch()}
 			{hasMore}
 			onLoadMore={loadMore}
+			title="Economy"
 		/>
 	</div>
 </div>

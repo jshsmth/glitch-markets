@@ -96,6 +96,7 @@
 		onRetry={handleRetry}
 		onLoadMore={handleLoadMore}
 		{hasMore}
+		title="New Markets"
 	/>
 </div>
 

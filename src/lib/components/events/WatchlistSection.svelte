@@ -238,11 +238,13 @@
 		display: flex;
 		gap: 12px;
 		overflow-x: auto;
-		overflow-y: hidden;
+		overflow-y: visible;
 		scroll-snap-type: x mandatory;
 		-webkit-overflow-scrolling: touch;
 		scrollbar-width: none;
+		padding-top: 4px;
 		padding-bottom: 8px;
+		margin-top: -4px;
 		transition: all var(--transition-normal);
 	}
 

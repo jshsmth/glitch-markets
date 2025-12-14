@@ -97,6 +97,7 @@
 			onRetry={() => eventsQuery.refetch()}
 			{hasMore}
 			onLoadMore={loadMore}
+			title="Geopolitics"
 		/>
 	</div>
 </div>
