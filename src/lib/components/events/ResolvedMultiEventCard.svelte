@@ -3,6 +3,7 @@
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
 	import { formatNumber } from '$lib/utils/format';
+	import { isWinningMarket } from '$lib/utils/market-parser';
 
 	interface Props {
 		event: Event;
@@ -10,41 +11,21 @@
 
 	let { event }: Props = $props();
 
-	// Sort markets to show winner first, then by groupItemThreshold
 	const sortedMarkets = $derived.by(() => {
 		if (!event.markets) return [];
 
 		return [...event.markets]
-			.map((market) => {
-				try {
-					const prices =
-						typeof market.outcomePrices === 'string'
-							? JSON.parse(market.outcomePrices)
-							: market.outcomePrices;
-					const isWinner =
-						Array.isArray(prices) && prices.length >= 2 && parseFloat(prices[0]) === 1;
-
-					return {
-						market,
-						isWinner,
-						threshold: parseInt(market.groupItemThreshold || '999', 10)
-					};
-				} catch {
-					return {
-						market,
-						isWinner: false,
-						threshold: parseInt(market.groupItemThreshold || '999', 10)
-					};
-				}
-			})
+			.map((market) => ({
+				market,
+				isWinner: isWinningMarket(market),
+				threshold: parseInt(market.groupItemThreshold || '999', 10)
+			}))
 			.sort((a, b) => {
-				// Winners first
 				if (a.isWinner && !b.isWinner) return -1;
 				if (!a.isWinner && b.isWinner) return 1;
-				// Then by threshold
 				return a.threshold - b.threshold;
 			})
-			.slice(0, 3) // Show top 3 outcomes
+			.slice(0, 3)
 			.map((item) => ({
 				...item.market,
 				isWinner: item.isWinner

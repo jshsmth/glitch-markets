@@ -80,7 +80,6 @@ export class SearchService {
 	async search(options: SearchOptions): Promise<SearchResults> {
 		const cacheKey = this.buildCacheKey(options);
 
-		// Check if caching is disabled
 		if (options.cache === false) {
 			this.logger.info('Cache disabled for search request', { options });
 			return this.fetchAndCacheSearch(cacheKey, options, true);
@@ -143,7 +142,6 @@ export class SearchService {
 
 		const results = await this.client.fetchSearch({ params });
 
-		// Cache the results unless skipCache is true
 		if (!skipCache) {
 			this.cache.set(cacheKey, results, this.cacheTtl);
 		}

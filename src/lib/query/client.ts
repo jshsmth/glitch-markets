@@ -15,9 +15,7 @@ function shouldRetry(failureCount: number, error: unknown): boolean {
 		return false;
 	}
 
-	// Check if error has a status code
 	if (error && typeof error === 'object') {
-		// Handle Response objects
 		if ('status' in error && typeof error.status === 'number') {
 			const status = error.status;
 			// Don't retry on client errors (400-499) except for 429 (rate limit)

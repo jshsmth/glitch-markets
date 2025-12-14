@@ -17,7 +17,6 @@ const logger = new Logger({ component: 'PolymarketRegistration' });
 
 export const POST: RequestHandler = async ({ locals }) => {
 	try {
-		// Get the authenticated user from Supabase Auth (secure server-side verification)
 		const {
 			data: { user: authUser },
 			error: authError
@@ -31,7 +30,6 @@ export const POST: RequestHandler = async ({ locals }) => {
 
 		logger.info('Polymarket registration requested', { userId });
 
-		// Check if user already has Polymarket credentials
 		const { data: existingCreds } = await supabaseAdmin
 			.from('polymarket_credentials')
 			.select('proxy_wallet_address')
@@ -51,15 +49,12 @@ export const POST: RequestHandler = async ({ locals }) => {
 			});
 		}
 
-		// Register with Polymarket CLOB
 		const credentials = await registerWithPolymarket(userId);
 
-		// Encrypt the API credentials before storing
 		const encryptedApiKey = encryptData(credentials.apiKey);
 		const encryptedSecret = encryptData(credentials.secret);
 		const encryptedPassphrase = encryptData(credentials.passphrase);
 
-		// Get user's server wallet address from database
 		const { data: dbUser } = await supabaseAdmin
 			.from('users')
 			.select('server_wallet_address')
@@ -70,7 +65,6 @@ export const POST: RequestHandler = async ({ locals }) => {
 			throw new Error('Server wallet not found');
 		}
 
-		// Save credentials to database
 		const { error: insertError } = await supabaseAdmin.from('polymarket_credentials').insert({
 			user_id: userId,
 			wallet_address: dbUser.server_wallet_address,

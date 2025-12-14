@@ -75,7 +75,6 @@ export async function GET({ url }: RequestEvent) {
 		const recurrence = url.searchParams.get('recurrence');
 		const optimized = url.searchParams.get('optimized');
 
-		// Handle array parameters - both ?tag=a&tag=b and ?tag=a,b formats
 		const eventsTagsParam = url.searchParams.getAll('events_tag');
 		const excludeTagIdParam = url.searchParams.getAll('exclude_tag_id');
 

@@ -4,6 +4,7 @@
 	import CloseCircleIcon from '$lib/components/icons/CloseCircleIcon.svelte';
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
 	import { formatNumber } from '$lib/utils/format';
+	import { getMarketResolution } from '$lib/utils/market-parser';
 
 	interface Props {
 		event: Event;
@@ -13,35 +14,7 @@
 
 	const primaryMarket = $derived(event.markets?.[0]);
 
-	const resolution = $derived.by(() => {
-		if (!primaryMarket?.outcomePrices || !primaryMarket?.outcomes) return null;
-
-		try {
-			const outcomes =
-				typeof primaryMarket.outcomes === 'string'
-					? JSON.parse(primaryMarket.outcomes)
-					: primaryMarket.outcomes;
-			const prices =
-				typeof primaryMarket.outcomePrices === 'string'
-					? JSON.parse(primaryMarket.outcomePrices)
-					: primaryMarket.outcomePrices;
-
-			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
-			if (outcomes.length < 2 || prices.length < 2) return null;
-
-			// For resolved markets, one price will be 1 and the other 0
-			const winnerIndex = prices.findIndex((p: string) => parseFloat(p) === 1);
-			if (winnerIndex === -1) return null;
-
-			return {
-				winner: outcomes[winnerIndex],
-				loser: outcomes[winnerIndex === 0 ? 1 : 0],
-				winnerIsYes: winnerIndex === 0
-			};
-		} catch {
-			return null;
-		}
-	});
+	const resolution = $derived(getMarketResolution(primaryMarket));
 </script>
 
 <div class="event-card">

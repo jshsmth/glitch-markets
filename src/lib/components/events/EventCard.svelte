@@ -7,6 +7,7 @@
 	import FireIcon from '$lib/components/icons/FireIcon.svelte';
 	import CupIcon from '$lib/components/icons/CupIcon.svelte';
 	import { formatNumber } from '$lib/utils/format';
+	import { parseBinaryMarket, parseMultiMarketOutcomes } from '$lib/utils/market-parser';
 
 	interface Props {
 		event: Event;
@@ -21,75 +22,9 @@
 		event.markets?.find((m) => m.outcomes && m.outcomePrices) || event.markets?.[0]
 	);
 
-	const parsedPrimaryMarket = $derived.by(() => {
-		if (!primaryMarket?.outcomes || !primaryMarket?.outcomePrices) return null;
-		try {
-			const outcomes =
-				typeof primaryMarket.outcomes === 'string'
-					? JSON.parse(primaryMarket.outcomes)
-					: primaryMarket.outcomes;
-			const prices =
-				typeof primaryMarket.outcomePrices === 'string'
-					? JSON.parse(primaryMarket.outcomePrices)
-					: primaryMarket.outcomePrices;
-			return { outcomes, prices };
-		} catch {
-			return null;
-		}
-	});
+	const binaryData = $derived(isMultiMarket ? null : parseBinaryMarket(primaryMarket));
 
-	interface OutcomeData {
-		label: string;
-		percentage: number;
-	}
-
-	// Binary market: Yes percentage determines color (green if ≥50%, red if <50%)
-	const binaryData = $derived.by(
-		(): { yes: OutcomeData; no: OutcomeData; leansYes: boolean } | null => {
-			if (isMultiMarket) return null;
-			if (!parsedPrimaryMarket) return null;
-
-			const { outcomes, prices } = parsedPrimaryMarket;
-			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
-			if (outcomes.length < 2 || prices.length < 2) return null;
-
-			const yesPercentage = parseFloat(prices[0]) * 100;
-			const noPercentage = parseFloat(prices[1]) * 100;
-
-			return {
-				yes: { label: outcomes[0] || 'Yes', percentage: yesPercentage },
-				no: { label: outcomes[1] || 'No', percentage: noPercentage },
-				leansYes: yesPercentage >= 50
-			};
-		}
-	);
-
-	const multiOutcomes = $derived.by((): OutcomeData[] | null => {
-		if (!isMultiMarket || !event.markets) return null;
-
-		const allOutcomes: OutcomeData[] = [];
-
-		for (const market of event.markets) {
-			try {
-				const outcomes =
-					typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : market.outcomes;
-				const prices =
-					typeof market.outcomePrices === 'string'
-						? JSON.parse(market.outcomePrices)
-						: market.outcomePrices;
-
-				if (Array.isArray(outcomes) && Array.isArray(prices) && outcomes.length >= 1) {
-					const displayTitle = market.groupItemTitle || outcomes[0] || market.question;
-					const percentage = parseFloat(prices[0]) * 100;
-					allOutcomes.push({ label: displayTitle, percentage });
-				}
-			} catch {
-				// Intentionally skip invalid markets
-			}
-		}
-
-		return allOutcomes.length > 0 ? allOutcomes.sort((a, b) => b.percentage - a.percentage) : null;
-	});
+	const multiOutcomes = $derived(isMultiMarket ? parseMultiMarketOutcomes(event.markets) : null);
 
 	const leadingOutcome = $derived(multiOutcomes?.[0] || null);
 	const secondOutcome = $derived(multiOutcomes?.[1] || null);

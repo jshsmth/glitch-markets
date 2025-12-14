@@ -29,11 +29,9 @@ export const GET: RequestHandler = async ({ url }) => {
 	const startTime = Date.now();
 
 	try {
-		// Extract and parse query parameters
 		const limitParam = url.searchParams.get('limit');
 		const offsetParam = url.searchParams.get('offset');
 
-		// Validate required params
 		if (limitParam === null) {
 			return json(
 				formatErrorResponse(

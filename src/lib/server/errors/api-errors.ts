@@ -116,7 +116,6 @@ export function formatErrorResponse(error: Error | ApiError): ErrorResponse {
 		};
 	}
 
-	// Handle unknown errors
 	return {
 		error: 'INTERNAL_ERROR',
 		message: error.message || 'An unexpected error occurred',
@@ -134,7 +133,6 @@ export function isNetworkError(error: unknown): boolean {
 	}
 
 	if (error instanceof Error) {
-		// Check for common network error patterns
 		const networkErrorPatterns = [
 			'ECONNREFUSED',
 			'ENOTFOUND',

@@ -1230,7 +1230,6 @@ export function validateCollection(data: unknown): Collection {
 		}
 	}
 
-	// Validate optional ImageOptimized fields
 	const imageOptimizedFields = ['imageOptimized', 'iconOptimized', 'headerImageOptimized'];
 	for (const field of imageOptimizedFields) {
 		if (field in data && data[field] !== null) {

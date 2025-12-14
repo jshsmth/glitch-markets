@@ -31,7 +31,6 @@ export async function GET({ url }: RequestEvent) {
 
 		const filters: CommentFilters = {};
 
-		// Validate and parse numeric parameters
 		if (limit !== null) {
 			const parsedLimit = parseInt(limit, 10);
 			if (isNaN(parsedLimit) || parsedLimit < 0) {
@@ -70,7 +69,6 @@ export async function GET({ url }: RequestEvent) {
 			filters.parent_entity_id = parsedId;
 		}
 
-		// Validate string parameters
 		if (order !== null) {
 			filters.order = order;
 		}
@@ -93,7 +91,6 @@ export async function GET({ url }: RequestEvent) {
 			filters.parent_entity_type = parent_entity_type as 'Event' | 'Series' | 'market';
 		}
 
-		// Validate boolean parameters
 		if (ascending !== null) {
 			if (ascending !== 'true' && ascending !== 'false') {
 				logger.error('Invalid ascending parameter', undefined, { ascending });
