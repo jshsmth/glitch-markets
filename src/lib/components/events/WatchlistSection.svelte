@@ -238,7 +238,7 @@
 		display: flex;
 		gap: 12px;
 		overflow-x: auto;
-		overflow-y: hidden;
+		overflow-y: visible;
 		scroll-snap-type: x mandatory;
 		-webkit-overflow-scrolling: touch;
 		scrollbar-width: none;

@@ -630,7 +630,7 @@
 <style>
 	/* Reset & Base */
 	.event-page {
-		max-width: 1200px;
+		max-width: 1400px;
 		margin: 0 auto;
 		padding: 12px;
 		padding-bottom: 80px;
@@ -947,25 +947,25 @@
 	}
 
 	.outcome-card-percentage {
-		font-size: 28px;
-		font-weight: 700;
-		color: var(--text-0);
+		font-size: 20px;
+		font-weight: 600;
+		color: var(--text-1);
 		flex-shrink: 0;
 	}
 
 	.outcome-card-actions {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: 8px;
 		flex: 1;
 	}
 
 	.bet-btn {
-		padding: 8px 12px;
-		font-size: 12px;
-		font-weight: 500;
+		padding: 10px 16px;
+		font-size: 14px;
+		font-weight: 600;
 		border: none;
-		border-radius: 6px;
+		border-radius: 8px;
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		white-space: nowrap;
