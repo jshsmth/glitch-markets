@@ -65,6 +65,11 @@ export async function addToWatchlist(eventId: string): Promise<boolean> {
 	try {
 		bookmarkedEventIds.add(eventId);
 
+		// Haptic feedback
+		if ('vibrate' in navigator) {
+			navigator.vibrate(50);
+		}
+
 		const response = await fetch('/api/watchlist', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -105,6 +110,11 @@ export async function removeFromWatchlist(eventId: string): Promise<boolean> {
 
 	try {
 		bookmarkedEventIds.delete(eventId);
+
+		// Haptic feedback (slightly longer for removal)
+		if ('vibrate' in navigator) {
+			navigator.vibrate([30, 20, 30]);
+		}
 
 		if (queryClient) {
 			queryClient.setQueryData(queryKeys.watchlist.all, (old: any) => {
