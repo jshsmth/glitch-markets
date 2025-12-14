@@ -23,39 +23,7 @@
 
 	let { size = 36, hideChevron = false }: Props = $props();
 
-	/**
-	 * Generate a consistent gradient based on user ID using brand colors
-	 */
-	function generateAvatarGradient(userId: string): string {
-		// Sophisticated muted color palette for avatar variety
-		const brandColors = [
-			['#6366f1', '#4f46e5'], // Indigo
-			['#8b5cf6', '#7c3aed'], // Violet
-			['#ec4899', '#db2777'], // Pink
-			['#f97316', '#ea580c'], // Orange
-			['#14b8a6', '#0d9488'], // Teal
-			['#3b82f6', '#2563eb'], // Blue
-			['#10b981', '#059669'], // Emerald
-			['#f59e0b', '#d97706'], // Amber
-			['#06b6d4', '#0891b2'] // Cyan
-		];
-
-		// Generate consistent hash from user ID
-		let hash = 0;
-		for (let i = 0; i < userId.length; i++) {
-			hash = userId.charCodeAt(i) + ((hash << 5) - hash);
-		}
-
-		// Select gradient based on hash
-		const gradientIndex = Math.abs(hash) % brandColors.length;
-		const [color1, color2] = brandColors[gradientIndex];
-
-		return `linear-gradient(135deg, ${color1}, ${color2})`;
-	}
-
-	let gradient = $derived(
-		authState.user ? generateAvatarGradient(authState.user.id || 'default') : ''
-	);
+	const avatarGradient = 'linear-gradient(135deg, #e6c76a 0%, #d4af37 100%)';
 	let showDropdown = $state(false);
 	let closeTimeout: ReturnType<typeof setTimeout> | null = null;
 	let windowWidth = $state(1024);
@@ -242,7 +210,7 @@
 			aria-label="Account menu"
 			aria-expanded={showDropdown}
 		>
-			<div class="avatar" style="background: {gradient}"></div>
+			<div class="avatar" style="background: {avatarGradient}"></div>
 			{#if !hideChevron}
 				<ChevronDownIcon size={16} color="var(--text-2)" />
 			{/if}
@@ -257,7 +225,7 @@
 				onmouseleave={handleDropdownMouseLeave}
 			>
 				<div class="dropdown-header">
-					<div class="header-avatar" style="background: {gradient}"></div>
+					<div class="header-avatar" style="background: {avatarGradient}"></div>
 					<div class="header-info">
 						{#if serverWalletAddress}
 							<div class="header-address">

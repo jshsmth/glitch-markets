@@ -676,7 +676,7 @@
 		display: block;
 		width: 1px;
 		height: 12px;
-		background: var(--bg-4);
+		background: var(--bg-3);
 		margin-left: var(--spacing-4);
 	}
 
