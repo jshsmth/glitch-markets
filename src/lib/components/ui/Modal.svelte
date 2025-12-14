@@ -145,8 +145,9 @@
 		position: relative;
 		width: 100%;
 		max-height: 90vh;
-		overflow-y: auto;
 		animation: modalFadeIn var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1);
+		display: flex;
+		flex-direction: column;
 	}
 
 	@keyframes modalFadeIn {
@@ -162,9 +163,11 @@
 
 	/* Mobile: Full screen */
 	.modal-container.full-screen-mobile {
-		height: 100vh;
-		max-height: 100vh;
+		height: 100dvh;
+		max-height: 100dvh;
 		border-radius: 0;
+		display: flex;
+		flex-direction: column;
 	}
 
 	/* Tablet and Desktop: Centered with border radius */
@@ -197,6 +200,7 @@
 			var(--bg-1) 0%,
 			color-mix(in srgb, var(--bg-1) 95%, var(--primary) 5%) 100%
 		);
+		flex-shrink: 0;
 	}
 
 	.modal-title {
@@ -241,6 +245,10 @@
 	.modal-content {
 		padding: 0 var(--spacing-6) var(--spacing-6);
 		padding-bottom: max(var(--spacing-6), env(safe-area-inset-bottom, var(--spacing-6)));
+		flex: 1;
+		overflow-y: auto;
+		overflow-x: hidden;
+		-webkit-overflow-scrolling: touch;
 	}
 
 	@media (min-width: 768px) {
@@ -251,6 +259,7 @@
 
 		.modal-content {
 			padding: 0 var(--spacing-8) var(--spacing-8);
+			padding-bottom: var(--spacing-8);
 		}
 	}
 

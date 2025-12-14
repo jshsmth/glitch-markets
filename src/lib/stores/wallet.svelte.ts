@@ -1,0 +1,114 @@
+/**
+ * Wallet store for managing user wallet addresses
+ * Shared across components to avoid duplicate API calls
+ */
+
+import { browser } from '$app/environment';
+import { authState } from './auth.svelte';
+
+interface WalletState {
+	serverWalletAddress: string | null;
+	proxyWalletAddress: string | null;
+	isLoading: boolean;
+	error: string | null;
+}
+
+export const walletState = $state<WalletState>({
+	serverWalletAddress: null,
+	proxyWalletAddress: null,
+	isLoading: false,
+	error: null
+});
+
+let abortController: AbortController | null = null;
+let lastProfileVersion = -1;
+
+/**
+ * Fetch wallet addresses from the API
+ */
+export async function fetchWalletAddresses(): Promise<void> {
+	if (!browser || !authState.session) {
+		walletState.serverWalletAddress = null;
+		walletState.proxyWalletAddress = null;
+		walletState.isLoading = false;
+		walletState.error = null;
+		return;
+	}
+
+	if (abortController) {
+		abortController.abort();
+	}
+
+	abortController = new AbortController();
+	walletState.isLoading = true;
+	walletState.error = null;
+
+	try {
+		const response = await fetch('/api/user/profile', {
+			signal: abortController.signal
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}`);
+		}
+
+		const data = await response.json();
+		walletState.serverWalletAddress = data.serverWalletAddress || null;
+		walletState.proxyWalletAddress = data.proxyWalletAddress || null;
+	} catch (err) {
+		if (err instanceof Error && err.name === 'AbortError') {
+			return;
+		}
+		console.error('Failed to fetch wallet addresses:', err);
+		walletState.error = err instanceof Error ? err.message : 'Failed to load wallet';
+		walletState.serverWalletAddress = null;
+		walletState.proxyWalletAddress = null;
+	} finally {
+		walletState.isLoading = false;
+		abortController = null;
+	}
+}
+
+/**
+ * Auto-fetch wallet addresses when auth state changes
+ * Call this in a $effect in your root layout
+ */
+export function initializeWalletSync(): () => void {
+	const cleanup = $effect.root(() => {
+		$effect(() => {
+			const currentVersion = authState.profileVersion;
+
+			if (!authState.session) {
+				walletState.serverWalletAddress = null;
+				walletState.proxyWalletAddress = null;
+				walletState.isLoading = false;
+				walletState.error = null;
+				lastProfileVersion = -1;
+				return;
+			}
+
+			if (currentVersion !== lastProfileVersion) {
+				lastProfileVersion = currentVersion;
+				fetchWalletAddresses();
+			}
+		});
+	});
+
+	return cleanup;
+}
+
+/**
+ * Reset wallet state (call on logout)
+ */
+export function resetWalletState(): void {
+	if (abortController) {
+		abortController.abort();
+		abortController = null;
+	}
+
+	walletState.serverWalletAddress = null;
+	walletState.proxyWalletAddress = null;
+	walletState.isLoading = false;
+	walletState.error = null;
+	lastProfileVersion = -1;
+}
