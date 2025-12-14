@@ -32,6 +32,7 @@
 	let isAuthenticating = $state(false);
 	let emailAddress = $state('');
 	let password = $state('');
+	// eslint-disable-next-line svelte/prefer-writable-derived -- isSignUp needs to be writable for toggle functionality
 	let isSignUp = $state(false);
 	let emailSent = $state(false);
 	let sentToEmail = $state('');
