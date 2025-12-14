@@ -290,13 +290,9 @@
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		padding: 4px 10px;
-		border-radius: var(--radius-full);
 		font-size: 10px;
 		font-weight: 600;
 		color: var(--danger);
-		background: color-mix(in srgb, var(--danger) 10%, var(--bg-1));
-		border: 1px solid color-mix(in srgb, var(--danger) 20%, transparent);
 		white-space: nowrap;
 		z-index: 1;
 	}
