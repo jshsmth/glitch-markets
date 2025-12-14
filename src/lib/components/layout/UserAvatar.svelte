@@ -27,14 +27,14 @@
 	 * Generate a consistent gradient based on user ID using brand colors
 	 */
 	function generateAvatarGradient(userId: string): string {
-		// Brand color palette from design system
+		// Brand color palette from design system (slate-based)
 		const brandColors = [
-			['#00d9ff', '#00aed9'], // Cyan gradient (primary)
-			['#00d9ff', '#0083a3'], // Cyan to darker cyan
-			['#33cfff', '#0083a3'], // Light cyan to dark cyan
-			['#00c447', '#00d9ff'], // Success to cyan
-			['#00d9ff', '#00c447'], // Cyan to success
-			['#66dbff', '#00aed9'] // Light cyan to medium cyan
+			['#64748b', '#475569'], // Slate to dark slate (primary)
+			['#94a3b8', '#64748b'], // Light slate to slate
+			['#64748b', '#334155'], // Slate to deep slate
+			['#cbd5e1', '#94a3b8'], // Pale slate to light slate
+			['#475569', '#334155'], // Dark slate to deeper slate
+			['#94a3b8', '#475569'] // Light slate to dark slate
 		];
 
 		// Generate consistent hash from user ID
@@ -529,7 +529,7 @@
 
 	.logout-item:focus-visible {
 		outline: none;
-		box-shadow: var(--focus-ring); /* Cyan focus even on red item */
+		box-shadow: var(--focus-ring); /* Primary focus ring on red item */
 	}
 
 	.dropdown-header {

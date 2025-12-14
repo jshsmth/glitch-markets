@@ -1,28 +1,28 @@
 /**
  * Glitch Markets - Dark Theme Colors
- * Following Google's tinting approach with subtle cyan tint
+ * Clean dark palette with slate accents
  */
 
 [data-theme='dark'] {
 	/* ============================================
-     BACKGROUNDS - Much darker with subtle cyan tint
+     BACKGROUNDS - Clean dark neutrals
      WCAG Contrast Ratios (vs --text-0):
      --bg-0: Base background (20.5:1)
      ============================================ */
 
-	--bg-0: #0a0c0e; /* Much darker base for true dark mode */
-	--bg-1: #111416; /* Darker cards for better contrast */
-	--bg-2: #1a1d21; /* Clear distinction for layered elements */
-	--bg-3: #252a30; /* More visible borders and dividers */
-	--bg-4: #323940; /* Strong accent backgrounds */
-	--bg-5: #404852; /* Even stronger backgrounds */
+	--bg-0: #0a0a0a; /* Pure dark base */
+	--bg-1: #121212; /* Card background */
+	--bg-2: #1a1a1a; /* Clear distinction for layered elements */
+	--bg-3: #262626; /* More visible borders */
+	--bg-4: #333333; /* Strong accent backgrounds */
+	--bg-5: #404040; /* Even stronger backgrounds */
 
 	/* RGB values for transparency effects */
-	--bg-0-rgb: 10, 12, 14;
-	--bg-1-rgb: 17, 20, 22;
+	--bg-0-rgb: 10, 10, 10;
+	--bg-1-rgb: 18, 18, 18;
 
 	/* ============================================
-     TEXT - More neutral whites with better hierarchy
+     TEXT - Clean neutral whites with better hierarchy
      WCAG Contrast Ratios (vs --bg-0):
      --text-0: 20.8:1 (AAA)
      --text-1: 17.5:1 (AAA)
@@ -31,26 +31,26 @@
      --text-4: 5.2:1 (AA)
      ============================================ */
 
-	--text-0: #f7f9fa; /* Brighter primary text for better readability */
-	--text-1: #e7e9ea; /* Clear secondary text */
-	--text-2: #b0b8c0; /* More muted for less important text */
-	--text-3: #6e7681; /* Even more muted for hints/placeholders */
-	--text-4: #525a63; /* Subtle text for disabled states */
+	--text-0: #f5f5f5; /* Bright primary text */
+	--text-1: #e0e0e0; /* Secondary text */
+	--text-2: #a0a0a0; /* Muted text */
+	--text-3: #6a6a6a; /* Hints/placeholders */
+	--text-4: #4a4a4a; /* Disabled states */
 
 	/* ============================================
-     PRIMARY BRAND COLOR - Refined Cyan (adjusted for dark)
+     PRIMARY BRAND COLOR - Slate (adjusted for dark)
      ============================================ */
 
-	--primary-50: #002d36;
-	--primary-100: #005570;
-	--primary-200: #007d9e;
-	--primary-300: #00a5c8;
-	--primary-400: #00b8d9;
-	--primary-500: #00c4e6; /* Main brand color - refined */
-	--primary-600: #26d0ed;
-	--primary-700: #4dd4f1;
-	--primary-800: #80e0f5;
-	--primary-900: #b3ecf9;
+	--primary-50: #0f172a;
+	--primary-100: #1e293b;
+	--primary-200: #334155;
+	--primary-300: #475569;
+	--primary-400: #64748b;
+	--primary-500: #94a3b8; /* Lighter slate for dark mode */
+	--primary-600: #cbd5e1;
+	--primary-700: #e2e8f0;
+	--primary-800: #f1f5f9;
+	--primary-900: #f8fafc;
 
 	/* Convenient aliases */
 	--primary: var(--primary-500);
@@ -58,7 +58,7 @@
 	--primary-active: var(--primary-700);
 
 	/* RGB for transparency effects */
-	--primary-rgb: 0, 196, 230;
+	--primary-rgb: 148, 163, 184;
 
 	/* ============================================
      TRADING INDICATORS - Brighter for dark mode
@@ -85,7 +85,7 @@
 
 	/* Button colors */
 	--button-primary-bg: var(--primary);
-	--button-primary-text: #0d1214; /* Dark text on bright cyan */
+	--button-primary-text: #0f172a; /* Dark text on slate */
 	--button-primary-hover-bg: var(--primary-hover);
 
 	/* Error states */
@@ -118,39 +118,39 @@
 
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		/* Backgrounds - Much darker with subtle cyan tint */
-		--bg-0: #0a0c0e;
-		--bg-1: #111416;
-		--bg-2: #1a1d21;
-		--bg-3: #252a30;
-		--bg-4: #323940;
-		--bg-5: #404852;
+		/* Backgrounds - Clean dark neutrals */
+		--bg-0: #0a0a0a;
+		--bg-1: #121212;
+		--bg-2: #1a1a1a;
+		--bg-3: #262626;
+		--bg-4: #333333;
+		--bg-5: #404040;
 
 		/* RGB values */
-		--bg-0-rgb: 10, 12, 14;
-		--bg-1-rgb: 17, 20, 22;
+		--bg-0-rgb: 10, 10, 10;
+		--bg-1-rgb: 18, 18, 18;
 
-		/* Text - More neutral whites with better hierarchy */
-		--text-0: #f7f9fa;
-		--text-1: #e7e9ea;
-		--text-2: #b0b8c0;
-		--text-3: #6e7681;
-		--text-4: #525a63;
+		/* Text - Clean neutral whites */
+		--text-0: #f5f5f5;
+		--text-1: #e0e0e0;
+		--text-2: #a0a0a0;
+		--text-3: #6a6a6a;
+		--text-4: #4a4a4a;
 
-		/* Primary Brand Color - Refined Cyan (adjusted for dark) */
-		--primary-50: #002d36;
-		--primary-100: #005570;
-		--primary-200: #007d9e;
-		--primary-300: #00a5c8;
-		--primary-400: #00b8d9;
-		--primary-500: #00c4e6;
-		--primary-600: #26d0ed;
-		--primary-700: #4dd4f1;
-		--primary-800: #80e0f5;
-		--primary-900: #b3ecf9;
+		/* Primary Brand Color - Slate (adjusted for dark) */
+		--primary-50: #0f172a;
+		--primary-100: #1e293b;
+		--primary-200: #334155;
+		--primary-300: #475569;
+		--primary-400: #64748b;
+		--primary-500: #94a3b8;
+		--primary-600: #cbd5e1;
+		--primary-700: #e2e8f0;
+		--primary-800: #f1f5f9;
+		--primary-900: #f8fafc;
 
 		/* RGB for transparency */
-		--primary-rgb: 0, 196, 230;
+		--primary-rgb: 148, 163, 184;
 
 		/* Trading Indicators - Brighter for dark mode */
 		--success: #34d399;

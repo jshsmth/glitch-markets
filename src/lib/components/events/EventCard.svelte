@@ -244,7 +244,7 @@
 		position: relative;
 		display: flex;
 		background: var(--bg-1);
-		border: 1px solid var(--bg-4);
+		border: 1px solid var(--bg-3);
 		border-radius: var(--radius-card);
 		padding: var(--spacing-4);
 		box-shadow: var(--shadow-sm);
@@ -347,7 +347,7 @@
 		border-radius: var(--radius-md);
 		overflow: hidden;
 		background: var(--bg-2);
-		border: 1px solid var(--bg-4);
+		border: 1px solid var(--bg-3);
 	}
 
 	.event-icon img {
