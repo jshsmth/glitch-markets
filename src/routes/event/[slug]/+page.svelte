@@ -172,8 +172,8 @@
 	};
 
 	const getSeriesColor = (index: number): string => {
-		const colors = ['var(--success)', 'var(--danger)', 'var(--text-3)'];
-		return colors[index] || 'var(--text-3)';
+		const colors = ['#00d9ff', '#ff006e', '#a855f7'];
+		return colors[index] || '#00d9ff';
 	};
 
 	const top3Markets = $derived(filteredMarkets.slice(0, 3));
@@ -789,6 +789,8 @@
 	.chart-card {
 		padding: 0;
 		overflow: hidden;
+		background: transparent;
+		border: none;
 	}
 
 	.chart-wrapper {
