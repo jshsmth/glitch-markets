@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ComponentType, SvelteComponent } from 'svelte';
+	import type { Component } from 'svelte';
 
 	interface Props {
 		isOpen: boolean;
@@ -8,9 +8,7 @@
 
 	let { isOpen, onClose }: Props = $props();
 
-	let DepositModal: ComponentType<
-		SvelteComponent<{ isOpen: boolean; onClose: () => void }>
-	> | null = $state(null);
+	let DepositModal: Component<{ isOpen: boolean; onClose: () => void }> | null = $state(null);
 	let hasBeenOpened = $state(false);
 
 	$effect(() => {
