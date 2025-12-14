@@ -32,9 +32,13 @@
 	let isAuthenticating = $state(false);
 	let emailAddress = $state('');
 	let password = $state('');
-	let isSignUp = $state(initialMode === 'signup');
+	let isSignUp = $state(false);
 	let emailSent = $state(false);
 	let sentToEmail = $state('');
+
+	$effect(() => {
+		isSignUp = initialMode === 'signup';
+	});
 
 	function isValidEmail(email: string): boolean {
 		return EMAIL_PATTERN.test(email);
