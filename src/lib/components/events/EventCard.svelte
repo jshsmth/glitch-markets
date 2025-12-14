@@ -2,6 +2,8 @@
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
 	import WaterLiquidIcon from '$lib/components/icons/WaterLiquidIcon.svelte';
+	import BookmarkIcon from '$lib/components/icons/BookmarkIcon.svelte';
+	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
 
 	interface Props {
 		event: Event;
@@ -9,6 +11,17 @@
 	}
 
 	let { event, variant = 'default' }: Props = $props();
+
+	const OUTCOME_COLORS = [
+		'#8b5cf6', // Purple
+		'#ec4899', // Pink
+		'#f59e0b', // Amber
+		'#00d9ff', // Cyan (brand)
+		'#10b981', // Green
+		'#f97316', // Orange
+		'#6366f1', // Indigo
+		'#14b8a6'  // Teal
+	];
 
 	function formatNumber(num: number | null | undefined): string {
 		if (num === null || num === undefined) return '$0';
@@ -44,7 +57,13 @@
 		}
 	});
 
-	const primaryOdds = $derived.by(() => {
+	interface OutcomeData {
+		label: string;
+		percentage: number;
+		color: string;
+	}
+
+	const binaryOutcomes = $derived.by((): OutcomeData[] | null => {
 		if (isMultiMarket) return null;
 		if (!parsedPrimaryMarket) return null;
 
@@ -52,25 +71,21 @@
 		if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
 		if (outcomes.length < 2 || prices.length < 2) return null;
 
-		const percentages = prices.map((p: string) => parseFloat(p) * 100);
+		const yesPercentage = parseFloat(prices[0]) * 100;
+		const noPercentage = parseFloat(prices[1]) * 100;
 
 		return [
-			{
-				label: outcomes[0] || 'Yes',
-				price: percentages[0]?.toFixed(0) || '—',
-				percentage: percentages[0] || 0
-			},
-			{
-				label: outcomes[1] || 'No',
-				price: percentages[1]?.toFixed(0) || '—',
-				percentage: percentages[1] || 0
-			}
+			{ label: outcomes[0] || 'Yes', percentage: yesPercentage, color: '#10b981' },
+			{ label: outcomes[1] || 'No', percentage: noPercentage, color: '#ef4444' }
 		];
 	});
 
-	const parsedMarkets = $derived.by(() => {
-		if (!event.markets) return null;
-		return event.markets.map((market) => {
+	const multiOutcomes = $derived.by((): OutcomeData[] | null => {
+		if (!isMultiMarket || !event.markets) return null;
+
+		const allOutcomes: OutcomeData[] = [];
+
+		for (const market of event.markets) {
 			try {
 				const outcomes =
 					typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : market.outcomes;
@@ -78,44 +93,42 @@
 					typeof market.outcomePrices === 'string'
 						? JSON.parse(market.outcomePrices)
 						: market.outcomePrices;
-				return { market, outcomes, prices };
+
+				if (Array.isArray(outcomes) && Array.isArray(prices) && outcomes.length >= 1) {
+					const displayTitle =
+						market.groupItemTitle || outcomes[0] || market.question;
+					const percentage = parseFloat(prices[0]) * 100;
+					allOutcomes.push({
+						label: displayTitle,
+						percentage,
+						color: OUTCOME_COLORS[allOutcomes.length % OUTCOME_COLORS.length]
+					});
+				}
 			} catch {
-				return { market, outcomes: null, prices: null };
+				// Skip invalid markets
 			}
-		});
+		}
+
+		return allOutcomes.length > 0
+			? allOutcomes.sort((a, b) => b.percentage - a.percentage)
+			: null;
 	});
 
-	const topMarkets = $derived.by(() => {
-		if (!isMultiMarket || !parsedMarkets) return null;
-		return parsedMarkets.map(({ market, outcomes, prices }) => {
-			const displayTitle =
-				market.groupItemTitle || (Array.isArray(outcomes) && outcomes[0]) || market.question;
-
-			return {
-				question: displayTitle,
-				outcomes:
-					Array.isArray(outcomes) && Array.isArray(prices) && outcomes.length >= 2
-						? [
-								{
-									label: outcomes[0],
-									price: (parseFloat(prices[0]) * 100).toFixed(0),
-									percentage: parseFloat(prices[0]) * 100
-								},
-								{
-									label: outcomes[1],
-									price: (parseFloat(prices[1]) * 100).toFixed(0),
-									percentage: parseFloat(prices[1]) * 100
-								}
-							]
-						: null
-			};
-		});
-	});
+	const displayOutcomes = $derived(multiOutcomes || binaryOutcomes);
+	const leadingOutcome = $derived(displayOutcomes?.[0] || null);
+	const outcomeCount = $derived(displayOutcomes?.length || 0);
+	const isEffectivelyResolved = $derived(leadingOutcome && leadingOutcome.percentage >= 99);
 </script>
 
-<div class="event-card" class:compact={variant === 'compact'}>
+<a
+	href={`/event/${event.slug || event.id}`}
+	class="event-card"
+	class:compact={variant === 'compact'}
+	class:resolved={isEffectivelyResolved}
+	data-sveltekit-preload-data="hover"
+>
 	<div class="card-content">
-		<!-- Header with Icon + Title -->
+		<!-- Header: Icon + Title -->
 		<div class="card-header">
 			<div class="title-row">
 				{#if event.image}
@@ -123,64 +136,58 @@
 						<img src={event.image} alt={event.title || 'Event icon'} />
 					</div>
 				{/if}
-				<a
-					href={`/event/${event.slug || event.id}`}
-					class="event-title-link"
-					data-sveltekit-preload-data="hover"
-				>
-					<h3 class="event-title">{event.title || 'Untitled Event'}</h3>
-				</a>
+				<h3 class="event-title">{event.title || 'Untitled Event'}</h3>
+				{#if isEffectivelyResolved}
+					<div class="resolved-badge">
+						<CheckCircleIcon size={14} />
+						<span>Resolved</span>
+					</div>
+				{/if}
 			</div>
+
+			<!-- Binary: Inline bar next to title -->
+			{#if !isMultiMarket && displayOutcomes && leadingOutcome && !isEffectivelyResolved}
+				<div class="probability-inline">
+					<div class="probability-bar">
+						{#each displayOutcomes as outcome, i (i)}
+							<div
+								class="bar-segment"
+								style="width: {outcome.percentage}%; background-color: {outcome.color};"
+								title="{outcome.label}: {outcome.percentage.toFixed(0)}%"
+							></div>
+						{/each}
+					</div>
+					<span class="outcome-percentage" style="color: {leadingOutcome.color}">
+						{leadingOutcome.percentage.toFixed(0)}%
+					</span>
+				</div>
+			{/if}
 		</div>
 
-		<!-- Binary Market: Odds Board Layout -->
-		{#if primaryOdds}
-			<div class="odds-board">
-				{#each primaryOdds as outcome, i (i)}
-					<a
-						href={`/event/${event.slug || event.id}`}
-						class="odds-row"
-						class:is-yes={i === 0}
-						class:is-no={i === 1}
-						style="--fill-percentage: {outcome.percentage}%"
-						data-sveltekit-preload-data="hover"
-					>
-						<span class="outcome-label">{outcome.label}</span>
-						<span class="outcome-odds">{outcome.price}%</span>
-					</a>
-				{/each}
-			</div>
-		{/if}
-
-		<!-- Multi-Market Preview -->
-		{#if topMarkets && variant !== 'compact'}
-			<div class="markets-scroll-container">
-				<div class="markets-preview">
-					{#each topMarkets as market, i (i)}
-						<div class="market-item">
-							<div class="market-header">
-								<div class="market-question">{market.question}</div>
-							</div>
-							{#if market.outcomes}
-								<div class="market-odds-inline">
-									{#each market.outcomes as outcome, j (j)}
-										<a
-											href={`/event/${event.slug || event.id}`}
-											class="odds-chip"
-											class:chip-first={j === 0}
-											class:chip-second={j === 1}
-											style="--fill-percentage: {outcome.percentage}%"
-											data-sveltekit-preload-data="hover"
-										>
-											<span class="odds-chip-label">{outcome.label}</span>
-											<span class="odds-chip-price">{outcome.price}%</span>
-										</a>
-									{/each}
-								</div>
-							{/if}
-						</div>
-					{/each}
+		<!-- Multi-market: Leading outcome highlight (hide if resolved) -->
+		{#if isMultiMarket && displayOutcomes && leadingOutcome && !isEffectivelyResolved}
+			<div class="multi-highlight">
+				<div class="leading-text">
+					<span class="leader-name">{leadingOutcome.label}</span>
+					<span class="leader-odds">
+						{leadingOutcome.percentage.toFixed(0)}%
+					</span>
 				</div>
+				<div class="probability-bar full">
+					<div
+						class="bar-segment leader"
+						style="width: {leadingOutcome.percentage}%;"
+						title="{leadingOutcome.label}: {leadingOutcome.percentage.toFixed(0)}%"
+					></div>
+				</div>
+				<div class="multi-meta">
+					<span>{outcomeCount} outcomes</span>
+				</div>
+			</div>
+		{:else if isMultiMarket && isEffectivelyResolved && leadingOutcome}
+			<div class="resolved-winner">
+				<CheckCircleIcon size={16} />
+				<span class="winner-name">{leadingOutcome.label}</span>
 			</div>
 		{/if}
 
@@ -189,20 +196,30 @@
 			<div class="card-footer">
 				<div class="stats">
 					<div class="stat">
-						<MoneyIcon size={16} class="stat-icon" />
+						<MoneyIcon size={14} class="stat-icon" />
 						<span class="stat-value">{formatNumber(event.volume24hr)}</span>
 						<span class="stat-label">24h</span>
 					</div>
 					<div class="stat">
-						<WaterLiquidIcon size={16} class="stat-icon" />
+						<WaterLiquidIcon size={14} class="stat-icon" />
 						<span class="stat-value">{formatNumber(event.liquidity)}</span>
 						<span class="stat-label">Liq</span>
 					</div>
 				</div>
+				<button
+					class="bookmark-btn"
+					onclick={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+					}}
+					aria-label="Bookmark this event"
+				>
+					<BookmarkIcon size={18} />
+				</button>
 			</div>
 		{/if}
 	</div>
-</div>
+</a>
 
 <style>
 	.event-card {
@@ -210,69 +227,100 @@
 		background: var(--bg-1);
 		border: 1px solid var(--bg-4);
 		border-radius: var(--radius-card);
-		padding: 18px;
+		padding: var(--spacing-4);
 		box-shadow: var(--shadow-sm);
-		transition:
-			all var(--transition-fast),
-			box-shadow var(--transition-fast);
+		transition: all var(--transition-fast);
 		color: inherit;
+		text-decoration: none;
 		height: 100%;
 	}
 
-	/* Compact variant for search dropdown */
+	.event-card:hover {
+		border-color: var(--primary);
+		box-shadow: var(--shadow-primary-md);
+		transform: translateY(-1px);
+	}
+
+	.event-card:focus-visible {
+		outline: none;
+		border-color: var(--primary);
+		box-shadow: var(--focus-ring);
+	}
+
+	/* Resolved state */
+	.event-card.resolved {
+		opacity: 0.7;
+		background: var(--bg-2);
+	}
+
+	.event-card.resolved:hover {
+		opacity: 0.85;
+	}
+
+	.resolved-badge {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 3px 8px;
+		background: rgba(0, 196, 71, 0.12);
+		border-radius: var(--radius-sm);
+		color: var(--success);
+		font-size: 11px;
+		font-weight: 600;
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+
+	/* Compact variant */
 	.event-card.compact {
 		padding: var(--spacing-3);
 	}
 
-	.event-card.compact .card-content {
-		gap: var(--spacing-3);
-	}
-
 	.event-card.compact .event-icon {
-		width: 32px;
-		height: 32px;
+		width: 28px;
+		height: 28px;
 	}
 
 	.event-card.compact .event-title {
-		font-size: 15px;
-		display: -webkit-box;
+		font-size: 14px;
 		-webkit-line-clamp: 2;
 		line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-
-	.event-card.compact .outcome-odds {
-		font-size: 18px;
-	}
-
-	.event-card:focus-within {
-		outline: none;
-		border-color: var(--primary);
-		box-shadow: var(--shadow-primary-md);
 	}
 
 	.card-content {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-4);
+		gap: var(--spacing-3);
 		width: 100%;
 	}
 
-	/* ============================================
-	   HEADER
-	   ============================================ */
+	/* Header */
+	.card-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--spacing-3);
+	}
 
 	.title-row {
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-3);
+		flex: 1;
+		min-width: 0;
+	}
+
+	.probability-inline {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-shrink: 0;
 	}
 
 	.event-icon {
 		flex-shrink: 0;
-		width: 40px;
-		height: 40px;
+		width: 36px;
+		height: 36px;
 		border-radius: var(--radius-md);
 		overflow: hidden;
 		background: var(--bg-2);
@@ -285,265 +333,146 @@
 		object-fit: cover;
 	}
 
-	.event-title-link {
-		flex: 1;
-		text-decoration: none;
-		color: inherit;
-		min-width: 0;
+	.event-title {
+		font-size: 15px;
+		font-weight: 600;
+		color: var(--text-0);
+		line-height: 1.35;
+		margin: 0;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 
-	.event-title-link:hover .event-title {
+	.bookmark-btn {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		padding: 0;
+		background: transparent;
+		border: none;
+		border-radius: var(--radius-sm);
+		color: var(--text-3);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.bookmark-btn:hover {
+		background: var(--bg-2);
 		color: var(--primary);
-		text-decoration: underline;
 	}
 
-	.event-title-link:focus-visible {
+	.bookmark-btn:focus-visible {
 		outline: none;
-		border-radius: 4px;
 		box-shadow: var(--focus-ring);
 	}
 
-	.event-title {
-		font-size: 17px;
-		font-weight: 700;
-		color: var(--text-0);
-		line-height: 1.4;
-		margin: 0;
-		letter-spacing: -0.01em;
+	/* Probability Bar */
+	.probability-bar {
+		display: flex;
+		width: 60px;
+		height: 16px;
+		overflow: hidden;
+		background: var(--bg-3);
 	}
 
-	/* ============================================
-	   ODDS BOARD (Binary Markets)
-	   ============================================ */
+	.probability-bar.full {
+		width: 100%;
+		height: 12px;
+	}
 
-	.odds-board {
+	.bar-segment {
+		height: 100%;
+		min-width: 2px;
+		transition: width 0.3s ease;
+	}
+
+	.bar-segment.leader {
+		background-color: var(--primary);
+	}
+
+	.outcome-percentage {
+		font-size: 14px;
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	/* Multi-market highlight */
+	.multi-highlight {
 		display: flex;
 		flex-direction: column;
+		gap: 6px;
+	}
+
+	.leading-text {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 		gap: var(--spacing-2);
 	}
 
-	.odds-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--spacing-3);
-		padding: 10px var(--spacing-3);
-		background: var(--bg-2);
-		border: 1px solid var(--bg-4);
-		border-radius: var(--radius-sm);
-		text-decoration: none;
-		transition: all var(--transition-fast);
-		position: relative;
-		overflow: hidden;
-	}
-
-	.odds-row::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		height: 100%;
-		width: var(--fill-percentage, 0%);
-		background: linear-gradient(90deg, var(--row-gradient-start), var(--row-gradient-end));
-		transition:
-			width 0.3s ease,
-			opacity 0.3s ease;
-		z-index: 0;
-	}
-
-	/* Yes row: Uses shared gradient variables */
-	.odds-row.is-yes {
-		--row-gradient-start: var(--gradient-yes-start);
-		--row-gradient-end: var(--gradient-yes-end);
-	}
-
-	/* No row: Uses shared gradient variables (red-to-cyan for binary) */
-	.odds-row.is-no {
-		--row-gradient-start: var(--gradient-no-alt-start);
-		--row-gradient-end: var(--gradient-no-alt-end);
-	}
-
-	.odds-row:hover {
-		border-color: var(--primary);
-		transform: translateY(-1px);
-	}
-
-	.odds-row:hover::before {
-		opacity: 1.3;
-	}
-
-	.odds-row:focus-visible {
-		outline: none;
-		box-shadow: var(--focus-ring);
-	}
-
-	.outcome-label {
-		font-size: 14px;
-		color: var(--text-0);
+	.leader-name {
+		font-size: 13px;
 		font-weight: 500;
-		text-overflow: ellipsis;
+		color: var(--text-1);
 		overflow: hidden;
+		text-overflow: ellipsis;
 		white-space: nowrap;
 		flex: 1;
 		min-width: 0;
-		position: relative;
-		z-index: 1;
 	}
 
-	.outcome-odds {
-		font-size: 20px;
-		font-weight: 800;
-		color: var(--text-0);
-		white-space: nowrap;
-		letter-spacing: -0.02em;
-		position: relative;
-		z-index: 1;
-	}
-
-	/* ============================================
-	   MULTI-MARKET PREVIEW
-	   ============================================ */
-
-	.markets-scroll-container {
-		max-height: 80px;
-		overflow-y: auto;
-	}
-
-	.markets-preview {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-
-	.market-item {
-		display: grid;
-		grid-template-columns: 1fr auto;
-		align-items: center;
-		gap: 8px;
-		padding: 6px 0;
-	}
-
-	.market-header {
-		display: flex;
-		align-items: center;
-		min-width: 0;
-	}
-
-	.market-question {
+	.leader-odds {
 		font-size: 14px;
-		color: var(--text-0);
-		font-weight: 500;
-		line-height: 1.4;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.market-odds-inline {
-		display: flex;
-		gap: 6px;
-		flex-shrink: 0;
-	}
-
-	.odds-chip {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		padding: 5px 8px;
-		background: var(--bg-2);
-		border: 1px solid var(--bg-4);
-		border-radius: var(--radius-sm);
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		white-space: nowrap;
-		text-decoration: none;
-		min-width: 65px;
-		justify-content: space-between;
-		position: relative;
-		overflow: hidden;
-	}
-
-	.odds-chip::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		height: 100%;
-		width: var(--fill-percentage, 0%);
-		background: linear-gradient(90deg, var(--chip-gradient-start), var(--chip-gradient-end));
-		transition:
-			width 0.3s ease,
-			opacity 0.3s ease;
-		z-index: 0;
-	}
-
-	/* First chip: Uses shared gradient variables */
-	.odds-chip.chip-first {
-		--chip-gradient-start: var(--gradient-yes-start);
-		--chip-gradient-end: var(--gradient-yes-end);
-	}
-
-	/* Second chip: Uses shared gradient variables */
-	.odds-chip.chip-second {
-		--chip-gradient-start: var(--gradient-no-start);
-		--chip-gradient-end: var(--gradient-no-end);
-	}
-
-	.odds-chip:hover {
-		background: var(--primary-hover-bg);
-		border-color: var(--primary);
-		transform: translateY(-1px);
-	}
-
-	.odds-chip:hover::before {
-		opacity: 1.3;
-	}
-
-	.odds-chip:focus-visible {
-		outline: none;
-		box-shadow: var(--focus-ring);
-	}
-
-	.odds-chip-label {
-		font-size: 11px;
-		color: var(--text-2);
-		font-weight: 500;
-		max-width: 50px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		position: relative;
-		z-index: 1;
-	}
-
-	.odds-chip-price {
-		font-size: 12px;
-		color: var(--text-0);
 		font-weight: 700;
 		white-space: nowrap;
-		position: relative;
-		z-index: 1;
+		color: var(--primary);
 	}
 
-	/* ============================================
-	   FOOTER STATS
-	   ============================================ */
+	.multi-meta {
+		font-size: 12px;
+		color: var(--text-3);
+	}
 
+	/* Resolved winner display */
+	.resolved-winner {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: var(--success);
+	}
+
+	.winner-name {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-1);
+	}
+
+	/* Footer Stats */
 	.card-footer {
 		margin-top: auto;
-		padding-top: 12px;
+		padding-top: var(--spacing-3);
 		border-top: 1px solid var(--bg-3);
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 	}
 
 	.stats {
 		display: flex;
-		gap: 20px;
+		gap: var(--spacing-5);
 		align-items: center;
 	}
 
 	.stat {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: 4px;
 	}
 
 	.stat :global(.stat-icon) {
@@ -552,9 +481,9 @@
 	}
 
 	.stat-value {
-		font-size: 13px;
-		font-weight: 700;
-		color: var(--text-0);
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text-1);
 	}
 
 	.stat-label {
@@ -563,47 +492,23 @@
 		font-weight: 500;
 	}
 
-	/* ============================================
-	   MOBILE OPTIMIZATIONS
-	   ============================================ */
-
+	/* Mobile */
 	@media (max-width: 768px) {
 		.event-card {
-			padding: 16px;
-		}
-
-		.event-title {
-			font-size: 16px;
+			padding: var(--spacing-3);
 		}
 
 		.event-icon {
-			width: 36px;
-			height: 36px;
+			width: 32px;
+			height: 32px;
 		}
 
-		.outcome-odds {
-			font-size: 20px;
+		.event-title {
+			font-size: 14px;
 		}
 
 		.stats {
-			gap: 16px;
-		}
-
-		.stat-value {
-			font-size: 12px;
-		}
-
-		.market-item {
-			grid-template-columns: 1fr;
-			gap: 8px;
-		}
-
-		.market-odds-inline {
-			justify-content: flex-start;
-		}
-
-		.odds-chip-label {
-			max-width: 80px;
+			gap: var(--spacing-4);
 		}
 	}
 </style>
