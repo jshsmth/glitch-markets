@@ -22,7 +22,8 @@
 
 	let { formatDate, formatPercent, series }: Props = $props();
 
-	const { xGet, yGet, xScale, width } = getContext<Record<string, unknown>>('LayerCake');
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const { xGet, yGet, xScale, width } = getContext<any>('LayerCake');
 
 	let mouseX = $state(0);
 	let isHovering = $state(false);

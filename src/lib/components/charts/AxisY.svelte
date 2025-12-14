@@ -8,7 +8,8 @@
 
 	let { formatPercent, ticks = 5 }: Props = $props();
 
-	const { width, yScale } = getContext<Record<string, unknown>>('LayerCake');
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const { width, yScale } = getContext<any>('LayerCake');
 
 	const tickVals = $derived($yScale?.ticks?.(ticks) ?? []);
 </script>

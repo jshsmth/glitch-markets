@@ -8,7 +8,8 @@
 
 	let { color, data }: Props = $props();
 
-	const { xGet, yGet } = getContext<Record<string, unknown>>('LayerCake');
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const { xGet, yGet } = getContext<any>('LayerCake');
 
 	const path = $derived(
 		data

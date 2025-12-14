@@ -8,7 +8,8 @@
 
 	let { formatDate, ticks = 4 }: Props = $props();
 
-	const { height, xScale } = getContext<Record<string, unknown>>('LayerCake');
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const { height, xScale } = getContext<any>('LayerCake');
 
 	const tickVals = $derived($xScale?.ticks?.(ticks) ?? []);
 </script>
