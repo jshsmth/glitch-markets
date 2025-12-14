@@ -38,7 +38,9 @@ import type {
 	SportsMetadata,
 	TraderLeaderboardEntry,
 	BuilderLeaderboardEntry,
-	BuilderVolumeEntry
+	BuilderVolumeEntry,
+	PricePoint,
+	PriceHistory
 } from '../api/polymarket-client.js';
 
 /**
@@ -2628,4 +2630,70 @@ export function validateBuilderVolume(data: unknown): BuilderVolumeEntry[] {
 			throw error;
 		}
 	});
+}
+
+/**
+ * Validates a single price point from CLOB API
+ * @param data - Raw price point data
+ * @returns Validated PricePoint
+ * @throws {ValidationError} If validation fails
+ */
+export function validatePricePoint(data: unknown): PricePoint {
+	if (!isObject(data)) {
+		throw new ValidationError('PricePoint must be an object', { data });
+	}
+
+	const point = data as Record<string, unknown>;
+
+	if (!isNumber(point.t)) {
+		throw new ValidationError('PricePoint.t (timestamp) must be a number', { point });
+	}
+
+	if (!isNumber(point.p)) {
+		throw new ValidationError('PricePoint.p (price) must be a number', { point });
+	}
+
+	return {
+		t: point.t,
+		p: point.p
+	};
+}
+
+/**
+ * Validates price history response from CLOB API
+ * @param data - Raw data from /prices-history endpoint
+ * @returns Validated PriceHistory object
+ * @throws {ValidationError} If validation fails
+ *
+ * @example
+ * ```typescript
+ * const data = await fetch('/prices-history?market=...').then(r => r.json());
+ * const validated = validatePriceHistory(data);
+ * // Result: { history: [{ t: 1697875200, p: 0.65 }, ...] }
+ * ```
+ */
+export function validatePriceHistory(data: unknown): PriceHistory {
+	if (!isObject(data)) {
+		throw new ValidationError('PriceHistory response must be an object', { data });
+	}
+
+	if (!isArray(data.history)) {
+		throw new ValidationError('PriceHistory.history must be an array', { data });
+	}
+
+	const history = data.history.map((item, index) => {
+		try {
+			return validatePricePoint(item);
+		} catch (error) {
+			if (error instanceof ValidationError) {
+				throw new ValidationError(`Invalid price point at index ${index}`, {
+					index,
+					originalError: error.message
+				});
+			}
+			throw error;
+		}
+	});
+
+	return { history };
 }

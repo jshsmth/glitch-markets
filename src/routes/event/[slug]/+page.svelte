@@ -14,6 +14,7 @@
 	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
 	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
+	import PriceChart from '$lib/components/charts/PriceChart.svelte';
 	import { formatNumber } from '$lib/utils/format';
 
 	let { data }: { data: PageData } = $props();
@@ -113,7 +114,7 @@
 		typeof window !== 'undefined' && window.innerWidth < 768 ? 'outcomes' : 'about'
 	);
 	type TimeRange = '1H' | '6H' | '1D' | '1W' | '1M' | 'MAX';
-	let selectedTimeRange = $state<TimeRange>('1D');
+	let selectedTimeRange = $state<TimeRange>('MAX');
 
 	const commentsQuery = createQuery<Comment[]>(() => ({
 		queryKey: ['comments', event.id],
@@ -131,6 +132,90 @@
 		},
 		enabled: activeTab === 'comments'
 	}));
+
+	interface PriceHistoryResponse {
+		history: Array<{ t: number; p: number }>;
+	}
+
+	const getIntervalForTimeRange = (range: TimeRange): '1h' | '6h' | '1d' | '1w' | '1m' | 'max' => {
+		const mapping: Record<TimeRange, '1h' | '6h' | '1d' | '1w' | '1m' | 'max'> = {
+			'1H': '1h',
+			'6H': '6h',
+			'1D': '1d',
+			'1W': '1w',
+			'1M': '1m',
+			MAX: 'max'
+		};
+		return mapping[range];
+	};
+
+	const getFidelityForTimeRange = (range: TimeRange): number | undefined => {
+		const fidelityMap: Record<TimeRange, number | undefined> = {
+			'1H': undefined,
+			'6H': undefined,
+			'1D': undefined,
+			'1W': 5,
+			'1M': 10,
+			MAX: undefined
+		};
+		return fidelityMap[range];
+	};
+
+	const getClobTokenId = (market: Market | null): string | null => {
+		if (!market?.clobTokenIds) return null;
+		try {
+			const tokenIds = JSON.parse(market.clobTokenIds);
+			return Array.isArray(tokenIds) && tokenIds[0] ? tokenIds[0] : null;
+		} catch {
+			return null;
+		}
+	};
+
+	const getSeriesColor = (index: number): string => {
+		const colors = ['#00d9ff', '#ff006e', '#a855f7'];
+		return colors[index] || '#00d9ff';
+	};
+
+	const top3Markets = $derived(filteredMarkets.slice(0, 3));
+
+	const priceHistoryQueries = $derived(
+		top3Markets.map((market) => {
+			const tokenId = getClobTokenId(market);
+			return createQuery<PriceHistoryResponse>(() => ({
+				queryKey: ['priceHistory', tokenId, selectedTimeRange],
+				queryFn: async () => {
+					if (!tokenId) throw new Error('No token ID available');
+
+					// eslint-disable-next-line svelte/prefer-svelte-reactivity
+					const params = new URLSearchParams({
+						market: tokenId,
+						interval: getIntervalForTimeRange(selectedTimeRange)
+					});
+
+					const fidelity = getFidelityForTimeRange(selectedTimeRange);
+					if (fidelity !== undefined) {
+						params.set('fidelity', fidelity.toString());
+					}
+
+					const response = await fetch(`/api/prices/history?${params}`);
+					if (!response.ok) throw new Error('Failed to fetch price history');
+					return response.json();
+				},
+				enabled: !!tokenId
+			}));
+		})
+	);
+
+	const chartSeries = $derived(
+		priceHistoryQueries.map((query, index) => ({
+			name: getMarketDisplayTitle(top3Markets[index]),
+			color: getSeriesColor(index),
+			data: query.data?.history ?? []
+		}))
+	);
+
+	const isAnyLoading = $derived(priceHistoryQueries.some((q) => q.isPending));
+	const anyError = $derived(priceHistoryQueries.find((q) => q.error)?.error?.message ?? null);
 
 	function formatRelativeTime(dateStr: string | null): string {
 		if (!dateStr) return '';
@@ -262,14 +347,7 @@
 						{@const marketData = parseMarketData(market)}
 						{@const percentage = marketData?.[0]?.priceFormatted || '—'}
 						<div class="summary-item">
-							<span
-								class="summary-dot"
-								style="background-color: {index === 0
-									? 'var(--success)'
-									: index === 1
-										? 'var(--danger)'
-										: 'var(--text-3)'}"
-							></span>
+							<span class="summary-dot" style="background-color: {getSeriesColor(index)}"></span>
 							<span class="summary-name">{getMarketDisplayTitle(market)}</span>
 							<span class="summary-percentage">{percentage}%</span>
 						</div>
@@ -290,8 +368,8 @@
 
 			<!-- Chart -->
 			<section class="card chart-card">
-				<div class="chart-placeholder">
-					<span>Chart coming soon</span>
+				<div class="chart-wrapper">
+					<PriceChart series={chartSeries} loading={isAnyLoading} error={anyError} />
 				</div>
 				<div class="time-controls">
 					{#each ['1H', '6H', '1D', '1W', '1M', 'MAX'] as range (range)}
@@ -654,7 +732,6 @@
 	}
 
 	.summary-name {
-		flex: 1;
 		color: var(--text-0);
 		font-weight: 500;
 	}
@@ -703,48 +780,43 @@
 	.chart-card {
 		padding: 0;
 		overflow: hidden;
+		background: transparent;
+		border: none;
 	}
 
-	.chart-placeholder {
-		display: flex;
-		align-items: center;
-		justify-content: center;
+	.chart-wrapper {
 		height: 220px;
-		background: var(--bg-2);
-		color: var(--text-3);
-		font-size: 14px;
+		width: 100%;
 	}
 
 	.time-controls {
 		display: flex;
-		gap: 4px;
-		padding: 12px;
-		background: var(--bg-1);
-		border-top: 1px solid var(--bg-3);
+		gap: 8px;
+		padding: 12px 0;
+		justify-content: flex-end;
 	}
 
 	.time-btn {
-		flex: 1;
-		padding: 8px;
-		font-size: 12px;
-		font-weight: 600;
-		background: var(--bg-2);
-		border: 1px solid var(--bg-3);
+		padding: 6px 12px;
+		font-size: 13px;
+		font-weight: 500;
+		background: transparent;
+		border: none;
 		border-radius: 6px;
-		color: var(--text-2);
+		color: var(--text-3);
 		cursor: pointer;
 		transition: all var(--transition-fast);
 	}
 
 	.time-btn:hover {
-		background: var(--bg-3);
+		background: var(--bg-2);
 		color: var(--text-0);
 	}
 
 	.time-btn.active {
-		background: var(--primary);
-		color: var(--bg-0);
-		border-color: var(--primary);
+		background: var(--bg-2);
+		color: var(--text-0);
+		font-weight: 600;
 	}
 
 	.rules-link {
@@ -824,15 +896,15 @@
 	}
 
 	.outcome-card {
-		background: var(--bg-2);
+		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
 		border-radius: 12px;
-		padding: 14px;
+		padding: 16px;
 		transition: all var(--transition-fast);
 	}
 
 	.outcomes-grid .outcome-card:not(:last-child) {
-		margin-bottom: 16px;
+		margin-bottom: 12px;
 	}
 
 	.outcomes-scroll .outcome-card:not(:last-child) {
@@ -840,28 +912,28 @@
 	}
 
 	.outcome-card:hover {
-		border-color: var(--bg-4);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+		background: var(--bg-2);
 	}
 
 	.outcome-card-header {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 12px;
+		align-items: flex-start;
+		margin-bottom: 10px;
 		gap: 8px;
 	}
 
 	.outcome-card-name {
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 600;
 		color: var(--text-0);
 		flex: 1;
 		min-width: 0;
+		line-height: 1.4;
 	}
 
 	.outcome-card-volume {
-		font-size: 11px;
+		font-size: 10px;
 		font-weight: 500;
 		color: var(--text-3);
 		flex-shrink: 0;
@@ -875,7 +947,7 @@
 	}
 
 	.outcome-card-percentage {
-		font-size: 32px;
+		font-size: 28px;
 		font-weight: 700;
 		color: var(--text-0);
 		flex-shrink: 0;
@@ -889,36 +961,34 @@
 	}
 
 	.bet-btn {
-		padding: 10px 14px;
-		font-size: 13px;
-		font-weight: 600;
+		padding: 8px 12px;
+		font-size: 12px;
+		font-weight: 500;
 		border: none;
-		border-radius: 8px;
+		border-radius: 6px;
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		white-space: nowrap;
 	}
 
 	.bet-btn.yes {
-		background: rgba(0, 196, 71, 0.1);
+		background: rgba(0, 196, 71, 0.08);
 		color: var(--success);
-		border: 1px solid rgba(0, 196, 71, 0.2);
+		border: 1px solid transparent;
 	}
 
 	.bet-btn.yes:hover:not(:disabled) {
-		background: rgba(0, 196, 71, 0.15);
-		border-color: var(--success);
+		background: rgba(0, 196, 71, 0.12);
 	}
 
 	.bet-btn.no {
-		background: rgba(255, 51, 102, 0.1);
+		background: rgba(255, 51, 102, 0.08);
 		color: var(--danger);
-		border: 1px solid rgba(255, 51, 102, 0.2);
+		border: 1px solid transparent;
 	}
 
 	.bet-btn.no:hover:not(:disabled) {
-		background: rgba(255, 51, 102, 0.15);
-		border-color: var(--danger);
+		background: rgba(255, 51, 102, 0.12);
 	}
 
 	.bet-btn:disabled {
@@ -1032,28 +1102,28 @@
 	}
 
 	.outcomes-panel {
-		background: var(--bg-1);
-		border: 1px solid var(--bg-3);
+		background: transparent;
+		border: none;
 		border-radius: 12px;
 		overflow: hidden;
 	}
 
 	.outcomes-panel-title {
-		font-size: 14px;
+		font-size: 11px;
 		font-weight: 700;
-		color: var(--text-0);
+		color: var(--text-3);
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: 1px;
 		margin: 0;
-		padding: 16px;
-		border-bottom: 1px solid var(--bg-3);
+		padding: 8px 0 16px 0;
+		border-bottom: none;
 	}
 
 	.outcomes-scroll {
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
-		padding: 16px;
+		padding: 0;
 		max-height: calc(100vh - 200px);
 		overflow-y: auto;
 	}
@@ -1074,7 +1144,7 @@
 			height: 48px;
 		}
 
-		.chart-placeholder {
+		.chart-wrapper {
 			height: 380px;
 		}
 

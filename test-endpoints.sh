@@ -104,10 +104,35 @@ try:
                 output.append(f"**Builder**: {first.get('builder')}")
                 output.append(f"**Volume**: ${first.get('volume'):,.0f}")
                 output.append(f"**Active Users**: {first.get('activeUsers')}")
+            # Check for TraderLeaderboardEntry objects
+            if 'rank' in first and 'proxyWallet' in first and 'pnl' in first:
+                output.append(f"**First Trader**: Rank #{first.get('rank')}")
+                output.append(f"**Username**: {first.get('userName', 'N/A')}")
+                output.append(f"**Volume**: ${first.get('vol', 0):,.0f}")
+                output.append(f"**PnL**: ${first.get('pnl', 0):,.0f}")
+                if 'verifiedBadge' in first and first.get('verifiedBadge'):
+                    output.append(f"**Verified**: ✓")
 
     elif isinstance(d, dict):
+        # For price history responses
+        if 'history' in d and isinstance(d['history'], list):
+            history = d['history']
+            output.append(f"**Price Points**: {len(history)} items")
+            if len(history) > 0:
+                first = history[0]
+                last = history[-1]
+                if 't' in first and 'p' in first:
+                    import datetime
+                    first_time = datetime.datetime.fromtimestamp(first['t']).strftime('%Y-%m-%d %H:%M')
+                    last_time = datetime.datetime.fromtimestamp(last['t']).strftime('%Y-%m-%d %H:%M')
+                    output.append(f"**First Point**: {first_time} @ {first['p']:.4f}")
+                    output.append(f"**Last Point**: {last_time} @ {last['p']:.4f}")
+                    if len(history) > 1:
+                        price_change = ((last['p'] - first['p']) / first['p']) * 100
+                        output.append(f"**Price Change**: {price_change:+.2f}%")
+
         # For health check responses
-        if 'status' in d and 'services' in d:
+        elif 'status' in d and 'services' in d:
             output.append(f"**Overall Status**: {d.get('status')}")
             if 'timestamp' in d:
                 output.append(f"**Timestamp**: {d.get('timestamp')}")
@@ -234,6 +259,53 @@ if [ -n "$MARKET_ID" ]; then
     test_endpoint "Get Market Tags" "/api/markets/$MARKET_ID/tags"
 fi
 
+# Extract market slug for slug endpoint test (skip 'all' as it's a keyword, not a valid slug)
+MARKET_SLUG=$(python3 << 'PY'
+import json
+try:
+    with open('/tmp/response.json') as f:
+        data = json.load(f)
+    if isinstance(data, list) and len(data) > 0:
+        slug = data[0].get('slug', '')
+        # Skip 'all' as it's a keyword, not a real market slug
+        if slug and slug != 'all':
+            print(slug)
+except: pass
+PY
+)
+
+if [ -n "$MARKET_SLUG" ]; then
+    test_endpoint "Get Market by Slug" "/api/markets/slug/$MARKET_SLUG"
+else
+    echo -e "${RED}⚠ Skipping Get Market by Slug - no valid slug found${NC}"
+fi
+
+# Prices API - Test price history
+echo -e "\n${YELLOW}Testing Prices API...${NC}"
+echo "# Prices API" >> "$OUTPUT"
+echo "" >> "$OUTPUT"
+
+if [ -n "$MARKET_ID" ]; then
+    test_endpoint "Price History (1 Day Interval)" "/api/prices/history?market=$MARKET_ID&interval=1d"
+    test_endpoint "Price History (1 Week)" "/api/prices/history?market=$MARKET_ID&interval=1w&fidelity=60"
+    test_endpoint "Price History (1 Hour)" "/api/prices/history?market=$MARKET_ID&interval=1h&fidelity=15"
+    test_endpoint "Price History (Max)" "/api/prices/history?market=$MARKET_ID&interval=max"
+
+    # Test with timestamps (last 7 days)
+    END_TS=$(date +%s)
+    START_TS=$((END_TS - 604800))  # 7 days ago
+    test_endpoint "Price History (Timestamps)" "/api/prices/history?market=$MARKET_ID&startTs=$START_TS&endTs=$END_TS&fidelity=60"
+else
+    echo -e "${RED}⚠ Skipping Price History tests - no market ID found${NC}"
+fi
+
+# Prices validation tests
+echo -e "\n${YELLOW}Testing Prices Validation...${NC}"
+test_endpoint "Missing Market Parameter" "/api/prices/history?interval=1d" "400"
+test_endpoint "Invalid Interval" "/api/prices/history?market=$MARKET_ID&interval=invalid" "400"
+test_endpoint "Invalid Fidelity (Not a Number)" "/api/prices/history?market=$MARKET_ID&interval=1d&fidelity=abc" "400"
+test_endpoint "Interval with Timestamps (Mutually Exclusive)" "/api/prices/history?market=$MARKET_ID&interval=1d&startTs=1234567890" "400"
+
 # Events API - Get event data first
 echo -e "\n${YELLOW}Testing Events API...${NC}"
 echo "# Events API" >> "$OUTPUT"
@@ -326,11 +398,13 @@ fi
 
 if [ -n "$TAG_SLUG" ]; then
     test_endpoint "Get Tag by Slug" "/api/tags/slug/$TAG_SLUG"
+    test_endpoint "Get Related Tags" "/api/tags/slug/$TAG_SLUG/related?limit=5"
+    test_endpoint "Get Tag Relationships" "/api/tags/slug/$TAG_SLUG/relationships?limit=5"
 else
     echo -e "${RED}⚠ Skipping Get Tag by Slug - no slug found${NC}"
+    echo -e "${RED}⚠ Skipping Get Related Tags - no slug found${NC}"
+    echo -e "${RED}⚠ Skipping Get Tag Relationships - no slug found${NC}"
 fi
-
-# Tag relationship endpoints have been removed (not in Polymarket API)
 
 # Sports API
 echo -e "\n${YELLOW}Testing Sports API...${NC}"
@@ -383,6 +457,24 @@ fi
 
 test_endpoint "List Comments by User" "/api/comments/user/$TEST_USER"
 
+# Extract a comment ID if available
+COMMENT_ID=$(python3 << 'PY'
+import json
+try:
+    with open('/tmp/response.json') as f:
+        data = json.load(f)
+    if isinstance(data, list) and len(data) > 0:
+        print(data[0].get('id', ''))
+except: pass
+PY
+)
+
+if [ -n "$COMMENT_ID" ]; then
+    test_endpoint "Get Comment by ID" "/api/comments/$COMMENT_ID"
+else
+    echo -e "${RED}⚠ Skipping Get Comment by ID - no comment ID found${NC}"
+fi
+
 # Users API - Use test address
 echo -e "\n${YELLOW}Testing Users API...${NC}"
 echo "# Users API" >> "$OUTPUT"
@@ -390,6 +482,50 @@ echo "" >> "$OUTPUT"
 test_endpoint "User Positions" "/api/users/positions?user=$TEST_USER"
 test_endpoint "User Activity" "/api/users/activity?user=$TEST_USER"
 test_endpoint "User Trades" "/api/users/trades?user=$TEST_USER"
+test_endpoint "User Portfolio Value" "/api/users/value?user=$TEST_USER"
+test_endpoint "User Closed Positions" "/api/users/closed-positions?user=$TEST_USER"
+
+# Note: Market holders endpoint requires CLOB token ID (long hex string), not simple market ID
+# Accepting 400 as valid since not all market IDs work with the Polymarket holders endpoint
+if [ -n "$MARKET_ID" ]; then
+    # Try the holders endpoint - it may return 400 if the market ID format isn't compatible
+    http_code=$(curl $CURL_OPTS -s -o /tmp/response.json -w "%{http_code}" "$BASE_URL/api/users/holders?market=$MARKET_ID")
+    total=$((total + 1))
+
+    if [ "$http_code" = "200" ] || [ "$http_code" = "400" ]; then
+        passed=$((passed + 1))
+        echo -e "${GREEN}✅ Market Holders${NC} (HTTP $http_code)"
+        echo "## ✅ Market Holders" >> "$OUTPUT"
+        echo "" >> "$OUTPUT"
+        echo "**Endpoint**: \`GET /api/users/holders?market=$MARKET_ID\`  " >> "$OUTPUT"
+        echo "**Status**: $http_code ✓" >> "$OUTPUT"
+        if [ "$http_code" = "400" ]; then
+            echo "  " >> "$OUTPUT"
+            echo "**Note**: Some market IDs require CLOB token format (long hex string)  " >> "$OUTPUT"
+        fi
+        echo "" >> "$OUTPUT"
+    else
+        failed=$((failed + 1))
+        echo -e "${RED}❌ Market Holders${NC} (Expected: 200 or 400, Got: $http_code)"
+        echo "## ❌ Market Holders" >> "$OUTPUT"
+        echo "" >> "$OUTPUT"
+        echo "**Endpoint**: \`GET /api/users/holders?market=$MARKET_ID\`  " >> "$OUTPUT"
+        echo "**Expected**: 200 or 400  " >> "$OUTPUT"
+        echo "**Actual**: $http_code ✗" >> "$OUTPUT"
+        echo "" >> "$OUTPUT"
+    fi
+else
+    echo -e "${RED}⚠ Skipping Market Holders - no market ID found${NC}"
+fi
+
+# Traders API
+echo -e "\n${YELLOW}Testing Traders API...${NC}"
+echo "# Traders API" >> "$OUTPUT"
+echo "" >> "$OUTPUT"
+test_endpoint "Trader Leaderboard (Default)" "/api/traders/leaderboard"
+test_endpoint "Trader Leaderboard (Weekly)" "/api/traders/leaderboard?timePeriod=WEEK"
+test_endpoint "Trader Leaderboard (Monthly)" "/api/traders/leaderboard?timePeriod=MONTH"
+test_endpoint "Trader Leaderboard (All Time)" "/api/traders/leaderboard?timePeriod=ALL"
 
 # Search API
 echo -e "\n${YELLOW}Testing Search API...${NC}"

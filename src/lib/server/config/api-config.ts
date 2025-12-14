@@ -2,6 +2,7 @@ export interface ApiConfig {
 	baseUrl: string;
 	dataApiUrl: string;
 	bridgeApiUrl: string;
+	clobApiUrl: string;
 	timeout: number;
 	cacheTtl: number;
 	enableCache: boolean;
@@ -11,6 +12,7 @@ const DEFAULT_CONFIG: ApiConfig = {
 	baseUrl: 'https://gamma-api.polymarket.com',
 	dataApiUrl: 'https://data-api.polymarket.com',
 	bridgeApiUrl: 'https://bridge.polymarket.com',
+	clobApiUrl: 'https://clob.polymarket.com',
 	timeout: 10000,
 	cacheTtl: 60,
 	enableCache: true
@@ -78,6 +80,14 @@ export function validateConfig(config: ApiConfig): void {
 		throw new ConfigurationError('bridgeApiUrl must be a valid URL');
 	}
 
+	if (!config.clobApiUrl || typeof config.clobApiUrl !== 'string') {
+		throw new ConfigurationError('clobApiUrl must be a non-empty string');
+	}
+
+	if (!isValidUrl(config.clobApiUrl)) {
+		throw new ConfigurationError('clobApiUrl must be a valid URL');
+	}
+
 	if (typeof config.timeout !== 'number' || config.timeout <= 0) {
 		throw new ConfigurationError('timeout must be a positive number');
 	}
@@ -99,6 +109,7 @@ export function validateConfig(config: ApiConfig): void {
  * - POLYMARKET_API_URL: Base URL for the Gamma API
  * - POLYMARKET_DATA_API_URL: Base URL for the Data API
  * - POLYMARKET_BRIDGE_API_URL: Base URL for the Bridge API
+ * - POLYMARKET_CLOB_API_URL: Base URL for the CLOB API
  * - POLYMARKET_API_TIMEOUT: Request timeout in milliseconds
  * - POLYMARKET_CACHE_TTL: Cache TTL in seconds
  * - POLYMARKET_CACHE_ENABLED: Enable/disable caching ("true" or "false")
@@ -112,6 +123,7 @@ export function validateConfig(config: ApiConfig): void {
  * console.log(config.baseUrl); // https://gamma-api.polymarket.com
  * console.log(config.dataApiUrl); // https://data-api.polymarket.com
  * console.log(config.bridgeApiUrl); // https://bridge.polymarket.com
+ * console.log(config.clobApiUrl); // https://clob.polymarket.com
  * ```
  */
 export function loadConfig(): ApiConfig {
@@ -119,6 +131,7 @@ export function loadConfig(): ApiConfig {
 		baseUrl: process.env.POLYMARKET_API_URL || DEFAULT_CONFIG.baseUrl,
 		dataApiUrl: process.env.POLYMARKET_DATA_API_URL || DEFAULT_CONFIG.dataApiUrl,
 		bridgeApiUrl: process.env.POLYMARKET_BRIDGE_API_URL || DEFAULT_CONFIG.bridgeApiUrl,
+		clobApiUrl: process.env.POLYMARKET_CLOB_API_URL || DEFAULT_CONFIG.clobApiUrl,
 		timeout: process.env.POLYMARKET_API_TIMEOUT
 			? parseInt(process.env.POLYMARKET_API_TIMEOUT, 10)
 			: DEFAULT_CONFIG.timeout,

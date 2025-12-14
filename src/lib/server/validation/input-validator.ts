@@ -888,3 +888,118 @@ export function validateBuilderVolumeParams(params: Record<string, unknown>): {
 		timePeriod: timePeriod as 'DAY' | 'WEEK' | 'MONTH' | 'ALL'
 	};
 }
+
+/**
+ * Validates a market token ID (CLOB token ID)
+ */
+export function validateTokenId(tokenId: unknown): string {
+	return validateNonEmptyString(tokenId, 'market');
+}
+
+/**
+ * Validates a Unix timestamp
+ */
+export function validateTimestamp(timestamp: unknown, paramName: string): number {
+	if (typeof timestamp !== 'number' && typeof timestamp !== 'string') {
+		throw new ValidationError(`${paramName} must be a number or string`, {
+			[paramName]: timestamp
+		});
+	}
+
+	const parsed = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
+
+	if (!Number.isInteger(parsed) || parsed < 0) {
+		throw new ValidationError(`${paramName} must be a non-negative integer`, {
+			[paramName]: timestamp,
+			parsed
+		});
+	}
+
+	return parsed;
+}
+
+/**
+ * Validates price history interval parameter
+ */
+export function validateInterval(interval: unknown): '1m' | '1w' | '1d' | '6h' | '1h' | 'max' {
+	if (typeof interval !== 'string') {
+		throw new ValidationError('interval must be a string', { interval });
+	}
+
+	const validIntervals = ['1m', '1w', '1d', '6h', '1h', 'max'] as const;
+	if (!validIntervals.includes(interval as '1m' | '1w' | '1d' | '6h' | '1h' | 'max')) {
+		throw new ValidationError(`interval must be one of: ${validIntervals.join(', ')}`, {
+			interval,
+			validIntervals
+		});
+	}
+
+	return interval as '1m' | '1w' | '1d' | '6h' | '1h' | 'max';
+}
+
+/**
+ * Validates query parameters for the price history endpoint
+ */
+export function validatePriceHistoryParams(params: {
+	market: string;
+	startTs?: number;
+	endTs?: number;
+	interval?: string;
+	fidelity?: number;
+}): {
+	market: string;
+	startTs?: number;
+	endTs?: number;
+	interval?: '1m' | '1w' | '1d' | '6h' | '1h' | 'max';
+	fidelity?: number;
+} {
+	const validated: {
+		market: string;
+		startTs?: number;
+		endTs?: number;
+		interval?: '1m' | '1w' | '1d' | '6h' | '1h' | 'max';
+		fidelity?: number;
+	} = {
+		market: validateTokenId(params.market)
+	};
+
+	if (
+		params.interval !== undefined &&
+		(params.startTs !== undefined || params.endTs !== undefined)
+	) {
+		throw new ValidationError('interval parameter is mutually exclusive with startTs and endTs', {
+			interval: params.interval,
+			startTs: params.startTs,
+			endTs: params.endTs
+		});
+	}
+
+	if (params.startTs !== undefined) {
+		validated.startTs = validateTimestamp(params.startTs, 'startTs');
+	}
+
+	if (params.endTs !== undefined) {
+		validated.endTs = validateTimestamp(params.endTs, 'endTs');
+	}
+
+	if (params.interval !== undefined) {
+		validated.interval = validateInterval(params.interval);
+	}
+
+	if (params.fidelity !== undefined) {
+		validated.fidelity = validatePositiveNumber(params.fidelity, 'fidelity');
+	}
+
+	if (
+		validated.startTs !== undefined &&
+		validated.endTs !== undefined &&
+		validated.startTs > validated.endTs
+	) {
+		throw new ValidationError('startTs must be less than or equal to endTs', {
+			startTs: validated.startTs,
+			endTs: validated.endTs
+		});
+	}
+
+	return validated;
+}
