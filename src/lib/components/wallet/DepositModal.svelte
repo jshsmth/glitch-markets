@@ -21,6 +21,7 @@
 		ChainType
 	} from '$lib/types/bridge';
 	import { determineChainType } from '$lib/types/bridge';
+	import { walletState } from '$lib/stores/wallet.svelte';
 
 	// Module-level cache persists across modal open/close
 	const CACHE_DURATION_MS = 5 * 60 * 1000;
@@ -33,7 +34,6 @@
 	let assetsCache: CacheEntry<SupportedAsset[]> | null = null;
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- module-level cache, not reactive state
 	let depositAddressCache: Map<string, CacheEntry<string>> = new Map();
-	let userWalletCache: CacheEntry<string> | null = null;
 
 	function isCacheValid<T>(cache: CacheEntry<T> | null | undefined): cache is CacheEntry<T> {
 		if (!cache) return false;
@@ -53,7 +53,6 @@
 	let selectedAsset = $state<SupportedAsset | null>(null);
 	let depositAddress = $state<string | null>(null);
 	let addressError = $state<string | null>(null);
-	let userWalletAddress = $state<string | null>(null);
 	let qrCanvas = $state<HTMLCanvasElement | null>(null);
 	let qrError = $state(false);
 	let copySuccess = $state(false);
@@ -98,13 +97,13 @@
 			}
 			assetsError = null;
 			fetchSupportedAssets();
-			fetchUserWalletAddress();
 		}
 	});
 
 	$effect(() => {
-		if (selectedAsset && userWalletAddress) {
-			fetchDepositAddress(selectedAsset, userWalletAddress);
+		const userAddress = walletState.serverWalletAddress;
+		if (selectedAsset && userAddress) {
+			fetchDepositAddress(selectedAsset, userAddress);
 		}
 	});
 
@@ -186,27 +185,6 @@
 			assetsError = err instanceof Error ? err.message : 'Failed to load assets';
 		} finally {
 			assetsLoading = false;
-		}
-	}
-
-	async function fetchUserWalletAddress() {
-		if (isCacheValid(userWalletCache)) {
-			userWalletAddress = userWalletCache.data;
-			return;
-		}
-
-		try {
-			const response = await fetch('/api/user/profile');
-			if (!response.ok) {
-				throw new Error('Failed to fetch user profile');
-			}
-			const profile = await response.json();
-			userWalletAddress = profile.serverWalletAddress || null;
-			if (userWalletAddress) {
-				userWalletCache = { data: userWalletAddress, timestamp: Date.now() };
-			}
-		} catch (err) {
-			console.error('Failed to fetch user wallet address:', err);
 		}
 	}
 
@@ -305,8 +283,9 @@
 	}
 
 	function retryFetchAddress() {
-		if (selectedAsset && userWalletAddress) {
-			fetchDepositAddress(selectedAsset, userWalletAddress);
+		const userAddress = walletState.serverWalletAddress;
+		if (selectedAsset && userAddress) {
+			fetchDepositAddress(selectedAsset, userAddress);
 		}
 	}
 </script>

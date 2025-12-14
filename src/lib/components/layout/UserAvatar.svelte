@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { authState } from '$lib/stores/auth.svelte';
+	import { walletState } from '$lib/stores/wallet.svelte';
 	import { themeState, toggleTheme } from '$lib/stores/theme.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -27,9 +28,6 @@
 	let showDropdown = $state(false);
 	let closeTimeout: ReturnType<typeof setTimeout> | null = null;
 	let windowWidth = $state(1024);
-	let serverWalletAddress = $state<string | null>(null);
-	let proxyWalletAddress = $state<string | null>(null);
-	let profileAbortController: AbortController | null = null;
 
 	let isMobile = $derived(windowWidth <= 767);
 
@@ -49,50 +47,6 @@
 				}
 			};
 		}
-	});
-
-	$effect(() => {
-		void authState.profileVersion;
-
-		if (profileAbortController) {
-			profileAbortController.abort();
-		}
-
-		if (authState.session) {
-			profileAbortController = new AbortController();
-
-			fetch('/api/user/profile', {
-				signal: profileAbortController.signal
-			})
-				.then((res) => {
-					if (!res.ok) {
-						throw new Error(`HTTP ${res.status}`);
-					}
-					return res.json();
-				})
-				.then((data) => {
-					serverWalletAddress = data.serverWalletAddress || null;
-					proxyWalletAddress = data.proxyWalletAddress || null;
-				})
-				.catch((err) => {
-					if (err.name === 'AbortError') {
-						return; // Ignore abort errors
-					}
-					console.error('Failed to fetch user profile:', err);
-					serverWalletAddress = null;
-					proxyWalletAddress = null;
-				});
-		} else {
-			serverWalletAddress = null;
-			proxyWalletAddress = null;
-		}
-
-		return () => {
-			if (profileAbortController) {
-				profileAbortController.abort();
-				profileAbortController = null;
-			}
-		};
 	});
 
 	function handleAvatarClick() {
@@ -160,7 +114,8 @@
 		toggleTheme();
 	}
 
-	async function handleCopyAddress(address: string | null) {
+	async function handleCopyAddress() {
+		const address = walletState.serverWalletAddress;
 		if (!address) return;
 
 		try {
@@ -223,22 +178,25 @@
 				<div class="dropdown-header">
 					<div class="header-avatar" style="background: {avatarGradient}"></div>
 					<div class="header-info">
-						{#if serverWalletAddress}
+						{#if walletState.isLoading}
+							<div class="wallet-skeleton">
+								<div class="skeleton-address"></div>
+								<div class="skeleton-badge"></div>
+							</div>
+						{:else if walletState.serverWalletAddress}
 							<div class="header-address">
-								<span class="address-text">{formatAddress(serverWalletAddress)}</span>
+								<span class="address-text">{formatAddress(walletState.serverWalletAddress)}</span>
 								<button
 									class="copy-button"
-									onclick={() => handleCopyAddress(serverWalletAddress)}
+									onclick={handleCopyAddress}
 									aria-label="Copy wallet address"
 								>
 									<CopyIcon size={16} color="var(--text-2)" />
 								</button>
 							</div>
-							{#if proxyWalletAddress}
+							{#if walletState.proxyWalletAddress}
 								<div class="header-subtext ready-badge">Ready to Trade</div>
 							{/if}
-						{:else if authState.session}
-							<div class="loading-address">Loading wallet...</div>
 						{/if}
 					</div>
 					<button class="settings-button" onclick={handleSettingsClick} aria-label="Settings">
@@ -602,10 +560,29 @@
 		margin: 8px 0;
 	}
 
-	.loading-address {
-		font-size: 12px;
-		color: var(--text-2);
+	.wallet-skeleton {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
 		padding: 6px 8px;
+	}
+
+	.skeleton-address {
+		width: 120px;
+		height: 24px;
+		background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-3) 50%, var(--bg-2) 75%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s ease-in-out infinite;
+		border-radius: 6px;
+	}
+
+	.skeleton-badge {
+		width: 80px;
+		height: 14px;
+		background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-3) 50%, var(--bg-2) 75%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s ease-in-out infinite;
+		border-radius: 4px;
 	}
 
 	.header-subtext {

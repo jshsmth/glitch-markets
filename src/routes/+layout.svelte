@@ -8,6 +8,7 @@
 	import { createQueryClient } from '$lib/query/client';
 	import { initializeAuth, updateAuthState, refreshProfile } from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
+	import { initializeWalletSync } from '$lib/stores/wallet.svelte';
 	import {
 		signInModalState,
 		closeSignInModal,
@@ -37,6 +38,8 @@
 		initializeTheme();
 		initializeAuth(data?.session);
 
+		const cleanupWalletSync = initializeWalletSync();
+
 		if (data?.session?.user) {
 			handleUserSignIn();
 		}
@@ -52,7 +55,10 @@
 			}
 		});
 
-		return () => subscription.unsubscribe();
+		return () => {
+			subscription.unsubscribe();
+			cleanupWalletSync();
+		};
 	});
 
 	async function handleUserSignIn() {
