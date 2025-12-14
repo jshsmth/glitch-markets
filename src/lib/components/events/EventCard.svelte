@@ -390,8 +390,9 @@
 	}
 
 	.binary-percentage {
-		font-size: 15px;
-		font-weight: 700;
+		font-size: 20px;
+		font-weight: 800;
+		letter-spacing: -0.02em;
 	}
 
 	.binary-percentage.leans-yes {
@@ -453,8 +454,9 @@
 	}
 
 	.leader-percentage {
-		font-size: 15px;
-		font-weight: 700;
+		font-size: 20px;
+		font-weight: 800;
+		letter-spacing: -0.02em;
 		color: var(--primary);
 		white-space: nowrap;
 	}
