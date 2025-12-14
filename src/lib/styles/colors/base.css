@@ -31,6 +31,7 @@
 	--gold-dark: #a68b2e;
 	--gold-base: #d4af37;
 	--gold-light: #e6c76a;
+	--gold-text: #5c4a15; /* Dark text for gold backgrounds */
 	--gold-rgb: 212, 175, 55; /* RGB of gold-base for rgba() usage */
 
 	/* ============================================

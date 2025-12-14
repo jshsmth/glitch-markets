@@ -72,8 +72,38 @@
 </script>
 
 {#if loading}
-	<div class="chart-state">
-		<span>Loading chart data...</span>
+	<div class="chart-skeleton">
+		<div class="skeleton-y-axis">
+			<div class="skeleton-tick"></div>
+			<div class="skeleton-tick"></div>
+			<div class="skeleton-tick"></div>
+			<div class="skeleton-tick"></div>
+			<div class="skeleton-tick"></div>
+		</div>
+		<div class="skeleton-chart-area">
+			<div class="skeleton-grid-lines">
+				<div class="skeleton-grid-line"></div>
+				<div class="skeleton-grid-line"></div>
+				<div class="skeleton-grid-line"></div>
+				<div class="skeleton-grid-line"></div>
+			</div>
+			<svg class="skeleton-line" viewBox="0 0 100 50" preserveAspectRatio="none">
+				<path
+					d="M 0,35 Q 15,30 25,32 T 50,28 Q 65,26 75,30 T 100,25"
+					fill="none"
+					stroke="var(--bg-3)"
+					stroke-width="2"
+					opacity="0.5"
+				/>
+			</svg>
+		</div>
+		<div class="skeleton-x-axis">
+			<div class="skeleton-tick"></div>
+			<div class="skeleton-tick"></div>
+			<div class="skeleton-tick"></div>
+			<div class="skeleton-tick"></div>
+			<div class="skeleton-tick"></div>
+		</div>
 	</div>
 {:else if error}
 	<div class="chart-state error">
@@ -129,5 +159,99 @@
 
 	.chart-state.error {
 		color: var(--danger);
+	}
+
+	.chart-skeleton {
+		width: 100%;
+		height: 100%;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		padding: 8px 50px 24px 8px;
+	}
+
+	.skeleton-y-axis {
+		position: absolute;
+		right: 0;
+		top: 8px;
+		bottom: 24px;
+		width: 50px;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		padding: 0 8px;
+	}
+
+	.skeleton-y-axis .skeleton-tick {
+		width: 30px;
+		height: 10px;
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s infinite;
+		border-radius: var(--radius-sm);
+	}
+
+	.skeleton-x-axis {
+		display: flex;
+		justify-content: space-between;
+		padding: 8px 0 0 0;
+		gap: 8px;
+	}
+
+	.skeleton-x-axis .skeleton-tick {
+		flex: 1;
+		height: 10px;
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s infinite;
+		border-radius: var(--radius-sm);
+	}
+
+	.skeleton-chart-area {
+		flex: 1;
+		position: relative;
+		min-height: 0;
+	}
+
+	.skeleton-grid-lines {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		padding: 4px 0;
+	}
+
+	.skeleton-grid-line {
+		width: 100%;
+		height: 1px;
+		background: var(--bg-2);
+	}
+
+	.skeleton-line {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		animation: fadeInOut 2s ease-in-out infinite;
+	}
+
+	@keyframes shimmer {
+		0% {
+			background-position: 200% 0;
+		}
+		100% {
+			background-position: -200% 0;
+		}
+	}
+
+	@keyframes fadeInOut {
+		0%,
+		100% {
+			opacity: 0.3;
+		}
+		50% {
+			opacity: 0.6;
+		}
 	}
 </style>

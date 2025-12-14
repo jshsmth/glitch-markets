@@ -561,7 +561,7 @@
 
 	.rank-1 {
 		background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%);
-		color: #5c4a15;
+		color: var(--gold-text);
 		box-shadow: 0 1px 2px rgba(var(--gold-rgb), 0.3);
 	}
 
