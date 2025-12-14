@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { useRegisterSW } from 'virtual:pwa-register/svelte';
-	import XIcon from '$lib/components/icons/XIcon.svelte';
 
 	const { needRefresh, offlineReady, updateServiceWorker } = useRegisterSW({
 		onRegisteredSW(swScriptUrl, registration) {
@@ -53,7 +52,18 @@
 					<div class="toast-actions">
 						<button class="btn-update" onclick={handleUpdate}> Update Now </button>
 						<button class="btn-close" onclick={handleClose} aria-label="Close notification">
-							<XIcon size={18} />
+							<svg
+								width="18"
+								height="18"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path d="M18 6 6 18M6 6l12 12" />
+							</svg>
 						</button>
 					</div>
 				{:else if $offlineReady}
@@ -78,7 +88,18 @@
 					</div>
 					<div class="toast-actions">
 						<button class="btn-close" onclick={handleClose} aria-label="Close notification">
-							<XIcon size={18} />
+							<svg
+								width="18"
+								height="18"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path d="M18 6 6 18M6 6l12 12" />
+							</svg>
 						</button>
 					</div>
 				{/if}
