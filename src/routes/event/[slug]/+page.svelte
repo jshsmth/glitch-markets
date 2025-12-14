@@ -350,11 +350,7 @@
 						<div class="summary-item">
 							<span
 								class="summary-dot"
-								style="background-color: {index === 0
-									? 'var(--success)'
-									: index === 1
-										? 'var(--danger)'
-										: 'var(--text-3)'}"
+								style="background-color: {getSeriesColor(index)}"
 							></span>
 							<span class="summary-name">{getMarketDisplayTitle(market)}</span>
 							<span class="summary-percentage">{percentage}%</span>
@@ -740,7 +736,6 @@
 	}
 
 	.summary-name {
-		flex: 1;
 		color: var(--text-0);
 		font-weight: 500;
 	}
