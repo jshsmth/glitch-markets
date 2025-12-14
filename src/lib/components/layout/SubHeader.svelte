@@ -340,14 +340,8 @@
 	}
 
 	.nav-link.active {
-		color: var(--primary-700);
-		background-color: var(--primary-50);
-		font-weight: 600;
-	}
-
-	:global([data-theme='dark']) .nav-link.active {
-		color: var(--primary-400);
-		background-color: rgba(var(--primary-rgb), 0.12);
+		color: var(--text-0);
+		font-weight: var(--font-bold);
 	}
 
 	.nav-link :global(svg) {
