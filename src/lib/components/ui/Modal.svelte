@@ -15,18 +15,13 @@
 	let modalElement = $state<HTMLDivElement | null>(null);
 	let previousFocusElement = $state<HTMLElement | null>(null);
 
-	// Focus trap and scroll lock
 	$effect(() => {
 		if (!browser) return;
 
 		if (isOpen && modalElement) {
-			// Store previous focus
 			previousFocusElement = document.activeElement as HTMLElement;
-
-			// Lock body scroll
 			document.body.style.overflow = 'hidden';
 
-			// Focus first focusable element
 			const focusableElements = modalElement.querySelectorAll<HTMLElement>(
 				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 			);
@@ -35,38 +30,26 @@
 				focusableElements[0].focus();
 			}
 
-			// Trap focus within modal
 			const handleTabKey = (e: KeyboardEvent) => {
 				if (e.key !== 'Tab') return;
 
 				const firstFocusable = focusableElements[0];
 				const lastFocusable = focusableElements[focusableElements.length - 1];
 
-				if (e.shiftKey) {
-					// Shift + Tab
-					if (document.activeElement === firstFocusable) {
-						e.preventDefault();
-						lastFocusable.focus();
-					}
-				} else {
-					// Tab
-					if (document.activeElement === lastFocusable) {
-						e.preventDefault();
-						firstFocusable.focus();
-					}
+				if (e.shiftKey && document.activeElement === firstFocusable) {
+					e.preventDefault();
+					lastFocusable.focus();
+				} else if (!e.shiftKey && document.activeElement === lastFocusable) {
+					e.preventDefault();
+					firstFocusable.focus();
 				}
 			};
 
 			document.addEventListener('keydown', handleTabKey);
 
 			return () => {
-				// Restore focus
 				previousFocusElement?.focus();
-
-				// Unlock body scroll
 				document.body.style.overflow = '';
-
-				// Remove event listener
 				document.removeEventListener('keydown', handleTabKey);
 			};
 		}

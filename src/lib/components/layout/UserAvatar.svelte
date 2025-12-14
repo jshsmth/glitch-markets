@@ -23,36 +23,7 @@
 
 	let { size = 36, hideChevron = false }: Props = $props();
 
-	/**
-	 * Generate a consistent gradient based on user ID using brand colors
-	 */
-	function generateAvatarGradient(userId: string): string {
-		// Brand color palette from design system
-		const brandColors = [
-			['#00d9ff', '#00aed9'], // Cyan gradient (primary)
-			['#00d9ff', '#0083a3'], // Cyan to darker cyan
-			['#33cfff', '#0083a3'], // Light cyan to dark cyan
-			['#00c447', '#00d9ff'], // Success to cyan
-			['#00d9ff', '#00c447'], // Cyan to success
-			['#66dbff', '#00aed9'] // Light cyan to medium cyan
-		];
-
-		// Generate consistent hash from user ID
-		let hash = 0;
-		for (let i = 0; i < userId.length; i++) {
-			hash = userId.charCodeAt(i) + ((hash << 5) - hash);
-		}
-
-		// Select gradient based on hash
-		const gradientIndex = Math.abs(hash) % brandColors.length;
-		const [color1, color2] = brandColors[gradientIndex];
-
-		return `linear-gradient(135deg, ${color1}, ${color2})`;
-	}
-
-	let gradient = $derived(
-		authState.user ? generateAvatarGradient(authState.user.id || 'default') : ''
-	);
+	const avatarGradient = 'linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%)';
 	let showDropdown = $state(false);
 	let closeTimeout: ReturnType<typeof setTimeout> | null = null;
 	let windowWidth = $state(1024);
@@ -72,7 +43,6 @@
 			window.addEventListener('resize', handleResize);
 			return () => {
 				window.removeEventListener('resize', handleResize);
-				// Clean up any pending timeouts on unmount
 				if (closeTimeout) {
 					clearTimeout(closeTimeout);
 					closeTimeout = null;
@@ -84,7 +54,6 @@
 	$effect(() => {
 		void authState.profileVersion;
 
-		// Cancel any pending profile fetch
 		if (profileAbortController) {
 			profileAbortController.abort();
 		}
@@ -103,7 +72,6 @@
 				})
 				.then((data) => {
 					serverWalletAddress = data.serverWalletAddress || null;
-					// Set proxy wallet address (only if user has registered with Polymarket)
 					proxyWalletAddress = data.proxyWalletAddress || null;
 				})
 				.catch((err) => {
@@ -120,7 +88,6 @@
 		}
 
 		return () => {
-			// Cleanup: abort fetch on effect cleanup
 			if (profileAbortController) {
 				profileAbortController.abort();
 				profileAbortController = null;
@@ -239,7 +206,7 @@
 			aria-label="Account menu"
 			aria-expanded={showDropdown}
 		>
-			<div class="avatar" style="background: {gradient}"></div>
+			<div class="avatar" style="background: {avatarGradient}"></div>
 			{#if !hideChevron}
 				<ChevronDownIcon size={16} color="var(--text-2)" />
 			{/if}
@@ -254,7 +221,7 @@
 				onmouseleave={handleDropdownMouseLeave}
 			>
 				<div class="dropdown-header">
-					<div class="header-avatar" style="background: {gradient}"></div>
+					<div class="header-avatar" style="background: {avatarGradient}"></div>
 					<div class="header-info">
 						{#if serverWalletAddress}
 							<div class="header-address">
@@ -529,7 +496,7 @@
 
 	.logout-item:focus-visible {
 		outline: none;
-		box-shadow: var(--focus-ring); /* Cyan focus even on red item */
+		box-shadow: var(--focus-ring); /* Primary focus ring on red item */
 	}
 
 	.dropdown-header {

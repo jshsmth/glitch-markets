@@ -11,6 +11,8 @@
 		onRetry?: () => void;
 		onLoadMore?: () => void | Promise<void>;
 		hasMore?: boolean;
+		loadMoreInterval?: number;
+		loadMoreRootMargin?: string;
 	}
 
 	let {
@@ -19,7 +21,9 @@
 		error = null,
 		onRetry,
 		onLoadMore,
-		hasMore = false
+		hasMore = false,
+		loadMoreInterval = 500,
+		loadMoreRootMargin = '200px'
 	}: Props = $props();
 
 	function isResolved(event: Event): boolean {
@@ -31,83 +35,64 @@
 	}
 
 	let loadingMore = $state(false);
+	let sentinelElement = $state<HTMLElement | null>(null);
 
-	/**
-	 * Infinite scroll action using IntersectionObserver
-	 * Triggers onLoadMore when the sentinel element becomes visible
-	 */
-	function infiniteScroll(node: HTMLElement) {
+	$effect(() => {
+		if (!sentinelElement || !hasMore || !onLoadMore) return;
+
 		let isLoading = false;
-		let abortController: AbortController | null = null;
 		let lastLoadTime = 0;
-		const MIN_LOAD_INTERVAL = 500; // Prevent rapid-fire loads
 
 		const observer = new IntersectionObserver(
 			async (entries) => {
 				const entry = entries[0];
 				const now = Date.now();
 
-				// Prevent infinite loop with multiple safeguards:
-				// 1. Check if already loading
-				// 2. Check parent loading state
-				// 3. Check if there's more data
-				// 4. Enforce minimum interval between loads
 				if (
 					entry.isIntersecting &&
 					!isLoading &&
 					!loading &&
 					hasMore &&
 					onLoadMore &&
-					now - lastLoadTime >= MIN_LOAD_INTERVAL
+					now - lastLoadTime >= loadMoreInterval
 				) {
 					isLoading = true;
 					loadingMore = true;
 					lastLoadTime = now;
 
-					// Temporarily unobserve to prevent retriggering during load
-					observer.unobserve(node);
-
-					// Create abort controller for this load operation
-					abortController = new AbortController();
+					if (sentinelElement) {
+						observer.unobserve(sentinelElement);
+					}
 
 					try {
 						await onLoadMore();
 					} catch (error) {
-						// Only log errors that aren't from abort
-						if (error instanceof Error && error.name !== 'AbortError') {
+						if (error instanceof Error) {
 							console.error('Error loading more:', error);
 						}
 					} finally {
 						isLoading = false;
 						loadingMore = false;
-						abortController = null;
 
-						// Re-observe after a small delay to allow UI to update
 						setTimeout(() => {
-							if (node && observer) {
-								observer.observe(node);
+							if (sentinelElement && observer) {
+								observer.observe(sentinelElement);
 							}
 						}, 100);
 					}
 				}
 			},
 			{
-				rootMargin: '200px'
+				rootMargin: loadMoreRootMargin
 			}
 		);
 
-		observer.observe(node);
+		observer.observe(sentinelElement);
 
-		return {
-			destroy() {
-				observer.disconnect();
-				// Cancel any pending load operation
-				if (abortController) {
-					abortController.abort();
-				}
-			}
+		return () => {
+			observer.disconnect();
 		};
-	}
+	});
 </script>
 
 <div class="event-list-container">
@@ -160,11 +145,12 @@
 		</div>
 
 		{#if hasMore}
-			<div use:infiniteScroll class="sentinel">
+			<div bind:this={sentinelElement} class="sentinel">
 				{#if loadingMore}
-					<div class="loading-more">
-						<div class="spinner"></div>
-						<p>Loading more events...</p>
+					<div class="loading-dots">
+						<span></span>
+						<span></span>
+						<span></span>
 					</div>
 				{/if}
 			</div>
@@ -180,7 +166,7 @@
 	.event-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-		gap: 14px;
+		gap: 12px;
 		align-items: start;
 	}
 
@@ -194,14 +180,14 @@
 	@media (min-width: 641px) and (max-width: 1024px) {
 		.event-grid {
 			grid-template-columns: repeat(2, 1fr);
-			gap: 14px;
+			gap: 12px;
 		}
 	}
 
 	@media (min-width: 1400px) {
 		.event-grid {
 			grid-template-columns: repeat(3, 1fr);
-			gap: 16px;
+			gap: 14px;
 		}
 	}
 
@@ -332,39 +318,50 @@
 
 	/* Infinite scroll styles */
 	.sentinel {
-		min-height: 100px;
+		min-height: 60px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		margin-top: var(--space-lg);
+		margin-top: var(--space-md);
 	}
 
-	.loading-more {
+	.loading-dots {
 		display: flex;
-		flex-direction: column;
 		align-items: center;
-		gap: var(--space-sm);
-		padding: var(--space-lg);
+		gap: 6px;
+		padding: var(--space-sm);
 	}
 
-	.loading-more p {
-		font-size: 14px;
-		color: var(--text-2);
-		margin: 0;
-	}
-
-	.spinner {
-		width: 32px;
-		height: 32px;
-		border: 3px solid var(--bg-3);
-		border-top-color: var(--primary);
+	.loading-dots span {
+		width: 8px;
+		height: 8px;
+		background-color: var(--primary);
 		border-radius: 50%;
-		animation: spin 0.8s linear infinite;
+		animation: dotPulse 1.4s ease-in-out infinite;
 	}
 
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
+	.loading-dots span:nth-child(1) {
+		animation-delay: 0s;
+	}
+
+	.loading-dots span:nth-child(2) {
+		animation-delay: 0.2s;
+	}
+
+	.loading-dots span:nth-child(3) {
+		animation-delay: 0.4s;
+	}
+
+	@keyframes dotPulse {
+		0%,
+		80%,
+		100% {
+			opacity: 0.3;
+			transform: scale(0.8);
+		}
+		40% {
+			opacity: 1;
+			transform: scale(1);
 		}
 	}
 </style>

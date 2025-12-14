@@ -18,7 +18,6 @@
 	let wrapperElement = $state<HTMLDivElement | undefined>();
 
 	function handleFocus() {
-		// Always show dropdown on focus (will show browse state if empty)
 		showDropdown = true;
 	}
 
@@ -72,7 +71,6 @@
 		if (query.length < 2) {
 			searchResults = null;
 			isLoading = false;
-			// Keep dropdown open to show browse state
 			return;
 		}
 
@@ -80,7 +78,6 @@
 		debouncedSearch(query);
 	}
 
-	// Cleanup on unmount
 	$effect(() => {
 		return () => {
 			cancelSearch();

@@ -1,28 +1,28 @@
 /**
  * Glitch Markets - Light Theme Colors
- * Following Google's tinting approach with subtle cyan tint
+ * Warm neutral palette with stone accents
  */
 
 :root {
 	/* ============================================
-     BACKGROUNDS - cyan-tinted whites (improved contrast)
+     BACKGROUNDS - Warm whites with stone tint
      WCAG Contrast Ratios (vs --text-0):
      --bg-0: Base background (21:1)
      ============================================ */
 
-	--bg-0: #fafbfc; /* Slightly darker base for better contrast */
-	--bg-1: #f5f7f9; /* More visible card background */
-	--bg-2: #edf1f5; /* Clear distinction for layered elements */
-	--bg-3: #e1e8ee; /* More visible borders and dividers */
-	--bg-4: #d0dae5; /* Strong accent backgrounds */
-	--bg-5: #c0ccd9; /* Even stronger backgrounds */
+	--bg-0: #fafaf9; /* Warm neutral base - Stone 50 */
+	--bg-1: #f5f5f4; /* Card background - Stone 100 */
+	--bg-2: #e7e5e4; /* Layered elements - Stone 200 */
+	--bg-3: #d6d3d1; /* Borders and dividers - Stone 300 */
+	--bg-4: #c4c0bd; /* Strong accent backgrounds */
+	--bg-5: #b5b0ac; /* Even stronger backgrounds */
 
 	/* RGB values for transparency effects */
-	--bg-0-rgb: 250, 251, 252;
-	--bg-1-rgb: 245, 247, 249;
+	--bg-0-rgb: 250, 250, 249;
+	--bg-1-rgb: 245, 245, 244;
 
 	/* ============================================
-     TEXT - Improved hierarchy with better contrast
+     TEXT - Warm grays with stone undertone
      WCAG Contrast Ratios (vs --bg-0):
      --text-0: 17.5:1 (AAA - passes all criteria)
      --text-1: 14.2:1 (AAA)
@@ -31,34 +31,34 @@
      --text-4: 3.6:1 (AA for UI elements)
      ============================================ */
 
-	--text-0: #0f1419; /* Darker primary text for better readability */
-	--text-1: #20252c; /* Clear secondary text */
-	--text-2: #536471; /* More muted for less important text */
-	--text-3: #8899a6; /* Even more muted for hints/placeholders */
-	--text-4: #a0b0bd; /* Subtle text for disabled states */
+	--text-0: #1c1917; /* Dark primary text - Stone 900 */
+	--text-1: #292524; /* Secondary text - Stone 800 */
+	--text-2: #57534e; /* Muted text - Stone 600 */
+	--text-3: #78716c; /* Hints/placeholders - Stone 500 */
+	--text-4: #a8a29e; /* Disabled states - Stone 400 */
 
 	/* ============================================
-     PRIMARY BRAND COLOR - Refined Cyan (slightly toned down)
+     PRIMARY BRAND COLOR - Charcoal Gray
      ============================================ */
 
-	--primary-50: #e0f7fc;
-	--primary-100: #b3ecf9;
-	--primary-200: #80e0f5;
-	--primary-300: #4dd4f1;
-	--primary-400: #26caee;
-	--primary-500: #00c4e6; /* Main brand color - refined for better viewing */
-	--primary-600: #00b8d9;
-	--primary-700: #00a3c2;
-	--primary-800: #008faa;
-	--primary-900: #006d84;
+	--primary-50: #f9fafb;
+	--primary-100: #f3f4f6;
+	--primary-200: #e5e7eb; /* Light gray accent */
+	--primary-300: #d1d5db;
+	--primary-400: #9ca3af;
+	--primary-500: #6b7280; /* Medium gray - progress bars */
+	--primary-600: #4b5563;
+	--primary-700: #374151;
+	--primary-800: #1f2937; /* Charcoal - primary action */
+	--primary-900: #111827;
 
 	/* Convenient aliases */
-	--primary: var(--primary-500);
-	--primary-hover: var(--primary-600);
-	--primary-active: var(--primary-700);
+	--primary: var(--primary-800); /* Charcoal as primary */
+	--primary-hover: var(--primary-900);
+	--primary-active: var(--primary-900);
 
 	/* RGB for transparency effects */
-	--primary-rgb: 0, 196, 230;
+	--primary-rgb: 31, 41, 55;
 
 	/* ============================================
      TRADING INDICATORS - Improved vibrance and backgrounds
@@ -85,7 +85,7 @@
 
 	/* Button colors */
 	--button-primary-bg: var(--primary);
-	--button-primary-text: #111111; /* High contrast on cyan */
+	--button-primary-text: #ffffff; /* White text on stone */
 	--button-primary-hover-bg: var(--primary-hover);
 
 	/* Error states */

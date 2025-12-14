@@ -2,6 +2,12 @@
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
 	import WaterLiquidIcon from '$lib/components/icons/WaterLiquidIcon.svelte';
+	import BookmarkIcon from '$lib/components/icons/BookmarkIcon.svelte';
+	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
+	import FireIcon from '$lib/components/icons/FireIcon.svelte';
+	import CupIcon from '$lib/components/icons/CupIcon.svelte';
+	import { formatNumber } from '$lib/utils/format';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	interface Props {
 		event: Event;
@@ -9,17 +15,6 @@
 	}
 
 	let { event, variant = 'default' }: Props = $props();
-
-	function formatNumber(num: number | null | undefined): string {
-		if (num === null || num === undefined) return '$0';
-		if (num >= 1000000) {
-			return `$${(num / 1000000).toFixed(1)}M`;
-		}
-		if (num >= 1000) {
-			return `$${(num / 1000).toFixed(1)}K`;
-		}
-		return `$${num.toFixed(0)}`;
-	}
 
 	const isMultiMarket = $derived((event.markets?.length || 0) > 1);
 
@@ -44,33 +39,39 @@
 		}
 	});
 
-	const primaryOdds = $derived.by(() => {
-		if (isMultiMarket) return null;
-		if (!parsedPrimaryMarket) return null;
+	interface OutcomeData {
+		label: string;
+		percentage: number;
+	}
 
-		const { outcomes, prices } = parsedPrimaryMarket;
-		if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
-		if (outcomes.length < 2 || prices.length < 2) return null;
+	// Binary market: Yes percentage determines color (green if ≥50%, red if <50%)
+	const binaryData = $derived.by(
+		(): { yes: OutcomeData; no: OutcomeData; leansYes: boolean } | null => {
+			if (isMultiMarket) return null;
+			if (!parsedPrimaryMarket) return null;
 
-		const percentages = prices.map((p: string) => parseFloat(p) * 100);
+			const { outcomes, prices } = parsedPrimaryMarket;
+			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
+			if (outcomes.length < 2 || prices.length < 2) return null;
 
-		return [
-			{
-				label: outcomes[0] || 'Yes',
-				price: percentages[0]?.toFixed(0) || '—',
-				percentage: percentages[0] || 0
-			},
-			{
-				label: outcomes[1] || 'No',
-				price: percentages[1]?.toFixed(0) || '—',
-				percentage: percentages[1] || 0
-			}
-		];
-	});
+			const yesPercentage = parseFloat(prices[0]) * 100;
+			const noPercentage = parseFloat(prices[1]) * 100;
 
-	const parsedMarkets = $derived.by(() => {
-		if (!event.markets) return null;
-		return event.markets.map((market) => {
+			return {
+				yes: { label: outcomes[0] || 'Yes', percentage: yesPercentage },
+				no: { label: outcomes[1] || 'No', percentage: noPercentage },
+				leansYes: yesPercentage >= 50
+			};
+		}
+	);
+
+	// Multi-market outcomes sorted by percentage
+	const multiOutcomes = $derived.by((): OutcomeData[] | null => {
+		if (!isMultiMarket || !event.markets) return null;
+
+		const allOutcomes: OutcomeData[] = [];
+
+		for (const market of event.markets) {
 			try {
 				const outcomes =
 					typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : market.outcomes;
@@ -78,49 +79,99 @@
 					typeof market.outcomePrices === 'string'
 						? JSON.parse(market.outcomePrices)
 						: market.outcomePrices;
-				return { market, outcomes, prices };
+
+				if (Array.isArray(outcomes) && Array.isArray(prices) && outcomes.length >= 1) {
+					const displayTitle = market.groupItemTitle || outcomes[0] || market.question;
+					const percentage = parseFloat(prices[0]) * 100;
+					allOutcomes.push({ label: displayTitle, percentage });
+				}
 			} catch {
-				return { market, outcomes: null, prices: null };
+				// Skip invalid markets
 			}
-		});
+		}
+
+		return allOutcomes.length > 0 ? allOutcomes.sort((a, b) => b.percentage - a.percentage) : null;
 	});
 
-	const topMarkets = $derived.by(() => {
-		if (!isMultiMarket || !parsedMarkets) return null;
-		return parsedMarkets.map(({ market, outcomes, prices }) => {
-			const displayTitle =
-				market.groupItemTitle || (Array.isArray(outcomes) && outcomes[0]) || market.question;
+	const leadingOutcome = $derived(multiOutcomes?.[0] || null);
+	const secondOutcome = $derived(multiOutcomes?.[1] || null);
+	const outcomeCount = $derived(multiOutcomes?.length || 0);
 
-			return {
-				question: displayTitle,
-				outcomes:
-					Array.isArray(outcomes) && Array.isArray(prices) && outcomes.length >= 2
-						? [
-								{
-									label: outcomes[0],
-									price: (parseFloat(prices[0]) * 100).toFixed(0),
-									percentage: parseFloat(prices[0]) * 100
-								},
-								{
-									label: outcomes[1],
-									price: (parseFloat(prices[1]) * 100).toFixed(0),
-									percentage: parseFloat(prices[1]) * 100
-								}
-							]
-						: null
-			};
-		});
+	// Resolved detection
+	const isEffectivelyResolved = $derived.by(() => {
+		if (binaryData) return binaryData.yes.percentage >= 99 || binaryData.no.percentage >= 99;
+		if (leadingOutcome) return leadingOutcome.percentage >= 99;
+		return false;
 	});
+
+	const closingSoon = $derived.by(() => {
+		if (!event.endDate || isEffectivelyResolved) return false;
+		const endDate = new Date(event.endDate);
+		const now = new Date();
+		const diffMs = endDate.getTime() - now.getTime();
+		const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+		return diffDays > 0 && diffDays <= 7;
+	});
+
+	const BOOKMARKS_KEY = 'glitch-bookmarks';
+
+	function getBookmarkedEvents(): Set<string> {
+		if (typeof window === 'undefined') return new Set();
+		try {
+			const stored = localStorage.getItem(BOOKMARKS_KEY);
+			return stored ? new Set(JSON.parse(stored)) : new Set();
+		} catch {
+			return new Set();
+		}
+	}
+
+	function saveBookmarkedEvents(bookmarks: Set<string>): void {
+		if (typeof window === 'undefined') return;
+		try {
+			localStorage.setItem(BOOKMARKS_KEY, JSON.stringify([...bookmarks]));
+		} catch (error) {
+			console.error('Failed to save bookmarks:', error);
+		}
+	}
+
+	let bookmarkedEvents = new SvelteSet(getBookmarkedEvents());
+	let isBookmarked = $derived(bookmarkedEvents.has(event.id));
+
+	function toggleBookmark() {
+		if (isBookmarked) {
+			bookmarkedEvents.delete(event.id);
+		} else {
+			bookmarkedEvents.add(event.id);
+		}
+		saveBookmarkedEvents(bookmarkedEvents);
+	}
 </script>
 
-<div class="event-card" class:compact={variant === 'compact'}>
+<div
+	class="event-card"
+	class:compact={variant === 'compact'}
+	class:resolved={isEffectivelyResolved}
+>
+	<!-- Resolved badge (top-right corner) -->
+	{#if isEffectivelyResolved}
+		<div class="corner-badge resolved-badge">
+			<CheckCircleIcon size={12} />
+			<span>Resolved</span>
+		</div>
+	{:else if closingSoon}
+		<div class="closing-indicator">
+			<FireIcon size={12} />
+			<span>Ending soon</span>
+		</div>
+	{/if}
+
 	<div class="card-content">
-		<!-- Header with Icon + Title -->
+		<!-- Header: Icon + Title -->
 		<div class="card-header">
 			<div class="title-row">
 				{#if event.image}
 					<div class="event-icon">
-						<img src={event.image} alt={event.title || 'Event icon'} />
+						<img src={event.image} alt={event.title || 'Event icon'} loading="lazy" />
 					</div>
 				{/if}
 				<a
@@ -133,54 +184,110 @@
 			</div>
 		</div>
 
-		<!-- Binary Market: Odds Board Layout -->
-		{#if primaryOdds}
-			<div class="odds-board">
-				{#each primaryOdds as outcome, i (i)}
-					<a
-						href={`/event/${event.slug || event.id}`}
-						class="odds-row"
-						class:is-yes={i === 0}
-						class:is-no={i === 1}
-						style="--fill-percentage: {outcome.percentage}%"
-						data-sveltekit-preload-data="hover"
+		<!-- Binary Market Display -->
+		{#if binaryData && !isEffectivelyResolved}
+			<div class="binary-display">
+				<!-- Yes/Leading option -->
+				<div class="binary-row" class:leading={binaryData.leansYes}>
+					<div class="binary-option">
+						<span class="binary-label" class:label-yes={binaryData.leansYes}
+							>{binaryData.yes.label}</span
+						>
+						<span
+							class="binary-percentage"
+							class:pct-yes={binaryData.leansYes}
+							class:pct-muted={!binaryData.leansYes}
+						>
+							{binaryData.yes.percentage.toFixed(0)}%
+						</span>
+					</div>
+					<div
+						class="probability-bar"
+						class:bar-yes={binaryData.leansYes}
+						class:bar-muted={!binaryData.leansYes}
 					>
-						<span class="outcome-label">{outcome.label}</span>
-						<span class="outcome-odds">{outcome.price}%</span>
-					</a>
-				{/each}
+						<div class="bar-fill" style="width: {binaryData.yes.percentage}%;"></div>
+					</div>
+				</div>
+				<!-- No option -->
+				<div class="binary-row" class:leading={!binaryData.leansYes}>
+					<div class="binary-option">
+						<span class="binary-label" class:label-no={!binaryData.leansYes}
+							>{binaryData.no.label}</span
+						>
+						<span
+							class="binary-percentage"
+							class:pct-no={!binaryData.leansYes}
+							class:pct-muted={binaryData.leansYes}
+						>
+							{binaryData.no.percentage.toFixed(0)}%
+						</span>
+					</div>
+					<div
+						class="probability-bar"
+						class:bar-no={!binaryData.leansYes}
+						class:bar-muted={binaryData.leansYes}
+					>
+						<div class="bar-fill" style="width: {binaryData.no.percentage}%;"></div>
+					</div>
+				</div>
+			</div>
+		{:else if binaryData && isEffectivelyResolved}
+			<div class="resolved-winner">
+				<CheckCircleIcon size={16} />
+				<span class="winner-name">
+					{binaryData.yes.percentage >= 99 ? binaryData.yes.label : binaryData.no.label}
+				</span>
 			</div>
 		{/if}
 
-		<!-- Multi-Market Preview -->
-		{#if topMarkets && variant !== 'compact'}
-			<div class="markets-scroll-container">
-				<div class="markets-preview">
-					{#each topMarkets as market, i (i)}
-						<div class="market-item">
-							<div class="market-header">
-								<div class="market-question">{market.question}</div>
-							</div>
-							{#if market.outcomes}
-								<div class="market-odds-inline">
-									{#each market.outcomes as outcome, j (j)}
-										<a
-											href={`/event/${event.slug || event.id}`}
-											class="odds-chip"
-											class:chip-first={j === 0}
-											class:chip-second={j === 1}
-											style="--fill-percentage: {outcome.percentage}%"
-											data-sveltekit-preload-data="hover"
-										>
-											<span class="odds-chip-label">{outcome.label}</span>
-											<span class="odds-chip-price">{outcome.price}%</span>
-										</a>
-									{/each}
-								</div>
-							{/if}
+		<!-- Multi-market Display -->
+		{#if isMultiMarket && leadingOutcome && !isEffectivelyResolved}
+			<div class="multi-display">
+				<!-- 1st Place -->
+				<div class="outcome-row first-place">
+					<div class="rank-badge rank-1">
+						<CupIcon size={10} />
+					</div>
+					<div class="outcome-info">
+						<div class="outcome-header">
+							<span class="outcome-name">{leadingOutcome.label}</span>
+							<span class="outcome-percentage first">{leadingOutcome.percentage.toFixed(0)}%</span>
 						</div>
-					{/each}
+						<div class="probability-bar bar-first">
+							<div class="bar-fill" style="width: {leadingOutcome.percentage}%;"></div>
+						</div>
+					</div>
 				</div>
+
+				<!-- 2nd Place -->
+				{#if secondOutcome}
+					<div class="outcome-row second-place">
+						<div class="rank-badge rank-2">2</div>
+						<div class="outcome-info">
+							<div class="outcome-header">
+								<span class="outcome-name">{secondOutcome.label}</span>
+								<span class="outcome-percentage second">{secondOutcome.percentage.toFixed(0)}%</span
+								>
+							</div>
+							<div class="probability-bar bar-second">
+								<div class="bar-fill" style="width: {secondOutcome.percentage}%;"></div>
+							</div>
+						</div>
+					</div>
+				{/if}
+
+				<!-- More outcomes indicator -->
+				{#if outcomeCount > 2}
+					<div class="more-outcomes">
+						+{outcomeCount - 2} more outcome{outcomeCount - 2 === 1 ? '' : 's'}
+					</div>
+				{/if}
+			</div>
+		{:else if isMultiMarket && isEffectivelyResolved && leadingOutcome}
+			<div class="resolved-winner">
+				<CheckCircleIcon size={16} />
+				<span class="winner-name">{leadingOutcome.label}</span>
 			</div>
 		{/if}
 
@@ -189,16 +296,25 @@
 			<div class="card-footer">
 				<div class="stats">
 					<div class="stat">
-						<MoneyIcon size={16} class="stat-icon" />
+						<MoneyIcon size={14} class="stat-icon" />
 						<span class="stat-value">{formatNumber(event.volume24hr)}</span>
 						<span class="stat-label">24h</span>
 					</div>
 					<div class="stat">
-						<WaterLiquidIcon size={16} class="stat-icon" />
+						<WaterLiquidIcon size={14} class="stat-icon" />
 						<span class="stat-value">{formatNumber(event.liquidity)}</span>
 						<span class="stat-label">Liq</span>
 					</div>
 				</div>
+				<button
+					class="bookmark-btn"
+					class:bookmarked={isBookmarked}
+					onclick={toggleBookmark}
+					aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this event'}
+					aria-pressed={isBookmarked}
+				>
+					<BookmarkIcon size={18} filled={isBookmarked} />
+				</button>
 			</div>
 		{/if}
 	</div>
@@ -206,26 +322,70 @@
 
 <style>
 	.event-card {
+		position: relative;
 		display: flex;
 		background: var(--bg-1);
-		border: 1px solid var(--bg-4);
+		border: 1px solid var(--bg-3);
 		border-radius: var(--radius-card);
-		padding: 18px;
+		padding: var(--spacing-4);
 		box-shadow: var(--shadow-sm);
-		transition:
-			all var(--transition-fast),
-			box-shadow var(--transition-fast);
-		color: inherit;
 		height: 100%;
+		transition: all var(--transition-fast);
 	}
 
-	/* Compact variant for search dropdown */
+	.event-card:hover {
+		border-color: var(--bg-4);
+		box-shadow: var(--shadow-md);
+		transform: translateY(-2px);
+	}
+
+	/* Resolved state */
+	.event-card.resolved {
+		opacity: 0.65;
+		background: var(--bg-2);
+	}
+
+	.event-card.resolved:hover {
+		opacity: 0.8;
+	}
+
+	/* Corner badges - pill shaped for differentiation */
+	.corner-badge {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		display: flex;
+		align-items: center;
+		gap: 3px;
+		padding: 4px 10px;
+		border-radius: var(--radius-full);
+		font-size: 10px;
+		font-weight: 600;
+		white-space: nowrap;
+		z-index: 1;
+	}
+
+	.resolved-badge {
+		background: var(--success-bg);
+		color: var(--success-dark);
+		border: 1px solid var(--success-light);
+	}
+
+	.closing-indicator {
+		position: absolute;
+		top: var(--spacing-3);
+		right: var(--spacing-3);
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--danger);
+	}
+
+	/* Compact variant */
 	.event-card.compact {
 		padding: var(--spacing-3);
-	}
-
-	.event-card.compact .card-content {
-		gap: var(--spacing-3);
 	}
 
 	.event-card.compact .event-icon {
@@ -234,49 +394,42 @@
 	}
 
 	.event-card.compact .event-title {
-		font-size: 15px;
-		display: -webkit-box;
+		font-size: 14px;
 		-webkit-line-clamp: 2;
 		line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-
-	.event-card.compact .outcome-odds {
-		font-size: 18px;
-	}
-
-	.event-card:focus-within {
-		outline: none;
-		border-color: var(--primary);
-		box-shadow: var(--shadow-primary-md);
 	}
 
 	.card-content {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-4);
+		gap: var(--spacing-3);
 		width: 100%;
 	}
 
-	/* ============================================
-	   HEADER
-	   ============================================ */
+	/* Header */
+	.card-header {
+		display: flex;
+		align-items: flex-start;
+		padding-right: 70px; /* Space for corner badge */
+	}
 
 	.title-row {
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-3);
+		flex: 1;
+		min-width: 0;
 	}
 
 	.event-icon {
 		flex-shrink: 0;
-		width: 40px;
-		height: 40px;
+		width: 44px;
+		height: 44px;
 		border-radius: var(--radius-md);
 		overflow: hidden;
 		background: var(--bg-2);
-		border: 1px solid var(--bg-4);
+		border: 1.5px solid var(--bg-3);
+		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
 	}
 
 	.event-icon img {
@@ -286,264 +439,294 @@
 	}
 
 	.event-title-link {
-		flex: 1;
 		text-decoration: none;
 		color: inherit;
+		flex: 1;
 		min-width: 0;
 	}
 
 	.event-title-link:hover .event-title {
 		color: var(--primary);
 		text-decoration: underline;
+		text-underline-offset: 2px;
 	}
 
 	.event-title-link:focus-visible {
 		outline: none;
-		border-radius: 4px;
-		box-shadow: var(--focus-ring);
+	}
+
+	.event-title-link:focus-visible .event-title {
+		color: var(--primary);
+		text-decoration: underline;
+		text-underline-offset: 2px;
 	}
 
 	.event-title {
-		font-size: 17px;
+		font-size: 15px;
 		font-weight: 700;
 		color: var(--text-0);
-		line-height: 1.4;
+		line-height: 1.35;
 		margin: 0;
-		letter-spacing: -0.01em;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		transition: color var(--transition-fast);
 	}
 
-	/* ============================================
-	   ODDS BOARD (Binary Markets)
-	   ============================================ */
-
-	.odds-board {
+	/* Binary Market Display */
+	.binary-display {
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-2);
 	}
 
-	.odds-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--spacing-3);
-		padding: 10px var(--spacing-3);
-		background: var(--bg-2);
-		border: 1px solid var(--bg-4);
-		border-radius: var(--radius-sm);
-		text-decoration: none;
-		transition: all var(--transition-fast);
-		position: relative;
-		overflow: hidden;
-	}
-
-	.odds-row::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		height: 100%;
-		width: var(--fill-percentage, 0%);
-		background: linear-gradient(90deg, var(--row-gradient-start), var(--row-gradient-end));
-		transition:
-			width 0.3s ease,
-			opacity 0.3s ease;
-		z-index: 0;
-	}
-
-	/* Yes row: Uses shared gradient variables */
-	.odds-row.is-yes {
-		--row-gradient-start: var(--gradient-yes-start);
-		--row-gradient-end: var(--gradient-yes-end);
-	}
-
-	/* No row: Uses shared gradient variables (red-to-cyan for binary) */
-	.odds-row.is-no {
-		--row-gradient-start: var(--gradient-no-alt-start);
-		--row-gradient-end: var(--gradient-no-alt-end);
-	}
-
-	.odds-row:hover {
-		border-color: var(--primary);
-		transform: translateY(-1px);
-	}
-
-	.odds-row:hover::before {
-		opacity: 1.3;
-	}
-
-	.odds-row:focus-visible {
-		outline: none;
-		box-shadow: var(--focus-ring);
-	}
-
-	.outcome-label {
-		font-size: 14px;
-		color: var(--text-0);
-		font-weight: 500;
-		text-overflow: ellipsis;
-		overflow: hidden;
-		white-space: nowrap;
-		flex: 1;
-		min-width: 0;
-		position: relative;
-		z-index: 1;
-	}
-
-	.outcome-odds {
-		font-size: 20px;
-		font-weight: 800;
-		color: var(--text-0);
-		white-space: nowrap;
-		letter-spacing: -0.02em;
-		position: relative;
-		z-index: 1;
-	}
-
-	/* ============================================
-	   MULTI-MARKET PREVIEW
-	   ============================================ */
-
-	.markets-scroll-container {
-		max-height: 80px;
-		overflow-y: auto;
-	}
-
-	.markets-preview {
+	.binary-row {
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
 	}
 
-	.market-item {
-		display: grid;
-		grid-template-columns: 1fr auto;
-		align-items: center;
-		gap: 8px;
-		padding: 6px 0;
+	.binary-row:not(.leading) {
+		opacity: 0.7;
 	}
 
-	.market-header {
+	.binary-row:not(.leading) .probability-bar {
+		height: 6px;
+	}
+
+	.binary-option {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
+		gap: var(--spacing-2);
+	}
+
+	.binary-label {
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--text-2);
+	}
+
+	.binary-label.label-yes {
+		font-weight: 600;
+		color: var(--success);
+	}
+
+	.binary-label.label-no {
+		font-weight: 600;
+		color: var(--danger);
+	}
+
+	.binary-percentage {
+		font-size: 15px;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	.binary-percentage.pct-yes {
+		color: var(--success);
+	}
+
+	.binary-percentage.pct-no {
+		color: var(--danger);
+	}
+
+	.binary-percentage.pct-muted {
+		color: var(--text-3);
+		font-size: 13px;
+		font-weight: 600;
+	}
+
+	.probability-bar.bar-muted .bar-fill {
+		background: var(--bg-4);
+	}
+
+	/* Probability Bar */
+	.probability-bar {
+		width: 100%;
+		height: 10px;
+		background: var(--bg-3);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+	}
+
+	.bar-fill {
+		height: 100%;
+		border-radius: var(--radius-full);
+		transition: width 0.3s ease;
+	}
+
+	.probability-bar.bar-yes .bar-fill {
+		background-color: var(--success);
+	}
+
+	.probability-bar.bar-no .bar-fill {
+		background-color: var(--danger);
+	}
+
+	/* Multi-market Display */
+	.multi-display {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-2);
+	}
+
+	/* Outcome Row - shared between 1st and 2nd */
+	.outcome-row {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--spacing-2);
+	}
+
+	.outcome-info {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.outcome-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--spacing-2);
+	}
+
+	.outcome-name {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-0);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		flex: 1;
 		min-width: 0;
 	}
 
-	.market-question {
+	.first-place .outcome-name {
 		font-size: 14px;
-		color: var(--text-0);
-		font-weight: 500;
-		line-height: 1.4;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		font-weight: 700;
+	}
+
+	.outcome-percentage {
+		font-size: 15px;
+		font-weight: 700;
+		letter-spacing: -0.01em;
 		white-space: nowrap;
 	}
 
-	.market-odds-inline {
-		display: flex;
-		gap: 6px;
-		flex-shrink: 0;
+	.outcome-percentage.first {
+		color: var(--gold-dark);
+		font-size: 16px;
 	}
 
-	.odds-chip {
+	.outcome-percentage.second {
+		color: var(--text-2);
+	}
+
+	/* Rank Badges */
+	.rank-badge {
+		flex-shrink: 0;
+		width: 18px;
+		height: 18px;
+		border-radius: var(--radius-sm);
 		display: flex;
 		align-items: center;
-		gap: 4px;
-		padding: 5px 8px;
-		background: var(--bg-2);
-		border: 1px solid var(--bg-4);
-		border-radius: var(--radius-sm);
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		white-space: nowrap;
-		text-decoration: none;
-		min-width: 65px;
-		justify-content: space-between;
-		position: relative;
-		overflow: hidden;
-	}
-
-	.odds-chip::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		height: 100%;
-		width: var(--fill-percentage, 0%);
-		background: linear-gradient(90deg, var(--chip-gradient-start), var(--chip-gradient-end));
-		transition:
-			width 0.3s ease,
-			opacity 0.3s ease;
-		z-index: 0;
-	}
-
-	/* First chip: Uses shared gradient variables */
-	.odds-chip.chip-first {
-		--chip-gradient-start: var(--gradient-yes-start);
-		--chip-gradient-end: var(--gradient-yes-end);
-	}
-
-	/* Second chip: Uses shared gradient variables */
-	.odds-chip.chip-second {
-		--chip-gradient-start: var(--gradient-no-start);
-		--chip-gradient-end: var(--gradient-no-end);
-	}
-
-	.odds-chip:hover {
-		background: var(--primary-hover-bg);
-		border-color: var(--primary);
-		transform: translateY(-1px);
-	}
-
-	.odds-chip:hover::before {
-		opacity: 1.3;
-	}
-
-	.odds-chip:focus-visible {
-		outline: none;
-		box-shadow: var(--focus-ring);
-	}
-
-	.odds-chip-label {
-		font-size: 11px;
-		color: var(--text-2);
-		font-weight: 500;
-		max-width: 50px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		position: relative;
-		z-index: 1;
-	}
-
-	.odds-chip-price {
-		font-size: 12px;
-		color: var(--text-0);
+		justify-content: center;
+		font-size: 10px;
 		font-weight: 700;
-		white-space: nowrap;
-		position: relative;
-		z-index: 1;
+		margin-top: 1px;
 	}
 
-	/* ============================================
-	   FOOTER STATS
-	   ============================================ */
+	.rank-1 {
+		background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%);
+		color: #5c4a15;
+		box-shadow: 0 1px 2px rgba(var(--gold-rgb), 0.3);
+	}
 
+	.rank-2 {
+		background: linear-gradient(135deg, var(--bg-3) 0%, var(--bg-4) 100%);
+		color: var(--text-2);
+	}
+
+	/* Progress bars for 1st and 2nd */
+	.probability-bar.bar-first .bar-fill {
+		background: linear-gradient(90deg, var(--gold-light) 0%, var(--gold-base) 100%);
+	}
+
+	.probability-bar.bar-second {
+		height: 6px;
+	}
+
+	.probability-bar.bar-second .bar-fill {
+		background: var(--bg-4);
+	}
+
+	/* Second place styling */
+	.second-place .outcome-name {
+		font-weight: 500;
+		color: var(--text-2);
+		font-size: 12px;
+	}
+
+	.second-place .probability-bar {
+		height: 6px;
+	}
+
+	/* More outcomes indicator */
+	.more-outcomes {
+		font-size: 11px;
+		color: var(--text-3);
+		padding-left: 26px;
+		font-weight: 500;
+	}
+
+	/* Resolved winner */
+	.resolved-winner {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: var(--success);
+	}
+
+	.winner-name {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-1);
+	}
+
+	/* Footer */
 	.card-footer {
 		margin-top: auto;
-		padding-top: 12px;
+		padding-top: var(--spacing-3);
 		border-top: 1px solid var(--bg-3);
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 	}
 
 	.stats {
 		display: flex;
-		gap: 20px;
+		gap: var(--spacing-4);
 		align-items: center;
 	}
 
 	.stat {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: 4px;
+	}
+
+	.stat:not(:last-child)::after {
+		content: '';
+		display: block;
+		width: 1px;
+		height: 12px;
+		background: var(--bg-3);
+		margin-left: var(--spacing-4);
 	}
 
 	.stat :global(.stat-icon) {
@@ -552,9 +735,9 @@
 	}
 
 	.stat-value {
-		font-size: 13px;
-		font-weight: 700;
-		color: var(--text-0);
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text-1);
 	}
 
 	.stat-label {
@@ -563,17 +746,54 @@
 		font-weight: 500;
 	}
 
-	/* ============================================
-	   MOBILE OPTIMIZATIONS
-	   ============================================ */
+	.bookmark-btn {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		padding: 0;
+		background: transparent;
+		border: none;
+		border-radius: var(--radius-sm);
+		color: var(--text-3);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
 
+	.bookmark-btn:hover {
+		background: var(--bg-2);
+		color: var(--gold-base);
+	}
+
+	.bookmark-btn.bookmarked {
+		color: var(--gold-base);
+	}
+
+	.bookmark-btn.bookmarked:hover {
+		background: rgba(var(--gold-rgb), 0.1);
+		color: var(--gold-light);
+	}
+
+	.bookmark-btn:active {
+		transform: scale(0.9);
+	}
+
+	.bookmark-btn:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
+	/* Bookmark fill animation */
+	.bookmark-btn :global(svg) {
+		transition: fill var(--transition-fast);
+	}
+
+	/* Mobile */
 	@media (max-width: 768px) {
 		.event-card {
-			padding: 16px;
-		}
-
-		.event-title {
-			font-size: 16px;
+			padding: var(--spacing-3);
 		}
 
 		.event-icon {
@@ -581,29 +801,25 @@
 			height: 36px;
 		}
 
-		.outcome-odds {
-			font-size: 20px;
+		.event-title {
+			font-size: 14px;
 		}
 
 		.stats {
-			gap: 16px;
+			gap: var(--spacing-4);
 		}
 
-		.stat-value {
-			font-size: 12px;
+		.card-header {
+			padding-right: 60px;
 		}
 
-		.market-item {
-			grid-template-columns: 1fr;
-			gap: 8px;
+		.corner-badge {
+			font-size: 9px;
+			padding: 3px 8px;
 		}
 
-		.market-odds-inline {
-			justify-content: flex-start;
-		}
-
-		.odds-chip-label {
-			max-width: 80px;
+		.stat:not(:last-child)::after {
+			margin-left: var(--spacing-3);
 		}
 	}
 </style>

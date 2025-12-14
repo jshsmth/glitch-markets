@@ -5,12 +5,12 @@
 
 :root {
 	/* ============================================
-     PRIMARY BRAND COLOR - Electric Cyan
-     Shared across light and dark themes
+     PRIMARY BRAND COLOR - Charcoal Gray
+     Sophisticated, minimal, professional
      ============================================ */
 
-	--primary-base: #00d9ff; /* Main brand color */
-	--primary-rgb: 0, 217, 255; /* RGB values for rgba() usage */
+	--primary-base: #1f2937; /* Main brand color - Gray 800 */
+	--primary-rgb: 31, 41, 55; /* RGB values for rgba() usage */
 
 	/* ============================================
      THIRD-PARTY BRAND COLORS
@@ -22,6 +22,16 @@
 	--discord-bg: #5865f2;
 	--discord-rgb: 88, 101, 242;
 	--twitter-blue: #1da1f2;
+
+	/* ============================================
+     GOLD ACCENT COLORS
+     Used for awards, bookmarks, and premium features
+     ============================================ */
+
+	--gold-dark: #a68b2e;
+	--gold-base: #d4af37;
+	--gold-light: #e6c76a;
+	--gold-rgb: 212, 175, 55; /* RGB of gold-base for rgba() usage */
 
 	/* ============================================
      SPACING SCALE (8pt base grid)
@@ -148,17 +158,17 @@
 	   Shared gradients for EventCard odds rows and chips
 	   ============================================ */
 
-	/* Yes/First outcome: Green-to-cyan gradient */
+	/* Yes/First outcome: Green-to-gray gradient */
 	--gradient-yes-start: rgba(0, 196, 71, 0.12);
-	--gradient-yes-end: rgba(0, 217, 255, 0.08);
+	--gradient-yes-end: rgba(107, 114, 128, 0.08);
 
-	/* No/Second outcome: Cyan-to-purple gradient */
-	--gradient-no-start: rgba(0, 217, 255, 0.1);
-	--gradient-no-end: rgba(139, 92, 246, 0.08);
+	/* No/Second outcome: Gray gradient */
+	--gradient-no-start: rgba(107, 114, 128, 0.1);
+	--gradient-no-end: rgba(75, 85, 99, 0.08);
 
-	/* Alternative second outcome (red-to-cyan) for binary markets */
-	--gradient-no-alt-start: rgba(255, 51, 102, 0.12);
-	--gradient-no-alt-end: rgba(0, 217, 255, 0.08);
+	/* Alternative second outcome (gray) for binary markets */
+	--gradient-no-alt-start: rgba(107, 114, 128, 0.12);
+	--gradient-no-alt-end: rgba(55, 65, 81, 0.08);
 
 	/* ============================================
      TARGET SIZES (WCAG 2.2 AA Compliance)

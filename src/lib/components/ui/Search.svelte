@@ -64,7 +64,6 @@
 	}: Props = $props();
 	let hasValue = $derived(value.length > 0);
 
-	// Create debounced input handler if oninput is provided
 	const debouncedInput = $derived(oninput ? debounce(oninput, debounceDelay) : undefined);
 
 	function handleInput(event: Event) {
@@ -73,7 +72,6 @@
 		}
 	}
 
-	// Listen for "/" key to focus search
 	function handleKeyDown(event: KeyboardEvent) {
 		const target = event.target as HTMLElement;
 		const isInInput =

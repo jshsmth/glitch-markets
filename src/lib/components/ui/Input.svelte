@@ -290,11 +290,19 @@
      SEARCH VARIANT
      ============================================ */
 
+	.input-container.variant-search::before {
+		border: 1px solid var(--bg-3);
+	}
+
 	.input-container.variant-search {
 		background-color: var(--bg-2);
 	}
 
 	.input-container.variant-search:hover {
 		background-color: var(--bg-1);
+	}
+
+	.input-container.variant-search:hover::before {
+		border-color: var(--bg-4);
 	}
 </style>

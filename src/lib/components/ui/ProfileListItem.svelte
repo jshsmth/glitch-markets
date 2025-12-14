@@ -8,35 +8,11 @@
 
 	let { profile, onclick }: Props = $props();
 
-	/**
-	 * Generate a consistent gradient based on user ID using brand colors
-	 * Same algorithm as UserAvatar.svelte
-	 */
-	function generateAvatarGradient(userId: string): string {
-		const brandColors = [
-			['#00d9ff', '#00aed9'], // Cyan gradient (primary)
-			['#00d9ff', '#0083a3'], // Cyan to darker cyan
-			['#33cfff', '#0083a3'], // Light cyan to dark cyan
-			['#00c447', '#00d9ff'], // Success to cyan
-			['#00d9ff', '#00c447'], // Cyan to success
-			['#66dbff', '#00aed9'] // Light cyan to medium cyan
-		];
-
-		let hash = 0;
-		for (let i = 0; i < userId.length; i++) {
-			hash = userId.charCodeAt(i) + ((hash << 5) - hash);
-		}
-
-		const gradientIndex = Math.abs(hash) % brandColors.length;
-		const [color1, color2] = brandColors[gradientIndex];
-
-		return `linear-gradient(135deg, ${color1}, ${color2})`;
-	}
+	const avatarGradient = 'linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%)';
 
 	const displayName = $derived(
 		profile.name || profile.pseudonym || profile.id?.slice(0, 8) || 'Unknown User'
 	);
-	const gradient = $derived(generateAvatarGradient(profile.id || displayName));
 	const profileImage = $derived(profile.profileImageOptimized || profile.profileImage);
 	const href = $derived(`/search?q=${encodeURIComponent(displayName)}`);
 </script>
@@ -46,7 +22,7 @@
 		{#if profileImage}
 			<img src={profileImage} alt={displayName} loading="lazy" />
 		{:else}
-			<div class="avatar-gradient" style="background: {gradient}"></div>
+			<div class="avatar-gradient" style="background: {avatarGradient}"></div>
 		{/if}
 	</div>
 

@@ -2,6 +2,7 @@
 	import type { Tag } from '$lib/server/api/polymarket-client';
 	import FilterBar from '$lib/components/filters/FilterBar.svelte';
 	import { BottomSheet } from '$lib/components/ui';
+	import ChevronDownIcon from '$lib/components/icons/ChevronDownIcon.svelte';
 
 	interface Props {
 		subcategories: Tag[];
@@ -24,52 +25,8 @@
 	}: Props = $props();
 
 	let isMobileFilterOpen = $state(false);
-	let scrollContainer: HTMLDivElement | undefined = $state();
-	let showLeftArrow = $state(false);
-	let showRightArrow = $state(false);
-
-	function updateArrowVisibility() {
-		if (!scrollContainer) return;
-
-		const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
-		showLeftArrow = scrollLeft > 0;
-		showRightArrow = scrollLeft < scrollWidth - clientWidth - 1;
-	}
-
-	function scrollLeft() {
-		if (!scrollContainer) return;
-		scrollContainer.scrollBy({ left: -200, behavior: 'smooth' });
-	}
-
-	function scrollRight() {
-		if (!scrollContainer) return;
-		scrollContainer.scrollBy({ left: 200, behavior: 'smooth' });
-	}
-
-	$effect(() => {
-		if (scrollContainer) {
-			const rafId = requestAnimationFrame(() => {
-				updateArrowVisibility();
-			});
-
-			scrollContainer.addEventListener('scroll', updateArrowVisibility);
-			window.addEventListener('resize', updateArrowVisibility);
-
-			return () => {
-				cancelAnimationFrame(rafId);
-				scrollContainer?.removeEventListener('scroll', updateArrowVisibility);
-				window.removeEventListener('resize', updateArrowVisibility);
-			};
-		}
-	});
-
-	$effect(() => {
-		if (scrollContainer && subcategories.length > 0) {
-			requestAnimationFrame(() => {
-				updateArrowVisibility();
-			});
-		}
-	});
+	let isDropdownOpen = $state(false);
+	let dropdownRef: HTMLDivElement | undefined = $state();
 
 	const statusOptions = [
 		{ value: 'active', label: 'Active' },
@@ -85,7 +42,21 @@
 
 	function handleSubcategoryClick(slug: string | null) {
 		onTagChange?.(slug);
+		isDropdownOpen = false;
 	}
+
+	function handleClickOutside(event: MouseEvent) {
+		if (dropdownRef && !dropdownRef.contains(event.target as Node)) {
+			isDropdownOpen = false;
+		}
+	}
+
+	$effect(() => {
+		if (isDropdownOpen) {
+			document.addEventListener('click', handleClickOutside);
+			return () => document.removeEventListener('click', handleClickOutside);
+		}
+	});
 
 	function isActive(slug: string | null): boolean {
 		if (!slug && !activeSlug) return true;
@@ -110,59 +81,43 @@
 </script>
 
 <nav class="subcategory-nav">
-	<!-- Desktop: Horizontal scrolling chips + FilterBar -->
+	<!-- Desktop: Dropdown for subcategories + FilterBar -->
 	<div class="desktop-nav">
-		{#if showLeftArrow}
-			<button class="scroll-arrow left" onclick={scrollLeft} aria-label="Scroll left">
-				<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-					<path
-						d="M15 18l-6-6 6-6"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
+		<div class="dropdown-wrapper" bind:this={dropdownRef}>
+			<button
+				class="dropdown-trigger"
+				class:active={isDropdownOpen}
+				onclick={() => (isDropdownOpen = !isDropdownOpen)}
+			>
+				<span class="dropdown-label">{getActiveSubcategoryLabel()}</span>
+				<ChevronDownIcon size={16} />
 			</button>
-		{/if}
 
-		<div class="chip-scroll" bind:this={scrollContainer}>
-			<div class="chip-container">
-				<button
-					class="chip"
-					class:active={isActive(null)}
-					onclick={() => handleSubcategoryClick(null)}
-				>
-					All
-				</button>
-
-				{#each subcategories as subcategory (subcategory.id)}
-					{#if subcategory.label && subcategory.slug}
+			{#if isDropdownOpen}
+				<div class="dropdown-panel">
+					<div class="dropdown-grid">
 						<button
-							class="chip"
-							class:active={isActive(subcategory.slug)}
-							onclick={() => handleSubcategoryClick(subcategory.slug)}
+							class="dropdown-option"
+							class:active={isActive(null)}
+							onclick={() => handleSubcategoryClick(null)}
 						>
-							{subcategory.label}
+							All
 						</button>
-					{/if}
-				{/each}
-			</div>
+						{#each subcategories as subcategory (subcategory.id)}
+							{#if subcategory.label && subcategory.slug}
+								<button
+									class="dropdown-option"
+									class:active={isActive(subcategory.slug)}
+									onclick={() => handleSubcategoryClick(subcategory.slug)}
+								>
+									{subcategory.label}
+								</button>
+							{/if}
+						{/each}
+					</div>
+				</div>
+			{/if}
 		</div>
-
-		{#if showRightArrow}
-			<button class="scroll-arrow right" onclick={scrollRight} aria-label="Scroll right">
-				<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-					<path
-						d="M9 18l6-6-6-6"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
-			</button>
-		{/if}
 
 		<div class="filter-wrapper">
 			<FilterBar {currentStatus} {currentSort} {onStatusChange} {onSortChange} />
@@ -412,106 +367,114 @@
 	@media (min-width: 769px) {
 		.desktop-nav {
 			display: flex;
-			gap: 6px;
+			gap: 8px;
 			align-items: center;
-			background: var(--bg-1);
-			border: 1px solid var(--bg-3);
-			border-radius: var(--radius-lg);
-			padding: 8px;
-			position: relative;
 		}
 
 		.mobile-nav {
 			display: none;
 		}
 
-		.scroll-arrow {
-			flex-shrink: 0;
+		.dropdown-wrapper {
+			position: relative;
+		}
+
+		.dropdown-trigger {
 			display: flex;
 			align-items: center;
-			justify-content: center;
-			width: 32px;
-			height: 32px;
-			background: var(--bg-2);
+			gap: 6px;
+			padding: 8px 14px;
+			background: var(--bg-1);
 			border: 1px solid var(--bg-3);
 			border-radius: var(--radius-button);
-			color: var(--text-2);
+			color: var(--text-0);
+			font-size: 14px;
+			font-weight: 600;
 			cursor: pointer;
 			transition: all var(--transition-fast);
-			z-index: 1;
+			min-height: 40px;
 		}
 
-		.scroll-arrow:hover {
-			background: var(--bg-3);
+		.dropdown-trigger:hover {
+			background: var(--bg-2);
 			border-color: var(--bg-4);
-			color: var(--text-0);
 		}
 
-		.scroll-arrow:active {
-			transform: scale(0.95);
+		.dropdown-trigger.active {
+			background: var(--bg-2);
+			border-color: var(--primary);
 		}
 
-		.chip-scroll {
-			flex: 1;
-			min-width: 0;
-			overflow-x: auto;
-			overflow-y: visible;
-			-webkit-overflow-scrolling: touch;
-			scrollbar-width: none;
-			-ms-overflow-style: none;
-			scroll-behavior: smooth;
-		}
-
-		.chip-scroll::-webkit-scrollbar {
-			display: none;
-		}
-
-		.chip-container {
-			display: flex;
-			gap: 6px;
-			width: fit-content;
-			min-width: 100%;
-		}
-
-		.filter-wrapper {
-			flex-shrink: 0;
-			margin-left: 4px;
-		}
-
-		.chip {
-			display: inline-flex;
-			align-items: center;
-			gap: var(--space-xs);
-			padding: 6px 12px;
-			background: transparent;
+		.dropdown-trigger :global(svg) {
 			color: var(--text-2);
+			transition: transform var(--transition-fast);
+		}
+
+		.dropdown-trigger.active :global(svg) {
+			transform: rotate(180deg);
+		}
+
+		.dropdown-panel {
+			position: absolute;
+			top: calc(100% + 8px);
+			left: 0;
+			min-width: 280px;
+			max-width: 400px;
+			background: var(--bg-1);
+			border: 1px solid var(--bg-3);
+			border-radius: var(--radius-lg);
+			padding: 12px;
+			box-shadow: var(--shadow-dropdown);
+			z-index: var(--z-dropdown);
+			animation: dropdownFadeIn 0.15s ease-out;
+		}
+
+		@keyframes dropdownFadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(-4px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		.dropdown-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+			gap: 6px;
+		}
+
+		.dropdown-option {
+			padding: 8px 12px;
+			background: var(--bg-2);
 			border: 1px solid transparent;
-			border-radius: var(--radius-button);
+			border-radius: var(--radius-sm);
+			color: var(--text-1);
 			font-size: 13px;
 			font-weight: 500;
 			cursor: pointer;
 			transition: all var(--transition-fast);
+			text-align: center;
 			white-space: nowrap;
-			min-height: 32px;
-			user-select: none;
+			overflow: hidden;
+			text-overflow: ellipsis;
 		}
 
-		.chip:hover:not(.active) {
-			background: var(--bg-2);
-			border-color: var(--bg-4);
-			color: var(--text-1);
+		.dropdown-option:hover {
+			background: var(--bg-3);
+			color: var(--text-0);
 		}
 
-		.chip:active {
-			transform: scale(0.98);
-		}
-
-		.chip.active {
+		.dropdown-option.active {
 			background: var(--primary);
 			color: var(--bg-0);
-			border-color: var(--primary);
 			font-weight: 600;
-			box-shadow: var(--shadow-button-primary);
+		}
+
+		.filter-wrapper {
+			flex-shrink: 0;
 		}
 	}
 </style>

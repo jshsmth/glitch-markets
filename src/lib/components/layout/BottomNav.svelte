@@ -3,15 +3,19 @@
 	import { preloadData } from '$app/navigation';
 	import { untrack } from 'svelte';
 	import HomeIcon from '$lib/components/icons/HomeIcon.svelte';
+	import CompassIcon from '$lib/components/icons/CompassIcon.svelte';
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
 	import PokerChipIcon from '$lib/components/icons/PokerChipIcon.svelte';
-	import MenuIcon from '$lib/components/icons/MenuIcon.svelte';
+	import UserIcon from '$lib/components/icons/UserIcon.svelte';
 	import DollarCircleIcon from '$lib/components/icons/DollarCircleIcon.svelte';
 	import SettingsIcon from '$lib/components/icons/SettingsIcon.svelte';
+	import LogoutIcon from '$lib/components/icons/LogoutIcon.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import CategoryPicker from '$lib/components/navigation/CategoryPicker.svelte';
 	import { openDepositModal, openSignInModal } from '$lib/stores/modal.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
 	import { TIMEOUTS } from '$lib/config/constants';
+	import { goto } from '$app/navigation';
 
 	import type { Component } from 'svelte';
 
@@ -19,7 +23,7 @@
 		label: string;
 		href: string;
 		icon: Component;
-		isMore?: boolean;
+		action?: 'explore' | 'profile';
 		requiresAuth?: boolean;
 	}
 
@@ -28,6 +32,12 @@
 			label: 'Home',
 			href: '/',
 			icon: HomeIcon
+		},
+		{
+			label: 'Explore',
+			href: '#',
+			icon: CompassIcon,
+			action: 'explore'
 		},
 		{
 			label: 'Search',
@@ -41,24 +51,33 @@
 			requiresAuth: true
 		},
 		{
-			label: 'More',
+			label: 'Profile',
 			href: '#',
-			icon: MenuIcon,
-			isMore: true
+			icon: UserIcon,
+			action: 'profile'
 		}
 	];
 
-	let moreMenuOpen = $state(false);
+	let exploreOpen = $state(false);
+	let profileMenuOpen = $state(false);
 
-	function isActive(href: string): boolean {
+	function isActive(href: string, action?: string): boolean {
+		if (action === 'explore') return exploreOpen;
+		if (action === 'profile') return profileMenuOpen;
 		if (href === '#') return false;
 		return $page.url.pathname === href;
 	}
 
 	function handleNavClick(event: MouseEvent, item: NavItem) {
-		if (item.isMore) {
+		if (item.action === 'explore') {
 			event.preventDefault();
-			moreMenuOpen = true;
+			exploreOpen = true;
+			return;
+		}
+
+		if (item.action === 'profile') {
+			event.preventDefault();
+			profileMenuOpen = true;
 			return;
 		}
 
@@ -69,12 +88,34 @@
 	}
 
 	function handleDeposit() {
-		moreMenuOpen = false;
+		profileMenuOpen = false;
 		openDepositModal();
 	}
 
-	function closeMoreMenu() {
-		moreMenuOpen = false;
+	function handleSignIn() {
+		profileMenuOpen = false;
+		openSignInModal();
+	}
+
+	async function handleLogout() {
+		const supabase = $page.data.supabase;
+		if (!supabase) return;
+
+		try {
+			await supabase.auth.signOut();
+			profileMenuOpen = false;
+			goto('/');
+		} catch (err) {
+			console.error('Logout error:', err);
+		}
+	}
+
+	function closeExplore() {
+		exploreOpen = false;
+	}
+
+	function closeProfileMenu() {
+		profileMenuOpen = false;
 	}
 
 	let hasPreloaded = $state(false);
@@ -85,7 +126,7 @@
 		const currentPath = $page.url.pathname;
 		const preloadRoutes = () => {
 			navItems.forEach((item) => {
-				if (!item.isMore && item.href !== currentPath) {
+				if (!item.action && item.href !== currentPath) {
 					preloadData(item.href).catch(() => {});
 				}
 			});
@@ -105,8 +146,8 @@
 		<a
 			href={item.href}
 			class="nav-item"
-			class:active={isActive(item.href) || (item.isMore && moreMenuOpen)}
-			aria-current={isActive(item.href) ? 'page' : undefined}
+			class:active={isActive(item.href, item.action)}
+			aria-current={isActive(item.href, item.action) ? 'page' : undefined}
 			aria-label={item.label}
 			onclick={(e) => handleNavClick(e, item)}
 			data-sveltekit-preload-data="tap"
@@ -120,21 +161,44 @@
 	{/each}
 </nav>
 
-<BottomSheet open={moreMenuOpen} title="More" onClose={closeMoreMenu}>
-	<nav aria-label="More options">
+<CategoryPicker open={exploreOpen} onClose={closeExplore} />
+
+<BottomSheet open={profileMenuOpen} title="Profile" onClose={closeProfileMenu}>
+	<nav aria-label="Profile options">
 		<ul class="menu-list" role="menu">
-			<li role="menuitem">
-				<button class="menu-item" onclick={handleDeposit}>
-					<DollarCircleIcon size={22} color="currentColor" />
-					<span>Deposit</span>
-				</button>
-			</li>
-			<li role="menuitem">
-				<a href="/settings" class="menu-item" onclick={closeMoreMenu}>
-					<SettingsIcon size={22} color="currentColor" />
-					<span>Settings</span>
-				</a>
-			</li>
+			{#if authState.user}
+				<li role="menuitem">
+					<button class="menu-item" onclick={handleDeposit}>
+						<DollarCircleIcon size={22} color="currentColor" />
+						<span>Deposit</span>
+					</button>
+				</li>
+				<li role="menuitem">
+					<a href="/settings" class="menu-item" onclick={closeProfileMenu}>
+						<SettingsIcon size={22} color="currentColor" />
+						<span>Settings</span>
+					</a>
+				</li>
+				<li role="menuitem">
+					<button class="menu-item menu-item-danger" onclick={handleLogout}>
+						<LogoutIcon size={22} color="currentColor" />
+						<span>Sign Out</span>
+					</button>
+				</li>
+			{:else}
+				<li role="menuitem">
+					<button class="menu-item menu-item-primary" onclick={handleSignIn}>
+						<UserIcon size={22} color="currentColor" />
+						<span>Sign In</span>
+					</button>
+				</li>
+				<li role="menuitem">
+					<a href="/settings" class="menu-item" onclick={closeProfileMenu}>
+						<SettingsIcon size={22} color="currentColor" />
+						<span>Settings</span>
+					</a>
+				</li>
+			{/if}
 		</ul>
 	</nav>
 </BottomSheet>
@@ -257,5 +321,22 @@
 
 	.menu-item:active {
 		background: var(--bg-3);
+	}
+
+	.menu-item-primary {
+		background: var(--primary);
+		color: var(--button-primary-text);
+	}
+
+	.menu-item-primary:hover {
+		background: var(--primary-hover);
+	}
+
+	.menu-item-danger {
+		color: var(--danger);
+	}
+
+	.menu-item-danger:hover {
+		background: var(--danger-bg);
 	}
 </style>

@@ -22,17 +22,13 @@
 	const hasMore = $derived(results?.pagination.hasMore || false);
 	const showBrowse = $derived(!isLoading && !hasResults && query.length === 0);
 
-	// Popular topics for browse state
 	const popularTopics = [
 		{ label: 'Politics', slug: 'politics', icon: '🏛️' },
-		{ label: 'Crypto', slug: 'crypto', icon: '₿' },
-		{ label: 'Sports', slug: 'sports', icon: '⚽' },
 		{ label: 'Tech', slug: 'tech', icon: '💻' },
 		{ label: 'Finance', slug: 'finance', icon: '💰' },
 		{ label: 'Pop Culture', slug: 'pop-culture', icon: '🎬' }
 	];
 
-	// Browse filters
 	const browseFilters = [
 		{ label: 'New', href: '/new', icon: '✨' },
 		{ label: 'Trending', href: '/trending', icon: '📈' }

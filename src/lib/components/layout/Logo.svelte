@@ -1,15 +1,12 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 
-	// Read theme directly from DOM on client
 	let theme = $state<'light' | 'dark'>('dark');
 
-	// Only run on client
 	if (browser) {
 		const currentTheme = document.documentElement.getAttribute('data-theme');
 		theme = currentTheme === 'light' ? 'light' : 'dark';
 
-		// Watch for theme changes
 		const observer = new MutationObserver((mutations) => {
 			mutations.forEach((mutation) => {
 				if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {

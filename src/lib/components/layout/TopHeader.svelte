@@ -81,7 +81,7 @@
 		background-color: rgba(var(--bg-0-rgb), 0.95);
 		backdrop-filter: blur(16px);
 		-webkit-backdrop-filter: blur(16px);
-		border-bottom: 1px solid var(--bg-4);
+		border-bottom: 1px solid var(--bg-3);
 		box-shadow:
 			0 1px 2px rgba(0, 0, 0, 0.04),
 			0 1px 4px rgba(0, 0, 0, 0.02);
@@ -218,7 +218,7 @@
 	.header-divider {
 		width: 1px;
 		height: 24px;
-		background-color: var(--bg-4);
+		background-color: var(--bg-3);
 		flex-shrink: 0;
 	}
 

@@ -24,8 +24,6 @@
 
 	function handleEmailAuthChange(isAuth: boolean) {
 		isAuthenticating = isAuth ? 'email' : null;
-		// Hide social buttons when email OTP verification is active
-		// The EmailOTPForm internally handles email step vs verify step
 	}
 
 	function handleSocialAuthChange(provider: AuthProvider | null) {
@@ -36,7 +34,6 @@
 		errorMessage = message;
 	}
 
-	// Auto-close modal when user successfully authenticates
 	$effect(() => {
 		if (isOpen && authState.session) {
 			onClose();

@@ -73,7 +73,6 @@
 
 			if (error) throw error;
 
-			// Show confirmation message instead of closing modal
 			sentToEmail = email;
 			emailSent = true;
 		} catch (err) {

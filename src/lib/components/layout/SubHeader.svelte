@@ -21,28 +21,21 @@
 
 	const queryClient = useQueryClient();
 
-	// Map of category paths to their tag slugs for API calls
 	const categoryTagMap: Record<string, string> = {
 		'/politics': 'politics',
-		'/sports': 'sports',
 		'/finance': 'finance',
-		'/crypto': 'crypto',
 		'/tech': 'tech',
 		'/pop-culture': 'pop-culture',
 		'/world': 'world',
 		'/economy': 'economy',
-		'/elections': 'elections',
-		'/earnings': 'earnings',
 		'/geopolitics': 'geopolitics'
 	};
 
 	async function prefetchCategoryData(href: string) {
 		if (!browser) return;
 
-		// Prefetch events for category pages
 		const tagSlug = categoryTagMap[href];
 		if (tagSlug) {
-			// Prefetch the main events query
 			await queryClient.prefetchInfiniteQuery({
 				queryKey: ['events', tagSlug.replace('/', ''), tagSlug, 'active', 'volume24hr'],
 				queryFn: async () => {
@@ -63,7 +56,6 @@
 				initialPageParam: 0
 			});
 
-			// Prefetch subcategories
 			await queryClient.prefetchQuery({
 				queryKey: ['tags', tagSlug.replace('/', ''), 'related'],
 				queryFn: async () => {
@@ -73,7 +65,6 @@
 				}
 			});
 		} else if (href === '/') {
-			// Prefetch trending page
 			await queryClient.prefetchQuery({
 				queryKey: ['events', 'all', 0],
 				queryFn: async () => {
@@ -92,7 +83,6 @@
 				}
 			});
 		} else if (href === '/new') {
-			// Prefetch new page
 			await queryClient.prefetchQuery({
 				queryKey: ['events', 'all', 0],
 				queryFn: async () => {
@@ -116,10 +106,7 @@
 	}
 
 	function handleCategoryHover(href: string) {
-		// Silently prefetch - don't await or handle errors
-		prefetchCategoryData(href).catch(() => {
-			// Ignore prefetch errors
-		});
+		prefetchCategoryData(href).catch(() => {});
 	}
 
 	function handleScroll() {
@@ -130,7 +117,6 @@
 		canScrollLeft = scrollLeft > SCROLL_THRESHOLD;
 		canScrollRight = scrollLeft < scrollWidth - clientWidth - SCROLL_THRESHOLD;
 
-		// Hide swipe hint after user scrolls
 		if (scrollLeft > SCROLL_THRESHOLD) {
 			showSwipeHint = false;
 		}
@@ -231,6 +217,7 @@
 
 <style>
 	.sub-header {
+		display: none; /* Hidden on mobile - use bottom nav Explore tab */
 		background-color: var(--bg-0);
 		border-bottom: 1px solid var(--bg-4);
 		padding: 10px 0;
@@ -238,6 +225,7 @@
 
 	@media (min-width: 768px) {
 		.sub-header {
+			display: block; /* Show on desktop */
 			padding: 12px 0;
 		}
 	}
@@ -344,14 +332,8 @@
 	}
 
 	.nav-link.active {
-		color: var(--primary-700);
-		background-color: var(--primary-50);
-		font-weight: 600;
-	}
-
-	:global([data-theme='dark']) .nav-link.active {
-		color: var(--primary-400);
-		background-color: rgba(var(--primary-rgb), 0.12);
+		color: var(--text-0);
+		font-weight: var(--font-bold);
 	}
 
 	.nav-link :global(svg) {
