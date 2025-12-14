@@ -1,23 +1,19 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import type { Market, Comment, MarketHolders } from '$lib/server/api/polymarket-client';
+	import type { Market, Comment } from '$lib/server/api/polymarket-client';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { page } from '$app/stores';
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
 	import CalendarIcon from '$lib/components/icons/CalendarIcon.svelte';
-	import ScrollIcon from '$lib/components/icons/ScrollIcon.svelte';
 	import GlobalIcon from '$lib/components/icons/GlobalIcon.svelte';
 	import XIcon from '$lib/components/icons/XIcon.svelte';
 	import GitHubIcon from '$lib/components/icons/GitHubIcon.svelte';
 	import LinkedInIcon from '$lib/components/icons/LinkedInIcon.svelte';
 	import DiscordIcon from '$lib/components/icons/DiscordIcon.svelte';
 	import MessageTextIcon from '$lib/components/icons/MessageTextIcon.svelte';
-	import LeaderboardIcon from '$lib/components/icons/LeaderboardIcon.svelte';
-	import FlashIcon from '$lib/components/icons/FlashIcon.svelte';
 	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
 	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
-	import CupIcon from '$lib/components/icons/CupIcon.svelte';
 	import { formatNumber } from '$lib/utils/format';
 
 	let { data }: { data: PageData } = $props();
@@ -112,18 +108,12 @@
 	let selectedMarketIndex = $state(0);
 	const selectedMarket = $derived(filteredMarkets[selectedMarketIndex] || null);
 	const selectedMarketData = $derived(selectedMarket ? parseMarketData(selectedMarket) : null);
-	const isMarketResolved = $derived(selectedMarket?.closed || false);
-	const winningOutcome = $derived.by(() => {
-		if (!isMarketResolved || !selectedMarketData) return null;
-		return selectedMarketData.find((outcome) => outcome.won);
-	});
-
-	let selectedOutcome = $state(0);
 	type TabType = 'outcomes' | 'about' | 'comments';
-	let activeTab = $state<TabType>('about');
+	let activeTab = $state<TabType>(
+		typeof window !== 'undefined' && window.innerWidth < 768 ? 'outcomes' : 'about'
+	);
 	type TimeRange = '1H' | '6H' | '1D' | '1W' | '1M' | 'MAX';
 	let selectedTimeRange = $state<TimeRange>('1D');
-	const selectedMarketConditionId = $derived(selectedMarket?.conditionId);
 
 	const commentsQuery = createQuery<Comment[]>(() => ({
 		queryKey: ['comments', event.id],
@@ -140,19 +130,6 @@
 			return response.json();
 		},
 		enabled: activeTab === 'comments'
-	}));
-
-	const holdersQuery = createQuery<MarketHolders[]>(() => ({
-		queryKey: ['holders', selectedMarketConditionId],
-		queryFn: async () => {
-			if (!selectedMarketConditionId) return [];
-			const response = await fetch(
-				`/api/users/holders?market=${encodeURIComponent(selectedMarketConditionId)}`
-			);
-			if (!response.ok) throw new Error('Failed to fetch holders');
-			return response.json();
-		},
-		enabled: activeTab === 'holders' && !!selectedMarketConditionId
 	}));
 
 	function formatRelativeTime(dateStr: string | null): string {
@@ -172,11 +149,6 @@
 		} catch {
 			return '';
 		}
-	}
-
-	function selectMarket(index: number) {
-		selectedMarketIndex = index;
-		selectedOutcome = 0;
 	}
 
 	interface ParsedSegment {
@@ -283,14 +255,21 @@
 	<div class="content-grid">
 		<!-- Left Column -->
 		<main class="main-content">
-			<!-- Probability Summary (Mobile Only) -->
-			<section class="probability-summary mobile-only">
+			<!-- Probability Summary -->
+			<section class="probability-summary">
 				{#if isMultiMarket}
 					{#each filteredMarkets.slice(0, 3) as market, index (market.id)}
 						{@const marketData = parseMarketData(market)}
 						{@const percentage = marketData?.[0]?.priceFormatted || '—'}
 						<div class="summary-item">
-							<span class="summary-dot" style="background-color: {index === 0 ? 'var(--success)' : index === 1 ? 'var(--danger)' : 'var(--text-3)'}"></span>
+							<span
+								class="summary-dot"
+								style="background-color: {index === 0
+									? 'var(--success)'
+									: index === 1
+										? 'var(--danger)'
+										: 'var(--text-3)'}"
+							></span>
 							<span class="summary-name">{getMarketDisplayTitle(market)}</span>
 							<span class="summary-percentage">{percentage}%</span>
 						</div>
@@ -298,7 +277,10 @@
 				{:else if selectedMarketData}
 					{#each selectedMarketData as outcome, index (index)}
 						<div class="summary-item">
-							<span class="summary-dot" style="background-color: {index === 0 ? 'var(--success)' : 'var(--danger)'}"></span>
+							<span
+								class="summary-dot"
+								style="background-color: {index === 0 ? 'var(--success)' : 'var(--danger)'}"
+							></span>
 							<span class="summary-name">{outcome.label}</span>
 							<span class="summary-percentage">{outcome.priceFormatted}%</span>
 						</div>
@@ -312,7 +294,7 @@
 					<span>Chart coming soon</span>
 				</div>
 				<div class="time-controls">
-					{#each ['1H', '6H', '1D', '1W', '1M', 'MAX'] as range}
+					{#each ['1H', '6H', '1D', '1W', '1M', 'MAX'] as range (range)}
 						<button
 							class="time-btn"
 							class:active={selectedTimeRange === range}
@@ -354,12 +336,14 @@
 					{#if activeTab === 'outcomes'}
 						<div class="outcomes-grid mobile-only">
 							{#if isMultiMarket}
-								{#each filteredMarkets as market, index (market.id)}
+								{#each filteredMarkets as market (market.id)}
 									{@const marketData = parseMarketData(market)}
 									<div class="outcome-card">
 										<div class="outcome-card-header">
 											<span class="outcome-card-name">{getMarketDisplayTitle(market)}</span>
-											<span class="outcome-card-volume">{formatNumber(market.volume || 0)} Vol.</span>
+											<span class="outcome-card-volume"
+												>{formatNumber(Number(market.volume) || 0)} Vol.</span
+											>
 										</div>
 										<div class="outcome-card-body">
 											<span class="outcome-card-percentage">
@@ -385,16 +369,20 @@
 									</div>
 								{/each}
 							{:else if selectedMarketData}
-								{#each selectedMarketData as outcome, index (index)}
+								{#each selectedMarketData as outcome (outcome.label)}
 									<div class="outcome-card">
 										<div class="outcome-card-header">
 											<span class="outcome-card-name">{outcome.label}</span>
-											<span class="outcome-card-volume">{formatNumber(selectedMarket?.volume || 0)} Vol.</span>
+											<span class="outcome-card-volume"
+												>{formatNumber(Number(selectedMarket?.volume) || 0)} Vol.</span
+											>
 										</div>
 										<div class="outcome-card-body">
 											<span class="outcome-card-percentage">
 												{#if outcome.isResolved}
-													<span class="resolved-tag" class:won={outcome.won}>{outcome.priceFormatted}</span>
+													<span class="resolved-tag" class:won={outcome.won}
+														>{outcome.priceFormatted}</span
+													>
 												{:else}
 													{outcome.priceFormatted}%
 												{/if}
@@ -421,14 +409,14 @@
 												rel="noopener noreferrer"
 												class="rules-link"
 												>{#if segment.iconType === 'x'}<XIcon
-													size={12}
-												/>{:else if segment.iconType === 'github'}<GitHubIcon
-													size={12}
-												/>{:else if segment.iconType === 'linkedin'}<LinkedInIcon
-													size={12}
-												/>{:else if segment.iconType === 'discord'}<DiscordIcon
-													size={12}
-												/>{:else}<GlobalIcon size={12} />{/if}<span>{segment.domain}</span></a
+														size={12}
+													/>{:else if segment.iconType === 'github'}<GitHubIcon
+														size={12}
+													/>{:else if segment.iconType === 'linkedin'}<LinkedInIcon
+														size={12}
+													/>{:else if segment.iconType === 'discord'}<DiscordIcon
+														size={12}
+													/>{:else}<GlobalIcon size={12} />{/if}<span>{segment.domain}</span></a
 											>{/if}{/each}
 								</p>
 								{#if event.endDate}
@@ -493,12 +481,14 @@
 				<h2 class="outcomes-panel-title">Outcomes</h2>
 				<div class="outcomes-scroll">
 					{#if isMultiMarket}
-						{#each filteredMarkets as market, index (market.id)}
+						{#each filteredMarkets as market (market.id)}
 							{@const marketData = parseMarketData(market)}
 							<div class="outcome-card">
 								<div class="outcome-card-header">
 									<span class="outcome-card-name">{getMarketDisplayTitle(market)}</span>
-									<span class="outcome-card-volume">{formatNumber(market.volume || 0)} Vol.</span>
+									<span class="outcome-card-volume"
+										>{formatNumber(Number(market.volume) || 0)} Vol.</span
+									>
 								</div>
 								<div class="outcome-card-body">
 									<span class="outcome-card-percentage">
@@ -524,16 +514,20 @@
 							</div>
 						{/each}
 					{:else if selectedMarketData}
-						{#each selectedMarketData as outcome, index (index)}
+						{#each selectedMarketData as outcome (outcome.label)}
 							<div class="outcome-card">
 								<div class="outcome-card-header">
 									<span class="outcome-card-name">{outcome.label}</span>
-									<span class="outcome-card-volume">{formatNumber(selectedMarket?.volume || 0)} Vol.</span>
+									<span class="outcome-card-volume"
+										>{formatNumber(Number(selectedMarket?.volume) || 0)} Vol.</span
+									>
 								</div>
 								<div class="outcome-card-body">
 									<span class="outcome-card-percentage">
 										{#if outcome.isResolved}
-											<span class="resolved-tag" class:won={outcome.won}>{outcome.priceFormatted}</span>
+											<span class="resolved-tag" class:won={outcome.won}
+												>{outcome.priceFormatted}</span
+											>
 										{:else}
 											{outcome.priceFormatted}%
 										{/if}
@@ -637,12 +631,12 @@
 		background: rgba(var(--gold-rgb), 0.1);
 	}
 
-	/* Probability Summary (Mobile) */
+	/* Probability Summary */
 	.probability-summary {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
-		margin-bottom: 16px;
+		margin-bottom: 8px;
 	}
 
 	.summary-item {
@@ -689,24 +683,6 @@
 		border: 1px solid var(--bg-3);
 		border-radius: 12px;
 		padding: 16px;
-	}
-
-	.card-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 12px;
-		padding-bottom: 10px;
-		border-bottom: 1px solid var(--bg-3);
-	}
-
-	.card-header h2 {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-0);
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		margin: 0;
 	}
 
 	.resolved-tag {
@@ -1035,87 +1011,6 @@
 		color: var(--text-1);
 		margin: 0;
 		line-height: 1.5;
-	}
-
-	/* Holders */
-	.holders-grid {
-		display: flex;
-		flex-direction: column;
-		gap: 16px;
-	}
-
-	.holders-col {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-	}
-
-	.holders-label {
-		font-size: 11px;
-		font-weight: 600;
-		text-transform: uppercase;
-		margin-bottom: 4px;
-	}
-
-	.holders-label.yes {
-		color: var(--success);
-	}
-
-	.holders-label.no {
-		color: var(--danger);
-	}
-
-	.holder {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 10px;
-		background: var(--bg-2);
-		border-radius: 8px;
-		font-size: 13px;
-	}
-
-	.holder-rank {
-		color: var(--text-3);
-		font-size: 12px;
-		flex-shrink: 0;
-		min-width: 24px;
-	}
-
-	.holder:first-child .holder-rank {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 20px;
-		height: 20px;
-		background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%);
-		color: #5c4a15;
-		border-radius: 50%;
-		font-size: 10px;
-		font-weight: 700;
-		box-shadow: 0 1px 2px rgba(var(--gold-rgb), 0.3);
-	}
-
-	.holder-name {
-		flex: 1;
-		min-width: 0;
-		color: var(--text-0);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.holder-amount {
-		font-weight: 600;
-		flex-shrink: 0;
-	}
-
-	.holder-amount.yes {
-		color: var(--success);
-	}
-
-	.holder-amount.no {
-		color: var(--danger);
 	}
 
 	/* Mobile/Desktop visibility */
