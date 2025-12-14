@@ -11,6 +11,7 @@ A sophisticated, minimal color system built on warm neutrals (Stone palette) wit
 - **Primary**: Charcoal gray (#1f2937) - sophisticated, minimal, timeless
 
 **Key benefits for trading interfaces**:
+
 - Warm neutrals feel organic and reduce eye strain during long sessions
 - High contrast ratios (WCAG AAA compliant) ensure readability
 - Doesn't compete with trading indicators (green/red)
@@ -36,11 +37,13 @@ The logo files are located at:
 ## Current Color System - Charcoal Gray & Warm Stone
 
 **Primary Brand Color**: Charcoal Gray (#1f2937)
+
 - Sophisticated, minimal, and professional
 - Works equally well in light and dark modes
 - Timeless aesthetic that won't feel dated
 
 **Why Charcoal Gray works for Glitch Markets**:
+
 - Professional without being corporate
 - Gender-neutral and accessible
 - Creates strong hierarchy with trading colors
@@ -243,8 +246,8 @@ text: #0c0a09 (dark text on light gray)
 	--text-4: #a8a29e;
 
 	/* Charcoal Gray Primary */
-	--primary: #1f2937;  /* primary-800 */
-	--primary-hover: #111827;  /* primary-900 */
+	--primary: #1f2937; /* primary-800 */
+	--primary-hover: #111827; /* primary-900 */
 	--primary-active: #111827;
 
 	/* Trading Indicators */
@@ -281,9 +284,9 @@ text: #0c0a09 (dark text on light gray)
 	--text-4: #57534e;
 
 	/* Light Gray Primary (inverted for dark mode) */
-	--primary: #d1d5db;  /* primary-600 */
-	--primary-hover: #e5e7eb;  /* primary-700 */
-	--primary-active: #f3f4f6;  /* primary-800 */
+	--primary: #d1d5db; /* primary-600 */
+	--primary-hover: #e5e7eb; /* primary-700 */
+	--primary-active: #f3f4f6; /* primary-800 */
 
 	/* Trading Indicators (brighter for dark mode) */
 	--success: #34d399;

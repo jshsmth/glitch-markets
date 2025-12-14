@@ -22,6 +22,7 @@
 	} from '$lib/types/bridge';
 	import { determineChainType } from '$lib/types/bridge';
 	import { walletState } from '$lib/stores/wallet.svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	// Module-level cache persists across modal open/close
 	const CACHE_DURATION_MS = 5 * 60 * 1000;
@@ -177,7 +178,7 @@
 			});
 
 			// Deduplicate by chainId, keeping the first USDC variant per chain
-			const chainMap = new Map<string, SupportedAsset>();
+			const chainMap = new SvelteMap<string, SupportedAsset>();
 			for (const asset of filteredAssets) {
 				if (!chainMap.has(asset.chainId)) {
 					chainMap.set(asset.chainId, asset);
