@@ -27,14 +27,17 @@
 	 * Generate a consistent gradient based on user ID using brand colors
 	 */
 	function generateAvatarGradient(userId: string): string {
-		// Brand color palette from design system (teal-based)
+		// Sophisticated muted color palette for avatar variety
 		const brandColors = [
-			['#14b8a6', '#0d9488'], // Teal 500 to Teal 600 (primary)
-			['#2dd4bf', '#14b8a6'], // Teal 400 to Teal 500
-			['#14b8a6', '#0f766e'], // Teal 500 to Teal 700
-			['#5eead4', '#2dd4bf'], // Teal 300 to Teal 400
-			['#0d9488', '#0f766e'], // Teal 600 to Teal 700
-			['#2dd4bf', '#0d9488'] // Teal 400 to Teal 600
+			['#6366f1', '#4f46e5'], // Indigo
+			['#8b5cf6', '#7c3aed'], // Violet
+			['#ec4899', '#db2777'], // Pink
+			['#f97316', '#ea580c'], // Orange
+			['#14b8a6', '#0d9488'], // Teal
+			['#3b82f6', '#2563eb'], // Blue
+			['#10b981', '#059669'], // Emerald
+			['#f59e0b', '#d97706'], // Amber
+			['#06b6d4', '#0891b2'] // Cyan
 		];
 
 		// Generate consistent hash from user ID

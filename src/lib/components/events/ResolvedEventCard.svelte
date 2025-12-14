@@ -3,23 +3,13 @@
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
 	import CloseCircleIcon from '$lib/components/icons/CloseCircleIcon.svelte';
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
+	import { formatNumber } from '$lib/utils/format';
 
 	interface Props {
 		event: Event;
 	}
 
 	let { event }: Props = $props();
-
-	function formatNumber(num: number | null | undefined): string {
-		if (num === null || num === undefined) return '$0';
-		if (num >= 1000000) {
-			return `$${(num / 1000000).toFixed(1)}M`;
-		}
-		if (num >= 1000) {
-			return `$${(num / 1000).toFixed(1)}K`;
-		}
-		return `$${num.toFixed(0)}`;
-	}
 
 	const primaryMarket = $derived(event.markets?.[0]);
 
@@ -61,7 +51,7 @@
 			<div class="title-row">
 				{#if event.image}
 					<div class="event-icon">
-						<img src={event.image} alt={event.title || 'Event icon'} />
+						<img src={event.image} alt={event.title || 'Event icon'} loading="lazy" />
 					</div>
 				{/if}
 				<a

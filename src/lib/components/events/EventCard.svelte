@@ -5,6 +5,8 @@
 	import BookmarkIcon from '$lib/components/icons/BookmarkIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
 	import ClockIcon from '$lib/components/icons/ClockIcon.svelte';
+	import CupIcon from '$lib/components/icons/CupIcon.svelte';
+	import { formatNumber } from '$lib/utils/format';
 
 	interface Props {
 		event: Event;
@@ -12,17 +14,6 @@
 	}
 
 	let { event, variant = 'default' }: Props = $props();
-
-	function formatNumber(num: number | null | undefined): string {
-		if (num === null || num === undefined) return '$0';
-		if (num >= 1000000) {
-			return `$${(num / 1000000).toFixed(1)}M`;
-		}
-		if (num >= 1000) {
-			return `$${(num / 1000).toFixed(1)}K`;
-		}
-		return `$${num.toFixed(0)}`;
-	}
 
 	const isMultiMarket = $derived((event.markets?.length || 0) > 1);
 
@@ -53,23 +44,25 @@
 	}
 
 	// Binary market: Yes percentage determines color (green if ≥50%, red if <50%)
-	const binaryData = $derived.by((): { yes: OutcomeData; no: OutcomeData; leansYes: boolean } | null => {
-		if (isMultiMarket) return null;
-		if (!parsedPrimaryMarket) return null;
+	const binaryData = $derived.by(
+		(): { yes: OutcomeData; no: OutcomeData; leansYes: boolean } | null => {
+			if (isMultiMarket) return null;
+			if (!parsedPrimaryMarket) return null;
 
-		const { outcomes, prices } = parsedPrimaryMarket;
-		if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
-		if (outcomes.length < 2 || prices.length < 2) return null;
+			const { outcomes, prices } = parsedPrimaryMarket;
+			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
+			if (outcomes.length < 2 || prices.length < 2) return null;
 
-		const yesPercentage = parseFloat(prices[0]) * 100;
-		const noPercentage = parseFloat(prices[1]) * 100;
+			const yesPercentage = parseFloat(prices[0]) * 100;
+			const noPercentage = parseFloat(prices[1]) * 100;
 
-		return {
-			yes: { label: outcomes[0] || 'Yes', percentage: yesPercentage },
-			no: { label: outcomes[1] || 'No', percentage: noPercentage },
-			leansYes: yesPercentage >= 50
-		};
-	});
+			return {
+				yes: { label: outcomes[0] || 'Yes', percentage: yesPercentage },
+				no: { label: outcomes[1] || 'No', percentage: noPercentage },
+				leansYes: yesPercentage >= 50
+			};
+		}
+	);
 
 	// Multi-market outcomes sorted by percentage
 	const multiOutcomes = $derived.by((): OutcomeData[] | null => {
@@ -96,9 +89,7 @@
 			}
 		}
 
-		return allOutcomes.length > 0
-			? allOutcomes.sort((a, b) => b.percentage - a.percentage)
-			: null;
+		return allOutcomes.length > 0 ? allOutcomes.sort((a, b) => b.percentage - a.percentage) : null;
 	});
 
 	const leadingOutcome = $derived(multiOutcomes?.[0] || null);
@@ -150,7 +141,7 @@
 			<div class="title-row">
 				{#if event.image}
 					<div class="event-icon">
-						<img src={event.image} alt={event.title || 'Event icon'} />
+						<img src={event.image} alt={event.title || 'Event icon'} loading="lazy" />
 					</div>
 				{/if}
 				<a
@@ -166,17 +157,49 @@
 		<!-- Binary Market Display -->
 		{#if binaryData && !isEffectivelyResolved}
 			<div class="binary-display">
-				<div class="binary-header">
-					<span class="binary-label">{binaryData.yes.label}</span>
-					<span class="binary-percentage" class:leans-yes={binaryData.leansYes} class:leans-no={!binaryData.leansYes}>
-						{binaryData.yes.percentage.toFixed(0)}%
-					</span>
-				</div>
-				<div class="probability-bar" class:bar-yes={binaryData.leansYes} class:bar-no={!binaryData.leansYes}>
+				<!-- Yes/Leading option -->
+				<div class="binary-row" class:leading={binaryData.leansYes}>
+					<div class="binary-option">
+						<span class="binary-label" class:label-yes={binaryData.leansYes}
+							>{binaryData.yes.label}</span
+						>
+						<span
+							class="binary-percentage"
+							class:pct-yes={binaryData.leansYes}
+							class:pct-muted={!binaryData.leansYes}
+						>
+							{binaryData.yes.percentage.toFixed(0)}%
+						</span>
+					</div>
 					<div
-						class="bar-fill"
-						style="width: {binaryData.yes.percentage}%;"
-					></div>
+						class="probability-bar"
+						class:bar-yes={binaryData.leansYes}
+						class:bar-muted={!binaryData.leansYes}
+					>
+						<div class="bar-fill" style="width: {binaryData.yes.percentage}%;"></div>
+					</div>
+				</div>
+				<!-- No option -->
+				<div class="binary-row" class:leading={!binaryData.leansYes}>
+					<div class="binary-option">
+						<span class="binary-label" class:label-no={!binaryData.leansYes}
+							>{binaryData.no.label}</span
+						>
+						<span
+							class="binary-percentage"
+							class:pct-no={!binaryData.leansYes}
+							class:pct-muted={binaryData.leansYes}
+						>
+							{binaryData.no.percentage.toFixed(0)}%
+						</span>
+					</div>
+					<div
+						class="probability-bar"
+						class:bar-no={!binaryData.leansYes}
+						class:bar-muted={binaryData.leansYes}
+					>
+						<div class="bar-fill" style="width: {binaryData.no.percentage}%;"></div>
+					</div>
 				</div>
 			</div>
 		{:else if binaryData && isEffectivelyResolved}
@@ -191,22 +214,45 @@
 		<!-- Multi-market Display -->
 		{#if isMultiMarket && leadingOutcome && !isEffectivelyResolved}
 			<div class="multi-display">
-				<div class="multi-header">
-					<span class="leader-name">{leadingOutcome.label}</span>
-					<span class="leader-percentage">{leadingOutcome.percentage.toFixed(0)}%</span>
+				<!-- 1st Place -->
+				<div class="outcome-row first-place">
+					<div class="rank-badge rank-1">
+						<CupIcon size={10} />
+					</div>
+					<div class="outcome-info">
+						<div class="outcome-header">
+							<span class="outcome-name">{leadingOutcome.label}</span>
+							<span class="outcome-percentage first">{leadingOutcome.percentage.toFixed(0)}%</span>
+						</div>
+						<div class="probability-bar bar-first">
+							<div class="bar-fill" style="width: {leadingOutcome.percentage}%;"></div>
+						</div>
+					</div>
 				</div>
-				<div class="probability-bar bar-multi">
-					<div
-						class="bar-fill"
-						style="width: {leadingOutcome.percentage}%;"
-					></div>
-				</div>
-				<div class="multi-meta">
-					<span>{outcomeCount} outcomes</span>
-					{#if secondOutcome}
-						<span class="second-place">2nd: {secondOutcome.label} ({secondOutcome.percentage.toFixed(0)}%)</span>
-					{/if}
-				</div>
+
+				<!-- 2nd Place -->
+				{#if secondOutcome}
+					<div class="outcome-row second-place">
+						<div class="rank-badge rank-2">2</div>
+						<div class="outcome-info">
+							<div class="outcome-header">
+								<span class="outcome-name">{secondOutcome.label}</span>
+								<span class="outcome-percentage second">{secondOutcome.percentage.toFixed(0)}%</span
+								>
+							</div>
+							<div class="probability-bar bar-second">
+								<div class="bar-fill" style="width: {secondOutcome.percentage}%;"></div>
+							</div>
+						</div>
+					</div>
+				{/if}
+
+				<!-- More outcomes indicator -->
+				{#if outcomeCount > 2}
+					<div class="more-outcomes">
+						+{outcomeCount - 2} more outcome{outcomeCount - 2 === 1 ? '' : 's'}
+					</div>
+				{/if}
 			</div>
 		{:else if isMultiMarket && isEffectivelyResolved && leadingOutcome}
 			<div class="resolved-winner">
@@ -230,10 +276,7 @@
 						<span class="stat-label">Liq</span>
 					</div>
 				</div>
-				<button
-					class="bookmark-btn"
-					aria-label="Bookmark this event"
-				>
+				<button class="bookmark-btn" aria-label="Bookmark this event">
 					<BookmarkIcon size={18} />
 				</button>
 			</div>
@@ -251,6 +294,13 @@
 		padding: var(--spacing-4);
 		box-shadow: var(--shadow-sm);
 		height: 100%;
+		transition: all var(--transition-fast);
+	}
+
+	.event-card:hover {
+		border-color: var(--bg-4);
+		box-shadow: var(--shadow-md);
+		transform: translateY(-2px);
 	}
 
 	/* Resolved state */
@@ -386,10 +436,24 @@
 	.binary-display {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: var(--spacing-2);
 	}
 
-	.binary-header {
+	.binary-row {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.binary-row:not(.leading) {
+		opacity: 0.7;
+	}
+
+	.binary-row:not(.leading) .probability-bar {
+		height: 6px;
+	}
+
+	.binary-option {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -399,21 +463,41 @@
 	.binary-label {
 		font-size: 13px;
 		font-weight: 500;
-		color: var(--text-1);
+		color: var(--text-2);
 	}
 
-	.binary-percentage {
-		font-size: 20px;
-		font-weight: 800;
-		letter-spacing: -0.02em;
-	}
-
-	.binary-percentage.leans-yes {
+	.binary-label.label-yes {
+		font-weight: 600;
 		color: var(--success);
 	}
 
-	.binary-percentage.leans-no {
+	.binary-label.label-no {
+		font-weight: 600;
 		color: var(--danger);
+	}
+
+	.binary-percentage {
+		font-size: 15px;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	.binary-percentage.pct-yes {
+		color: var(--success);
+	}
+
+	.binary-percentage.pct-no {
+		color: var(--danger);
+	}
+
+	.binary-percentage.pct-muted {
+		color: var(--text-3);
+		font-size: 13px;
+		font-weight: 600;
+	}
+
+	.probability-bar.bar-muted .bar-fill {
+		background: var(--bg-4);
 	}
 
 	/* Probability Bar */
@@ -439,28 +523,39 @@
 		background-color: var(--danger);
 	}
 
-	.probability-bar.bar-multi .bar-fill {
-		background-color: var(--primary);
-	}
-
 	/* Multi-market Display */
 	.multi-display {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: var(--spacing-2);
 	}
 
-	.multi-header {
+	/* Outcome Row - shared between 1st and 2nd */
+	.outcome-row {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--spacing-2);
+	}
+
+	.outcome-info {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.outcome-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--spacing-2);
 	}
 
-	.leader-name {
+	.outcome-name {
 		font-size: 13px;
-		font-weight: 500;
-		color: var(--text-1);
+		font-weight: 600;
+		color: var(--text-0);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -468,28 +563,76 @@
 		min-width: 0;
 	}
 
-	.leader-percentage {
-		font-size: 20px;
-		font-weight: 800;
-		letter-spacing: -0.02em;
-		color: var(--primary);
+	.outcome-percentage {
+		font-size: 15px;
+		font-weight: 700;
+		letter-spacing: -0.01em;
 		white-space: nowrap;
 	}
 
-	.multi-meta {
+	.outcome-percentage.first {
+		color: #a68b2e;
+	}
+
+	.outcome-percentage.second {
+		color: var(--text-2);
+	}
+
+	/* Rank Badges */
+	.rank-badge {
+		flex-shrink: 0;
+		width: 18px;
+		height: 18px;
+		border-radius: var(--radius-sm);
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		font-size: 12px;
-		color: var(--text-3);
+		justify-content: center;
+		font-size: 10px;
+		font-weight: 700;
+		margin-top: 1px;
 	}
 
-	.second-place {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		max-width: 60%;
-		text-align: right;
+	.rank-1 {
+		background: linear-gradient(135deg, #e6c76a 0%, #d4af37 100%);
+		color: #5c4a15;
+		box-shadow: 0 1px 2px rgba(212, 175, 55, 0.3);
+	}
+
+	.rank-2 {
+		background: linear-gradient(135deg, var(--bg-3) 0%, var(--bg-4) 100%);
+		color: var(--text-2);
+	}
+
+	/* Progress bars for 1st and 2nd */
+	.probability-bar.bar-first .bar-fill {
+		background: linear-gradient(90deg, #e6c76a 0%, #d4af37 100%);
+	}
+
+	.probability-bar.bar-second {
+		height: 6px;
+	}
+
+	.probability-bar.bar-second .bar-fill {
+		background: var(--bg-4);
+	}
+
+	/* Second place styling */
+	.second-place .outcome-name {
+		font-weight: 500;
+		color: var(--text-2);
+		font-size: 12px;
+	}
+
+	.second-place .probability-bar {
+		height: 6px;
+	}
+
+	/* More outcomes indicator */
+	.more-outcomes {
+		font-size: 11px;
+		color: var(--text-3);
+		padding-left: 26px;
+		font-weight: 500;
 	}
 
 	/* Resolved winner */

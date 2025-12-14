@@ -17,17 +17,11 @@
 	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
 	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
+	import { formatNumber } from '$lib/utils/format';
 
 	let { data }: { data: PageData } = $props();
 
 	const event = $derived(data.event);
-
-	function formatNumber(num: number | null | undefined): string {
-		if (num === null || num === undefined) return '$0';
-		if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
-		if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
-		return `$${num.toFixed(0)}`;
-	}
 
 	function formatDate(dateStr: string | null | undefined): string {
 		if (!dateStr) return '';
@@ -470,6 +464,7 @@
 												<img
 													src={comment.profile.profileImage}
 													alt={comment.profile?.name || comment.profile?.pseudonym || 'User avatar'}
+													loading="lazy"
 												/>
 											{/if}
 										</div>
@@ -554,7 +549,12 @@
 				{:else}
 					<div class="sidebar-header">
 						{#if event.image}
-							<img src={event.image} alt={event.title || 'Event icon'} class="sidebar-icon" />
+							<img
+								src={event.image}
+								alt={event.title || 'Event icon'}
+								class="sidebar-icon"
+								loading="lazy"
+							/>
 						{/if}
 						<span class="sidebar-title">
 							{isMultiMarket && selectedMarket

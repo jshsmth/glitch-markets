@@ -38,27 +38,27 @@
 	--text-4: #a8a29e; /* Disabled states - Stone 400 */
 
 	/* ============================================
-     PRIMARY BRAND COLOR - Muted Teal
+     PRIMARY BRAND COLOR - Charcoal Gray
      ============================================ */
 
-	--primary-50: #f0fdfa;
-	--primary-100: #ccfbf1;
-	--primary-200: #99f6e4;
-	--primary-300: #5eead4;
-	--primary-400: #2dd4bf;
-	--primary-500: #14b8a6; /* Main brand color */
-	--primary-600: #0d9488;
-	--primary-700: #0f766e;
-	--primary-800: #115e59;
-	--primary-900: #134e4a;
+	--primary-50: #f9fafb;
+	--primary-100: #f3f4f6;
+	--primary-200: #e5e7eb; /* Light gray accent */
+	--primary-300: #d1d5db;
+	--primary-400: #9ca3af;
+	--primary-500: #6b7280; /* Medium gray - progress bars */
+	--primary-600: #4b5563;
+	--primary-700: #374151;
+	--primary-800: #1f2937; /* Charcoal - primary action */
+	--primary-900: #111827;
 
 	/* Convenient aliases */
-	--primary: var(--primary-500);
-	--primary-hover: var(--primary-600);
-	--primary-active: var(--primary-700);
+	--primary: var(--primary-800); /* Charcoal as primary */
+	--primary-hover: var(--primary-900);
+	--primary-active: var(--primary-900);
 
 	/* RGB for transparency effects */
-	--primary-rgb: 20, 184, 166;
+	--primary-rgb: 31, 41, 55;
 
 	/* ============================================
      TRADING INDICATORS - Improved vibrance and backgrounds

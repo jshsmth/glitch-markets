@@ -191,7 +191,12 @@
 					<div class="col-trader">
 						<div class="trader-info">
 							{#if entry.profileImage}
-								<img src={entry.profileImage} alt={entry.userName} class="trader-avatar" />
+								<img
+									src={entry.profileImage}
+									alt={entry.userName}
+									class="trader-avatar"
+									loading="lazy"
+								/>
 							{:else}
 								<div class="trader-avatar-placeholder">
 									{entry.userName.charAt(0).toUpperCase()}
@@ -239,7 +244,12 @@
 					<div class="col-builder">
 						<div class="builder-info">
 							{#if entry.builderLogo}
-								<img src={entry.builderLogo} alt={entry.builder} class="builder-logo" />
+								<img
+									src={entry.builderLogo}
+									alt={entry.builder}
+									class="builder-logo"
+									loading="lazy"
+								/>
 							{:else}
 								<div class="builder-logo-placeholder">{entry.builder.charAt(0).toUpperCase()}</div>
 							{/if}

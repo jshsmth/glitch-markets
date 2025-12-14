@@ -38,27 +38,27 @@
 	--text-4: #57534e; /* Disabled states - Stone 600 */
 
 	/* ============================================
-     PRIMARY BRAND COLOR - Muted Teal (adjusted for dark)
+     PRIMARY BRAND COLOR - Charcoal Gray (adjusted for dark)
      ============================================ */
 
-	--primary-50: #134e4a;
-	--primary-100: #115e59;
-	--primary-200: #0f766e;
-	--primary-300: #0d9488;
-	--primary-400: #14b8a6;
-	--primary-500: #2dd4bf; /* Brighter teal for dark mode */
-	--primary-600: #5eead4;
-	--primary-700: #99f6e4;
-	--primary-800: #ccfbf1;
-	--primary-900: #f0fdfa;
+	--primary-50: #111827;
+	--primary-100: #1f2937;
+	--primary-200: #374151;
+	--primary-300: #4b5563;
+	--primary-400: #6b7280;
+	--primary-500: #9ca3af; /* Medium gray for dark mode */
+	--primary-600: #d1d5db;
+	--primary-700: #e5e7eb;
+	--primary-800: #f3f4f6;
+	--primary-900: #f9fafb;
 
 	/* Convenient aliases */
-	--primary: var(--primary-500);
-	--primary-hover: var(--primary-600);
-	--primary-active: var(--primary-700);
+	--primary: var(--primary-600); /* Light gray as primary in dark mode */
+	--primary-hover: var(--primary-700);
+	--primary-active: var(--primary-800);
 
 	/* RGB for transparency effects */
-	--primary-rgb: 45, 212, 191;
+	--primary-rgb: 209, 213, 219;
 
 	/* ============================================
      TRADING INDICATORS - Brighter for dark mode
@@ -85,7 +85,7 @@
 
 	/* Button colors */
 	--button-primary-bg: var(--primary);
-	--button-primary-text: #0c0a09; /* Dark text on teal */
+	--button-primary-text: #0c0a09; /* Dark text on light gray */
 	--button-primary-hover-bg: var(--primary-hover);
 
 	/* Error states */
@@ -137,20 +137,20 @@
 		--text-3: #78716c;
 		--text-4: #57534e;
 
-		/* Primary Brand Color - Muted Teal (adjusted for dark) */
-		--primary-50: #134e4a;
-		--primary-100: #115e59;
-		--primary-200: #0f766e;
-		--primary-300: #0d9488;
-		--primary-400: #14b8a6;
-		--primary-500: #2dd4bf;
-		--primary-600: #5eead4;
-		--primary-700: #99f6e4;
-		--primary-800: #ccfbf1;
-		--primary-900: #f0fdfa;
+		/* Primary Brand Color - Charcoal Gray (adjusted for dark) */
+		--primary-50: #111827;
+		--primary-100: #1f2937;
+		--primary-200: #374151;
+		--primary-300: #4b5563;
+		--primary-400: #6b7280;
+		--primary-500: #9ca3af;
+		--primary-600: #d1d5db;
+		--primary-700: #e5e7eb;
+		--primary-800: #f3f4f6;
+		--primary-900: #f9fafb;
 
 		/* RGB for transparency */
-		--primary-rgb: 45, 212, 191;
+		--primary-rgb: 209, 213, 219;
 
 		/* Trading Indicators - Brighter for dark mode */
 		--success: #34d399;

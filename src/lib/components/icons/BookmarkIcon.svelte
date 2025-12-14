@@ -6,7 +6,12 @@
 		class?: string;
 	}
 
-	let { size = 24, color = 'currentColor', filled = false, class: className = '' }: Props = $props();
+	let {
+		size = 24,
+		color = 'currentColor',
+		filled = false,
+		class: className = ''
+	}: Props = $props();
 </script>
 
 <svg

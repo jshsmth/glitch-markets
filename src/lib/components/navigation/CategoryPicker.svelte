@@ -10,7 +10,9 @@
 
 	let { open = false, onClose }: Props = $props();
 
-	const featuredCategories = $derived(categories.filter((c) => c.href === '/' || c.href === '/new'));
+	const featuredCategories = $derived(
+		categories.filter((c) => c.href === '/' || c.href === '/new')
+	);
 	const regularCategories = $derived(categories.filter((c) => c.href !== '/' && c.href !== '/new'));
 
 	function handleCategoryClick(href: string) {

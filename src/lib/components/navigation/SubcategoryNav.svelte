@@ -26,53 +26,7 @@
 
 	let isMobileFilterOpen = $state(false);
 	let isDropdownOpen = $state(false);
-	let scrollContainer: HTMLDivElement | undefined = $state();
-	let showLeftArrow = $state(false);
-	let showRightArrow = $state(false);
 	let dropdownRef: HTMLDivElement | undefined = $state();
-
-	function updateArrowVisibility() {
-		if (!scrollContainer) return;
-
-		const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
-		showLeftArrow = scrollLeft > 0;
-		showRightArrow = scrollLeft < scrollWidth - clientWidth - 1;
-	}
-
-	function scrollLeft() {
-		if (!scrollContainer) return;
-		scrollContainer.scrollBy({ left: -200, behavior: 'smooth' });
-	}
-
-	function scrollRight() {
-		if (!scrollContainer) return;
-		scrollContainer.scrollBy({ left: 200, behavior: 'smooth' });
-	}
-
-	$effect(() => {
-		if (scrollContainer) {
-			const rafId = requestAnimationFrame(() => {
-				updateArrowVisibility();
-			});
-
-			scrollContainer.addEventListener('scroll', updateArrowVisibility);
-			window.addEventListener('resize', updateArrowVisibility);
-
-			return () => {
-				cancelAnimationFrame(rafId);
-				scrollContainer?.removeEventListener('scroll', updateArrowVisibility);
-				window.removeEventListener('resize', updateArrowVisibility);
-			};
-		}
-	});
-
-	$effect(() => {
-		if (scrollContainer && subcategories.length > 0) {
-			requestAnimationFrame(() => {
-				updateArrowVisibility();
-			});
-		}
-	});
 
 	const statusOptions = [
 		{ value: 'active', label: 'Active' },
