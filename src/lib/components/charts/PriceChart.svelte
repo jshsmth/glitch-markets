@@ -33,6 +33,24 @@
 			: []
 	);
 
+	const yDomainMax = $derived.by(() => {
+		let maxValue = 0;
+		for (const s of series) {
+			for (const point of s.data) {
+				const value = point.p * 100;
+				if (value > maxValue) maxValue = value;
+			}
+		}
+
+		if (maxValue === 0) return 100;
+
+		const padding = maxValue * 0.15;
+		const maxWithPadding = maxValue + padding;
+
+		const roundTo = maxWithPadding > 50 ? 10 : 5;
+		return Math.ceil(maxWithPadding / roundTo) * roundTo;
+	});
+
 	const xKey = 'x';
 	const yKey = 'y';
 
@@ -72,7 +90,7 @@
 			padding={{ top: 8, right: 50, bottom: 24, left: 8 }}
 			x={xKey}
 			y={yKey}
-			yDomain={[0, 100]}
+			yDomain={[0, yDomainMax]}
 			data={chartData}
 		>
 			<Svg>
