@@ -165,7 +165,7 @@
 
 			const data: SupportedAssetsResponse = await response.json();
 			const evmChainIds = ['1', '10', '137', '42161', '56', '8453', '43114'];
-			supportedAssets = (data.supportedAssets || []).filter((asset) => {
+			const filteredAssets = (data.supportedAssets || []).filter((asset) => {
 				const isUSDC = asset.token.symbol.toUpperCase() === 'USDC';
 				const isEVM =
 					evmChainIds.includes(asset.chainId) ||
@@ -175,6 +175,15 @@
 						!asset.chainId.includes('btc'));
 				return isUSDC && isEVM;
 			});
+
+			// Deduplicate by chainId, keeping the first USDC variant per chain
+			const chainMap = new Map<string, SupportedAsset>();
+			for (const asset of filteredAssets) {
+				if (!chainMap.has(asset.chainId)) {
+					chainMap.set(asset.chainId, asset);
+				}
+			}
+			supportedAssets = Array.from(chainMap.values());
 			assetsCache = { data: supportedAssets, timestamp: Date.now() };
 
 			if (supportedAssets.length > 0 && !selectedAsset) {
@@ -296,27 +305,17 @@
 			<div class="selectors-row">
 				<div class="selector-group">
 					<span class="selector-label">Supported token</span>
-					<div class="selector-button skeleton">
-						<div class="skeleton-circle"></div>
-						<div class="skeleton-text"></div>
-					</div>
+					<div class="skeleton-selector"></div>
 				</div>
 				<div class="selector-group">
 					<span class="selector-label">Supported chain</span>
-					<div class="selector-button skeleton">
-						<div class="skeleton-circle"></div>
-						<div class="skeleton-text"></div>
-					</div>
+					<div class="skeleton-selector"></div>
 				</div>
 			</div>
 			<div class="qr-section">
-				<div class="qr-container skeleton-qr"></div>
+				<div class="skeleton-qr"></div>
 			</div>
 			<div class="address-section">
-				<div class="address-header">
-					<div class="skeleton-text-sm"></div>
-					<div class="skeleton-text-xs"></div>
-				</div>
 				<div class="skeleton-address"></div>
 				<div class="skeleton-button"></div>
 			</div>
@@ -405,7 +404,7 @@
 						</div>
 					</div>
 				{:else}
-					<div class="qr-container skeleton-qr"></div>
+					<div class="skeleton-qr"></div>
 				{/if}
 			</div>
 
@@ -529,87 +528,57 @@
 		background: var(--bg-2);
 	}
 
-	.selector-button.skeleton {
-		pointer-events: none;
-	}
-
-	.skeleton-circle {
-		width: 20px;
-		height: 20px;
-		border-radius: 50%;
-		background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
+	.skeleton-selector {
+		width: 100%;
+		height: 48px;
+		border-radius: 12px;
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-	}
-
-	.skeleton-text {
-		width: 60px;
-		height: 14px;
-		border-radius: 4px;
-		background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
+		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	.skeleton-qr {
 		width: 180px;
 		height: 180px;
-		background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
+		border-radius: var(--radius-xl);
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-	}
-
-	.skeleton-text-sm {
-		width: 120px;
-		height: 16px;
-		border-radius: 4px;
-		background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-	}
-
-	.skeleton-text-xs {
-		width: 70px;
-		height: 14px;
-		border-radius: 4px;
-		background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
+		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	.skeleton-address {
 		width: 100%;
 		height: 52px;
 		border-radius: 12px;
-		background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
+		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	.skeleton-button {
 		width: 100%;
 		height: 48px;
 		border-radius: 12px;
-		background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
+		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	.skeleton-banner {
 		width: 100%;
 		height: 48px;
 		border-radius: 12px;
-		background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
+		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
+		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	@keyframes shimmer {
 		0% {
-			background-position: 200% 0;
+			background-position: 100% 0;
 		}
 		100% {
-			background-position: -200% 0;
+			background-position: -100% 0;
 		}
 	}
 
@@ -878,10 +847,7 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.skeleton-circle,
-		.skeleton-text,
-		.skeleton-text-sm,
-		.skeleton-text-xs,
+		.skeleton-selector,
 		.skeleton-qr,
 		.skeleton-address,
 		.skeleton-button,
