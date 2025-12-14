@@ -10,7 +10,7 @@ export default defineConfig({
 		SvelteKitPWA({
 			registerType: 'prompt',
 			srcDir: './src',
-			mode: 'development',
+			mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
 			strategies: 'generateSW',
 			scope: '/',
 			base: '/',
