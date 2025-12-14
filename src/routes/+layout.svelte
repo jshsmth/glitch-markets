@@ -34,8 +34,8 @@
 	import TopHeader from '$lib/components/layout/TopHeader.svelte';
 	import BottomNav from '$lib/components/layout/BottomNav.svelte';
 	import SignInModal from '$lib/components/auth/SignInModal.svelte';
-	import DepositModal from '$lib/components/wallet/DepositModal.svelte';
-	import WithdrawModal from '$lib/components/wallet/WithdrawModal.svelte';
+	import LazyDepositModal from '$lib/components/modals/LazyDepositModal.svelte';
+	import LazyWithdrawModal from '$lib/components/modals/LazyWithdrawModal.svelte';
 	import ReloadPrompt from '$lib/components/pwa/ReloadPrompt.svelte';
 	// @ts-expect-error - virtual module from vite-plugin-pwa
 	import { pwaInfo } from 'virtual:pwa-info';
@@ -151,8 +151,8 @@
 		initialMode={signInModalState.initialMode}
 		onClose={closeSignInModal}
 	/>
-	<DepositModal isOpen={depositModalState.isOpen} onClose={closeDepositModal} />
-	<WithdrawModal isOpen={withdrawModalState.isOpen} onClose={closeWithdrawModal} />
+	<LazyDepositModal isOpen={depositModalState.isOpen} onClose={closeDepositModal} />
+	<LazyWithdrawModal isOpen={withdrawModalState.isOpen} onClose={closeWithdrawModal} />
 
 	<!-- PWA update prompt -->
 	<ReloadPrompt />

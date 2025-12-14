@@ -52,7 +52,6 @@ export async function GET({ params, url }: RequestEvent) {
 
 		const filters: UserCommentFilters = {};
 
-		// Validate and parse numeric parameters
 		if (limit !== null) {
 			const parsedLimit = parseInt(limit, 10);
 			if (isNaN(parsedLimit) || parsedLimit < 0) {
@@ -77,12 +76,10 @@ export async function GET({ params, url }: RequestEvent) {
 			filters.offset = parsedOffset;
 		}
 
-		// Validate string parameters
 		if (order !== null) {
 			filters.order = order;
 		}
 
-		// Validate boolean parameters
 		if (ascending !== null) {
 			if (ascending !== 'true' && ascending !== 'false') {
 				logger.error('Invalid ascending parameter', undefined, { ascending });

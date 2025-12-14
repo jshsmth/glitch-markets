@@ -59,11 +59,7 @@
 			: false
 	);
 	const error = $derived(
-		browser
-			? selectedType === 'traders'
-				? (tradersQuery.error as Error | null)
-				: (buildersQuery.error as Error | null)
-			: null
+		browser ? (selectedType === 'traders' ? tradersQuery.error : buildersQuery.error) : null
 	);
 	const tradersData = $derived(browser ? tradersQuery.data : null);
 	const buildersData = $derived(browser ? buildersQuery.data : null);

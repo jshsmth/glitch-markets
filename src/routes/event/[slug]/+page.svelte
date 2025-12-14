@@ -290,15 +290,9 @@
 			await navigator.clipboard.writeText($page.url.href);
 			copyState = 'copied';
 			setTimeout(() => (copyState = 'idle'), 2000);
-		} catch {
-			const input = document.createElement('input');
-			input.value = $page.url.href;
-			document.body.appendChild(input);
-			input.select();
-			document.execCommand('copy');
-			document.body.removeChild(input);
-			copyState = 'copied';
-			setTimeout(() => (copyState = 'idle'), 2000);
+		} catch (error) {
+			console.error('Failed to copy link:', error);
+			copyState = 'idle';
 		}
 	}
 </script>

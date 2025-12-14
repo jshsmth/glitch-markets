@@ -9,7 +9,6 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	try {
-		// Get the authenticated user from Supabase Auth (secure server-side verification)
 		const {
 			data: { user: authUser },
 			error: authError
@@ -21,7 +20,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 		const userId = authUser.id;
 
-		// Fetch user from Supabase
 		const { data: dbUser, error: userError } = await locals.supabase
 			.from('users')
 			.select('id, email, server_wallet_address')
@@ -33,7 +31,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 			return json({ error: 'User not found' }, { status: 404 });
 		}
 
-		// Fetch polymarket credentials if they exist
 		const { data: credentials } = await locals.supabase
 			.from('polymarket_credentials')
 			.select('proxy_wallet_address')

@@ -697,11 +697,9 @@ export function validateTeamQueryParams(params: {
 	name?: string[];
 	abbreviation?: string[];
 } {
-	// Validate required params
 	const limit = validateNonNegativeNumber(params.limit, 'limit');
 	const offset = validateNonNegativeNumber(params.offset, 'offset');
 
-	// Build validated params object
 	const validated: {
 		limit: number;
 		offset: number;
@@ -715,17 +713,14 @@ export function validateTeamQueryParams(params: {
 		offset
 	};
 
-	// Validate optional string param
 	if (params.order !== undefined) {
 		validated.order = validateNonEmptyString(params.order, 'order');
 	}
 
-	// Validate optional boolean param
 	if (params.ascending !== undefined) {
 		validated.ascending = validateBoolean(params.ascending, 'ascending');
 	}
 
-	// Validate optional array params
 	if (params.league !== undefined) {
 		if (!Array.isArray(params.league)) {
 			throw new ValidationError('league must be an array', { league: params.league });

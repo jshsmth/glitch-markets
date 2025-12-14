@@ -30,7 +30,6 @@ export async function POST({ request }: RequestEvent) {
 			});
 		}
 
-		// Extract address
 		if (!body || typeof body !== 'object') {
 			logger.error('Request body is not an object', undefined, { body });
 			return json(formatErrorResponse(new ValidationError('Request body must be a JSON object')), {

@@ -69,7 +69,6 @@ async function registerWithPolymarketAsync(userId: string): Promise<void> {
 }
 
 export const POST: RequestHandler = async ({ locals }) => {
-	// Get the authenticated user from Supabase Auth (secure server-side verification)
 	const {
 		data: { user },
 		error: authError
@@ -83,7 +82,6 @@ export const POST: RequestHandler = async ({ locals }) => {
 	const email = user.email || '';
 
 	try {
-		// Check if user already exists (use admin client to bypass RLS)
 		const { data: existingUser } = await supabaseAdmin
 			.from('users')
 			.select('id, server_wallet_address')
@@ -91,9 +89,7 @@ export const POST: RequestHandler = async ({ locals }) => {
 			.single();
 
 		if (existingUser) {
-			// Check if user has a server wallet
 			if (!existingUser.server_wallet_address) {
-				// Create server wallet for existing user who doesn't have one
 				logger.info('Creating server wallet for existing user', { userId });
 				let serverWallet;
 				try {
@@ -111,7 +107,6 @@ export const POST: RequestHandler = async ({ locals }) => {
 					throw walletError;
 				}
 
-				// Update user with server wallet info (use admin client to bypass RLS)
 				const { error: updateError } = await supabaseAdmin
 					.from('users')
 					.update({
