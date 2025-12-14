@@ -4,7 +4,7 @@
 	import WaterLiquidIcon from '$lib/components/icons/WaterLiquidIcon.svelte';
 	import BookmarkIcon from '$lib/components/icons/BookmarkIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
-	import ClockIcon from '$lib/components/icons/ClockIcon.svelte';
+	import FireIcon from '$lib/components/icons/FireIcon.svelte';
 	import CupIcon from '$lib/components/icons/CupIcon.svelte';
 	import { formatNumber } from '$lib/utils/format';
 
@@ -103,24 +103,47 @@
 		return false;
 	});
 
-	// Closing soon detection (within 7 days)
-	const closingSoon = $derived.by((): { days: number } | null => {
-		if (!event.endDate || isEffectivelyResolved) return null;
+	const closingSoon = $derived.by(() => {
+		if (!event.endDate || isEffectivelyResolved) return false;
 		const endDate = new Date(event.endDate);
 		const now = new Date();
 		const diffMs = endDate.getTime() - now.getTime();
 		const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-		if (diffDays > 0 && diffDays <= 7) {
-			return { days: diffDays };
-		}
-		return null;
+		return diffDays > 0 && diffDays <= 7;
 	});
 
-	let isBookmarked = $state(false);
+	const BOOKMARKS_KEY = 'glitch-bookmarks';
+
+	function getBookmarkedEvents(): Set<string> {
+		if (typeof window === 'undefined') return new Set();
+		try {
+			const stored = localStorage.getItem(BOOKMARKS_KEY);
+			return stored ? new Set(JSON.parse(stored)) : new Set();
+		} catch {
+			return new Set();
+		}
+	}
+
+	function saveBookmarkedEvents(bookmarks: Set<string>): void {
+		if (typeof window === 'undefined') return;
+		try {
+			localStorage.setItem(BOOKMARKS_KEY, JSON.stringify([...bookmarks]));
+		} catch (error) {
+			console.error('Failed to save bookmarks:', error);
+		}
+	}
+
+	let isBookmarked = $state(getBookmarkedEvents().has(event.id));
 
 	function toggleBookmark() {
+		const bookmarks = getBookmarkedEvents();
+		if (isBookmarked) {
+			bookmarks.delete(event.id);
+		} else {
+			bookmarks.add(event.id);
+		}
+		saveBookmarkedEvents(bookmarks);
 		isBookmarked = !isBookmarked;
-		// TODO: Persist to backend/localStorage
 	}
 </script>
 
@@ -136,9 +159,9 @@
 			<span>Resolved</span>
 		</div>
 	{:else if closingSoon}
-		<div class="corner-badge closing-badge">
-			<ClockIcon size={10} />
-			<span>{closingSoon.days}d left</span>
+		<div class="closing-indicator">
+			<FireIcon size={12} />
+			<span>Ending soon</span>
 		</div>
 	{/if}
 
@@ -348,10 +371,16 @@
 		border: 1px solid var(--success-light);
 	}
 
-	.closing-badge {
-		background: var(--warning-bg);
-		color: var(--warning-dark);
-		border: 1px solid var(--warning-light);
+	.closing-indicator {
+		position: absolute;
+		top: var(--spacing-3);
+		right: var(--spacing-3);
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--danger);
 	}
 
 	/* Compact variant */
@@ -577,6 +606,11 @@
 		min-width: 0;
 	}
 
+	.first-place .outcome-name {
+		font-size: 14px;
+		font-weight: 700;
+	}
+
 	.outcome-percentage {
 		font-size: 15px;
 		font-weight: 700;
@@ -585,7 +619,8 @@
 	}
 
 	.outcome-percentage.first {
-		color: #a68b2e;
+		color: var(--gold-dark);
+		font-size: 16px;
 	}
 
 	.outcome-percentage.second {
@@ -607,9 +642,9 @@
 	}
 
 	.rank-1 {
-		background: linear-gradient(135deg, #e6c76a 0%, #d4af37 100%);
+		background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%);
 		color: #5c4a15;
-		box-shadow: 0 1px 2px rgba(212, 175, 55, 0.3);
+		box-shadow: 0 1px 2px rgba(var(--gold-rgb), 0.3);
 	}
 
 	.rank-2 {
@@ -619,7 +654,7 @@
 
 	/* Progress bars for 1st and 2nd */
 	.probability-bar.bar-first .bar-fill {
-		background: linear-gradient(90deg, #e6c76a 0%, #d4af37 100%);
+		background: linear-gradient(90deg, var(--gold-light) 0%, var(--gold-base) 100%);
 	}
 
 	.probability-bar.bar-second {
@@ -729,16 +764,16 @@
 
 	.bookmark-btn:hover {
 		background: var(--bg-2);
-		color: #d4af37;
+		color: var(--gold-base);
 	}
 
 	.bookmark-btn.bookmarked {
-		color: #d4af37;
+		color: var(--gold-base);
 	}
 
 	.bookmark-btn.bookmarked:hover {
-		background: rgba(212, 175, 55, 0.1);
-		color: #e6c76a;
+		background: rgba(var(--gold-rgb), 0.1);
+		color: var(--gold-light);
 	}
 
 	.bookmark-btn:active {

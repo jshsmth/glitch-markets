@@ -23,7 +23,7 @@
 
 	let { size = 36, hideChevron = false }: Props = $props();
 
-	const avatarGradient = 'linear-gradient(135deg, #e6c76a 0%, #d4af37 100%)';
+	const avatarGradient = 'linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%)';
 	let showDropdown = $state(false);
 	let closeTimeout: ReturnType<typeof setTimeout> | null = null;
 	let windowWidth = $state(1024);
@@ -43,7 +43,6 @@
 			window.addEventListener('resize', handleResize);
 			return () => {
 				window.removeEventListener('resize', handleResize);
-				// Clean up any pending timeouts on unmount
 				if (closeTimeout) {
 					clearTimeout(closeTimeout);
 					closeTimeout = null;
@@ -55,7 +54,6 @@
 	$effect(() => {
 		void authState.profileVersion;
 
-		// Cancel any pending profile fetch
 		if (profileAbortController) {
 			profileAbortController.abort();
 		}
@@ -74,7 +72,6 @@
 				})
 				.then((data) => {
 					serverWalletAddress = data.serverWalletAddress || null;
-					// Set proxy wallet address (only if user has registered with Polymarket)
 					proxyWalletAddress = data.proxyWalletAddress || null;
 				})
 				.catch((err) => {
@@ -91,7 +88,6 @@
 		}
 
 		return () => {
-			// Cleanup: abort fetch on effect cleanup
 			if (profileAbortController) {
 				profileAbortController.abort();
 				profileAbortController = null;

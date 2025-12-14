@@ -15,7 +15,6 @@ export function closeSignInModal() {
 	signInModalState.isOpen = false;
 }
 
-// Deposit Modal State
 export const depositModalState = $state({
 	isOpen: false
 });
@@ -28,7 +27,6 @@ export function closeDepositModal() {
 	depositModalState.isOpen = false;
 }
 
-// Withdraw Modal State
 export const withdrawModalState = $state({
 	isOpen: false
 });

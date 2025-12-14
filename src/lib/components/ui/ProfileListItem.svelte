@@ -8,7 +8,7 @@
 
 	let { profile, onclick }: Props = $props();
 
-	const avatarGradient = 'linear-gradient(135deg, #e6c76a 0%, #d4af37 100%)';
+	const avatarGradient = 'linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%)';
 
 	const displayName = $derived(
 		profile.name || profile.pseudonym || profile.id?.slice(0, 8) || 'Unknown User'

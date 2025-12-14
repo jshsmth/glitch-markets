@@ -17,6 +17,7 @@
 	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
 	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
+	import CupIcon from '$lib/components/icons/CupIcon.svelte';
 	import { formatNumber } from '$lib/utils/format';
 
 	let { data }: { data: PageData } = $props();
@@ -348,8 +349,14 @@
 							<button
 								class="outcome-row"
 								class:selected={selectedMarketIndex === index}
+								class:leading={index === 0}
 								onclick={() => selectMarket(index)}
 							>
+								{#if index === 0}
+									<div class="rank-badge">
+										<CupIcon size={10} />
+									</div>
+								{/if}
 								<span class="outcome-name">{getMarketDisplayTitle(market)}</span>
 								<span class="outcome-price">
 									{#if marketData?.[0]?.isResolved}
@@ -367,8 +374,14 @@
 							<button
 								class="outcome-row"
 								class:selected={selectedOutcome === index}
+								class:leading={index === 0}
 								onclick={() => (selectedOutcome = index)}
 							>
+								{#if index === 0}
+									<div class="rank-badge">
+										<CupIcon size={10} />
+									</div>
+								{/if}
 								<span class="outcome-name">{outcome.label}</span>
 								<span class="outcome-price">
 									{#if outcome.isResolved}
@@ -638,6 +651,8 @@
 		border-radius: 10px;
 		object-fit: cover;
 		flex-shrink: 0;
+		border: 1.5px solid var(--bg-3);
+		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
 	}
 
 	.header-text {
@@ -674,21 +689,23 @@
 		align-items: center;
 		justify-content: center;
 		background: var(--bg-2);
-		border: 1px solid var(--bg-4);
+		border: 1px solid var(--bg-3);
 		border-radius: 8px;
 		color: var(--text-2);
 		cursor: pointer;
 		flex-shrink: 0;
+		transition: all var(--transition-fast);
 	}
 
 	.share-btn:hover {
 		color: var(--primary);
-		border-color: var(--primary);
+		border-color: var(--bg-4);
 	}
 
 	.share-btn.copied {
-		color: var(--success);
-		border-color: var(--success);
+		color: var(--gold-dark);
+		border-color: var(--gold-base);
+		background: rgba(var(--gold-rgb), 0.1);
 	}
 
 	.tags-row {
@@ -723,7 +740,7 @@
 	/* Cards */
 	.card {
 		background: var(--bg-1);
-		border: 1px solid var(--bg-4);
+		border: 1px solid var(--bg-3);
 		border-radius: 12px;
 		padding: 16px;
 	}
@@ -766,7 +783,7 @@
 
 	.quick-trade {
 		background: var(--bg-1);
-		border: 1px solid var(--bg-4);
+		border: 1px solid var(--bg-3);
 		border-radius: 12px;
 		padding: 14px;
 	}
@@ -794,7 +811,7 @@
 		align-items: center;
 		padding: 12px;
 		background: var(--bg-2);
-		border: 2px solid var(--bg-4);
+		border: 2px solid var(--bg-3);
 		border-radius: 10px;
 		cursor: pointer;
 		transition: all 0.15s;
@@ -858,8 +875,8 @@
 
 	.outcome-row {
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
+		gap: 10px;
 		padding: 12px;
 		background: var(--bg-2);
 		border: 2px solid transparent;
@@ -867,6 +884,7 @@
 		cursor: pointer;
 		width: 100%;
 		text-align: left;
+		transition: all var(--transition-fast);
 	}
 
 	.outcome-row:hover {
@@ -878,6 +896,35 @@
 		background: var(--primary-hover-bg);
 	}
 
+	.outcome-row.leading {
+		background: rgba(var(--gold-rgb), 0.08);
+		border-color: transparent;
+	}
+
+	.outcome-row.leading:hover {
+		background: rgba(var(--gold-rgb), 0.12);
+	}
+
+	.outcome-row.leading.selected {
+		background: rgba(var(--gold-rgb), 0.15);
+		border-color: var(--gold-base);
+	}
+
+	.rank-badge {
+		flex-shrink: 0;
+		width: 18px;
+		height: 18px;
+		border-radius: var(--radius-sm);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 10px;
+		font-weight: 700;
+		background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%);
+		color: #5c4a15;
+		box-shadow: 0 1px 2px rgba(var(--gold-rgb), 0.3);
+	}
+
 	.outcome-name {
 		font-size: 14px;
 		font-weight: 500;
@@ -887,7 +934,6 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		margin-right: 12px;
 	}
 
 	.outcome-price {
@@ -895,6 +941,11 @@
 		font-weight: 700;
 		color: var(--text-0);
 		flex-shrink: 0;
+		margin-left: auto;
+	}
+
+	.outcome-row.leading .outcome-price {
+		color: var(--gold-dark);
 	}
 
 	.resolved-tag {
@@ -998,8 +1049,8 @@
 	}
 
 	.tab.active {
-		color: var(--primary);
-		border-bottom-color: var(--primary);
+		color: var(--gold-dark);
+		border-bottom-color: var(--gold-base);
 	}
 
 	.tab-content {
@@ -1074,8 +1125,8 @@
 
 	/* Holders */
 	.holders-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
+		display: flex;
+		flex-direction: column;
 		gap: 16px;
 	}
 
@@ -1103,20 +1154,37 @@
 	.holder {
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		padding: 8px;
+		gap: 8px;
+		padding: 10px;
 		background: var(--bg-2);
 		border-radius: 8px;
-		font-size: 12px;
+		font-size: 13px;
 	}
 
 	.holder-rank {
 		color: var(--text-3);
+		font-size: 12px;
+		flex-shrink: 0;
+		min-width: 24px;
+	}
+
+	.holder:first-child .holder-rank {
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		width: 20px;
+		height: 20px;
+		background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%);
+		color: #5c4a15;
+		border-radius: 50%;
+		font-size: 10px;
+		font-weight: 700;
+		box-shadow: 0 1px 2px rgba(var(--gold-rgb), 0.3);
 	}
 
 	.holder-name {
 		flex: 1;
+		min-width: 0;
 		color: var(--text-0);
 		white-space: nowrap;
 		overflow: hidden;
@@ -1125,6 +1193,7 @@
 
 	.holder-amount {
 		font-weight: 600;
+		flex-shrink: 0;
 	}
 
 	.holder-amount.yes {
@@ -1152,7 +1221,7 @@
 
 	.sidebar-card {
 		background: var(--bg-1);
-		border: 1px solid var(--bg-4);
+		border: 1px solid var(--bg-3);
 		border-radius: 16px;
 		padding: 20px;
 	}
@@ -1191,6 +1260,8 @@
 		height: 32px;
 		border-radius: 8px;
 		object-fit: cover;
+		border: 1.5px solid var(--bg-3);
+		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
 	}
 
 	.sidebar-title {
@@ -1215,7 +1286,7 @@
 		justify-content: space-between;
 		padding: 12px;
 		background: var(--bg-2);
-		border: 2px solid var(--bg-4);
+		border: 2px solid var(--bg-3);
 		border-radius: 10px;
 		cursor: pointer;
 		font-size: 13px;
@@ -1263,7 +1334,7 @@
 		font-size: 20px;
 		font-weight: 700;
 		background: var(--bg-2);
-		border: 1px solid var(--bg-4);
+		border: 1px solid var(--bg-3);
 		border-radius: 10px;
 		color: var(--text-0);
 		outline: none;
@@ -1285,14 +1356,15 @@
 		font-size: 12px;
 		font-weight: 500;
 		background: var(--bg-2);
-		border: 1px solid var(--bg-4);
+		border: 1px solid var(--bg-3);
 		border-radius: 8px;
 		color: var(--text-1);
 		cursor: pointer;
+		transition: all var(--transition-fast);
 	}
 
 	.quick-btns button:hover {
-		border-color: var(--primary);
+		border-color: var(--bg-4);
 	}
 
 	.sidebar-trade-btn {
@@ -1338,6 +1410,7 @@
 		.event-icon {
 			width: 56px;
 			height: 56px;
+			border-width: 2px;
 		}
 
 		.chart-placeholder {
@@ -1357,6 +1430,12 @@
 			grid-template-columns: 1fr 340px;
 			gap: 24px;
 			align-items: start;
+		}
+
+		.holders-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 16px;
 		}
 	}
 </style>

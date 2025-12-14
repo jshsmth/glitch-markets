@@ -31,13 +31,9 @@ export function createEncryptor(keyHex: string): Encryptor {
 	 * @returns Encrypted string with IV and auth tag
 	 */
 	function encrypt(data: string): string {
-		// Generate random initialization vector
 		const iv = crypto.randomBytes(16);
-
-		// Create cipher
 		const cipher = crypto.createCipheriv(ALGORITHM, KEY, iv);
 
-		// Encrypt
 		let encrypted = cipher.update(data, 'utf8', 'hex');
 		encrypted += cipher.final('hex');
 
@@ -61,15 +57,12 @@ export function createEncryptor(keyHex: string): Encryptor {
 			throw new Error('Invalid encrypted data format');
 		}
 
-		// Convert from hex
 		const iv = Buffer.from(ivHex, 'hex');
 		const authTag = Buffer.from(authTagHex, 'hex');
 
-		// Create decipher
 		const decipher = crypto.createDecipheriv(ALGORITHM, KEY, iv);
 		decipher.setAuthTag(authTag);
 
-		// Decrypt
 		let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
 		decrypted += decipher.final('utf8');
 

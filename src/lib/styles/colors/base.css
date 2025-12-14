@@ -24,6 +24,16 @@
 	--twitter-blue: #1da1f2;
 
 	/* ============================================
+     GOLD ACCENT COLORS
+     Used for awards, bookmarks, and premium features
+     ============================================ */
+
+	--gold-dark: #a68b2e;
+	--gold-base: #d4af37;
+	--gold-light: #e6c76a;
+	--gold-rgb: 212, 175, 55; /* RGB of gold-base for rgba() usage */
+
+	/* ============================================
      SPACING SCALE (8pt base grid)
      ============================================ */
 

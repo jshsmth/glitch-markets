@@ -8,7 +8,6 @@
 
 	let { tag, onclick }: Props = $props();
 
-	// Check if this is a main category with a dedicated page
 	const mainCategories = [
 		'tech',
 		'politics',

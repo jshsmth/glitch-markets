@@ -27,16 +27,9 @@ export async function createServerWallet(userId: string): Promise<ServerWalletDa
 	try {
 		logger.info('Creating server wallet with viem', { userId });
 
-		// Generate a new random private key
 		const privateKey = generatePrivateKey();
-
-		// Create account from private key
 		const account = privateKeyToAccount(privateKey);
-
-		// Generate a unique wallet ID
 		const walletId = crypto.randomUUID();
-
-		// Encrypt the private key for secure storage
 		const encryptedKeyShares = encryptData(privateKey);
 
 		logger.info('Server wallet created successfully', {
@@ -85,7 +78,6 @@ export async function signMessageWithServerWallet(
 
 		const account = getAccountFromEncryptedKey(encryptedKeyShares);
 
-		// Verify the account matches
 		if (account.address.toLowerCase() !== accountAddress.toLowerCase()) {
 			throw new Error('Account address mismatch');
 		}
@@ -130,12 +122,10 @@ export async function signTypedDataWithServerWallet(
 
 		const account = getAccountFromEncryptedKey(encryptedKeyShares);
 
-		// Verify the account matches
 		if (account.address.toLowerCase() !== accountAddress.toLowerCase()) {
 			throw new Error('Account address mismatch');
 		}
 
-		// Sign the typed data using EIP-712
 		const signature = await account.signTypedData({
 			domain,
 			types,
@@ -171,7 +161,6 @@ export async function getServerWalletClient(
 
 		const account = getAccountFromEncryptedKey(encryptedKeyShares);
 
-		// Verify the account matches
 		if (account.address.toLowerCase() !== accountAddress.toLowerCase()) {
 			throw new Error('Account address mismatch');
 		}

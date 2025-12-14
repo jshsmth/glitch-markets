@@ -21,7 +21,6 @@
 
 	const queryClient = useQueryClient();
 
-	// Map of category paths to their tag slugs for API calls
 	const categoryTagMap: Record<string, string> = {
 		'/politics': 'politics',
 		'/finance': 'finance',
@@ -35,10 +34,8 @@
 	async function prefetchCategoryData(href: string) {
 		if (!browser) return;
 
-		// Prefetch events for category pages
 		const tagSlug = categoryTagMap[href];
 		if (tagSlug) {
-			// Prefetch the main events query
 			await queryClient.prefetchInfiniteQuery({
 				queryKey: ['events', tagSlug.replace('/', ''), tagSlug, 'active', 'volume24hr'],
 				queryFn: async () => {
@@ -59,7 +56,6 @@
 				initialPageParam: 0
 			});
 
-			// Prefetch subcategories
 			await queryClient.prefetchQuery({
 				queryKey: ['tags', tagSlug.replace('/', ''), 'related'],
 				queryFn: async () => {
@@ -69,7 +65,6 @@
 				}
 			});
 		} else if (href === '/') {
-			// Prefetch trending page
 			await queryClient.prefetchQuery({
 				queryKey: ['events', 'all', 0],
 				queryFn: async () => {
@@ -88,7 +83,6 @@
 				}
 			});
 		} else if (href === '/new') {
-			// Prefetch new page
 			await queryClient.prefetchQuery({
 				queryKey: ['events', 'all', 0],
 				queryFn: async () => {
@@ -112,10 +106,7 @@
 	}
 
 	function handleCategoryHover(href: string) {
-		// Silently prefetch - don't await or handle errors
-		prefetchCategoryData(href).catch(() => {
-			// Ignore prefetch errors
-		});
+		prefetchCategoryData(href).catch(() => {});
 	}
 
 	function handleScroll() {
@@ -126,7 +117,6 @@
 		canScrollLeft = scrollLeft > SCROLL_THRESHOLD;
 		canScrollRight = scrollLeft < scrollWidth - clientWidth - SCROLL_THRESHOLD;
 
-		// Hide swipe hint after user scrolls
 		if (scrollLeft > SCROLL_THRESHOLD) {
 			showSwipeHint = false;
 		}

@@ -59,15 +59,11 @@ export class BridgeService {
 	 * ```
 	 */
 	async createDeposit(address: string): Promise<DepositAddresses> {
-		// Validate address format
 		const validatedAddress = validateEthereumAddress(address);
 
 		this.logger.info('Creating deposit addresses', { address: validatedAddress });
 
-		// No caching - each request should generate unique addresses
 		const result = await this.client.createBridgeDeposit(validatedAddress);
-
-		// Count how many address types were returned
 		const addressTypes = Object.keys(result.address).length;
 
 		this.logger.info('Deposit addresses created successfully', {
@@ -97,14 +93,12 @@ export class BridgeService {
 	async getSupportedAssets(): Promise<SupportedAssets> {
 		const cacheKey = this.buildCacheKey();
 
-		// Check cache first
 		const cached = this.cache.get<SupportedAssets>(cacheKey);
 		if (cached) {
 			this.logger.info('Cache hit for supported assets');
 			return cached;
 		}
 
-		// Check if request is already in flight (cache stampede protection)
 		if (this.pendingRequests.has(cacheKey)) {
 			this.logger.info('Request already in-flight, waiting for result');
 			return this.pendingRequests.get(cacheKey)!;
@@ -112,7 +106,6 @@ export class BridgeService {
 
 		this.logger.info('Cache miss for supported assets, fetching from API');
 
-		// Create promise and store it
 		const fetchPromise = this.fetchAndCacheSupportedAssets(cacheKey);
 		this.pendingRequests.set(cacheKey, fetchPromise);
 
@@ -120,7 +113,6 @@ export class BridgeService {
 			const result = await fetchPromise;
 			return result;
 		} finally {
-			// Clean up pending request
 			this.pendingRequests.delete(cacheKey);
 		}
 	}
@@ -132,7 +124,6 @@ export class BridgeService {
 	private async fetchAndCacheSupportedAssets(cacheKey: string): Promise<SupportedAssets> {
 		const result = await this.client.fetchSupportedBridgeAssets();
 
-		// Cache the result
 		this.cache.set(cacheKey, result, this.cacheTtl);
 		this.logger.info('Supported assets cached successfully', {
 			assetCount: result.supportedAssets.length,

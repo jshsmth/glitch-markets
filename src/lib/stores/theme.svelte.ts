@@ -23,7 +23,6 @@ export const themeState = $state({
 export function initializeTheme() {
 	if (!browser) return;
 
-	// Read theme from data-theme attribute (set by inline script)
 	const currentTheme = document.documentElement.getAttribute('data-theme') as Theme | null;
 
 	if (currentTheme === 'light' || currentTheme === 'dark') {

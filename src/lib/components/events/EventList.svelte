@@ -11,6 +11,8 @@
 		onRetry?: () => void;
 		onLoadMore?: () => void | Promise<void>;
 		hasMore?: boolean;
+		loadMoreInterval?: number;
+		loadMoreRootMargin?: string;
 	}
 
 	let {
@@ -19,7 +21,9 @@
 		error = null,
 		onRetry,
 		onLoadMore,
-		hasMore = false
+		hasMore = false,
+		loadMoreInterval = 500,
+		loadMoreRootMargin = '200px'
 	}: Props = $props();
 
 	function isResolved(event: Event): boolean {
@@ -31,83 +35,62 @@
 	}
 
 	let loadingMore = $state(false);
+	let sentinelElement = $state<HTMLElement | null>(null);
 
-	/**
-	 * Infinite scroll action using IntersectionObserver
-	 * Triggers onLoadMore when the sentinel element becomes visible
-	 */
-	function infiniteScroll(node: HTMLElement) {
+	$effect(() => {
+		if (!sentinelElement || !hasMore || !onLoadMore) return;
+
 		let isLoading = false;
-		let abortController: AbortController | null = null;
 		let lastLoadTime = 0;
-		const MIN_LOAD_INTERVAL = 500; // Prevent rapid-fire loads
 
 		const observer = new IntersectionObserver(
 			async (entries) => {
 				const entry = entries[0];
 				const now = Date.now();
 
-				// Prevent infinite loop with multiple safeguards:
-				// 1. Check if already loading
-				// 2. Check parent loading state
-				// 3. Check if there's more data
-				// 4. Enforce minimum interval between loads
 				if (
 					entry.isIntersecting &&
 					!isLoading &&
 					!loading &&
 					hasMore &&
 					onLoadMore &&
-					now - lastLoadTime >= MIN_LOAD_INTERVAL
+					now - lastLoadTime >= loadMoreInterval
 				) {
 					isLoading = true;
 					loadingMore = true;
 					lastLoadTime = now;
 
-					// Temporarily unobserve to prevent retriggering during load
-					observer.unobserve(node);
-
-					// Create abort controller for this load operation
-					abortController = new AbortController();
+					observer.unobserve(sentinelElement);
 
 					try {
 						await onLoadMore();
 					} catch (error) {
-						// Only log errors that aren't from abort
-						if (error instanceof Error && error.name !== 'AbortError') {
+						if (error instanceof Error) {
 							console.error('Error loading more:', error);
 						}
 					} finally {
 						isLoading = false;
 						loadingMore = false;
-						abortController = null;
 
-						// Re-observe after a small delay to allow UI to update
 						setTimeout(() => {
-							if (node && observer) {
-								observer.observe(node);
+							if (sentinelElement && observer) {
+								observer.observe(sentinelElement);
 							}
 						}, 100);
 					}
 				}
 			},
 			{
-				rootMargin: '200px'
+				rootMargin: loadMoreRootMargin
 			}
 		);
 
-		observer.observe(node);
+		observer.observe(sentinelElement);
 
-		return {
-			destroy() {
-				observer.disconnect();
-				// Cancel any pending load operation
-				if (abortController) {
-					abortController.abort();
-				}
-			}
+		return () => {
+			observer.disconnect();
 		};
-	}
+	});
 </script>
 
 <div class="event-list-container">
@@ -160,7 +143,7 @@
 		</div>
 
 		{#if hasMore}
-			<div use:infiniteScroll class="sentinel">
+			<div bind:this={sentinelElement} class="sentinel">
 				{#if loadingMore}
 					<div class="loading-dots">
 						<span></span>
