@@ -271,31 +271,29 @@
 			</div>
 		{/if}
 
-		{#if variant !== 'compact'}
-			<div class="card-footer">
-				<div class="stats">
-					<div class="stat">
-						<MoneyIcon size={14} class="stat-icon" />
-						<span class="stat-value">{formatNumber(event.volume24hr)}</span>
-						<span class="stat-label">24h</span>
-					</div>
-					<div class="stat">
-						<WaterLiquidIcon size={14} class="stat-icon" />
-						<span class="stat-value">{formatNumber(event.liquidity)}</span>
-						<span class="stat-label">Liq</span>
-					</div>
+		<div class="card-footer" class:compact-footer={variant === 'compact'}>
+			<div class="stats">
+				<div class="stat">
+					<MoneyIcon size={14} class="stat-icon" />
+					<span class="stat-value">{formatNumber(event.volume24hr)}</span>
+					<span class="stat-label">24h</span>
 				</div>
-				<button
-					class="bookmark-btn"
-					class:bookmarked={isEventBookmarked}
-					onclick={toggleBookmark}
-					aria-label={isEventBookmarked ? 'Remove bookmark' : 'Bookmark this event'}
-					aria-pressed={isEventBookmarked}
-				>
-					<BookmarkIcon size={18} filled={isEventBookmarked} />
-				</button>
+				<div class="stat">
+					<WaterLiquidIcon size={14} class="stat-icon" />
+					<span class="stat-value">{formatNumber(event.liquidity)}</span>
+					<span class="stat-label">Liq</span>
+				</div>
 			</div>
-		{/if}
+			<button
+				class="bookmark-btn"
+				class:bookmarked={isEventBookmarked}
+				onclick={toggleBookmark}
+				aria-label={isEventBookmarked ? 'Remove bookmark' : 'Bookmark this event'}
+				aria-pressed={isEventBookmarked}
+			>
+				<BookmarkIcon size={18} filled={isEventBookmarked} />
+			</button>
+		</div>
 	</div>
 </div>
 
@@ -352,14 +350,20 @@
 
 	.closing-indicator {
 		position: absolute;
-		top: var(--spacing-3);
-		right: var(--spacing-3);
+		top: 8px;
+		right: 8px;
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		font-size: 11px;
+		padding: 4px 10px;
+		border-radius: var(--radius-full);
+		font-size: 10px;
 		font-weight: 600;
 		color: var(--danger);
+		background: color-mix(in srgb, var(--danger) 10%, var(--bg-1));
+		border: 1px solid color-mix(in srgb, var(--danger) 20%, transparent);
+		white-space: nowrap;
+		z-index: 1;
 	}
 
 	/* Compact variant */
@@ -685,6 +689,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+	}
+
+	.card-footer.compact-footer {
+		padding-top: var(--spacing-2);
 	}
 
 	.stats {

@@ -36,9 +36,8 @@
 	let showRightArrow = $state(false);
 	let showAllMode = $state(false);
 
-	const CARDS_PER_PAGE = 3;
 	let currentPage = $state(0);
-	const totalPages = $derived(Math.ceil(watchlistEvents.length / CARDS_PER_PAGE));
+	const totalDots = $derived(watchlistEvents.length);
 
 	function handleScroll() {
 		if (!scrollContainer) return;
@@ -147,9 +146,9 @@
 				{/if}
 			</div>
 
-			{#if !showAllMode && totalPages > 1}
+			{#if !showAllMode && totalDots > 1}
 				<div class="pagination-dots">
-					{#each Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i) as i (i)}
+					{#each Array.from({ length: Math.min(totalDots, 10) }, (_, i) => i) as i (i)}
 						<div class="dot" class:active={i === currentPage}></div>
 					{/each}
 				</div>
@@ -170,7 +169,7 @@
 
 <style>
 	.watchlist-section {
-		margin-bottom: var(--space-2xl);
+		margin-bottom: var(--space-lg);
 	}
 
 	.section-header {
