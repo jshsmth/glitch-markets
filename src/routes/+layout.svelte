@@ -36,6 +36,7 @@
 	import SignInModal from '$lib/components/auth/SignInModal.svelte';
 	import DepositModal from '$lib/components/wallet/DepositModal.svelte';
 	import WithdrawModal from '$lib/components/wallet/WithdrawModal.svelte';
+	import ReloadPrompt from '$lib/components/pwa/ReloadPrompt.svelte';
 	// @ts-expect-error - virtual module from vite-plugin-pwa
 	import { pwaInfo } from 'virtual:pwa-info';
 
@@ -152,6 +153,9 @@
 	/>
 	<DepositModal isOpen={depositModalState.isOpen} onClose={closeDepositModal} />
 	<WithdrawModal isOpen={withdrawModalState.isOpen} onClose={closeWithdrawModal} />
+
+	<!-- PWA update prompt -->
+	<ReloadPrompt />
 
 	{#if dev}
 		<SvelteQueryDevtools buttonPosition="bottom-right" />

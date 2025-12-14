@@ -8,6 +8,7 @@ export default defineConfig({
 		sveltekit(),
 		mkcert(),
 		SvelteKitPWA({
+			registerType: 'prompt',
 			srcDir: './src',
 			mode: 'development',
 			strategies: 'generateSW',
