@@ -162,9 +162,10 @@
 		{#if hasMore}
 			<div use:infiniteScroll class="sentinel">
 				{#if loadingMore}
-					<div class="loading-more">
-						<div class="spinner"></div>
-						<p>Loading more events...</p>
+					<div class="loading-dots">
+						<span></span>
+						<span></span>
+						<span></span>
 					</div>
 				{/if}
 			</div>
@@ -332,39 +333,50 @@
 
 	/* Infinite scroll styles */
 	.sentinel {
-		min-height: 100px;
+		min-height: 60px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		margin-top: var(--space-lg);
+		margin-top: var(--space-md);
 	}
 
-	.loading-more {
+	.loading-dots {
 		display: flex;
-		flex-direction: column;
 		align-items: center;
-		gap: var(--space-sm);
-		padding: var(--space-lg);
+		gap: 6px;
+		padding: var(--space-sm);
 	}
 
-	.loading-more p {
-		font-size: 14px;
-		color: var(--text-2);
-		margin: 0;
-	}
-
-	.spinner {
-		width: 32px;
-		height: 32px;
-		border: 3px solid var(--bg-3);
-		border-top-color: var(--primary);
+	.loading-dots span {
+		width: 8px;
+		height: 8px;
+		background-color: var(--primary);
 		border-radius: 50%;
-		animation: spin 0.8s linear infinite;
+		animation: dotPulse 1.4s ease-in-out infinite;
 	}
 
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
+	.loading-dots span:nth-child(1) {
+		animation-delay: 0s;
+	}
+
+	.loading-dots span:nth-child(2) {
+		animation-delay: 0.2s;
+	}
+
+	.loading-dots span:nth-child(3) {
+		animation-delay: 0.4s;
+	}
+
+	@keyframes dotPulse {
+		0%,
+		80%,
+		100% {
+			opacity: 0.3;
+			transform: scale(0.8);
+		}
+		40% {
+			opacity: 1;
+			transform: scale(1);
 		}
 	}
 </style>
