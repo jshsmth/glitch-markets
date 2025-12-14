@@ -79,7 +79,10 @@
 				<AxisX {formatDate} />
 				<AxisY {formatPercent} />
 				{#each series as s (s.name)}
-					<Line color={s.color} data={s.data.map((point) => ({ x: new Date(point.t * 1000), y: point.p * 100 }))} />
+					<Line
+						color={s.color}
+						data={s.data.map((point) => ({ x: new Date(point.t * 1000), y: point.p * 100 }))}
+					/>
 				{/each}
 			</Svg>
 			<Html>

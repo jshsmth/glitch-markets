@@ -22,7 +22,7 @@
 
 	let { formatDate, formatPercent, series }: Props = $props();
 
-	const { xGet, yGet, xScale, width, height } = getContext<any>('LayerCake');
+	const { xGet, yGet, xScale, width } = getContext<Record<string, unknown>>('LayerCake');
 
 	let mouseX = $state(0);
 	let isHovering = $state(false);
@@ -38,6 +38,8 @@
 		const targetTime = xValue instanceof Date ? xValue.getTime() : xValue;
 
 		const items: TooltipItem[] = [];
+		let newDate: Date | null = null;
+		let newMouseX = 0;
 
 		for (const s of series) {
 			if (s.data.length === 0) continue;
@@ -60,16 +62,70 @@
 				y: yPos
 			});
 
-			if (!tooltipDate) {
-				tooltipDate = new Date(closestPoint.t * 1000);
-				mouseX = $xGet(dataPoint);
+			if (!newDate) {
+				newDate = new Date(closestPoint.t * 1000);
+				newMouseX = $xGet(dataPoint);
 			}
 		}
 
+		tooltipDate = newDate;
+		mouseX = newMouseX;
 		tooltipItems = items;
 	}
 
 	function handleMouseLeave() {
+		isHovering = false;
+		tooltipDate = null;
+		tooltipItems = [];
+	}
+
+	function handleTouchMove(e: TouchEvent) {
+		e.preventDefault();
+		const touch = e.touches[0];
+		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		const clientX = touch.clientX - rect.left;
+		isHovering = true;
+
+		const xValue = $xScale.invert(clientX);
+		const targetTime = xValue instanceof Date ? xValue.getTime() : xValue;
+
+		const items: TooltipItem[] = [];
+		let newDate: Date | null = null;
+		let newMouseX = 0;
+
+		for (const s of series) {
+			if (s.data.length === 0) continue;
+
+			const closestPoint = s.data.reduce((closest, point) => {
+				const pointTime = point.t * 1000;
+				const closestTime = closest.t * 1000;
+				return Math.abs(pointTime - targetTime) < Math.abs(closestTime - targetTime)
+					? point
+					: closest;
+			});
+
+			const dataPoint = { x: new Date(closestPoint.t * 1000), y: closestPoint.p * 100 };
+			const yPos = $yGet(dataPoint);
+
+			items.push({
+				name: s.name,
+				color: s.color,
+				value: closestPoint.p * 100,
+				y: yPos
+			});
+
+			if (!newDate) {
+				newDate = new Date(closestPoint.t * 1000);
+				newMouseX = $xGet(dataPoint);
+			}
+		}
+
+		tooltipDate = newDate;
+		mouseX = newMouseX;
+		tooltipItems = items;
+	}
+
+	function handleTouchEnd() {
 		isHovering = false;
 		tooltipDate = null;
 		tooltipItems = [];
@@ -82,11 +138,17 @@
 	aria-label="Price chart tooltip"
 	onmousemove={handleMouseMove}
 	onmouseleave={handleMouseLeave}
+	ontouchmove={handleTouchMove}
+	ontouchend={handleTouchEnd}
+	ontouchcancel={handleTouchEnd}
 >
 	{#if isHovering && tooltipItems.length > 0 && tooltipDate}
 		<div class="crosshair-vertical" style="left: {mouseX}px;"></div>
 		{#each tooltipItems as item (item.name)}
-			<div class="tooltip-dot" style="left: {mouseX}px; top: {item.y}px; background: {item.color};"></div>
+			<div
+				class="tooltip-dot"
+				style="left: {mouseX}px; top: {item.y}px; background: {item.color};"
+			></div>
 		{/each}
 		<div
 			class="tooltip-box"

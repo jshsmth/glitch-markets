@@ -8,7 +8,7 @@
 
 	let { formatPercent, ticks = 5 }: Props = $props();
 
-	const { width, height, yScale } = getContext<any>('LayerCake');
+	const { width, yScale } = getContext<Record<string, unknown>>('LayerCake');
 
 	const tickVals = $derived($yScale?.ticks?.(ticks) ?? []);
 </script>

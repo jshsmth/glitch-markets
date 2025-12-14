@@ -8,11 +8,11 @@
 
 	let { color, data }: Props = $props();
 
-	const { xGet, yGet } = getContext<any>('LayerCake');
+	const { xGet, yGet } = getContext<Record<string, unknown>>('LayerCake');
 
 	const path = $derived(
 		data
-			.map((d: any, i: number) => {
+			.map((d, i: number) => {
 				const x = $xGet(d);
 				const y = $yGet(d);
 				return `${i === 0 ? 'M' : 'L'}${x},${y}`;
@@ -33,7 +33,13 @@
 <g>
 	<path class="path-line" d={path} style="stroke: {color};" />
 	{#if lastPoint}
-		<circle class="endpoint-dot pulse" cx={lastPoint.x} cy={lastPoint.y} r="4" style="fill: {color};" />
+		<circle
+			class="endpoint-dot pulse"
+			cx={lastPoint.x}
+			cy={lastPoint.y}
+			r="4"
+			style="fill: {color};"
+		/>
 	{/if}
 </g>
 

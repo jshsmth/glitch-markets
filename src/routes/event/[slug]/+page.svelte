@@ -144,7 +144,7 @@
 			'1D': '1d',
 			'1W': '1w',
 			'1M': '1m',
-			'MAX': 'max'
+			MAX: 'max'
 		};
 		return mapping[range];
 	};
@@ -156,7 +156,7 @@
 			'1D': undefined,
 			'1W': 5,
 			'1M': 10,
-			'MAX': undefined
+			MAX: undefined
 		};
 		return fidelityMap[range];
 	};
@@ -179,13 +179,14 @@
 	const top3Markets = $derived(filteredMarkets.slice(0, 3));
 
 	const priceHistoryQueries = $derived(
-		top3Markets.map((market, index) => {
+		top3Markets.map((market) => {
 			const tokenId = getClobTokenId(market);
 			return createQuery<PriceHistoryResponse>(() => ({
 				queryKey: ['priceHistory', tokenId, selectedTimeRange],
 				queryFn: async () => {
 					if (!tokenId) throw new Error('No token ID available');
 
+					// eslint-disable-next-line svelte/prefer-svelte-reactivity
 					const params = new URLSearchParams({
 						market: tokenId,
 						interval: getIntervalForTimeRange(selectedTimeRange)
@@ -214,9 +215,7 @@
 	);
 
 	const isAnyLoading = $derived(priceHistoryQueries.some((q) => q.isPending));
-	const anyError = $derived(
-		priceHistoryQueries.find((q) => q.error)?.error?.message ?? null
-	);
+	const anyError = $derived(priceHistoryQueries.find((q) => q.error)?.error?.message ?? null);
 
 	function formatRelativeTime(dateStr: string | null): string {
 		if (!dateStr) return '';
@@ -348,10 +347,7 @@
 						{@const marketData = parseMarketData(market)}
 						{@const percentage = marketData?.[0]?.priceFormatted || '—'}
 						<div class="summary-item">
-							<span
-								class="summary-dot"
-								style="background-color: {getSeriesColor(index)}"
-							></span>
+							<span class="summary-dot" style="background-color: {getSeriesColor(index)}"></span>
 							<span class="summary-name">{getMarketDisplayTitle(market)}</span>
 							<span class="summary-percentage">{percentage}%</span>
 						</div>
@@ -900,15 +896,15 @@
 	}
 
 	.outcome-card {
-		background: var(--bg-2);
+		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
 		border-radius: 12px;
-		padding: 14px;
+		padding: 16px;
 		transition: all var(--transition-fast);
 	}
 
 	.outcomes-grid .outcome-card:not(:last-child) {
-		margin-bottom: 16px;
+		margin-bottom: 12px;
 	}
 
 	.outcomes-scroll .outcome-card:not(:last-child) {
@@ -916,28 +912,28 @@
 	}
 
 	.outcome-card:hover {
-		border-color: var(--bg-4);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+		background: var(--bg-2);
 	}
 
 	.outcome-card-header {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 12px;
+		align-items: flex-start;
+		margin-bottom: 10px;
 		gap: 8px;
 	}
 
 	.outcome-card-name {
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 600;
 		color: var(--text-0);
 		flex: 1;
 		min-width: 0;
+		line-height: 1.4;
 	}
 
 	.outcome-card-volume {
-		font-size: 11px;
+		font-size: 10px;
 		font-weight: 500;
 		color: var(--text-3);
 		flex-shrink: 0;
@@ -951,7 +947,7 @@
 	}
 
 	.outcome-card-percentage {
-		font-size: 32px;
+		font-size: 28px;
 		font-weight: 700;
 		color: var(--text-0);
 		flex-shrink: 0;
@@ -965,36 +961,34 @@
 	}
 
 	.bet-btn {
-		padding: 10px 14px;
-		font-size: 13px;
-		font-weight: 600;
+		padding: 8px 12px;
+		font-size: 12px;
+		font-weight: 500;
 		border: none;
-		border-radius: 8px;
+		border-radius: 6px;
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		white-space: nowrap;
 	}
 
 	.bet-btn.yes {
-		background: rgba(0, 196, 71, 0.1);
+		background: rgba(0, 196, 71, 0.08);
 		color: var(--success);
-		border: 1px solid rgba(0, 196, 71, 0.2);
+		border: 1px solid transparent;
 	}
 
 	.bet-btn.yes:hover:not(:disabled) {
-		background: rgba(0, 196, 71, 0.15);
-		border-color: var(--success);
+		background: rgba(0, 196, 71, 0.12);
 	}
 
 	.bet-btn.no {
-		background: rgba(255, 51, 102, 0.1);
+		background: rgba(255, 51, 102, 0.08);
 		color: var(--danger);
-		border: 1px solid rgba(255, 51, 102, 0.2);
+		border: 1px solid transparent;
 	}
 
 	.bet-btn.no:hover:not(:disabled) {
-		background: rgba(255, 51, 102, 0.15);
-		border-color: var(--danger);
+		background: rgba(255, 51, 102, 0.12);
 	}
 
 	.bet-btn:disabled {
@@ -1108,28 +1102,28 @@
 	}
 
 	.outcomes-panel {
-		background: var(--bg-1);
-		border: 1px solid var(--bg-3);
+		background: transparent;
+		border: none;
 		border-radius: 12px;
 		overflow: hidden;
 	}
 
 	.outcomes-panel-title {
-		font-size: 14px;
+		font-size: 11px;
 		font-weight: 700;
-		color: var(--text-0);
+		color: var(--text-3);
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: 1px;
 		margin: 0;
-		padding: 16px;
-		border-bottom: 1px solid var(--bg-3);
+		padding: 8px 0 16px 0;
+		border-bottom: none;
 	}
 
 	.outcomes-scroll {
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
-		padding: 16px;
+		padding: 0;
 		max-height: calc(100vh - 200px);
 		overflow-y: auto;
 	}

@@ -8,7 +8,7 @@
 
 	let { formatDate, ticks = 4 }: Props = $props();
 
-	const { width, height, xScale } = getContext<any>('LayerCake');
+	const { height, xScale } = getContext<Record<string, unknown>>('LayerCake');
 
 	const tickVals = $derived($xScale?.ticks?.(ticks) ?? []);
 </script>
