@@ -227,6 +227,7 @@
 
 <style>
 	.sub-header {
+		display: none; /* Hidden on mobile - use bottom nav Explore tab */
 		background-color: var(--bg-0);
 		border-bottom: 1px solid var(--bg-4);
 		padding: 10px 0;
@@ -234,6 +235,7 @@
 
 	@media (min-width: 768px) {
 		.sub-header {
+			display: block; /* Show on desktop */
 			padding: 12px 0;
 		}
 	}

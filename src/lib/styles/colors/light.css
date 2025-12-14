@@ -1,28 +1,28 @@
 /**
  * Glitch Markets - Light Theme Colors
- * Clean neutral palette with zinc accents
+ * Warm neutral palette with stone accents
  */
 
 :root {
 	/* ============================================
-     BACKGROUNDS - neutral whites with subtle warmth
+     BACKGROUNDS - Warm whites with stone tint
      WCAG Contrast Ratios (vs --text-0):
      --bg-0: Base background (21:1)
      ============================================ */
 
-	--bg-0: #fafafa; /* Clean neutral base */
-	--bg-1: #f5f5f6; /* Card background - nearly white */
-	--bg-2: #ebebed; /* Clear distinction for layered elements */
-	--bg-3: #dddde2; /* More visible borders and dividers */
-	--bg-4: #cfcfd6; /* Strong accent backgrounds */
-	--bg-5: #c1c1ca; /* Even stronger backgrounds */
+	--bg-0: #fafaf9; /* Warm neutral base - Stone 50 */
+	--bg-1: #f5f5f4; /* Card background - Stone 100 */
+	--bg-2: #e7e5e4; /* Layered elements - Stone 200 */
+	--bg-3: #d6d3d1; /* Borders and dividers - Stone 300 */
+	--bg-4: #c4c0bd; /* Strong accent backgrounds */
+	--bg-5: #b5b0ac; /* Even stronger backgrounds */
 
 	/* RGB values for transparency effects */
-	--bg-0-rgb: 250, 250, 250;
-	--bg-1-rgb: 245, 245, 246;
+	--bg-0-rgb: 250, 250, 249;
+	--bg-1-rgb: 245, 245, 244;
 
 	/* ============================================
-     TEXT - Improved hierarchy with better contrast
+     TEXT - Warm grays with stone undertone
      WCAG Contrast Ratios (vs --bg-0):
      --text-0: 17.5:1 (AAA - passes all criteria)
      --text-1: 14.2:1 (AAA)
@@ -31,26 +31,26 @@
      --text-4: 3.6:1 (AA for UI elements)
      ============================================ */
 
-	--text-0: #111111; /* Dark primary text */
-	--text-1: #333333; /* Clear secondary text */
-	--text-2: #555555; /* Muted text */
-	--text-3: #888888; /* Hints/placeholders */
-	--text-4: #aaaaaa; /* Disabled states */
+	--text-0: #1c1917; /* Dark primary text - Stone 900 */
+	--text-1: #292524; /* Secondary text - Stone 800 */
+	--text-2: #57534e; /* Muted text - Stone 600 */
+	--text-3: #78716c; /* Hints/placeholders - Stone 500 */
+	--text-4: #a8a29e; /* Disabled states - Stone 400 */
 
 	/* ============================================
-     PRIMARY BRAND COLOR - Zinc
+     PRIMARY BRAND COLOR - Muted Teal
      ============================================ */
 
-	--primary-50: #fafafa;
-	--primary-100: #f4f4f5;
-	--primary-200: #e4e4e7;
-	--primary-300: #d4d4d8;
-	--primary-400: #a1a1aa;
-	--primary-500: #71717a; /* Main brand color */
-	--primary-600: #52525b;
-	--primary-700: #3f3f46;
-	--primary-800: #27272a;
-	--primary-900: #18181b;
+	--primary-50: #f0fdfa;
+	--primary-100: #ccfbf1;
+	--primary-200: #99f6e4;
+	--primary-300: #5eead4;
+	--primary-400: #2dd4bf;
+	--primary-500: #14b8a6; /* Main brand color */
+	--primary-600: #0d9488;
+	--primary-700: #0f766e;
+	--primary-800: #115e59;
+	--primary-900: #134e4a;
 
 	/* Convenient aliases */
 	--primary: var(--primary-500);
@@ -58,7 +58,7 @@
 	--primary-active: var(--primary-700);
 
 	/* RGB for transparency effects */
-	--primary-rgb: 113, 113, 122;
+	--primary-rgb: 20, 184, 166;
 
 	/* ============================================
      TRADING INDICATORS - Improved vibrance and backgrounds
@@ -85,7 +85,7 @@
 
 	/* Button colors */
 	--button-primary-bg: var(--primary);
-	--button-primary-text: #ffffff; /* White text on zinc */
+	--button-primary-text: #ffffff; /* White text on stone */
 	--button-primary-hover-bg: var(--primary-hover);
 
 	/* Error states */

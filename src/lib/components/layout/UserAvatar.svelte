@@ -27,14 +27,14 @@
 	 * Generate a consistent gradient based on user ID using brand colors
 	 */
 	function generateAvatarGradient(userId: string): string {
-		// Brand color palette from design system (zinc-based)
+		// Brand color palette from design system (teal-based)
 		const brandColors = [
-			['#71717a', '#52525b'], // Zinc to dark zinc (primary)
-			['#a1a1aa', '#71717a'], // Light zinc to zinc
-			['#71717a', '#3f3f46'], // Zinc to deep zinc
-			['#d4d4d8', '#a1a1aa'], // Pale zinc to light zinc
-			['#52525b', '#3f3f46'], // Dark zinc to deeper zinc
-			['#a1a1aa', '#52525b'] // Light zinc to dark zinc
+			['#14b8a6', '#0d9488'], // Teal 500 to Teal 600 (primary)
+			['#2dd4bf', '#14b8a6'], // Teal 400 to Teal 500
+			['#14b8a6', '#0f766e'], // Teal 500 to Teal 700
+			['#5eead4', '#2dd4bf'], // Teal 300 to Teal 400
+			['#0d9488', '#0f766e'], // Teal 600 to Teal 700
+			['#2dd4bf', '#0d9488'] // Teal 400 to Teal 600
 		];
 
 		// Generate consistent hash from user ID

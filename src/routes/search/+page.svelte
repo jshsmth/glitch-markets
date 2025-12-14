@@ -4,6 +4,7 @@
 	import TagChip from '$lib/components/ui/TagChip.svelte';
 	import ProfileListItem from '$lib/components/ui/ProfileListItem.svelte';
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
+	import { categories } from '$lib/config/categories';
 	import type { SearchResults } from '$lib/server/api/polymarket-client';
 	import { debounceCancellable } from '$lib/utils/debounce';
 
@@ -22,19 +23,8 @@
 
 	const showBrowse = $derived(!isLoading && !hasResults && searchQuery.length === 0);
 
-	const popularTopics = [
-		{ label: 'Politics', slug: 'politics', icon: '🏛️' },
-		{ label: 'Crypto', slug: 'crypto', icon: '₿' },
-		{ label: 'Sports', slug: 'sports', icon: '⚽' },
-		{ label: 'Tech', slug: 'tech', icon: '💻' },
-		{ label: 'Finance', slug: 'finance', icon: '💰' },
-		{ label: 'Pop Culture', slug: 'pop-culture', icon: '🎬' }
-	];
-
-	const browseFilters = [
-		{ label: 'New', href: '/new', icon: '✨' },
-		{ label: 'Trending', href: '/', icon: '📈' }
-	];
+	const browseFilters = $derived(categories.filter((c) => c.href === '/' || c.href === '/new'));
+	const popularTopics = $derived(categories.filter((c) => c.href !== '/' && c.href !== '/new'));
 
 	async function performSearch(query: string) {
 		if (query.length < 2) {
@@ -160,10 +150,15 @@
 				<section class="browse-section">
 					<h3 class="section-title">Browse</h3>
 					<div class="browse-filters">
-						{#each browseFilters as filter (filter.label)}
+						{#each browseFilters as filter (filter.name)}
+							{@const Icon = filter.icon}
 							<a href={filter.href} class="browse-filter">
-								<span class="filter-icon">{filter.icon}</span>
-								<span class="filter-label">{filter.label}</span>
+								{#if Icon}
+									<span class="filter-icon">
+										<Icon size={20} color="currentColor" />
+									</span>
+								{/if}
+								<span class="filter-label">{filter.name}</span>
 							</a>
 						{/each}
 					</div>
@@ -172,10 +167,15 @@
 				<section class="browse-section">
 					<h3 class="section-title">Popular Topics</h3>
 					<div class="topics-grid">
-						{#each popularTopics as topic (topic.slug)}
-							<a href="/{topic.slug}" class="topic-card">
-								<span class="topic-icon">{topic.icon}</span>
-								<span class="topic-label">{topic.label}</span>
+						{#each popularTopics as topic (topic.name)}
+							{@const Icon = topic.icon}
+							<a href={topic.href} class="topic-card">
+								{#if Icon}
+									<span class="topic-icon">
+										<Icon size={24} color="currentColor" />
+									</span>
+								{/if}
+								<span class="topic-label">{topic.name}</span>
 							</a>
 						{/each}
 					</div>
@@ -351,8 +351,10 @@
 	}
 
 	.filter-icon {
-		font-size: 18px;
-		line-height: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-1);
 	}
 
 	.filter-label {
@@ -396,8 +398,10 @@
 	}
 
 	.topic-icon {
-		font-size: 28px;
-		line-height: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-1);
 	}
 
 	.topic-label {

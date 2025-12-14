@@ -31,3 +31,7 @@ export { default as SpeakerIcon } from './SpeakerIcon.svelte';
 export { default as StarsIcon } from './StarsIcon.svelte';
 export { default as SunIcon } from './SunIcon.svelte';
 export { default as TicketIcon } from './TicketIcon.svelte';
+export { default as UserIcon } from './UserIcon.svelte';
+export { default as CompassIcon } from './CompassIcon.svelte';
+export { default as LogoutIcon } from './LogoutIcon.svelte';
+export { default as SettingsIcon } from './SettingsIcon.svelte';

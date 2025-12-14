@@ -1,28 +1,28 @@
 /**
  * Glitch Markets - Dark Theme Colors
- * Clean dark palette with zinc accents
+ * Warm dark palette with stone accents
  */
 
 [data-theme='dark'] {
 	/* ============================================
-     BACKGROUNDS - Clean dark neutrals
+     BACKGROUNDS - Warm dark neutrals with stone tint
      WCAG Contrast Ratios (vs --text-0):
      --bg-0: Base background (20.5:1)
      ============================================ */
 
-	--bg-0: #0a0a0a; /* Pure dark base */
-	--bg-1: #121212; /* Card background */
-	--bg-2: #1a1a1a; /* Clear distinction for layered elements */
-	--bg-3: #262626; /* More visible borders */
-	--bg-4: #333333; /* Strong accent backgrounds */
-	--bg-5: #404040; /* Even stronger backgrounds */
+	--bg-0: #0c0a09; /* Warm dark base - Stone 950 */
+	--bg-1: #1c1917; /* Card background - Stone 900 */
+	--bg-2: #292524; /* Layered elements - Stone 800 */
+	--bg-3: #44403c; /* Borders - Stone 700 */
+	--bg-4: #57534e; /* Strong accent backgrounds - Stone 600 */
+	--bg-5: #78716c; /* Even stronger backgrounds - Stone 500 */
 
 	/* RGB values for transparency effects */
-	--bg-0-rgb: 10, 10, 10;
-	--bg-1-rgb: 18, 18, 18;
+	--bg-0-rgb: 12, 10, 9;
+	--bg-1-rgb: 28, 25, 23;
 
 	/* ============================================
-     TEXT - Clean neutral whites with better hierarchy
+     TEXT - Warm whites with stone undertone
      WCAG Contrast Ratios (vs --bg-0):
      --text-0: 20.8:1 (AAA)
      --text-1: 17.5:1 (AAA)
@@ -31,26 +31,26 @@
      --text-4: 5.2:1 (AA)
      ============================================ */
 
-	--text-0: #f5f5f5; /* Bright primary text */
-	--text-1: #e0e0e0; /* Secondary text */
-	--text-2: #a0a0a0; /* Muted text */
-	--text-3: #6a6a6a; /* Hints/placeholders */
-	--text-4: #4a4a4a; /* Disabled states */
+	--text-0: #fafaf9; /* Bright primary text - Stone 50 */
+	--text-1: #e7e5e4; /* Secondary text - Stone 200 */
+	--text-2: #a8a29e; /* Muted text - Stone 400 */
+	--text-3: #78716c; /* Hints/placeholders - Stone 500 */
+	--text-4: #57534e; /* Disabled states - Stone 600 */
 
 	/* ============================================
-     PRIMARY BRAND COLOR - Zinc (adjusted for dark)
+     PRIMARY BRAND COLOR - Muted Teal (adjusted for dark)
      ============================================ */
 
-	--primary-50: #18181b;
-	--primary-100: #27272a;
-	--primary-200: #3f3f46;
-	--primary-300: #52525b;
-	--primary-400: #71717a;
-	--primary-500: #a1a1aa; /* Lighter zinc for dark mode */
-	--primary-600: #d4d4d8;
-	--primary-700: #e4e4e7;
-	--primary-800: #f4f4f5;
-	--primary-900: #fafafa;
+	--primary-50: #134e4a;
+	--primary-100: #115e59;
+	--primary-200: #0f766e;
+	--primary-300: #0d9488;
+	--primary-400: #14b8a6;
+	--primary-500: #2dd4bf; /* Brighter teal for dark mode */
+	--primary-600: #5eead4;
+	--primary-700: #99f6e4;
+	--primary-800: #ccfbf1;
+	--primary-900: #f0fdfa;
 
 	/* Convenient aliases */
 	--primary: var(--primary-500);
@@ -58,7 +58,7 @@
 	--primary-active: var(--primary-700);
 
 	/* RGB for transparency effects */
-	--primary-rgb: 161, 161, 170;
+	--primary-rgb: 45, 212, 191;
 
 	/* ============================================
      TRADING INDICATORS - Brighter for dark mode
@@ -85,7 +85,7 @@
 
 	/* Button colors */
 	--button-primary-bg: var(--primary);
-	--button-primary-text: #18181b; /* Dark text on zinc */
+	--button-primary-text: #0c0a09; /* Dark text on teal */
 	--button-primary-hover-bg: var(--primary-hover);
 
 	/* Error states */
@@ -118,39 +118,39 @@
 
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		/* Backgrounds - Clean dark neutrals */
-		--bg-0: #0a0a0a;
-		--bg-1: #121212;
-		--bg-2: #1a1a1a;
-		--bg-3: #262626;
-		--bg-4: #333333;
-		--bg-5: #404040;
+		/* Backgrounds - Warm dark neutrals with stone tint */
+		--bg-0: #0c0a09;
+		--bg-1: #1c1917;
+		--bg-2: #292524;
+		--bg-3: #44403c;
+		--bg-4: #57534e;
+		--bg-5: #78716c;
 
 		/* RGB values */
-		--bg-0-rgb: 10, 10, 10;
-		--bg-1-rgb: 18, 18, 18;
+		--bg-0-rgb: 12, 10, 9;
+		--bg-1-rgb: 28, 25, 23;
 
-		/* Text - Clean neutral whites */
-		--text-0: #f5f5f5;
-		--text-1: #e0e0e0;
-		--text-2: #a0a0a0;
-		--text-3: #6a6a6a;
-		--text-4: #4a4a4a;
+		/* Text - Warm whites with stone undertone */
+		--text-0: #fafaf9;
+		--text-1: #e7e5e4;
+		--text-2: #a8a29e;
+		--text-3: #78716c;
+		--text-4: #57534e;
 
-		/* Primary Brand Color - Zinc (adjusted for dark) */
-		--primary-50: #18181b;
-		--primary-100: #27272a;
-		--primary-200: #3f3f46;
-		--primary-300: #52525b;
-		--primary-400: #71717a;
-		--primary-500: #a1a1aa;
-		--primary-600: #d4d4d8;
-		--primary-700: #e4e4e7;
-		--primary-800: #f4f4f5;
-		--primary-900: #fafafa;
+		/* Primary Brand Color - Muted Teal (adjusted for dark) */
+		--primary-50: #134e4a;
+		--primary-100: #115e59;
+		--primary-200: #0f766e;
+		--primary-300: #0d9488;
+		--primary-400: #14b8a6;
+		--primary-500: #2dd4bf;
+		--primary-600: #5eead4;
+		--primary-700: #99f6e4;
+		--primary-800: #ccfbf1;
+		--primary-900: #f0fdfa;
 
 		/* RGB for transparency */
-		--primary-rgb: 161, 161, 170;
+		--primary-rgb: 45, 212, 191;
 
 		/* Trading Indicators - Brighter for dark mode */
 		--success: #34d399;
@@ -170,7 +170,7 @@
 
 		/* Component-specific */
 		--button-primary-bg: var(--primary);
-		--button-primary-text: #0a0c0e;
+		--button-primary-text: #0c0a09;
 		--button-primary-hover-bg: var(--primary-hover);
 
 		--error-bg: #3d1b1b;
@@ -178,7 +178,7 @@
 		--error-border: #dc2626;
 
 		/* Logo */
-		--logo: #fcfcfc;
+		--logo: #fafaf9;
 
 		/* Dark mode shadows */
 		--shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
