@@ -119,9 +119,10 @@
 	});
 
 	let selectedOutcome = $state(0);
-	let rulesExpanded = $state(false);
-	type TabType = 'comments' | 'holders' | 'activity';
-	let activeTab = $state<TabType>('comments');
+	type TabType = 'outcomes' | 'about' | 'comments';
+	let activeTab = $state<TabType>('about');
+	type TimeRange = '1H' | '6H' | '1D' | '1W' | '1M' | 'MAX';
+	let selectedTimeRange = $state<TimeRange>('1D');
 	const selectedMarketConditionId = $derived(selectedMarket?.conditionId);
 
 	const commentsQuery = createQuery<Comment[]>(() => ({
@@ -262,21 +263,7 @@
 			{#if event.image}
 				<img src={event.image} alt={event.title || 'Event icon'} class="event-icon" />
 			{/if}
-			<div class="header-text">
-				<h1 class="event-title">{event.title || 'Untitled Event'}</h1>
-				<div class="event-meta">
-					<span class="meta-item">
-						<MoneyIcon size={14} />
-						{formatNumber(event.volume)}
-					</span>
-					{#if event.endDate}
-						<span class="meta-item">
-							<CalendarIcon size={14} />
-							{formatDate(event.endDate)}
-						</span>
-					{/if}
-				</div>
-			</div>
+			<h1 class="event-title">{event.title || 'Untitled Event'}</h1>
 			<button
 				class="share-btn"
 				class:copied={copyState === 'copied'}
@@ -290,155 +277,70 @@
 				{/if}
 			</button>
 		</div>
-		{#if event.tags && event.tags.length > 0}
-			<div class="tags-row">
-				{#each event.tags.slice(0, 4) as tag (tag.id)}
-					<span class="tag">{tag.label}</span>
-				{/each}
-			</div>
-		{/if}
 	</header>
 
 	<!-- Main Content -->
 	<div class="content-grid">
 		<!-- Left Column -->
 		<main class="main-content">
-			<!-- Trade Card (Mobile: inline, Desktop: in sidebar) -->
-			<section class="trade-section mobile-only">
-				{#if isMarketResolved}
-					<div class="resolved-banner">
-						<CheckCircleIcon size={20} />
-						<span>Resolved: {winningOutcome?.label || 'Complete'}</span>
-					</div>
-				{:else if selectedMarketData}
-					<div class="quick-trade">
-						{#if isMultiMarket && selectedMarket}
-							<div class="trade-market-name">{getMarketDisplayTitle(selectedMarket)}</div>
-						{/if}
-						<div class="trade-pills">
-							{#each selectedMarketData as outcome, index (index)}
-								<button
-									class="trade-pill"
-									class:selected={selectedOutcome === index}
-									class:yes={index === 0}
-									class:no={index === 1}
-									onclick={() => (selectedOutcome = index)}
-								>
-									<span class="pill-label">{outcome.label}</span>
-									<span class="pill-price">{outcome.priceFormatted}¢</span>
-								</button>
-							{/each}
+			<!-- Probability Summary (Mobile Only) -->
+			<section class="probability-summary mobile-only">
+				{#if isMultiMarket}
+					{#each filteredMarkets.slice(0, 3) as market, index (market.id)}
+						{@const marketData = parseMarketData(market)}
+						{@const percentage = marketData?.[0]?.priceFormatted || '—'}
+						<div class="summary-item">
+							<span class="summary-dot" style="background-color: {index === 0 ? 'var(--success)' : index === 1 ? 'var(--danger)' : 'var(--text-3)'}"></span>
+							<span class="summary-name">{getMarketDisplayTitle(market)}</span>
+							<span class="summary-percentage">{percentage}%</span>
 						</div>
-						<button class="trade-btn" disabled>Trade</button>
-					</div>
+					{/each}
+				{:else if selectedMarketData}
+					{#each selectedMarketData as outcome, index (index)}
+						<div class="summary-item">
+							<span class="summary-dot" style="background-color: {index === 0 ? 'var(--success)' : 'var(--danger)'}"></span>
+							<span class="summary-name">{outcome.label}</span>
+							<span class="summary-percentage">{outcome.priceFormatted}%</span>
+						</div>
+					{/each}
 				{/if}
 			</section>
 
-			<!-- Outcomes -->
-			<section class="card">
-				<div class="card-header">
-					<h2>Outcomes</h2>
-					{#if filteredMarkets.length > 5}
-						<ScrollIcon size={14} />
-					{/if}
-				</div>
-				<div class="outcomes-list">
-					{#if isMultiMarket}
-						{#each filteredMarkets as market, index (market.id)}
-							{@const marketData = parseMarketData(market)}
-							<button
-								class="outcome-row"
-								class:selected={selectedMarketIndex === index}
-								class:leading={index === 0}
-								onclick={() => selectMarket(index)}
-							>
-								{#if index === 0}
-									<div class="rank-badge">
-										<CupIcon size={10} />
-									</div>
-								{/if}
-								<span class="outcome-name">{getMarketDisplayTitle(market)}</span>
-								<span class="outcome-price">
-									{#if marketData?.[0]?.isResolved}
-										<span class="resolved-tag" class:won={marketData[0].won}>
-											{marketData[0].priceFormatted}
-										</span>
-									{:else}
-										{marketData?.[0]?.priceFormatted || '—'}%
-									{/if}
-								</span>
-							</button>
-						{/each}
-					{:else if selectedMarketData}
-						{#each selectedMarketData as outcome, index (index)}
-							<button
-								class="outcome-row"
-								class:selected={selectedOutcome === index}
-								class:leading={index === 0}
-								onclick={() => (selectedOutcome = index)}
-							>
-								{#if index === 0}
-									<div class="rank-badge">
-										<CupIcon size={10} />
-									</div>
-								{/if}
-								<span class="outcome-name">{outcome.label}</span>
-								<span class="outcome-price">
-									{#if outcome.isResolved}
-										<span class="resolved-tag" class:won={outcome.won}
-											>{outcome.priceFormatted}</span
-										>
-									{:else}
-										{outcome.priceFormatted}%
-									{/if}
-								</span>
-							</button>
-						{/each}
-					{/if}
-				</div>
-			</section>
-
 			<!-- Chart -->
-			<section class="card">
-				<div class="chart-placeholder">Chart coming soon</div>
-			</section>
-
-			<!-- Rules -->
-			{#if event.description}
-				<section class="card">
-					<div class="card-header">
-						<h2>Rules</h2>
-					</div>
-					<div class="rules-content" class:expanded={rulesExpanded}>
-						<p class="rules-text">
-							{#each parsedDescription as segment, i (i)}{#if segment.type === 'text'}{segment.content}{:else}<a
-										href={segment.content}
-										target="_blank"
-										rel="noopener noreferrer"
-										class="rules-link"
-										>{#if segment.iconType === 'x'}<XIcon
-												size={12}
-											/>{:else if segment.iconType === 'github'}<GitHubIcon
-												size={12}
-											/>{:else if segment.iconType === 'linkedin'}<LinkedInIcon
-												size={12}
-											/>{:else if segment.iconType === 'discord'}<DiscordIcon
-												size={12}
-											/>{:else}<GlobalIcon size={12} />{/if}<span>{segment.domain}</span></a
-									>{/if}{/each}
-						</p>
-					</div>
-					{#if event.description.length > 200}
-						<button class="show-more" onclick={() => (rulesExpanded = !rulesExpanded)}>
-							{rulesExpanded ? 'Show less' : 'Show more'}
+			<section class="card chart-card">
+				<div class="chart-placeholder">
+					<span>Chart coming soon</span>
+				</div>
+				<div class="time-controls">
+					{#each ['1H', '6H', '1D', '1W', '1M', 'MAX'] as range}
+						<button
+							class="time-btn"
+							class:active={selectedTimeRange === range}
+							onclick={() => (selectedTimeRange = range as TimeRange)}
+						>
+							{range}
 						</button>
-					{/if}
-				</section>
-			{/if}
+					{/each}
+				</div>
+			</section>
 
 			<!-- Tabs -->
 			<section class="card tabs-card">
 				<div class="tabs-header">
+					<button
+						class="tab mobile-only"
+						class:active={activeTab === 'outcomes'}
+						onclick={() => (activeTab = 'outcomes')}
+					>
+						Outcomes
+					</button>
+					<button
+						class="tab"
+						class:active={activeTab === 'about'}
+						onclick={() => (activeTab = 'about')}
+					>
+						About
+					</button>
 					<button
 						class="tab"
 						class:active={activeTab === 'comments'}
@@ -447,25 +349,109 @@
 						<MessageTextIcon size={16} />
 						Comments
 					</button>
-					<button
-						class="tab"
-						class:active={activeTab === 'holders'}
-						onclick={() => (activeTab = 'holders')}
-					>
-						<LeaderboardIcon size={16} />
-						Holders
-					</button>
-					<button
-						class="tab"
-						class:active={activeTab === 'activity'}
-						onclick={() => (activeTab = 'activity')}
-					>
-						<FlashIcon size={16} />
-						Activity
-					</button>
 				</div>
 				<div class="tab-content">
-					{#if activeTab === 'comments'}
+					{#if activeTab === 'outcomes'}
+						<div class="outcomes-grid mobile-only">
+							{#if isMultiMarket}
+								{#each filteredMarkets as market, index (market.id)}
+									{@const marketData = parseMarketData(market)}
+									<div class="outcome-card">
+										<div class="outcome-card-header">
+											<span class="outcome-card-name">{getMarketDisplayTitle(market)}</span>
+											<span class="outcome-card-volume">{formatNumber(market.volume || 0)} Vol.</span>
+										</div>
+										<div class="outcome-card-body">
+											<span class="outcome-card-percentage">
+												{#if marketData?.[0]?.isResolved}
+													<span class="resolved-tag" class:won={marketData[0].won}>
+														{marketData[0].priceFormatted}
+													</span>
+												{:else}
+													{marketData?.[0]?.priceFormatted || '—'}%
+												{/if}
+											</span>
+											{#if marketData && !marketData[0]?.isResolved}
+												<div class="outcome-card-actions">
+													<button class="bet-btn yes">
+														Yes · {marketData[0]?.priceFormatted || '—'}¢
+													</button>
+													<button class="bet-btn no">
+														No · {marketData[1]?.priceFormatted || '—'}¢
+													</button>
+												</div>
+											{/if}
+										</div>
+									</div>
+								{/each}
+							{:else if selectedMarketData}
+								{#each selectedMarketData as outcome, index (index)}
+									<div class="outcome-card">
+										<div class="outcome-card-header">
+											<span class="outcome-card-name">{outcome.label}</span>
+											<span class="outcome-card-volume">{formatNumber(selectedMarket?.volume || 0)} Vol.</span>
+										</div>
+										<div class="outcome-card-body">
+											<span class="outcome-card-percentage">
+												{#if outcome.isResolved}
+													<span class="resolved-tag" class:won={outcome.won}>{outcome.priceFormatted}</span>
+												{:else}
+													{outcome.priceFormatted}%
+												{/if}
+											</span>
+											{#if !outcome.isResolved}
+												<div class="outcome-card-actions">
+													<button class="bet-btn yes">
+														Yes · {outcome.priceFormatted}¢
+													</button>
+												</div>
+											{/if}
+										</div>
+									</div>
+								{/each}
+							{/if}
+						</div>
+					{:else if activeTab === 'about'}
+						{#if event.description}
+							<div class="about-content">
+								<p class="about-text">
+									{#each parsedDescription as segment, i (i)}{#if segment.type === 'text'}{segment.content}{:else}<a
+												href={segment.content}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="rules-link"
+												>{#if segment.iconType === 'x'}<XIcon
+													size={12}
+												/>{:else if segment.iconType === 'github'}<GitHubIcon
+													size={12}
+												/>{:else if segment.iconType === 'linkedin'}<LinkedInIcon
+													size={12}
+												/>{:else if segment.iconType === 'discord'}<DiscordIcon
+													size={12}
+												/>{:else}<GlobalIcon size={12} />{/if}<span>{segment.domain}</span></a
+											>{/if}{/each}
+								</p>
+								{#if event.endDate}
+									<div class="about-meta">
+										<div class="meta-row">
+											<CalendarIcon size={14} />
+											<span>Ends {formatDate(event.endDate)}</span>
+										</div>
+									</div>
+								{/if}
+								{#if event.volume}
+									<div class="about-meta">
+										<div class="meta-row">
+											<MoneyIcon size={14} />
+											<span>{formatNumber(event.volume)} Volume</span>
+										</div>
+									</div>
+								{/if}
+							</div>
+						{:else}
+							<div class="tab-empty">No description available</div>
+						{/if}
+					{:else if activeTab === 'comments'}
 						{#if commentsQuery.isLoading}
 							<div class="tab-empty">Loading...</div>
 						{:else if commentsQuery.data?.length}
@@ -496,40 +482,6 @@
 						{:else}
 							<div class="tab-empty">No comments yet</div>
 						{/if}
-					{:else if activeTab === 'holders'}
-						{#if holdersQuery.isLoading}
-							<div class="tab-empty">Loading...</div>
-						{:else if holdersQuery.data?.length}
-							{@const allHolders = holdersQuery.data.flatMap((m) => m.holders)}
-							{@const yesHolders = allHolders.filter((h) => h.outcomeIndex === 0).slice(0, 5)}
-							{@const noHolders = allHolders.filter((h) => h.outcomeIndex === 1).slice(0, 5)}
-							<div class="holders-grid">
-								<div class="holders-col">
-									<div class="holders-label yes">Yes</div>
-									{#each yesHolders as holder, i (holder.proxyWallet)}
-										<div class="holder">
-											<span class="holder-rank">#{i + 1}</span>
-											<span class="holder-name">{holder.name || holder.pseudonym || 'Anon'}</span>
-											<span class="holder-amount yes">{formatNumber(holder.amount)}</span>
-										</div>
-									{/each}
-								</div>
-								<div class="holders-col">
-									<div class="holders-label no">No</div>
-									{#each noHolders as holder, i (holder.proxyWallet)}
-										<div class="holder">
-											<span class="holder-rank">#{i + 1}</span>
-											<span class="holder-name">{holder.name || holder.pseudonym || 'Anon'}</span>
-											<span class="holder-amount no">{formatNumber(holder.amount)}</span>
-										</div>
-									{/each}
-								</div>
-							</div>
-						{:else}
-							<div class="tab-empty">No holders data</div>
-						{/if}
-					{:else}
-						<div class="tab-empty">Activity coming soon</div>
 					{/if}
 				</div>
 			</section>
@@ -537,73 +489,67 @@
 
 		<!-- Right Sidebar (Desktop only) -->
 		<aside class="sidebar desktop-only">
-			<div class="sidebar-card">
-				{#if isMarketResolved}
-					<div class="resolved-card">
-						<div class="resolved-icon">
-							<svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-								<circle cx="24" cy="24" r="24" fill="var(--primary)" />
-								<path
-									d="M34 16L20 30L14 24"
-									stroke="white"
-									stroke-width="3"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								/>
-							</svg>
-						</div>
-						<h3>Outcome: {winningOutcome?.label || 'Resolved'}</h3>
-						<p>
-							{isMultiMarket && selectedMarket
-								? getMarketDisplayTitle(selectedMarket)
-								: event.title}
-						</p>
-					</div>
-				{:else}
-					<div class="sidebar-header">
-						{#if event.image}
-							<img
-								src={event.image}
-								alt={event.title || 'Event icon'}
-								class="sidebar-icon"
-								loading="lazy"
-							/>
-						{/if}
-						<span class="sidebar-title">
-							{isMultiMarket && selectedMarket
-								? getMarketDisplayTitle(selectedMarket)
-								: event.title}
-						</span>
-					</div>
-					{#if selectedMarketData}
-						<div class="sidebar-pills">
-							{#each selectedMarketData as outcome, index (index)}
-								<button
-									class="sidebar-pill"
-									class:selected={selectedOutcome === index}
-									class:yes={index === 0}
-									class:no={index === 1}
-									onclick={() => (selectedOutcome = index)}
-								>
-									<span>{outcome.label}</span>
-									<span class="price">{outcome.priceFormatted}¢</span>
-								</button>
-							{/each}
-						</div>
+			<div class="outcomes-panel">
+				<h2 class="outcomes-panel-title">Outcomes</h2>
+				<div class="outcomes-scroll">
+					{#if isMultiMarket}
+						{#each filteredMarkets as market, index (market.id)}
+							{@const marketData = parseMarketData(market)}
+							<div class="outcome-card">
+								<div class="outcome-card-header">
+									<span class="outcome-card-name">{getMarketDisplayTitle(market)}</span>
+									<span class="outcome-card-volume">{formatNumber(market.volume || 0)} Vol.</span>
+								</div>
+								<div class="outcome-card-body">
+									<span class="outcome-card-percentage">
+										{#if marketData?.[0]?.isResolved}
+											<span class="resolved-tag" class:won={marketData[0].won}>
+												{marketData[0].priceFormatted}
+											</span>
+										{:else}
+											{marketData?.[0]?.priceFormatted || '—'}%
+										{/if}
+									</span>
+									{#if marketData && !marketData[0]?.isResolved}
+										<div class="outcome-card-actions">
+											<button class="bet-btn yes">
+												Yes · {marketData[0]?.priceFormatted || '—'}¢
+											</button>
+											<button class="bet-btn no">
+												No · {marketData[1]?.priceFormatted || '—'}¢
+											</button>
+										</div>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					{:else if selectedMarketData}
+						{#each selectedMarketData as outcome, index (index)}
+							<div class="outcome-card">
+								<div class="outcome-card-header">
+									<span class="outcome-card-name">{outcome.label}</span>
+									<span class="outcome-card-volume">{formatNumber(selectedMarket?.volume || 0)} Vol.</span>
+								</div>
+								<div class="outcome-card-body">
+									<span class="outcome-card-percentage">
+										{#if outcome.isResolved}
+											<span class="resolved-tag" class:won={outcome.won}>{outcome.priceFormatted}</span>
+										{:else}
+											{outcome.priceFormatted}%
+										{/if}
+									</span>
+									{#if !outcome.isResolved}
+										<div class="outcome-card-actions">
+											<button class="bet-btn yes">
+												Yes · {outcome.priceFormatted}¢
+											</button>
+										</div>
+									{/if}
+								</div>
+							</div>
+						{/each}
 					{/if}
-					<div class="sidebar-amount">
-						<label for="amount">Amount</label>
-						<input id="amount" type="number" placeholder="$0" />
-						<div class="quick-btns">
-							<button>+$1</button>
-							<button>+$20</button>
-							<button>+$100</button>
-							<button>Max</button>
-						</div>
-					</div>
-					<button class="sidebar-trade-btn" disabled>Trade</button>
-					<p class="terms">By trading, you agree to the <a href="/terms">Terms of Use</a></p>
-				{/if}
+				</div>
 			</div>
 		</aside>
 	</div>
@@ -641,7 +587,7 @@
 
 	.header-row {
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
 		gap: 12px;
 	}
 
@@ -655,31 +601,14 @@
 		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
 	}
 
-	.header-text {
-		flex: 1;
-		min-width: 0;
-	}
-
 	.event-title {
 		font-size: 18px;
 		font-weight: 700;
 		color: var(--text-0);
 		line-height: 1.3;
-		margin: 0 0 6px 0;
-	}
-
-	.event-meta {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 12px;
-	}
-
-	.meta-item {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		font-size: 13px;
-		color: var(--text-2);
+		margin: 0;
+		flex: 1;
+		min-width: 0;
 	}
 
 	.share-btn {
@@ -708,20 +637,37 @@
 		background: rgba(var(--gold-rgb), 0.1);
 	}
 
-	.tags-row {
+	/* Probability Summary (Mobile) */
+	.probability-summary {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
-		margin-top: 10px;
+		flex-direction: column;
+		gap: 8px;
+		margin-bottom: 16px;
 	}
 
-	.tag {
-		padding: 4px 10px;
-		font-size: 11px;
+	.summary-item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 13px;
+	}
+
+	.summary-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.summary-name {
+		flex: 1;
+		color: var(--text-0);
 		font-weight: 500;
-		color: var(--text-2);
-		background: var(--bg-2);
-		border-radius: 6px;
+	}
+
+	.summary-percentage {
+		font-weight: 700;
+		color: var(--text-0);
 	}
 
 	/* Content Grid */
@@ -763,191 +709,6 @@
 		margin: 0;
 	}
 
-	/* Trade Section (Mobile) */
-	.trade-section {
-		margin-bottom: 4px;
-	}
-
-	.resolved-banner {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 8px;
-		padding: 14px;
-		background: var(--primary);
-		color: var(--bg-0);
-		border-radius: 12px;
-		font-weight: 600;
-		font-size: 15px;
-	}
-
-	.quick-trade {
-		background: var(--bg-1);
-		border: 1px solid var(--bg-3);
-		border-radius: 12px;
-		padding: 14px;
-	}
-
-	.trade-market-name {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-0);
-		margin-bottom: 10px;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.trade-pills {
-		display: flex;
-		gap: 8px;
-		margin-bottom: 12px;
-	}
-
-	.trade-pill {
-		flex: 1;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 12px;
-		background: var(--bg-2);
-		border: 2px solid var(--bg-3);
-		border-radius: 10px;
-		cursor: pointer;
-		transition: all 0.15s;
-	}
-
-	.trade-pill.selected.yes {
-		border-color: var(--success);
-		background: rgba(0, 196, 71, 0.1);
-	}
-
-	.trade-pill.selected.no {
-		border-color: var(--danger);
-		background: rgba(255, 51, 102, 0.1);
-	}
-
-	.trade-pill .pill-label {
-		font-size: 14px;
-		font-weight: 500;
-		color: var(--text-0);
-	}
-
-	.trade-pill .pill-price {
-		font-size: 15px;
-		font-weight: 700;
-		color: var(--text-0);
-	}
-
-	.trade-pill.selected.yes .pill-price {
-		color: var(--success);
-	}
-
-	.trade-pill.selected.no .pill-price {
-		color: var(--danger);
-	}
-
-	.trade-btn {
-		width: 100%;
-		padding: 14px;
-		font-size: 16px;
-		font-weight: 600;
-		background: var(--primary);
-		border: none;
-		border-radius: 10px;
-		color: var(--bg-0);
-		cursor: pointer;
-	}
-
-	.trade-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	/* Outcomes */
-	.outcomes-list {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		max-height: 300px;
-		overflow-y: auto;
-	}
-
-	.outcome-row {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 12px;
-		background: var(--bg-2);
-		border: 2px solid transparent;
-		border-radius: 10px;
-		cursor: pointer;
-		width: 100%;
-		text-align: left;
-		transition: all var(--transition-fast);
-	}
-
-	.outcome-row:hover {
-		background: var(--bg-3);
-	}
-
-	.outcome-row.selected {
-		border-color: var(--primary);
-		background: var(--primary-hover-bg);
-	}
-
-	.outcome-row.leading {
-		background: rgba(var(--gold-rgb), 0.08);
-		border-color: transparent;
-	}
-
-	.outcome-row.leading:hover {
-		background: rgba(var(--gold-rgb), 0.12);
-	}
-
-	.outcome-row.leading.selected {
-		background: rgba(var(--gold-rgb), 0.15);
-		border-color: var(--gold-base);
-	}
-
-	.rank-badge {
-		flex-shrink: 0;
-		width: 18px;
-		height: 18px;
-		border-radius: var(--radius-sm);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 10px;
-		font-weight: 700;
-		background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-base) 100%);
-		color: #5c4a15;
-		box-shadow: 0 1px 2px rgba(var(--gold-rgb), 0.3);
-	}
-
-	.outcome-name {
-		font-size: 14px;
-		font-weight: 500;
-		color: var(--text-0);
-		flex: 1;
-		min-width: 0;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.outcome-price {
-		font-size: 16px;
-		font-weight: 700;
-		color: var(--text-0);
-		flex-shrink: 0;
-		margin-left: auto;
-	}
-
-	.outcome-row.leading .outcome-price {
-		color: var(--gold-dark);
-	}
-
 	.resolved-tag {
 		font-size: 12px;
 		font-weight: 600;
@@ -963,33 +724,51 @@
 	}
 
 	/* Chart */
+	.chart-card {
+		padding: 0;
+		overflow: hidden;
+	}
+
 	.chart-placeholder {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 180px;
+		height: 220px;
 		background: var(--bg-2);
-		border-radius: 8px;
 		color: var(--text-3);
 		font-size: 14px;
 	}
 
-	/* Rules */
-	.rules-content {
-		max-height: 80px;
-		overflow: hidden;
+	.time-controls {
+		display: flex;
+		gap: 4px;
+		padding: 12px;
+		background: var(--bg-1);
+		border-top: 1px solid var(--bg-3);
 	}
 
-	.rules-content.expanded {
-		max-height: none;
-	}
-
-	.rules-text {
-		font-size: 14px;
-		line-height: 1.6;
+	.time-btn {
+		flex: 1;
+		padding: 8px;
+		font-size: 12px;
+		font-weight: 600;
+		background: var(--bg-2);
+		border: 1px solid var(--bg-3);
+		border-radius: 6px;
 		color: var(--text-2);
-		margin: 0;
-		white-space: pre-wrap;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.time-btn:hover {
+		background: var(--bg-3);
+		color: var(--text-0);
+	}
+
+	.time-btn.active {
+		background: var(--primary);
+		color: var(--bg-0);
+		border-color: var(--primary);
 	}
 
 	.rules-link {
@@ -1011,17 +790,6 @@
 		white-space: nowrap;
 	}
 
-	.show-more {
-		margin-top: 8px;
-		padding: 0;
-		font-size: 13px;
-		font-weight: 500;
-		color: var(--primary);
-		background: none;
-		border: none;
-		cursor: pointer;
-	}
-
 	/* Tabs */
 	.tabs-card {
 		padding: 0;
@@ -1039,18 +807,23 @@
 		justify-content: center;
 		gap: 6px;
 		padding: 14px 8px;
-		font-size: 13px;
-		font-weight: 500;
+		font-size: 14px;
+		font-weight: 600;
 		color: var(--text-2);
 		background: none;
 		border: none;
 		border-bottom: 2px solid transparent;
 		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.tab:hover {
+		color: var(--text-0);
 	}
 
 	.tab.active {
-		color: var(--gold-dark);
-		border-bottom-color: var(--gold-base);
+		color: var(--primary);
+		border-bottom-color: var(--primary);
 	}
 
 	.tab-content {
@@ -1065,6 +838,147 @@
 		height: 100px;
 		color: var(--text-3);
 		font-size: 14px;
+	}
+
+	/* Outcome Cards */
+	.outcomes-grid {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.outcome-card {
+		background: var(--bg-2);
+		border: 1px solid var(--bg-3);
+		border-radius: 12px;
+		padding: 14px;
+		transition: all var(--transition-fast);
+	}
+
+	.outcomes-grid .outcome-card:not(:last-child) {
+		margin-bottom: 16px;
+	}
+
+	.outcomes-scroll .outcome-card:not(:last-child) {
+		margin-bottom: 12px;
+	}
+
+	.outcome-card:hover {
+		border-color: var(--bg-4);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+	}
+
+	.outcome-card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 12px;
+		gap: 8px;
+	}
+
+	.outcome-card-name {
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--text-0);
+		flex: 1;
+		min-width: 0;
+	}
+
+	.outcome-card-volume {
+		font-size: 11px;
+		font-weight: 500;
+		color: var(--text-3);
+		flex-shrink: 0;
+	}
+
+	.outcome-card-body {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.outcome-card-percentage {
+		font-size: 32px;
+		font-weight: 700;
+		color: var(--text-0);
+		flex-shrink: 0;
+	}
+
+	.outcome-card-actions {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		flex: 1;
+	}
+
+	.bet-btn {
+		padding: 10px 14px;
+		font-size: 13px;
+		font-weight: 600;
+		border: none;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		white-space: nowrap;
+	}
+
+	.bet-btn.yes {
+		background: rgba(0, 196, 71, 0.1);
+		color: var(--success);
+		border: 1px solid rgba(0, 196, 71, 0.2);
+	}
+
+	.bet-btn.yes:hover:not(:disabled) {
+		background: rgba(0, 196, 71, 0.15);
+		border-color: var(--success);
+	}
+
+	.bet-btn.no {
+		background: rgba(255, 51, 102, 0.1);
+		color: var(--danger);
+		border: 1px solid rgba(255, 51, 102, 0.2);
+	}
+
+	.bet-btn.no:hover:not(:disabled) {
+		background: rgba(255, 51, 102, 0.15);
+		border-color: var(--danger);
+	}
+
+	.bet-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	/* About Content */
+	.about-content {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.about-text {
+		font-size: 14px;
+		line-height: 1.6;
+		color: var(--text-1);
+		margin: 0;
+		white-space: pre-wrap;
+	}
+
+	.about-meta {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding-top: 12px;
+		border-top: 1px solid var(--bg-3);
+	}
+
+	.meta-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 13px;
+		color: var(--text-2);
 	}
 
 	/* Comments */
@@ -1216,184 +1130,37 @@
 	/* Sidebar (Desktop) */
 	.sidebar {
 		position: sticky;
-		top: 100px;
+		top: 80px;
+		height: fit-content;
+		max-height: calc(100vh - 100px);
+		overflow-y: auto;
 	}
 
-	.sidebar-card {
+	.outcomes-panel {
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
-		border-radius: 16px;
-		padding: 20px;
-	}
-
-	.resolved-card {
-		text-align: center;
-		padding: 24px 16px;
-	}
-
-	.resolved-card .resolved-icon {
-		margin-bottom: 16px;
-	}
-
-	.resolved-card h3 {
-		font-size: 18px;
-		font-weight: 700;
-		color: var(--primary);
-		margin: 0 0 8px 0;
-	}
-
-	.resolved-card p {
-		font-size: 14px;
-		color: var(--text-2);
-		margin: 0;
-	}
-
-	.sidebar-header {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin-bottom: 16px;
-	}
-
-	.sidebar-icon {
-		width: 32px;
-		height: 32px;
-		border-radius: 8px;
-		object-fit: cover;
-		border: 1.5px solid var(--bg-3);
-		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
-	}
-
-	.sidebar-title {
-		font-size: 14px;
-		font-weight: 600;
-		color: var(--text-0);
-		flex: 1;
-		white-space: nowrap;
+		border-radius: 12px;
 		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 
-	.sidebar-pills {
-		display: flex;
-		gap: 8px;
-		margin-bottom: 16px;
-	}
-
-	.sidebar-pill {
-		flex: 1;
-		display: flex;
-		justify-content: space-between;
-		padding: 12px;
-		background: var(--bg-2);
-		border: 2px solid var(--bg-3);
-		border-radius: 10px;
-		cursor: pointer;
-		font-size: 13px;
-		font-weight: 500;
-		color: var(--text-0);
-	}
-
-	.sidebar-pill .price {
+	.outcomes-panel-title {
+		font-size: 14px;
 		font-weight: 700;
-	}
-
-	.sidebar-pill.selected.yes {
-		border-color: var(--success);
-		background: rgba(0, 196, 71, 0.1);
-	}
-
-	.sidebar-pill.selected.yes .price {
-		color: var(--success);
-	}
-
-	.sidebar-pill.selected.no {
-		border-color: var(--danger);
-		background: rgba(255, 51, 102, 0.1);
-	}
-
-	.sidebar-pill.selected.no .price {
-		color: var(--danger);
-	}
-
-	.sidebar-amount {
-		margin-bottom: 16px;
-	}
-
-	.sidebar-amount label {
-		display: block;
-		font-size: 13px;
-		font-weight: 500;
-		color: var(--text-2);
-		margin-bottom: 8px;
-	}
-
-	.sidebar-amount input {
-		width: 100%;
-		padding: 14px;
-		font-size: 20px;
-		font-weight: 700;
-		background: var(--bg-2);
-		border: 1px solid var(--bg-3);
-		border-radius: 10px;
 		color: var(--text-0);
-		outline: none;
-		margin-bottom: 8px;
-	}
-
-	.sidebar-amount input:focus {
-		border-color: var(--primary);
-	}
-
-	.quick-btns {
-		display: flex;
-		gap: 6px;
-	}
-
-	.quick-btns button {
-		flex: 1;
-		padding: 8px;
-		font-size: 12px;
-		font-weight: 500;
-		background: var(--bg-2);
-		border: 1px solid var(--bg-3);
-		border-radius: 8px;
-		color: var(--text-1);
-		cursor: pointer;
-		transition: all var(--transition-fast);
-	}
-
-	.quick-btns button:hover {
-		border-color: var(--bg-4);
-	}
-
-	.sidebar-trade-btn {
-		width: 100%;
-		padding: 16px;
-		font-size: 16px;
-		font-weight: 600;
-		background: var(--primary);
-		border: none;
-		border-radius: 10px;
-		color: var(--bg-0);
-		cursor: pointer;
-		margin-bottom: 12px;
-	}
-
-	.sidebar-trade-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.terms {
-		font-size: 11px;
-		color: var(--text-3);
-		text-align: center;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 		margin: 0;
+		padding: 16px;
+		border-bottom: 1px solid var(--bg-3);
 	}
 
-	.terms a {
-		color: var(--primary);
+	.outcomes-scroll {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		padding: 16px;
+		max-height: calc(100vh - 200px);
+		overflow-y: auto;
 	}
 
 	/* Desktop Layout */
@@ -1404,17 +1171,16 @@
 		}
 
 		.event-title {
-			font-size: 24px;
+			font-size: 20px;
 		}
 
 		.event-icon {
-			width: 56px;
-			height: 56px;
-			border-width: 2px;
+			width: 48px;
+			height: 48px;
 		}
 
 		.chart-placeholder {
-			height: 280px;
+			height: 380px;
 		}
 
 		.mobile-only {
@@ -1427,15 +1193,40 @@
 
 		.content-grid {
 			display: grid;
-			grid-template-columns: 1fr 340px;
+			grid-template-columns: 1fr 380px;
 			gap: 24px;
 			align-items: start;
 		}
 
-		.holders-grid {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
+		.main-content {
 			gap: 16px;
+		}
+
+		.card {
+			padding: 20px;
+		}
+
+		.chart-card {
+			padding: 0;
+		}
+
+		.time-controls {
+			padding: 16px;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.event-title {
+			font-size: 24px;
+		}
+
+		.event-icon {
+			width: 56px;
+			height: 56px;
+		}
+
+		.content-grid {
+			grid-template-columns: 1fr 420px;
 		}
 	}
 </style>
