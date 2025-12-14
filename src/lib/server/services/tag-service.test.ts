@@ -22,6 +22,7 @@ describe('TagService', () => {
 			baseUrl: 'https://test-api.com',
 			dataApiUrl: 'https://data-api.polymarket.com',
 			bridgeApiUrl: 'https://bridge.polymarket.com',
+			clobApiUrl: 'https://clob.polymarket.com',
 			timeout: 5000,
 			cacheTtl: 60,
 			enableCache: true

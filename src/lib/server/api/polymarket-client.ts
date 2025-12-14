@@ -38,7 +38,8 @@ import {
 	validateProxyWallet,
 	validateBoolean,
 	validateSearchQueryParams,
-	validateTeamQueryParams
+	validateTeamQueryParams,
+	validatePriceHistoryParams
 } from '../validation/input-validator.js';
 import {
 	validateMarket,
@@ -64,7 +65,8 @@ import {
 	validateSportsMetadataList,
 	validateTraderLeaderboard,
 	validateBuilderLeaderboard,
-	validateBuilderVolume
+	validateBuilderVolume,
+	validatePriceHistory
 } from '../validation/response-validator.js';
 
 /**
@@ -709,6 +711,21 @@ export interface DepositAddress {
 	depositAddress: string;
 }
 
+/**
+ * Single price point in price history
+ */
+export interface PricePoint {
+	t: number;
+	p: number;
+}
+
+/**
+ * Price history response from CLOB API
+ */
+export interface PriceHistory {
+	history: PricePoint[];
+}
+
 export interface FetchOptions {
 	params?: Record<string, string | number | boolean | string[]>;
 	signal?: AbortSignal;
@@ -734,6 +751,7 @@ export class PolymarketClient {
 	private baseUrl: string;
 	private dataApiBaseUrl: string;
 	private bridgeApiBaseUrl: string;
+	private clobApiBaseUrl: string;
 	private timeout: number;
 	private logger: Logger;
 
@@ -745,6 +763,7 @@ export class PolymarketClient {
 		this.baseUrl = config.baseUrl;
 		this.dataApiBaseUrl = config.dataApiUrl;
 		this.bridgeApiBaseUrl = config.bridgeApiUrl;
+		this.clobApiBaseUrl = config.clobApiUrl;
 		this.timeout = config.timeout;
 		this.logger = new Logger({ component: 'PolymarketClient' });
 	}
@@ -1967,6 +1986,76 @@ export class PolymarketClient {
 
 		const validated = validateBuilderVolume(data);
 		this.logger.info('Builder volume fetched successfully', { count: validated.length });
+
+		return validated;
+	}
+
+	/**
+	 * Fetches price history for a market token from the CLOB API
+	 * Returns historical timestamp/price pairs for charting
+	 *
+	 * @param params - Query parameters (market, startTs, endTs, interval, fidelity)
+	 * @returns Promise resolving to price history object
+	 * @throws {ValidationError} When parameters are invalid
+	 * @throws {NetworkError} When network connection fails
+	 * @throws {ApiResponseError} When the API returns an error
+	 *
+	 * @example
+	 * ```typescript
+	 * // Using interval
+	 * const history = await client.fetchPriceHistory({
+	 *   market: '0x123...',
+	 *   interval: '1d',
+	 *   fidelity: 60
+	 * });
+	 *
+	 * // Using timestamps
+	 * const history = await client.fetchPriceHistory({
+	 *   market: '0x123...',
+	 *   startTs: 1697875200,
+	 *   endTs: 1697961600,
+	 *   fidelity: 60
+	 * });
+	 * console.log(history); // { history: [{ t: 1697875200, p: 0.65 }, ...] }
+	 * ```
+	 */
+	async fetchPriceHistory(params: {
+		market: string;
+		startTs?: number;
+		endTs?: number;
+		interval?: '1m' | '1w' | '1d' | '6h' | '1h' | 'max';
+		fidelity?: number;
+	}): Promise<PriceHistory> {
+		const validatedParams = validatePriceHistoryParams(params);
+
+		const queryParams = new URLSearchParams();
+		queryParams.set('market', validatedParams.market);
+
+		if (validatedParams.startTs !== undefined) {
+			queryParams.set('startTs', validatedParams.startTs.toString());
+		}
+
+		if (validatedParams.endTs !== undefined) {
+			queryParams.set('endTs', validatedParams.endTs.toString());
+		}
+
+		if (validatedParams.interval !== undefined) {
+			queryParams.set('interval', validatedParams.interval);
+		}
+
+		if (validatedParams.fidelity !== undefined) {
+			queryParams.set('fidelity', validatedParams.fidelity.toString());
+		}
+
+		const url = `${this.clobApiBaseUrl}/prices-history?${queryParams}`;
+		this.logger.info('Fetching price history', { url, params: validatedParams });
+
+		const data = await this.request<unknown>(url);
+
+		const validated = validatePriceHistory(data);
+		this.logger.info('Price history fetched successfully', {
+			pointCount: validated.history.length
+		});
 
 		return validated;
 	}
