@@ -1,45 +1,78 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 
+	interface Series {
+		name: string;
+		color: string;
+		data: Array<{ t: number; p: number }>;
+	}
+
+	interface TooltipItem {
+		name: string;
+		color: string;
+		value: number;
+		y: number;
+	}
+
 	interface Props {
 		formatDate: (val: Date | number) => string;
 		formatPercent: (val: number) => string;
+		series: Series[];
 	}
 
-	let { formatDate, formatPercent }: Props = $props();
+	let { formatDate, formatPercent, series }: Props = $props();
 
-	const { data, xGet, yGet, xScale, width, height } = getContext<any>('LayerCake');
+	const { xGet, yGet, xScale, width, height } = getContext<any>('LayerCake');
 
 	let mouseX = $state(0);
-	let mouseY = $state(0);
 	let isHovering = $state(false);
-	let tooltipData = $state<{ x: Date; y: number } | null>(null);
+	let tooltipDate = $state<Date | null>(null);
+	let tooltipItems = $state<TooltipItem[]>([]);
 
 	function handleMouseMove(e: MouseEvent) {
 		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
 		const clientX = e.clientX - rect.left;
-		const clientY = e.clientY - rect.top;
 		isHovering = true;
 
 		const xValue = $xScale.invert(clientX);
-		const closestPoint = $data.reduce((closest: any, point: any) => {
-			const pointX = point.x instanceof Date ? point.x.getTime() : point.x;
-			const targetX = xValue instanceof Date ? xValue.getTime() : xValue;
-			const closestX = closest?.x instanceof Date ? closest.x.getTime() : (closest?.x ?? Infinity);
+		const targetTime = xValue instanceof Date ? xValue.getTime() : xValue;
 
-			return Math.abs(pointX - targetX) < Math.abs(closestX - targetX) ? point : closest;
-		}, null);
+		const items: TooltipItem[] = [];
 
-		if (closestPoint) {
-			tooltipData = closestPoint;
-			mouseX = $xGet(closestPoint);
-			mouseY = $yGet(closestPoint);
+		for (const s of series) {
+			if (s.data.length === 0) continue;
+
+			const closestPoint = s.data.reduce((closest, point) => {
+				const pointTime = point.t * 1000;
+				const closestTime = closest.t * 1000;
+				return Math.abs(pointTime - targetTime) < Math.abs(closestTime - targetTime)
+					? point
+					: closest;
+			});
+
+			const dataPoint = { x: new Date(closestPoint.t * 1000), y: closestPoint.p * 100 };
+			const yPos = $yGet(dataPoint);
+
+			items.push({
+				name: s.name,
+				color: s.color,
+				value: closestPoint.p * 100,
+				y: yPos
+			});
+
+			if (!tooltipDate) {
+				tooltipDate = new Date(closestPoint.t * 1000);
+				mouseX = $xGet(dataPoint);
+			}
 		}
+
+		tooltipItems = items;
 	}
 
 	function handleMouseLeave() {
 		isHovering = false;
-		tooltipData = null;
+		tooltipDate = null;
+		tooltipItems = [];
 	}
 </script>
 
@@ -50,16 +83,23 @@
 	onmousemove={handleMouseMove}
 	onmouseleave={handleMouseLeave}
 >
-	{#if isHovering && tooltipData}
+	{#if isHovering && tooltipItems.length > 0 && tooltipDate}
 		<div class="crosshair-vertical" style="left: {mouseX}px;"></div>
-		<div class="crosshair-horizontal" style="top: {mouseY}px;"></div>
-		<div class="tooltip-dot" style="left: {mouseX}px; top: {mouseY}px;"></div>
+		{#each tooltipItems as item (item.name)}
+			<div class="tooltip-dot" style="left: {mouseX}px; top: {item.y}px; background: {item.color};"></div>
+		{/each}
 		<div
 			class="tooltip-box"
-			style="left: {mouseX > $width / 2 ? mouseX - 110 : mouseX + 10}px; top: {mouseY - 50}px;"
+			style="left: {mouseX > $width / 2 ? mouseX - 140 : mouseX + 10}px; top: 10px;"
 		>
-			<div class="tooltip-value">{formatPercent(tooltipData.y)}</div>
-			<div class="tooltip-date">{formatDate(tooltipData.x)}</div>
+			<div class="tooltip-date">{formatDate(tooltipDate)}</div>
+			{#each tooltipItems as item (item.name)}
+				<div class="tooltip-item">
+					<div class="tooltip-dot-inline" style="background: {item.color};"></div>
+					<span class="tooltip-name">{item.name}</span>
+					<span class="tooltip-value">{formatPercent(item.value)}</span>
+				</div>
+			{/each}
 		</div>
 	{/if}
 </div>
@@ -74,24 +114,13 @@
 		pointer-events: all;
 	}
 
-	.crosshair-vertical,
-	.crosshair-horizontal {
+	.crosshair-vertical {
 		position: absolute;
 		pointer-events: none;
 		z-index: 1;
-	}
-
-	.crosshair-vertical {
 		top: 0;
 		width: 1px;
 		height: 100%;
-		background: var(--bg-4);
-	}
-
-	.crosshair-horizontal {
-		left: 0;
-		width: 100%;
-		height: 1px;
 		background: var(--bg-4);
 	}
 
@@ -100,7 +129,6 @@
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
-		background: var(--primary);
 		border: 2px solid var(--bg-1);
 		transform: translate(-50%, -50%);
 		pointer-events: none;
@@ -109,24 +137,52 @@
 
 	.tooltip-box {
 		position: absolute;
-		padding: 8px 12px;
+		padding: 10px 12px;
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
 		border-radius: 8px;
 		pointer-events: none;
 		z-index: 3;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-	}
-
-	.tooltip-value {
-		font-size: 16px;
-		font-weight: 700;
-		color: var(--text-0);
-		margin-bottom: 2px;
+		min-width: 120px;
 	}
 
 	.tooltip-date {
 		font-size: 11px;
 		color: var(--text-3);
+		margin-bottom: 8px;
+		padding-bottom: 6px;
+		border-bottom: 1px solid var(--bg-3);
+	}
+
+	.tooltip-item {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin-top: 4px;
+	}
+
+	.tooltip-dot-inline {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.tooltip-name {
+		font-size: 12px;
+		color: var(--text-2);
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.tooltip-value {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-0);
+		flex-shrink: 0;
 	}
 </style>

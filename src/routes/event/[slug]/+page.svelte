@@ -114,7 +114,7 @@
 		typeof window !== 'undefined' && window.innerWidth < 768 ? 'outcomes' : 'about'
 	);
 	type TimeRange = '1H' | '6H' | '1D' | '1W' | '1M' | 'MAX';
-	let selectedTimeRange = $state<TimeRange>('1D');
+	let selectedTimeRange = $state<TimeRange>('MAX');
 
 	const commentsQuery = createQuery<Comment[]>(() => ({
 		queryKey: ['comments', event.id],
@@ -149,6 +149,18 @@
 		return mapping[range];
 	};
 
+	const getFidelityForTimeRange = (range: TimeRange): number | undefined => {
+		const fidelityMap: Record<TimeRange, number | undefined> = {
+			'1H': undefined,
+			'6H': undefined,
+			'1D': undefined,
+			'1W': 5,
+			'1M': 10,
+			'MAX': undefined
+		};
+		return fidelityMap[range];
+	};
+
 	const getClobTokenId = (market: Market | null): string | null => {
 		if (!market?.clobTokenIds) return null;
 		try {
@@ -159,25 +171,52 @@
 		}
 	};
 
-	const priceHistoryQuery = createQuery<PriceHistoryResponse>(() => {
-		const tokenId = getClobTokenId(selectedMarket);
-		return {
-			queryKey: ['priceHistory', tokenId, selectedTimeRange],
-			queryFn: async () => {
-				if (!tokenId) throw new Error('No token ID available');
+	const getSeriesColor = (index: number): string => {
+		const colors = ['var(--success)', 'var(--danger)', 'var(--text-3)'];
+		return colors[index] || 'var(--text-3)';
+	};
 
-				const params = new URLSearchParams({
-					market: tokenId,
-					interval: getIntervalForTimeRange(selectedTimeRange)
-				});
+	const top3Markets = $derived(filteredMarkets.slice(0, 3));
 
-				const response = await fetch(`/api/prices/history?${params}`);
-				if (!response.ok) throw new Error('Failed to fetch price history');
-				return response.json();
-			},
-			enabled: !!tokenId
-		};
-	});
+	const priceHistoryQueries = $derived(
+		top3Markets.map((market, index) => {
+			const tokenId = getClobTokenId(market);
+			return createQuery<PriceHistoryResponse>(() => ({
+				queryKey: ['priceHistory', tokenId, selectedTimeRange],
+				queryFn: async () => {
+					if (!tokenId) throw new Error('No token ID available');
+
+					const params = new URLSearchParams({
+						market: tokenId,
+						interval: getIntervalForTimeRange(selectedTimeRange)
+					});
+
+					const fidelity = getFidelityForTimeRange(selectedTimeRange);
+					if (fidelity !== undefined) {
+						params.set('fidelity', fidelity.toString());
+					}
+
+					const response = await fetch(`/api/prices/history?${params}`);
+					if (!response.ok) throw new Error('Failed to fetch price history');
+					return response.json();
+				},
+				enabled: !!tokenId
+			}));
+		})
+	);
+
+	const chartSeries = $derived(
+		priceHistoryQueries.map((query, index) => ({
+			name: getMarketDisplayTitle(top3Markets[index]),
+			color: getSeriesColor(index),
+			data: query.data?.history ?? []
+		}))
+	);
+
+	const isAnyLoading = $derived(priceHistoryQueries.some((q) => q.isPending));
+	const anyError = $derived(
+		priceHistoryQueries.find((q) => q.error)?.error?.message ?? null
+	);
 
 	function formatRelativeTime(dateStr: string | null): string {
 		if (!dateStr) return '';
@@ -338,11 +377,7 @@
 			<!-- Chart -->
 			<section class="card chart-card">
 				<div class="chart-wrapper">
-					<PriceChart
-						data={priceHistoryQuery.data?.history ?? []}
-						loading={priceHistoryQuery.isPending}
-						error={priceHistoryQuery.error?.message ?? null}
-					/>
+					<PriceChart series={chartSeries} loading={isAnyLoading} error={anyError} />
 				</div>
 				<div class="time-controls">
 					{#each ['1H', '6H', '1D', '1W', '1M', 'MAX'] as range (range)}

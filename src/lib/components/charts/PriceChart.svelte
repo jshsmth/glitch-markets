@@ -10,19 +10,27 @@
 		p: number;
 	}
 
-	interface Props {
+	interface Series {
+		name: string;
+		color: string;
 		data: PricePoint[];
+	}
+
+	interface Props {
+		series: Series[];
 		loading?: boolean;
 		error?: string | null;
 	}
 
-	let { data = [], loading = false, error = null }: Props = $props();
+	let { series = [], loading = false, error = null }: Props = $props();
 
 	const chartData = $derived(
-		data.map((point) => ({
-			x: new Date(point.t * 1000),
-			y: point.p * 100
-		}))
+		series.length > 0 && series[0].data.length > 0
+			? series[0].data.map((point) => ({
+					x: new Date(point.t * 1000),
+					y: point.p * 100
+				}))
+			: []
 	);
 
 	const xKey = 'x';
@@ -70,10 +78,12 @@
 			<Svg>
 				<AxisX {formatDate} />
 				<AxisY {formatPercent} />
-				<Line />
+				{#each series as s (s.name)}
+					<Line color={s.color} data={s.data.map((point) => ({ x: new Date(point.t * 1000), y: point.p * 100 }))} />
+				{/each}
 			</Svg>
 			<Html>
-				<Tooltip {formatDate} {formatPercent} />
+				<Tooltip {formatDate} {formatPercent} {series} />
 			</Html>
 		</LayerCake>
 	</div>
