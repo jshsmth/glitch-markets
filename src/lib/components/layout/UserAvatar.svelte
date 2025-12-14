@@ -275,10 +275,20 @@
 		{/if}
 	{:else}
 		<div class="auth-buttons">
-			<Button variant="tertiary" size="small" onclick={openSignInModal} aria-label="Log in">
+			<Button
+				variant="tertiary"
+				size="small"
+				onclick={() => openSignInModal('signin')}
+				aria-label="Log in"
+			>
 				Log In
 			</Button>
-			<Button variant="primary" size="small" onclick={openSignInModal} aria-label="Sign up">
+			<Button
+				variant="primary"
+				size="small"
+				onclick={() => openSignInModal('signup')}
+				aria-label="Sign up"
+			>
 				Sign Up
 			</Button>
 		</div>

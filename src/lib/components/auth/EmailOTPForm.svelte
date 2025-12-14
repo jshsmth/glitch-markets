@@ -7,6 +7,11 @@
 
 	interface Props {
 		/**
+		 * Initial mode - 'signin' or 'signup'
+		 */
+		initialMode?: 'signin' | 'signup';
+
+		/**
 		 * Callback when authentication succeeds
 		 */
 		onSuccess?: () => void;
@@ -22,12 +27,12 @@
 		onError?: (message: string | null) => void;
 	}
 
-	let { onSuccess, onAuthStateChange, onError }: Props = $props();
+	let { initialMode = 'signin', onSuccess, onAuthStateChange, onError }: Props = $props();
 
 	let isAuthenticating = $state(false);
 	let emailAddress = $state('');
 	let password = $state('');
-	let isSignUp = $state(false);
+	let isSignUp = $state(initialMode === 'signup');
 	let emailSent = $state(false);
 	let sentToEmail = $state('');
 
@@ -257,33 +262,36 @@
 	.email-form {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: 14px;
 	}
 
 	.email-input {
 		width: 100%;
-		padding: 14px 16px;
-		border: 1px solid var(--bg-4);
-		border-radius: 8px;
-		background: var(--bg-0);
+		padding: 15px 18px;
+		border: 1.5px solid var(--bg-4);
+		border-radius: 10px;
+		background: var(--bg-1);
 		color: var(--text-0);
 		font-size: 16px;
+		line-height: 1.5;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
 	.email-input:focus {
 		outline: none;
 		border-color: var(--primary);
-		box-shadow: var(--shadow-input-focus);
+		background: var(--bg-0);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
 	}
 
 	.email-input:disabled {
-		opacity: 0.6;
+		opacity: 0.5;
 		cursor: not-allowed;
 	}
 
 	.email-input::placeholder {
 		color: var(--text-3);
+		font-weight: 400;
 	}
 
 	.auth-button {
@@ -291,20 +299,21 @@
 		align-items: center;
 		justify-content: center;
 		gap: 12px;
-		padding: 14px 24px;
+		padding: 16px 24px;
 		border: none;
-		border-radius: 8px;
+		border-radius: 10px;
 		font-size: 16px;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		height: 52px;
+		height: 54px;
 		width: 100%;
 	}
 
 	.auth-button:disabled {
 		cursor: not-allowed;
-		opacity: 0.6;
+		opacity: 0.5;
+		filter: saturate(0.8);
 	}
 
 	.auth-button:not(:disabled):hover {
@@ -318,11 +327,13 @@
 
 	.auth-button.primary {
 		background: var(--primary);
-		color: var(--text-0);
+		color: white;
+		box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 25%, transparent);
 	}
 
 	.auth-button.primary:not(:disabled):hover {
 		background: var(--primary-hover);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 35%, transparent);
 	}
 
 	.auth-button.secondary {
@@ -341,18 +352,20 @@
 		border: none;
 		color: var(--text-2);
 		font-size: 14px;
+		font-weight: 500;
 		cursor: pointer;
-		padding: 8px;
+		padding: 12px 8px;
+		margin-top: 4px;
 		transition: color 0.2s;
 		text-align: center;
 	}
 
 	.toggle-mode-button:hover {
-		color: var(--text-0);
+		color: var(--primary);
 	}
 
 	.toggle-mode-button:disabled {
-		opacity: 0.6;
+		opacity: 0.5;
 		cursor: not-allowed;
 	}
 
@@ -373,7 +386,7 @@
 
 	@media (min-width: 768px) {
 		.auth-button {
-			height: 50px;
+			height: 52px;
 		}
 	}
 

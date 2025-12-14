@@ -145,7 +145,11 @@
 	</div>
 
 	<!-- Global modals rendered at root level -->
-	<SignInModal isOpen={signInModalState.isOpen} onClose={closeSignInModal} />
+	<SignInModal
+		isOpen={signInModalState.isOpen}
+		initialMode={signInModalState.initialMode}
+		onClose={closeSignInModal}
+	/>
 	<DepositModal isOpen={depositModalState.isOpen} onClose={closeDepositModal} />
 	<WithdrawModal isOpen={withdrawModalState.isOpen} onClose={closeWithdrawModal} />
 

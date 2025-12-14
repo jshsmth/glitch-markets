@@ -4,11 +4,13 @@
  */
 
 export const signInModalState = $state({
-	isOpen: false
+	isOpen: false,
+	initialMode: 'signin' as 'signin' | 'signup'
 });
 
-export function openSignInModal() {
+export function openSignInModal(mode: 'signin' | 'signup' = 'signin') {
 	signInModalState.isOpen = true;
+	signInModalState.initialMode = mode;
 }
 
 export function closeSignInModal() {
