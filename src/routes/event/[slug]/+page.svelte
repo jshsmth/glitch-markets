@@ -14,6 +14,7 @@
 	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
 	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
+	import PriceChart from '$lib/components/charts/PriceChart.svelte';
 	import { formatNumber } from '$lib/utils/format';
 
 	let { data }: { data: PageData } = $props();
@@ -131,6 +132,52 @@
 		},
 		enabled: activeTab === 'comments'
 	}));
+
+	interface PriceHistoryResponse {
+		history: Array<{ t: number; p: number }>;
+	}
+
+	const getIntervalForTimeRange = (range: TimeRange): '1h' | '6h' | '1d' | '1w' | '1m' | 'max' => {
+		const mapping: Record<TimeRange, '1h' | '6h' | '1d' | '1w' | '1m' | 'max'> = {
+			'1H': '1h',
+			'6H': '6h',
+			'1D': '1d',
+			'1W': '1w',
+			'1M': '1m',
+			'MAX': 'max'
+		};
+		return mapping[range];
+	};
+
+	const getClobTokenId = (market: Market | null): string | null => {
+		if (!market?.clobTokenIds) return null;
+		try {
+			const tokenIds = JSON.parse(market.clobTokenIds);
+			return Array.isArray(tokenIds) && tokenIds[0] ? tokenIds[0] : null;
+		} catch {
+			return null;
+		}
+	};
+
+	const priceHistoryQuery = createQuery<PriceHistoryResponse>(() => {
+		const tokenId = getClobTokenId(selectedMarket);
+		return {
+			queryKey: ['priceHistory', tokenId, selectedTimeRange],
+			queryFn: async () => {
+				if (!tokenId) throw new Error('No token ID available');
+
+				const params = new URLSearchParams({
+					market: tokenId,
+					interval: getIntervalForTimeRange(selectedTimeRange)
+				});
+
+				const response = await fetch(`/api/prices/history?${params}`);
+				if (!response.ok) throw new Error('Failed to fetch price history');
+				return response.json();
+			},
+			enabled: !!tokenId
+		};
+	});
 
 	function formatRelativeTime(dateStr: string | null): string {
 		if (!dateStr) return '';
@@ -290,8 +337,12 @@
 
 			<!-- Chart -->
 			<section class="card chart-card">
-				<div class="chart-placeholder">
-					<span>Chart coming soon</span>
+				<div class="chart-wrapper">
+					<PriceChart
+						data={priceHistoryQuery.data?.history ?? []}
+						loading={priceHistoryQuery.isPending}
+						error={priceHistoryQuery.error?.message ?? null}
+					/>
 				</div>
 				<div class="time-controls">
 					{#each ['1H', '6H', '1D', '1W', '1M', 'MAX'] as range (range)}
@@ -705,14 +756,9 @@
 		overflow: hidden;
 	}
 
-	.chart-placeholder {
-		display: flex;
-		align-items: center;
-		justify-content: center;
+	.chart-wrapper {
 		height: 220px;
-		background: var(--bg-2);
-		color: var(--text-3);
-		font-size: 14px;
+		width: 100%;
 	}
 
 	.time-controls {
@@ -1074,7 +1120,7 @@
 			height: 48px;
 		}
 
-		.chart-placeholder {
+		.chart-wrapper {
 			height: 380px;
 		}
 
