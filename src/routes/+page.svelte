@@ -2,6 +2,7 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import { queryKeys } from '$lib/query/client';
 	import EventList from '$lib/components/events/EventList.svelte';
+	import WatchlistSection from '$lib/components/events/WatchlistSection.svelte';
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import { browser } from '$app/environment';
 	import { untrack } from 'svelte';
@@ -82,6 +83,7 @@
 </script>
 
 <div class="page-container">
+	<WatchlistSection />
 	<EventList
 		events={allEvents}
 		loading={isInitialLoad}
