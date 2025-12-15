@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { createQuery } from '@tanstack/svelte-query';
 	import type { Position, Trade } from '$lib/server/api/polymarket-client';
-	import type { Order } from '$routes/api/users/orders/+server';
+	import type { Order } from '$lib/types/user';
 	import { queryKeys } from '$lib/query/client';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Search from '$lib/components/ui/Search.svelte';

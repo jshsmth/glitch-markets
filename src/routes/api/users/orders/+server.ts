@@ -10,24 +10,9 @@ import { json, type RequestEvent } from '@sveltejs/kit';
 import { Logger } from '$lib/server/utils/logger.js';
 import { createL2Client } from '$lib/server/polymarket/l2-client.js';
 import { formatErrorResponse } from '$lib/server/errors/api-errors.js';
+import type { Order } from '$lib/types/user.js';
 
 const logger = new Logger({ component: 'OrdersRoute' });
-
-export interface Order {
-	id: string;
-	market: string;
-	side: 'BUY' | 'SELL';
-	type: 'LIMIT' | 'MARKET';
-	price: number;
-	size: number;
-	filled: number;
-	remaining: number;
-	status: 'OPEN' | 'PARTIALLY_FILLED';
-	timestamp: number;
-	outcome: string;
-	icon: string;
-	eventSlug: string;
-}
 
 export async function GET({ locals }: RequestEvent) {
 	try {
