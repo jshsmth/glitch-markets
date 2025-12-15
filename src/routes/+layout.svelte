@@ -14,6 +14,7 @@
 	} from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
 	import { initializeWalletSync } from '$lib/stores/wallet.svelte';
+	import { initializeBalanceSync } from '$lib/stores/balance.svelte';
 	import {
 		initializeWatchlist,
 		clearWatchlist,
@@ -53,6 +54,7 @@
 		setQueryClient(queryClient);
 
 		const cleanupWalletSync = initializeWalletSync();
+		const cleanupBalanceSync = initializeBalanceSync();
 
 		if (data?.session?.user) {
 			handleUserSignIn();
@@ -72,6 +74,7 @@
 		return () => {
 			subscription.unsubscribe();
 			cleanupWalletSync();
+			cleanupBalanceSync();
 		};
 	});
 

@@ -7,7 +7,21 @@
 	import PortfolioStat from '$lib/components/ui/PortfolioStat.svelte';
 	import SearchWithResults from '$lib/components/ui/SearchWithResults.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
+	import { balanceState } from '$lib/stores/balance.svelte';
 	import { openDepositModal } from '$lib/stores/modal.svelte';
+
+	const formattedBalance = $derived.by(() => {
+		if (!balanceState.hasProxyWallet) return '$0.00';
+		if (balanceState.balance === null) return '$0.00';
+
+		const numBalance = parseFloat(balanceState.balance);
+		return new Intl.NumberFormat('en-US', {
+			style: 'currency',
+			currency: 'USD',
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2
+		}).format(numBalance);
+	});
 
 	function handleDepositClick() {
 		openDepositModal();
@@ -31,8 +45,18 @@
 			<div class="right-section">
 				{#if !authState.isInitializing && authState.user}
 					<div class="portfolio-stats">
-						<PortfolioStat label="Portfolio" value="$0.00" valueColor="success" href="/portfolio" />
-						<PortfolioStat label="Cash" value="$0.00" valueColor="success" href="/portfolio" />
+						<PortfolioStat
+							label="Portfolio"
+							value={formattedBalance}
+							valueColor="success"
+							href="/portfolio"
+						/>
+						<PortfolioStat
+							label="Cash"
+							value={formattedBalance}
+							valueColor="success"
+							href="/portfolio"
+						/>
 					</div>
 
 					<Button variant="primary" size="small" onclick={handleDepositClick}>Deposit</Button>
