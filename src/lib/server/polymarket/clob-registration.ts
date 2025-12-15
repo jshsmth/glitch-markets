@@ -3,12 +3,14 @@
  * Handles registration with Polymarket's CLOB (Central Limit Order Book)
  * and creation of API credentials for trading
  *
- * Uses direct REST API calls instead of broken npm package
+ * Uses official @polymarket/clob-client SDK
  */
 
+import { ClobClient } from '@polymarket/clob-client';
+import { Wallet } from '@ethersproject/wallet';
 import { Logger } from '../utils/logger';
 import { deriveProxyWalletAddress } from '../utils/proxy-wallet';
-import { signTypedDataWithServerWallet } from '../wallet/server-wallet';
+import { decryptData } from '../utils/encryption';
 import { supabaseAdmin } from '$lib/supabase/admin';
 
 const logger = new Logger({ component: 'CLOBRegistration' });
@@ -24,55 +26,28 @@ export interface PolymarketCredentials {
 }
 
 /**
- * Create EIP-712 signature for CLOB authentication
- * Following exact Polymarket clob-client implementation
+ * Create an ethers Wallet from encrypted key shares
+ * The CLOB client uses ethers, so we need to convert from our viem setup
  */
-async function createClobAuthSignature(
-	walletAddress: string,
-	timestamp: number,
-	nonce: number,
-	encryptedKeyShares?: string
-): Promise<string> {
-	// EIP-712 domain for Polymarket CLOB - matches clob-client exactly
-	const domain = {
-		name: 'ClobAuthDomain',
-		version: '1',
-		chainId: CHAIN_ID
-	} as const;
+function createEthersWallet(encryptedKeyShares: string): Wallet {
+	const privateKey = decryptData(encryptedKeyShares) as string;
+	return new Wallet(privateKey);
+}
 
-	// EIP-712 types - matches clob-client buildClobEip712Signature exactly
-	const types = {
-		ClobAuth: [
-			{ name: 'address', type: 'address' },
-			{ name: 'timestamp', type: 'string' },
-			{ name: 'nonce', type: 'uint256' },
-			{ name: 'message', type: 'string' }
-		]
-	};
-
-	// Message to sign - matches clob-client exactly
-	const message = {
-		address: walletAddress as `0x${string}`,
-		timestamp: `${timestamp}`,
-		nonce: BigInt(nonce),
-		message: 'This message attests that I control the given wallet'
-	};
-
-	// Sign using viem server wallet
-	const signature = await signTypedDataWithServerWallet(
-		walletAddress,
-		domain,
-		types,
-		message,
-		encryptedKeyShares
-	);
-
-	return signature;
+/**
+ * Create L1 authenticated CLOB client
+ * Used for API key management operations
+ */
+function createL1Client(encryptedKeyShares: string): ClobClient {
+	const wallet = createEthersWallet(encryptedKeyShares);
+	return new ClobClient(CLOB_API_URL, CHAIN_ID, wallet);
 }
 
 /**
  * Register user with Polymarket CLOB and create API credentials
  * This allows the user to trade on Polymarket
+ *
+ * Uses the official CLOB client for L1 authentication
  */
 export async function registerWithPolymarket(userId: string): Promise<PolymarketCredentials> {
 	try {
@@ -91,6 +66,10 @@ export async function registerWithPolymarket(userId: string): Promise<Polymarket
 
 		const { server_wallet_address, encrypted_server_key_shares } = user;
 
+		if (!encrypted_server_key_shares) {
+			throw new Error('Encrypted key shares not found');
+		}
+
 		logger.info('Retrieved user wallet info', {
 			userId,
 			address: server_wallet_address
@@ -105,48 +84,25 @@ export async function registerWithPolymarket(userId: string): Promise<Polymarket
 			proxyWallet: proxyWalletAddress
 		});
 
-		// Create EIP-712 signature for L1 authentication
-		const timestamp = Math.floor(Date.now() / 1000);
-		const nonce = 0; // Default nonce is 0 for first-time registration
-		const signature = await createClobAuthSignature(
-			server_wallet_address,
-			timestamp,
-			nonce,
-			encrypted_server_key_shares || undefined
-		);
+		// Create L1 authenticated CLOB client
+		const client = createL1Client(encrypted_server_key_shares);
 
-		logger.info('Created CLOB auth signature', { userId });
+		logger.info('Created L1 CLOB client', { userId });
 
-		// Call Polymarket CLOB API to create/derive API key
-		// Header names must use underscores per Polymarket docs
-		const response = await fetch(`${CLOB_API_URL}/auth/api-key`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				POLY_ADDRESS: server_wallet_address,
-				POLY_SIGNATURE: signature,
-				POLY_TIMESTAMP: timestamp.toString(),
-				POLY_NONCE: nonce.toString()
-			}
-		});
+		// Use CLOB client to create or derive API credentials
+		// This will automatically handle EIP-712 signing and API communication
+		const apiCreds = await client.createOrDeriveApiKey();
 
-		if (!response.ok) {
-			const errorText = await response.text();
-			throw new Error(`CLOB API error: ${response.status} - ${errorText}`);
-		}
-
-		const apiCreds = await response.json();
-
-		logger.info('Successfully created/derived API credentials', {
+		logger.info('Successfully created/derived API credentials via CLOB client', {
 			userId,
 			proxyWallet: proxyWalletAddress,
-			hasApiKey: !!apiCreds.apiKey,
+			hasApiKey: !!apiCreds.key,
 			hasSecret: !!apiCreds.secret,
 			hasPassphrase: !!apiCreds.passphrase
 		});
 
 		return {
-			apiKey: apiCreds.apiKey,
+			apiKey: apiCreds.key,
 			secret: apiCreds.secret,
 			passphrase: apiCreds.passphrase,
 			proxyWalletAddress
