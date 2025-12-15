@@ -5,7 +5,22 @@
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
 	import { openDepositModal, openWithdrawModal } from '$lib/stores/modal.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
+	import { balanceState } from '$lib/stores/balance.svelte';
 	import { goto } from '$app/navigation';
+
+	const formattedBalance = $derived.by(() => {
+		if (balanceState.isLoading) return '...';
+		if (!balanceState.hasProxyWallet) return '$0.00';
+		if (balanceState.balance === null) return '$0.00';
+
+		const numBalance = parseFloat(balanceState.balance);
+		return new Intl.NumberFormat('en-US', {
+			style: 'currency',
+			currency: 'USD',
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2
+		}).format(numBalance);
+	});
 
 	function handleDeposit() {
 		openDepositModal();
@@ -34,11 +49,11 @@
 				<span class="card-label">Portfolio</span>
 				<div class="cash-badge">
 					<MoneyIcon size={14} color="var(--success)" />
-					<span>$0.00</span>
+					<span>{formattedBalance}</span>
 				</div>
 			</div>
 
-			<span class="value">$0.00</span>
+			<span class="value">{formattedBalance}</span>
 
 			<div class="card-actions">
 				<Button variant="primary" fullWidth onclick={handleDeposit}>
