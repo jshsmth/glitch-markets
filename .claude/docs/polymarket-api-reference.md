@@ -111,6 +111,22 @@ Quick reference for looking up official Polymarket API documentation.
 - **Clients**: https://docs.polymarket.com/developers/CLOB/clients
 - **Authentication**: https://docs.polymarket.com/developers/CLOB/authentication
 
+#### Order Management
+
+- **Orders Overview**: https://docs.polymarket.com/developers/CLOB/orders/orders
+- **Create Order**: https://docs.polymarket.com/developers/CLOB/orders/create-order
+- **Create Order Batch**: https://docs.polymarket.com/developers/CLOB/orders/create-order-batch
+- **Get Order**: https://docs.polymarket.com/developers/CLOB/orders/get-order
+- **Get Active Orders**: https://docs.polymarket.com/developers/CLOB/orders/get-active-order
+- **Check Scoring**: https://docs.polymarket.com/developers/CLOB/orders/check-scoring
+- **Cancel Orders**: https://docs.polymarket.com/developers/CLOB/orders/cancel-orders
+- **On-chain Order Info**: https://docs.polymarket.com/developers/CLOB/orders/onchain-order-info
+
+#### Trades
+
+- **Trades Overview**: https://docs.polymarket.com/developers/CLOB/trades/trades-overview
+- **Get Trades**: https://docs.polymarket.com/developers/CLOB/trades/trades
+
 #### Endpoints
 
 **REST**
@@ -137,11 +153,6 @@ wss://ws-live-data.polymarket.com
 ### API Rate Limits
 
 - **Rate Limits**: https://docs.polymarket.com/quickstart/introduction/rate-limits
-
-### Trade Overview
-
-- **Trades Overview**: https://docs.polymarket.com/developers/CLOB/trades/trades-overview
-- **Get Trades**: https://docs.polymarket.com/developers/CLOB/trades/trades
 
 ### Proxy Wallet
 
