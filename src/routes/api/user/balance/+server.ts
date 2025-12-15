@@ -6,6 +6,9 @@
 
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { getUSDCBalance } from '$lib/server/utils/balance';
+import { Logger } from '$lib/server/utils/logger';
+
+const logger = new Logger({ component: 'BalanceRoute' });
 
 export async function GET({ locals }: RequestEvent) {
 	try {
@@ -44,7 +47,10 @@ export async function GET({ locals }: RequestEvent) {
 			hasProxyWallet: true
 		});
 	} catch (err) {
-		console.error('Error fetching user balance:', err);
+		logger.error('Error fetching user balance', {
+			error: err instanceof Error ? err.message : 'Unknown error',
+			stack: err instanceof Error ? err.stack : undefined
+		});
 		return json({ error: 'Failed to fetch balance' }, { status: 500 });
 	}
 }

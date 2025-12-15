@@ -113,5 +113,11 @@ export const queryKeys = {
 	},
 	watchlist: {
 		all: ['watchlist'] as const
+	},
+	users: {
+		positions: (wallet: string | null) => ['users', 'positions', wallet] as const,
+		orders: (wallet: string | null) => ['users', 'orders', wallet] as const,
+		trades: (wallet: string | null) => ['users', 'trades', wallet] as const,
+		activity: (wallet: string | null) => ['users', 'activity', wallet] as const
 	}
 };
