@@ -45,8 +45,18 @@
 			<div class="right-section">
 				{#if !authState.isInitializing && authState.user}
 					<div class="portfolio-stats">
-						<PortfolioStat label="Portfolio" value={formattedBalance} valueColor="success" href="/portfolio" />
-						<PortfolioStat label="Cash" value={formattedBalance} valueColor="success" href="/portfolio" />
+						<PortfolioStat
+							label="Portfolio"
+							value={formattedBalance}
+							valueColor="success"
+							href="/portfolio"
+						/>
+						<PortfolioStat
+							label="Cash"
+							value={formattedBalance}
+							valueColor="success"
+							href="/portfolio"
+						/>
 					</div>
 
 					<Button variant="primary" size="small" onclick={handleDepositClick}>Deposit</Button>
