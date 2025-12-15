@@ -9,7 +9,6 @@
 	import { goto } from '$app/navigation';
 
 	const formattedBalance = $derived.by(() => {
-		if (balanceState.isLoading) return '...';
 		if (!balanceState.hasProxyWallet) return '$0.00';
 		if (balanceState.balance === null) return '$0.00';
 

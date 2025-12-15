@@ -26,6 +26,9 @@ export const balanceState = $state<BalanceState>({
 
 let abortController: AbortController | null = null;
 let lastProfileVersion = -1;
+let refetchInterval: ReturnType<typeof setInterval> | null = null;
+
+const BALANCE_REFETCH_INTERVAL_MS = 60000;
 
 /**
  * Fetch balance from the API
@@ -78,7 +81,7 @@ export async function fetchBalance(): Promise<void> {
 }
 
 /**
- * Auto-fetch balance when auth state changes
+ * Auto-fetch balance when auth state changes and periodically
  * Call this in a $effect in your root layout
  */
 export function initializeBalanceSync(): () => void {
@@ -87,6 +90,10 @@ export function initializeBalanceSync(): () => void {
 			const currentVersion = authState.profileVersion;
 
 			if (!authState.session) {
+				if (refetchInterval) {
+					clearInterval(refetchInterval);
+					refetchInterval = null;
+				}
 				balanceState.balance = null;
 				balanceState.balanceRaw = null;
 				balanceState.hasProxyWallet = false;
@@ -99,11 +106,24 @@ export function initializeBalanceSync(): () => void {
 			if (currentVersion !== lastProfileVersion) {
 				lastProfileVersion = currentVersion;
 				fetchBalance();
+
+				if (refetchInterval) {
+					clearInterval(refetchInterval);
+				}
+				refetchInterval = setInterval(() => {
+					fetchBalance();
+				}, BALANCE_REFETCH_INTERVAL_MS);
 			}
 		});
 	});
 
-	return cleanup;
+	return () => {
+		cleanup();
+		if (refetchInterval) {
+			clearInterval(refetchInterval);
+			refetchInterval = null;
+		}
+	};
 }
 
 /**
@@ -113,6 +133,11 @@ export function resetBalanceState(): void {
 	if (abortController) {
 		abortController.abort();
 		abortController = null;
+	}
+
+	if (refetchInterval) {
+		clearInterval(refetchInterval);
+		refetchInterval = null;
 	}
 
 	balanceState.balance = null;
