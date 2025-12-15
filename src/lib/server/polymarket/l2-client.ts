@@ -97,8 +97,7 @@ async function getUserWallet(userId: string): Promise<Wallet> {
  * ```
  */
 export async function createL2Client(userId: string): Promise<ClobClient> {
-	const { apiKey, secret, passphrase, proxyWalletAddress } =
-		await getUserCredentials(userId);
+	const { apiKey, secret, passphrase, proxyWalletAddress } = await getUserCredentials(userId);
 
 	// Get user's wallet for signing operations
 	const wallet = await getUserWallet(userId);
