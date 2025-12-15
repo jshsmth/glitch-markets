@@ -102,7 +102,7 @@
 	});
 
 	$effect(() => {
-		const userAddress = walletState.serverWalletAddress;
+		const userAddress = walletState.proxyWalletAddress;
 		if (selectedAsset && userAddress) {
 			fetchDepositAddress(selectedAsset, userAddress);
 		}
