@@ -88,10 +88,9 @@
 		<!-- Mobile backdrop -->
 		<div
 			class="backdrop"
-			role="button"
-			tabindex="-1"
+			role="presentation"
 			onclick={() => (isOpen = false)}
-			onkeydown={(e) => e.key === 'Escape' && (isOpen = false)}
+			onkeydown={(e) => e.key === 'Enter' && (isOpen = false)}
 		></div>
 
 		<div
@@ -250,7 +249,7 @@
 			left: 0;
 			right: 0;
 			bottom: 0;
-			background: rgba(0, 0, 0, 0.5);
+			background: var(--overlay-backdrop-light);
 			z-index: var(--z-overlay);
 			animation: fadeIn 0.2s ease-out;
 		}
@@ -296,6 +295,13 @@
 		}
 		to {
 			opacity: 1;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.backdrop,
+		.filter-panel {
+			animation: none;
 		}
 	}
 </style>

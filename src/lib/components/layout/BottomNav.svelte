@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { preloadData } from '$app/navigation';
-	import { untrack } from 'svelte';
+	import { onMount } from 'svelte';
 	import HomeIcon from '$lib/components/icons/HomeIcon.svelte';
 	import CompassIcon from '$lib/components/icons/CompassIcon.svelte';
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
@@ -19,40 +19,53 @@
 
 	import type { Component } from 'svelte';
 
-	interface NavItem {
+	type NavItemBase = {
 		label: string;
-		href: string;
 		icon: Component;
-		action?: 'explore' | 'profile';
+	};
+
+	type NavLinkItem = NavItemBase & {
+		type: 'link';
+		href: string;
 		requiresAuth?: boolean;
-	}
+	};
+
+	type NavActionItem = NavItemBase & {
+		type: 'action';
+		action: 'explore' | 'profile';
+	};
+
+	type NavItem = NavLinkItem | NavActionItem;
 
 	const navItems: NavItem[] = [
 		{
+			type: 'link',
 			label: 'Home',
 			href: '/',
 			icon: HomeIcon
 		},
 		{
+			type: 'action',
 			label: 'Explore',
-			href: '#',
 			icon: CompassIcon,
 			action: 'explore'
 		},
 		{
+			type: 'link',
 			label: 'Search',
 			href: '/search',
 			icon: SearchIcon
 		},
 		{
+			type: 'link',
 			label: 'Portfolio',
 			href: '/portfolio',
 			icon: PokerChipIcon,
 			requiresAuth: true
 		},
 		{
+			type: 'action',
 			label: 'Profile',
-			href: '#',
 			icon: UserIcon,
 			action: 'profile'
 		}
@@ -61,23 +74,23 @@
 	let exploreOpen = $state(false);
 	let profileMenuOpen = $state(false);
 
-	function isActive(href: string, action?: string): boolean {
-		if (action === 'explore') return exploreOpen;
-		if (action === 'profile') return profileMenuOpen;
-		if (href === '#') return false;
-		return $page.url.pathname === href;
+	function isActive(item: NavItem): boolean {
+		if (item.type === 'action') {
+			if (item.action === 'explore') return exploreOpen;
+			if (item.action === 'profile') return profileMenuOpen;
+			return false;
+		}
+		return $page.url.pathname === item.href;
 	}
 
 	function handleNavClick(event: MouseEvent, item: NavItem) {
-		if (item.action === 'explore') {
+		if (item.type === 'action') {
 			event.preventDefault();
-			exploreOpen = true;
-			return;
-		}
-
-		if (item.action === 'profile') {
-			event.preventDefault();
-			profileMenuOpen = true;
+			if (item.action === 'explore') {
+				exploreOpen = true;
+			} else if (item.action === 'profile') {
+				profileMenuOpen = true;
+			}
 			return;
 		}
 
@@ -118,15 +131,11 @@
 		profileMenuOpen = false;
 	}
 
-	let hasPreloaded = $state(false);
-	$effect(() => {
-		if (untrack(() => hasPreloaded)) return;
-		hasPreloaded = true;
-
+	onMount(() => {
 		const currentPath = $page.url.pathname;
 		const preloadRoutes = () => {
 			navItems.forEach((item) => {
-				if (!item.action && item.href !== currentPath) {
+				if (item.type === 'link' && item.href !== currentPath) {
 					preloadData(item.href).catch(() => {});
 				}
 			});
@@ -144,10 +153,10 @@
 	{#each navItems as item (item.label)}
 		{@const Icon = item.icon}
 		<a
-			href={item.href}
+			href={item.type === 'link' ? item.href : '#'}
 			class="nav-item"
-			class:active={isActive(item.href, item.action)}
-			aria-current={isActive(item.href, item.action) ? 'page' : undefined}
+			class:active={isActive(item)}
+			aria-current={isActive(item) ? 'page' : undefined}
 			aria-label={item.label}
 			onclick={(e) => handleNavClick(e, item)}
 			data-sveltekit-preload-data="tap"
@@ -167,33 +176,33 @@
 	<nav aria-label="Profile options">
 		<ul class="menu-list" role="menu">
 			{#if authState.user}
-				<li role="menuitem">
-					<button class="menu-item" onclick={handleDeposit}>
+				<li>
+					<button class="menu-item" role="menuitem" onclick={handleDeposit}>
 						<DollarCircleIcon size={22} color="currentColor" />
 						<span>Deposit</span>
 					</button>
 				</li>
-				<li role="menuitem">
-					<a href="/settings" class="menu-item" onclick={closeProfileMenu}>
+				<li>
+					<a href="/settings" class="menu-item" role="menuitem" onclick={closeProfileMenu}>
 						<SettingsIcon size={22} color="currentColor" />
 						<span>Settings</span>
 					</a>
 				</li>
-				<li role="menuitem">
-					<button class="menu-item menu-item-danger" onclick={handleLogout}>
+				<li>
+					<button class="menu-item menu-item-danger" role="menuitem" onclick={handleLogout}>
 						<LogoutIcon size={22} color="currentColor" />
 						<span>Sign Out</span>
 					</button>
 				</li>
 			{:else}
-				<li role="menuitem">
-					<button class="menu-item menu-item-primary" onclick={handleSignIn}>
+				<li>
+					<button class="menu-item menu-item-primary" role="menuitem" onclick={handleSignIn}>
 						<UserIcon size={22} color="currentColor" />
 						<span>Sign In</span>
 					</button>
 				</li>
-				<li role="menuitem">
-					<a href="/settings" class="menu-item" onclick={closeProfileMenu}>
+				<li>
+					<a href="/settings" class="menu-item" role="menuitem" onclick={closeProfileMenu}>
 						<SettingsIcon size={22} color="currentColor" />
 						<span>Settings</span>
 					</a>
@@ -209,7 +218,7 @@
 		bottom: 0;
 		left: 0;
 		right: 0;
-		height: calc(var(--target-large) + env(safe-area-inset-bottom, 0px)); /* 64px + safe area */
+		height: calc(var(--target-large) + env(safe-area-inset-bottom, 0px));
 		background-color: var(--bg-1);
 		backdrop-filter: blur(12px);
 		-webkit-backdrop-filter: blur(12px);
@@ -217,7 +226,7 @@
 		display: flex;
 		justify-content: space-around;
 		align-items: flex-start;
-		padding: 0 var(--spacing-2); /* 8px */
+		padding: 0 var(--spacing-2);
 		padding-top: 6px;
 		padding-bottom: env(safe-area-inset-bottom, 8px);
 		z-index: var(--z-bottom-nav);
@@ -229,11 +238,11 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: var(--spacing-1); /* 4px - tight spacing for icon+label pair */
-		padding: var(--spacing-2) var(--spacing-1); /* 8px 4px */
-		min-height: var(--target-comfortable); /* 44px - WCAG 2.1 AA */
+		gap: var(--spacing-1);
+		padding: var(--spacing-2) var(--spacing-1);
+		min-height: var(--target-comfortable); /* WCAG 2.1 AA */
 		min-width: var(--target-comfortable);
-		color: var(--text-2); /* Better contrast than text-3 (Principle #9) */
+		color: var(--text-2); /* Better contrast than text-3 */
 		text-decoration: none;
 		border-radius: var(--radius-md);
 		transition:
@@ -269,15 +278,13 @@
 		letter-spacing: var(--tracking-wide);
 	}
 
-	/* Hide bottom nav on desktop */
 	@media (min-width: 768px) {
 		.bottom-nav {
 			display: none;
 		}
 	}
 
-	/* Tablet size - slightly larger */
-	@media (min-width: 375px) and (max-width: 767px) {
+	@media (min-width: 414px) and (max-width: 767px) {
 		.bottom-nav {
 			height: calc(68px + env(safe-area-inset-bottom, 0px));
 		}
@@ -291,28 +298,27 @@
 		}
 	}
 
-	/* More menu styles */
 	.menu-list {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--spacing-1);
 	}
 
 	.menu-item {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: var(--spacing-3);
 		width: 100%;
-		padding: 14px 16px;
+		padding: var(--spacing-3) var(--spacing-4);
 		background: transparent;
 		border: none;
-		border-radius: 12px;
-		font-size: 16px;
-		font-weight: 500;
+		border-radius: var(--radius-lg);
+		font-size: var(--text-base);
+		font-weight: var(--font-medium);
 		color: var(--text-0);
 		text-decoration: none;
 		cursor: pointer;
-		transition: background 0.15s ease;
+		transition: var(--transition-fast);
 	}
 
 	.menu-item:hover {

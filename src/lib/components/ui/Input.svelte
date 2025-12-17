@@ -189,7 +189,7 @@
 		/* Reset */
 		appearance: none;
 		background: transparent;
-		border: 1px solid rgba(0, 0, 0, 0.1);
+		border: 1px solid var(--bg-3);
 		outline: none;
 
 		/* Layout */
@@ -212,7 +212,7 @@
 	}
 
 	.input:hover {
-		border-color: rgba(0, 0, 0, 0.15);
+		border-color: var(--bg-4);
 	}
 
 	.input:focus {
@@ -226,21 +226,6 @@
 	.input:disabled {
 		cursor: not-allowed;
 		border-color: transparent;
-	}
-
-	/* Dark mode border adjustments */
-	@media (prefers-color-scheme: dark) {
-		.input {
-			border-color: rgba(255, 255, 255, 0.1);
-		}
-
-		.input:hover {
-			border-color: rgba(255, 255, 255, 0.15);
-		}
-
-		.input:focus {
-			border-color: transparent;
-		}
 	}
 
 	.input.has-icon-before {

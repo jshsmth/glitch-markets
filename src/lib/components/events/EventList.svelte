@@ -38,12 +38,10 @@
 
 	let loadingMore = $state(false);
 	let sentinelElement = $state<HTMLElement | null>(null);
+	let lastLoadTime = $state(0);
 
 	$effect(() => {
 		if (!sentinelElement || !hasMore || !onLoadMore) return;
-
-		let isLoading = false;
-		let lastLoadTime = 0;
 
 		const observer = new IntersectionObserver(
 			async (entries) => {
@@ -52,13 +50,12 @@
 
 				if (
 					entry.isIntersecting &&
-					!isLoading &&
+					!loadingMore &&
 					!loading &&
 					hasMore &&
 					onLoadMore &&
 					now - lastLoadTime >= loadMoreInterval
 				) {
-					isLoading = true;
 					loadingMore = true;
 					lastLoadTime = now;
 
@@ -73,7 +70,6 @@
 							console.error('Error loading more:', error);
 						}
 					} finally {
-						isLoading = false;
 						loadingMore = false;
 
 						setTimeout(() => {

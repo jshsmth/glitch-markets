@@ -138,10 +138,12 @@
 		<div class="loading-bar"></div>
 	{/if}
 
+	<a href="#main-content" class="skip-link">Skip to main content</a>
+
 	<div class="app-layout">
 		<TopHeader />
 
-		<main class="main-content">
+		<main id="main-content" class="main-content">
 			{@render children()}
 		</main>
 
@@ -186,6 +188,26 @@
 		100% {
 			background-position: 150% 0;
 		}
+	}
+
+	.skip-link {
+		position: absolute;
+		top: -100px;
+		left: 0;
+		background: var(--primary);
+		color: var(--button-primary-text);
+		padding: var(--spacing-3) var(--spacing-4);
+		text-decoration: none;
+		font-weight: var(--font-semibold);
+		border-radius: 0 0 var(--radius-md) 0;
+		z-index: var(--z-toast);
+		transition: top var(--transition-fast);
+	}
+
+	.skip-link:focus {
+		top: 0;
+		outline: none;
+		box-shadow: var(--focus-ring);
 	}
 
 	.app-layout {

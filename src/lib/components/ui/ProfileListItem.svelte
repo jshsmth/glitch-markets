@@ -17,7 +17,7 @@
 	const href = $derived(`/search?q=${encodeURIComponent(displayName)}`);
 </script>
 
-<a {href} class="profile-list-item" {onclick} role="button" tabindex="0">
+<a {href} class="profile-list-item" {onclick}>
 	<div class="profile-avatar">
 		{#if profileImage}
 			<img src={profileImage} alt={displayName} loading="lazy" />

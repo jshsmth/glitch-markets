@@ -343,7 +343,7 @@
 		overflow: hidden;
 		background: var(--bg-2);
 		border: 1.5px solid var(--bg-3);
-		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
+		box-shadow: var(--shadow-xs);
 	}
 
 	.event-icon img {

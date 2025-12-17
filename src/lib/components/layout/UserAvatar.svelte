@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount, onDestroy } from 'svelte';
 	import { authState } from '$lib/stores/auth.svelte';
 	import { walletState } from '$lib/stores/wallet.svelte';
 	import { themeState, toggleTheme } from '$lib/stores/theme.svelte';
@@ -31,21 +32,24 @@
 
 	let isMobile = $derived(windowWidth <= 767);
 
-	$effect(() => {
-		if (typeof window !== 'undefined') {
-			windowWidth = window.innerWidth;
+	onMount(() => {
+		windowWidth = window.innerWidth;
 
-			const handleResize = () => {
-				windowWidth = window.innerWidth;
-			};
-			window.addEventListener('resize', handleResize);
-			return () => {
-				window.removeEventListener('resize', handleResize);
-				if (closeTimeout) {
-					clearTimeout(closeTimeout);
-					closeTimeout = null;
-				}
-			};
+		const handleResize = () => {
+			windowWidth = window.innerWidth;
+		};
+
+		window.addEventListener('resize', handleResize);
+
+		return () => {
+			window.removeEventListener('resize', handleResize);
+		};
+	});
+
+	onDestroy(() => {
+		if (closeTimeout) {
+			clearTimeout(closeTimeout);
+			closeTimeout = null;
 		}
 	});
 
@@ -361,9 +365,7 @@
 		background-color: var(--bg-1);
 		border: 1px solid var(--bg-4);
 		border-radius: 12px;
-		box-shadow:
-			0 4px 6px -1px rgba(0, 0, 0, 0.1),
-			0 2px 4px -1px rgba(0, 0, 0, 0.06);
+		box-shadow: var(--shadow-md);
 		min-width: 280px;
 		z-index: var(--z-popover);
 		overflow: hidden;
