@@ -27,7 +27,7 @@
 	const href = $derived(isMainCategory ? `/${slug}` : `/search?q=${encodeURIComponent(slug)}`);
 </script>
 
-<a {href} class="tag-chip" {onclick} role="button" tabindex="0">
+<a {href} class="tag-chip" {onclick}>
 	<span class="tag-label">{tag.label || 'Unknown'}</span>
 	{#if tag.eventCount !== null && tag.eventCount !== undefined}
 		<span class="tag-count">{tag.eventCount}</span>

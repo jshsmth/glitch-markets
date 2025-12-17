@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import Search from './Search.svelte';
 	import SearchResultsDropdown from './SearchResultsDropdown.svelte';
 	import type { SearchResults } from '$lib/server/api/polymarket-client';
@@ -78,11 +79,9 @@
 		debouncedSearch(query);
 	}
 
-	$effect(() => {
-		return () => {
-			cancelSearch();
-			abortController?.abort();
-		};
+	onDestroy(() => {
+		cancelSearch();
+		abortController?.abort();
 	});
 
 	function handleClickOutside(event: MouseEvent) {

@@ -201,4 +201,11 @@
 			opacity: 1;
 		}
 	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.backdrop,
+		.bottom-sheet {
+			animation: none;
+		}
+	}
 </style>

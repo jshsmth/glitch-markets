@@ -143,18 +143,10 @@
 		background: var(--bg-1);
 		border: 1px solid var(--bg-4);
 		border-radius: var(--radius-lg);
-		box-shadow:
-			0 10px 15px -3px rgba(0, 0, 0, 0.1),
-			0 4px 6px -2px rgba(0, 0, 0, 0.05);
+		box-shadow: var(--shadow-lg);
 		z-index: var(--z-popover);
 		padding: 16px;
 		animation: dropdown-appear 0.12s cubic-bezier(0.16, 1, 0.3, 1);
-	}
-
-	:global([data-theme='dark']) .search-results-dropdown {
-		box-shadow:
-			0 10px 15px -3px rgba(0, 0, 0, 0.3),
-			0 4px 6px -2px rgba(0, 0, 0, 0.15);
 	}
 
 	@keyframes dropdown-appear {
@@ -404,5 +396,11 @@
 	.topic-label {
 		font-size: 14px;
 		font-weight: 600;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.search-results-dropdown {
+			animation: none;
+		}
 	}
 </style>

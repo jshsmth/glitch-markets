@@ -300,4 +300,11 @@
 			opacity: 1;
 		}
 	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.backdrop,
+		.picker-sheet {
+			animation: none;
+		}
+	}
 </style>

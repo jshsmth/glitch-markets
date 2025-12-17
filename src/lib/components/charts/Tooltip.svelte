@@ -206,7 +206,7 @@
 		border-radius: 8px;
 		pointer-events: none;
 		z-index: 3;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		box-shadow: var(--shadow-md);
 		min-width: 120px;
 	}
 
