@@ -42,8 +42,8 @@
 			<span class="spinner"></span>
 			<strong>Setting up your trading wallet...</strong>
 			<p class="pending-text">
-				Your wallet is being deployed on-chain. This usually takes a few seconds. Refresh the page if
-				this takes longer than a minute.
+				Your wallet is being deployed on-chain. This usually takes a few seconds. Refresh the page
+				if this takes longer than a minute.
 			</p>
 		</div>
 	{/if}

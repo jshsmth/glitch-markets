@@ -59,6 +59,8 @@ export interface Database {
 					encrypted_passphrase: string;
 					created_at: string;
 					last_used_at: string | null;
+					deployed_at: string | null;
+					deployment_tx_hash: string | null;
 				};
 				Insert: {
 					id?: string;
@@ -71,6 +73,8 @@ export interface Database {
 					encrypted_passphrase: string;
 					created_at?: string;
 					last_used_at?: string | null;
+					deployed_at?: string | null;
+					deployment_tx_hash?: string | null;
 				};
 				Update: {
 					id?: string;
@@ -82,6 +86,8 @@ export interface Database {
 					encrypted_passphrase?: string;
 					created_at?: string;
 					last_used_at?: string | null;
+					deployed_at?: string | null;
+					deployment_tx_hash?: string | null;
 				};
 				Relationships: [
 					{

@@ -11,11 +11,7 @@ import { createPublicClient, http, encodeFunctionData } from 'viem';
 import { polygon } from 'viem/chains';
 import { Logger } from '../utils/logger';
 import { decryptData } from '../utils/encryption';
-import {
-	BUILDER_API_KEY,
-	BUILDER_SECRET,
-	BUILDER_PASSPHRASE
-} from '$env/static/private';
+import { BUILDER_API_KEY, BUILDER_SECRET, BUILDER_PASSPHRASE } from '$env/static/private';
 
 const logger = new Logger({ component: 'ProxyDeployment' });
 
