@@ -32,20 +32,30 @@ export const POST: RequestHandler = async ({ locals }) => {
 
 		const { data: existingCreds } = await supabaseAdmin
 			.from('polymarket_credentials')
-			.select('proxy_wallet_address')
+			.select('proxy_wallet_address, deployed_at, deployment_tx_hash')
 			.eq('user_id', userId)
 			.single();
 
 		if (existingCreds) {
-			logger.info('User already registered with Polymarket', {
+			if (existingCreds.deployed_at) {
+				logger.info('User already registered with Polymarket', {
+					userId,
+					proxyWallet: existingCreds.proxy_wallet_address,
+					deployedAt: existingCreds.deployed_at
+				});
+
+				return json({
+					success: true,
+					proxyWalletAddress: existingCreds.proxy_wallet_address,
+					deployed: true,
+					transactionHash: existingCreds.deployment_tx_hash,
+					message: 'Already registered with Polymarket'
+				});
+			}
+
+			logger.info('Existing credentials found but wallet not deployed, completing deployment', {
 				userId,
 				proxyWallet: existingCreds.proxy_wallet_address
-			});
-
-			return json({
-				success: true,
-				proxyWalletAddress: existingCreds.proxy_wallet_address,
-				message: 'Already registered with Polymarket'
 			});
 		}
 
@@ -65,15 +75,20 @@ export const POST: RequestHandler = async ({ locals }) => {
 			throw new Error('Server wallet not found');
 		}
 
-		const { error: insertError } = await supabaseAdmin.from('polymarket_credentials').insert({
-			user_id: userId,
-			wallet_address: dbUser.server_wallet_address,
-			proxy_wallet_address: credentials.proxyWalletAddress,
-			encrypted_api_key: encryptedApiKey,
-			encrypted_secret: encryptedSecret,
-			encrypted_passphrase: encryptedPassphrase,
-			created_at: new Date().toISOString()
-		});
+		const { error: insertError } = await supabaseAdmin.from('polymarket_credentials').upsert(
+			{
+				user_id: userId,
+				wallet_address: dbUser.server_wallet_address,
+				proxy_wallet_address: credentials.proxyWalletAddress,
+				encrypted_api_key: encryptedApiKey,
+				encrypted_secret: encryptedSecret,
+				encrypted_passphrase: encryptedPassphrase,
+				deployed_at: credentials.deployed ? new Date().toISOString() : null,
+				deployment_tx_hash: credentials.transactionHash || null,
+				created_at: new Date().toISOString()
+			},
+			{ onConflict: 'user_id' }
+		);
 
 		if (insertError) {
 			logger.error('Failed to save Polymarket credentials', {
@@ -85,12 +100,16 @@ export const POST: RequestHandler = async ({ locals }) => {
 
 		logger.info('Successfully registered with Polymarket', {
 			userId,
-			proxyWallet: credentials.proxyWalletAddress
+			proxyWallet: credentials.proxyWalletAddress,
+			deployed: credentials.deployed,
+			transactionHash: credentials.transactionHash
 		});
 
 		return json({
 			success: true,
 			proxyWalletAddress: credentials.proxyWalletAddress,
+			deployed: credentials.deployed,
+			transactionHash: credentials.transactionHash,
 			message: 'Successfully registered with Polymarket'
 		});
 	} catch (error) {

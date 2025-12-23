@@ -1,44 +1,6 @@
 <script lang="ts">
 	import { authState } from '$lib/stores/auth.svelte';
-
-	let isRegistering = $state(false);
-	let registrationStatus = $state<'idle' | 'success' | 'error'>('idle');
-	let statusMessage = $state('');
-	let proxyWalletAddress = $state<string | null>(null);
-
-	async function registerWithPolymarket() {
-		if (!authState.user) {
-			statusMessage = 'You must be signed in to register with Polymarket';
-			registrationStatus = 'error';
-			return;
-		}
-
-		isRegistering = true;
-		registrationStatus = 'idle';
-		statusMessage = '';
-
-		try {
-			const response = await fetch('/api/polymarket/register', {
-				method: 'POST'
-			});
-
-			const data = await response.json();
-
-			if (!response.ok) {
-				throw new Error(data.message || data.error || 'Registration failed');
-			}
-
-			proxyWalletAddress = data.proxyWalletAddress;
-			statusMessage = data.message || 'Successfully registered with Polymarket!';
-			registrationStatus = 'success';
-		} catch (error) {
-			console.error('Polymarket registration error:', error);
-			statusMessage = error instanceof Error ? error.message : 'Failed to register with Polymarket';
-			registrationStatus = 'error';
-		} finally {
-			isRegistering = false;
-		}
-	}
+	import { walletState } from '$lib/stores/wallet.svelte';
 </script>
 
 <svelte:head>
@@ -50,45 +12,40 @@
 <section class="settings-section">
 	<h2>Polymarket Integration</h2>
 	<p class="section-description">
-		Register with Polymarket to enable trading. This creates your proxy wallet and API credentials.
+		Your trading wallet is automatically set up when you sign in. No manual action required.
 	</p>
 
 	{#if !authState.user}
-		<p class="warning-message">Please sign in to register with Polymarket.</p>
+		<p class="warning-message">Please sign in to view your Polymarket integration status.</p>
+	{:else if walletState.isLoading}
+		<div class="status-message loading">
+			<span class="spinner"></span>
+			Loading wallet information...
+		</div>
+	{:else if walletState.isRegistered && walletState.proxyWalletAddress}
+		<div class="status-message success">
+			<span class="status-icon">✓</span>
+			<strong>Ready to Trade</strong>
+			<div class="wallet-info">
+				<div class="wallet-row">
+					<span class="label">Server Wallet:</span>
+					<code class="wallet-code">{walletState.serverWalletAddress || 'Loading...'}</code>
+				</div>
+				<div class="wallet-row">
+					<span class="label">Proxy Wallet:</span>
+					<code class="wallet-code">{walletState.proxyWalletAddress}</code>
+				</div>
+			</div>
+		</div>
 	{:else}
-		<button
-			class="register-button"
-			onclick={registerWithPolymarket}
-			disabled={isRegistering}
-			aria-busy={isRegistering}
-		>
-			{#if isRegistering}
-				<span class="spinner"></span>
-				Registering...
-			{:else}
-				Register with Polymarket
-			{/if}
-		</button>
-
-		{#if registrationStatus === 'success'}
-			<div class="status-message success">
-				<span class="status-icon">✓</span>
-				{statusMessage}
-				{#if proxyWalletAddress}
-					<div class="wallet-address">
-						<strong>Proxy Wallet:</strong>
-						<code>{proxyWalletAddress}</code>
-					</div>
-				{/if}
-			</div>
-		{/if}
-
-		{#if registrationStatus === 'error'}
-			<div class="status-message error">
-				<span class="status-icon">✗</span>
-				{statusMessage}
-			</div>
-		{/if}
+		<div class="status-message pending">
+			<span class="spinner"></span>
+			<strong>Setting up your trading wallet...</strong>
+			<p class="pending-text">
+				Your wallet is being deployed on-chain. This usually takes a few seconds. Refresh the page
+				if this takes longer than a minute.
+			</p>
+		</div>
 	{/if}
 </section>
 
@@ -128,28 +85,42 @@
 		margin: 0;
 	}
 
-	.register-button {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 12px 20px;
-		background: var(--primary);
-		color: var(--text-0);
-		border: none;
+	.status-message {
+		margin-top: var(--spacing-4);
+		padding: 16px;
 		border-radius: 8px;
 		font-size: 14px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
 	}
 
-	.register-button:hover:not(:disabled) {
-		background: var(--primary-hover);
+	.status-message.success {
+		background: color-mix(in srgb, var(--success) 10%, transparent);
+		border: 1px solid var(--success);
+		color: var(--text-0);
 	}
 
-	.register-button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
+	.status-message.pending {
+		background: color-mix(in srgb, var(--primary) 10%, transparent);
+		border: 1px solid var(--primary);
+		color: var(--text-0);
+	}
+
+	.status-message.loading {
+		background: var(--bg-2);
+		border: 1px solid var(--bg-3);
+		color: var(--text-1);
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.status-icon {
+		color: var(--success);
+		font-size: 16px;
+		font-weight: bold;
 	}
 
 	.spinner {
@@ -159,6 +130,7 @@
 		border-top-color: transparent;
 		border-radius: 50%;
 		animation: spin 0.8s linear infinite;
+		flex-shrink: 0;
 	}
 
 	@keyframes spin {
@@ -167,42 +139,40 @@
 		}
 	}
 
-	.status-message {
-		margin-top: var(--spacing-4);
-		padding: 12px 16px;
-		border-radius: 8px;
-		font-size: 14px;
+	.pending-text {
+		margin: 0;
+		font-size: 13px;
+		color: var(--text-2);
+		line-height: 1.5;
+	}
+
+	.wallet-info {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
+		margin-top: 4px;
 	}
 
-	.status-message.success {
-		background: color-mix(in srgb, var(--success) 10%, transparent);
-		border: 1px solid var(--success);
-		color: var(--success);
+	.wallet-row {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
 	}
 
-	.status-message.error {
-		background: color-mix(in srgb, var(--danger) 10%, transparent);
-		border: 1px solid var(--danger);
-		color: var(--danger);
+	.label {
+		font-size: 12px;
+		color: var(--text-2);
+		font-weight: 500;
 	}
 
-	.status-icon {
-		font-weight: bold;
-	}
-
-	.wallet-address {
+	.wallet-code {
+		font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
 		font-size: 13px;
-		color: var(--text-1);
-		word-break: break-all;
-	}
-
-	.wallet-address code {
+		color: var(--text-0);
 		background: var(--bg-2);
-		padding: 2px 6px;
-		border-radius: 4px;
-		font-family: monospace;
+		padding: 8px 12px;
+		border-radius: 6px;
+		word-break: break-all;
+		border: 1px solid var(--bg-3);
 	}
 </style>

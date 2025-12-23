@@ -189,7 +189,7 @@
 									<CopyIcon size={16} color="var(--text-2)" />
 								</button>
 							</div>
-							{#if walletState.proxyWalletAddress}
+							{#if walletState.isRegistered}
 								<div class="header-subtext ready-badge">Ready to Trade</div>
 							{/if}
 						{/if}
