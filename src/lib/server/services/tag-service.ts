@@ -6,6 +6,7 @@
 import type { Tag, TagRelationship } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
@@ -56,29 +57,15 @@ export class TagService {
 	async getTags(): Promise<Tag[]> {
 		const cacheKey = 'tags:all';
 
-		const cached = this.cache.get<Tag[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for tags');
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result');
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for tags, fetching from API');
-
-		const fetchPromise = this.fetchAndCacheTags(cacheKey);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheTags(cacheKey),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<Tag[]>>,
+			logger: this.logger,
+			cacheHitMessage: 'Cache hit for tags',
+			cacheMissMessage: 'Cache miss for tags, fetching from API'
+		});
 	}
 
 	/**

@@ -6,6 +6,7 @@
 import type { Market } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
@@ -77,29 +78,16 @@ export class MarketService {
 	async getMarkets(filters: MarketFilters = {}): Promise<Market[]> {
 		const cacheKey = `markets:${JSON.stringify(filters)}`;
 
-		const cached = this.cache.get<Market[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for markets', { filters });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { filters });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for markets, fetching from API', { filters });
-
-		const fetchPromise = this.fetchAndCacheMarkets(cacheKey, filters);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheMarkets(cacheKey, filters),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<Market[]>>,
+			logger: this.logger,
+			logContext: { filters },
+			cacheHitMessage: 'Cache hit for markets',
+			cacheMissMessage: 'Cache miss for markets, fetching from API'
+		});
 	}
 
 	/**

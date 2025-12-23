@@ -6,6 +6,7 @@
 import type { SearchResults } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
 
@@ -85,29 +86,16 @@ export class SearchService {
 			return this.fetchAndCacheSearch(cacheKey, options, true);
 		}
 
-		const cached = this.cache.get<SearchResults>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for search', { query: options.q });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { query: options.q });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for search, fetching from API', { query: options.q });
-
-		const fetchPromise = this.fetchAndCacheSearch(cacheKey, options);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheSearch(cacheKey, options),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<SearchResults>>,
+			logger: this.logger,
+			logContext: { query: options.q },
+			cacheHitMessage: 'Cache hit for search',
+			cacheMissMessage: 'Cache miss for search, fetching from API'
+		});
 	}
 
 	/**
