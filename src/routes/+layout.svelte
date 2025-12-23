@@ -35,7 +35,7 @@
 	import TopHeader from '$lib/components/layout/TopHeader.svelte';
 	import BottomNav from '$lib/components/layout/BottomNav.svelte';
 	import SignInModal from '$lib/components/auth/SignInModal.svelte';
-	import LazyDepositModal from '$lib/components/modals/LazyDepositModal.svelte';
+	import DepositModal from '$lib/components/wallet/DepositModal.svelte';
 	import LazyWithdrawModal from '$lib/components/modals/LazyWithdrawModal.svelte';
 	import ReloadPrompt from '$lib/components/pwa/ReloadPrompt.svelte';
 	// @ts-expect-error - virtual module from vite-plugin-pwa
@@ -88,6 +88,23 @@
 						console.log(`Migrated ${result.migrated} bookmarks to database`);
 					}
 				});
+			}
+
+			if ('requestIdleCallback' in window) {
+				requestIdleCallback(
+					() => {
+						fetch('/api/bridge/supported-assets')
+							.then((r) => r.json())
+							.catch(() => {});
+					},
+					{ timeout: 2000 }
+				);
+			} else {
+				setTimeout(() => {
+					fetch('/api/bridge/supported-assets')
+						.then((r) => r.json())
+						.catch(() => {});
+				}, 1000);
 			}
 		} else if (browser) {
 			clearWatchlist();
@@ -156,7 +173,7 @@
 		initialMode={signInModalState.initialMode}
 		onClose={closeSignInModal}
 	/>
-	<LazyDepositModal isOpen={depositModalState.isOpen} onClose={closeDepositModal} />
+	<DepositModal isOpen={depositModalState.isOpen} onClose={closeDepositModal} />
 	<LazyWithdrawModal isOpen={withdrawModalState.isOpen} onClose={closeWithdrawModal} />
 
 	<!-- PWA update prompt -->
