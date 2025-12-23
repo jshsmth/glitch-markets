@@ -11,7 +11,7 @@ import { createPublicClient, http, encodeFunctionData } from 'viem';
 import { polygon } from 'viem/chains';
 import { Logger } from '../utils/logger';
 import { decryptData } from '../utils/encryption';
-import { BUILDER_API_KEY, BUILDER_SECRET, BUILDER_PASSPHRASE } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 const logger = new Logger({ component: 'ProxyDeployment' });
 
@@ -65,11 +65,19 @@ function createEthersWallet(encryptedKeyShares: string): Wallet {
  * Create builder configuration for relayer authentication
  */
 function createBuilderConfig(): BuilderConfig {
+	const apiKey = env.BUILDER_API_KEY;
+	const secret = env.BUILDER_SECRET;
+	const passphrase = env.BUILDER_PASSPHRASE;
+
+	if (!apiKey || !secret || !passphrase) {
+		throw new Error('Builder credentials not configured in environment');
+	}
+
 	return new BuilderConfig({
 		localBuilderCreds: {
-			key: BUILDER_API_KEY,
-			secret: BUILDER_SECRET,
-			passphrase: BUILDER_PASSPHRASE
+			key: apiKey,
+			secret: secret,
+			passphrase: passphrase
 		}
 	});
 }
