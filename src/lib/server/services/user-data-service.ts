@@ -11,11 +11,8 @@ import type {
 	PortfolioValue,
 	ClosedPosition
 } from '../api/polymarket-client.js';
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
+import { BaseService } from './base-service.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
-import { loadConfig } from '../config/api-config.js';
-import { Logger } from '../utils/logger.js';
 
 /**
  * Service layer for user data operations
@@ -27,25 +24,13 @@ import { Logger } from '../utils/logger.js';
  * const positions = await service.getCurrentPositions('0x123...', ['market1']);
  * ```
  */
-export class UserDataService {
-	private client: PolymarketClient;
-	private cache: CacheManager;
-	private logger: Logger;
-	private cacheTtl: number;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private pendingRequests: Map<string, Promise<any>>;
-
+export class UserDataService extends BaseService {
 	/**
 	 * Creates a new UserDataService instance
 	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 60000ms = 1 minute)
 	 */
 	constructor(cacheTtl: number = 60000) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'UserDataService' });
-		this.cacheTtl = cacheTtl;
-		this.pendingRequests = new Map();
+		super('UserDataService', cacheTtl);
 	}
 
 	/**

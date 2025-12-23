@@ -4,13 +4,10 @@
  */
 
 import type { Market } from '../api/polymarket-client.js';
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
 import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
-import { loadConfig } from '../config/api-config.js';
-import { Logger } from '../utils/logger.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
+import { BaseService } from './base-service.js';
 
 export interface MarketFilters {
 	category?: string;
@@ -36,25 +33,13 @@ export interface MarketSearchOptions extends MarketFilters {
  * const markets = await service.getMarkets({ category: 'crypto', active: true });
  * ```
  */
-export class MarketService {
-	private client: PolymarketClient;
-	private cache: CacheManager;
-	private logger: Logger;
-	private cacheTtl: number;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private pendingRequests: Map<string, Promise<any>>;
-
+export class MarketService extends BaseService {
 	/**
 	 * Creates a new MarketService instance
 	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 1 minute)
 	 */
 	constructor(cacheTtl: number = CACHE_TTL.DEFAULT) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'MarketService' });
-		this.cacheTtl = cacheTtl;
-		this.pendingRequests = new Map();
+		super('MarketService', cacheTtl);
 	}
 
 	/**
@@ -96,12 +81,7 @@ export class MarketService {
 	 * Separated for better cache stampede protection
 	 */
 	private async fetchAndCacheMarkets(cacheKey: string, filters: MarketFilters): Promise<Market[]> {
-		const params: Record<string, string | number | boolean> = {};
-		if (filters.category !== undefined) params.category = filters.category;
-		if (filters.active !== undefined) params.active = filters.active;
-		if (filters.closed !== undefined) params.closed = filters.closed;
-		if (filters.limit !== undefined) params.limit = filters.limit;
-		if (filters.offset !== undefined) params.offset = filters.offset;
+		const params = this.buildParams(filters);
 
 		const markets = await this.client.fetchMarkets({ params });
 		const filtered = this.applyFilters(markets, filters);
@@ -128,46 +108,12 @@ export class MarketService {
 	 * ```
 	 */
 	async getMarketById(id: string): Promise<Market | null> {
-		const cacheKey = `market:id:${id}`;
-
-		const cached = this.cache.get<Market>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for market by ID', { id });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { id });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for market by ID, fetching from API', { id });
-
-		const fetchPromise = (async () => {
-			try {
-				const market = await this.client.fetchMarketById(id);
-				this.cache.set(cacheKey, market, this.cacheTtl);
-				return market;
-			} catch (error) {
-				if (
-					error &&
-					typeof error === 'object' &&
-					'statusCode' in error &&
-					error.statusCode === 404
-				) {
-					return null;
-				}
-				throw error;
-			}
-		})();
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			return await fetchPromise;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return this.fetchSingleEntity<Market>(
+			`market:id:${id}`,
+			id,
+			(id) => this.client.fetchMarketById(id),
+			{ id }
+		);
 	}
 
 	/**
@@ -188,46 +134,12 @@ export class MarketService {
 	 * ```
 	 */
 	async getMarketBySlug(slug: string): Promise<Market | null> {
-		const cacheKey = `market:slug:${slug}`;
-
-		const cached = this.cache.get<Market>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for market by slug', { slug });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { slug });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for market by slug, fetching from API', { slug });
-
-		const fetchPromise = (async () => {
-			try {
-				const market = await this.client.fetchMarketBySlug(slug);
-				this.cache.set(cacheKey, market, this.cacheTtl);
-				return market;
-			} catch (error) {
-				if (
-					error &&
-					typeof error === 'object' &&
-					'statusCode' in error &&
-					error.statusCode === 404
-				) {
-					return null;
-				}
-				throw error;
-			}
-		})();
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			return await fetchPromise;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return this.fetchSingleEntity<Market>(
+			`market:slug:${slug}`,
+			slug,
+			(slug) => this.client.fetchMarketBySlug(slug),
+			{ slug }
+		);
 	}
 
 	/**
@@ -248,46 +160,12 @@ export class MarketService {
 	 * ```
 	 */
 	async getMarketTags(id: string): Promise<import('../api/polymarket-client.js').Tag[] | null> {
-		const cacheKey = `market:tags:${id}`;
-
-		const cached = this.cache.get<import('../api/polymarket-client.js').Tag[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for market tags', { id });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { id });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for market tags, fetching from API', { id });
-
-		const fetchPromise = (async () => {
-			try {
-				const tags = await this.client.fetchMarketTags(id);
-				this.cache.set(cacheKey, tags, this.cacheTtl);
-				return tags;
-			} catch (error) {
-				if (
-					error &&
-					typeof error === 'object' &&
-					'statusCode' in error &&
-					error.statusCode === 404
-				) {
-					return null;
-				}
-				throw error;
-			}
-		})();
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			return await fetchPromise;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return this.fetchSingleEntity<import('../api/polymarket-client.js').Tag[]>(
+			`market:tags:${id}`,
+			id,
+			(id) => this.client.fetchMarketTags(id),
+			{ id }
+		);
 	}
 
 	/**
@@ -380,13 +258,5 @@ export class MarketService {
 		});
 
 		return sorted;
-	}
-
-	/**
-	 * Clears the cache - useful for testing
-	 * @internal This method is primarily for testing purposes
-	 */
-	clearCache(): void {
-		this.cache.clear();
 	}
 }

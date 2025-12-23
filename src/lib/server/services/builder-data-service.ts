@@ -9,12 +9,9 @@ import type {
 	BuilderVolumeParams,
 	BuilderVolumeEntry
 } from '../api/polymarket-client.js';
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
+import { BaseService } from './base-service.js';
 import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
-import { loadConfig } from '../config/api-config.js';
-import { Logger } from '../utils/logger.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
 
 /**
@@ -31,14 +28,9 @@ import { CACHE_TTL } from '$lib/config/constants.js';
  * });
  * ```
  */
-export class BuilderDataService {
-	private client: PolymarketClient;
-	private cache: CacheManager;
-	private logger: Logger;
+export class BuilderDataService extends BaseService {
 	private cacheTtlLeaderboard: number;
 	private cacheTtlVolume: number;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private pendingRequests: Map<string, Promise<any>>;
 
 	/**
 	 * Creates a new BuilderDataService instance
@@ -49,13 +41,9 @@ export class BuilderDataService {
 		cacheTtlLeaderboard: number = CACHE_TTL.BUILDERS_LEADERBOARD,
 		cacheTtlVolume: number = CACHE_TTL.BUILDERS_VOLUME
 	) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'BuilderDataService' });
+		super('BuilderDataService', cacheTtlLeaderboard);
 		this.cacheTtlLeaderboard = cacheTtlLeaderboard;
 		this.cacheTtlVolume = cacheTtlVolume;
-		this.pendingRequests = new Map();
 	}
 
 	/**
@@ -147,13 +135,5 @@ export class BuilderDataService {
 		const volume = await this.client.fetchBuilderVolume(params);
 		this.cache.set(cacheKey, volume, this.cacheTtlVolume);
 		return volume;
-	}
-
-	/**
-	 * Clears the cache - useful for testing
-	 * @internal This method is primarily for testing purposes
-	 */
-	clearCache(): void {
-		this.cache.clear();
 	}
 }

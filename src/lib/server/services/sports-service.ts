@@ -4,12 +4,9 @@
  */
 
 import type { Team, SportsMetadata, TeamQueryParams } from '../api/polymarket-client.js';
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
+import { BaseService } from './base-service.js';
 import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
-import { loadConfig } from '../config/api-config.js';
-import { Logger } from '../utils/logger.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
 
 /**
@@ -22,25 +19,13 @@ import { CACHE_TTL } from '$lib/config/constants.js';
  * const teams = await service.getTeams({ limit: 10, offset: 0 });
  * ```
  */
-export class SportsService {
-	private client: PolymarketClient;
-	private cache: CacheManager;
-	private logger: Logger;
-	private cacheTtl: number;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private pendingRequests: Map<string, Promise<any>>;
-
+export class SportsService extends BaseService {
 	/**
 	 * Creates a new SportsService instance
 	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 60s)
 	 */
 	constructor(cacheTtl: number = CACHE_TTL.DEFAULT) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'SportsService' });
-		this.cacheTtl = cacheTtl;
-		this.pendingRequests = new Map();
+		super('SportsService', cacheTtl);
 	}
 
 	/**
@@ -123,13 +108,5 @@ export class SportsService {
 		const metadata = await this.client.fetchSportsMetadata();
 		this.cache.set(cacheKey, metadata, this.cacheTtl);
 		return metadata;
-	}
-
-	/**
-	 * Clears the cache - useful for testing
-	 * @internal This method is primarily for testing purposes
-	 */
-	clearCache(): void {
-		this.cache.clear();
 	}
 }
