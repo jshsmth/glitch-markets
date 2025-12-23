@@ -11,10 +11,8 @@ import type {
 	PortfolioValue,
 	ClosedPosition
 } from '../api/polymarket-client.js';
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
-import { loadConfig } from '../config/api-config.js';
-import { Logger } from '../utils/logger.js';
+import { BaseService } from './base-service.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 
 /**
  * Service layer for user data operations
@@ -26,25 +24,13 @@ import { Logger } from '../utils/logger.js';
  * const positions = await service.getCurrentPositions('0x123...', ['market1']);
  * ```
  */
-export class UserDataService {
-	private client: PolymarketClient;
-	private cache: CacheManager;
-	private logger: Logger;
-	private cacheTtl: number;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private pendingRequests: Map<string, Promise<any>>;
-
+export class UserDataService extends BaseService {
 	/**
 	 * Creates a new UserDataService instance
 	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 60000ms = 1 minute)
 	 */
 	constructor(cacheTtl: number = 60000) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'UserDataService' });
-		this.cacheTtl = cacheTtl;
-		this.pendingRequests = new Map();
+		super('UserDataService', cacheTtl);
 	}
 
 	/**
@@ -65,27 +51,16 @@ export class UserDataService {
 	async getCurrentPositions(user: string, markets?: string[]): Promise<Position[]> {
 		const cacheKey = `positions:${JSON.stringify({ user, markets })}`;
 
-		const cached = this.cache.get<Position[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for positions', { user, markets });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { user, markets });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for positions, fetching from API', { user, markets });
-
-		const fetchPromise = this.fetchAndCachePositions(cacheKey, user, markets);
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			return await fetchPromise;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCachePositions(cacheKey, user, markets),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<Position[]>>,
+			logger: this.logger,
+			logContext: { user, markets },
+			cacheHitMessage: 'Cache hit for positions',
+			cacheMissMessage: 'Cache miss for positions, fetching from API'
+		});
 	}
 
 	private async fetchAndCachePositions(
@@ -343,27 +318,16 @@ export class UserDataService {
 	async getClosedPositions(user: string): Promise<ClosedPosition[]> {
 		const cacheKey = `closed-positions:${user}`;
 
-		const cached = this.cache.get<ClosedPosition[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for closed positions', { user });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { user });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for closed positions, fetching from API', { user });
-
-		const fetchPromise = this.fetchAndCacheClosedPositions(cacheKey, user);
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			return await fetchPromise;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheClosedPositions(cacheKey, user),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<ClosedPosition[]>>,
+			logger: this.logger,
+			logContext: { user },
+			cacheHitMessage: 'Cache hit for closed positions',
+			cacheMissMessage: 'Cache miss for closed positions, fetching from API'
+		});
 	}
 
 	private async fetchAndCacheClosedPositions(

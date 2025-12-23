@@ -4,11 +4,11 @@
  */
 
 import type { Series } from '../api/polymarket-client.js';
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
-import { loadConfig } from '../config/api-config.js';
-import { Logger } from '../utils/logger.js';
+import { BaseService } from './base-service.js';
+import { buildCacheKey } from '../cache/cache-key-builder.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
+import { genericSort, parseDateForSort } from '../utils/sort-utils.js';
 
 export interface SeriesFilters {
 	category?: string;
@@ -34,25 +34,13 @@ export interface SeriesSearchOptions extends SeriesFilters {
  * const series = await service.getSeries({ category: 'crypto', active: true });
  * ```
  */
-export class SeriesService {
-	private client: PolymarketClient;
-	private cache: CacheManager;
-	private logger: Logger;
-	private cacheTtl: number;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private pendingRequests: Map<string, Promise<any>>;
-
+export class SeriesService extends BaseService {
 	/**
 	 * Creates a new SeriesService instance
 	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 1 minute)
 	 */
 	constructor(cacheTtl: number = CACHE_TTL.DEFAULT) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'SeriesService' });
-		this.cacheTtl = cacheTtl;
-		this.pendingRequests = new Map();
+		super('SeriesService', cacheTtl);
 	}
 
 	/**
@@ -75,30 +63,18 @@ export class SeriesService {
 	 * ```
 	 */
 	async getSeries(filters: SeriesFilters = {}): Promise<Series[]> {
-		const cacheKey = `series:${JSON.stringify(filters)}`;
+		const cacheKey = buildCacheKey('series', filters);
 
-		const cached = this.cache.get<Series[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for series', { filters });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { filters });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for series, fetching from API', { filters });
-
-		const fetchPromise = this.fetchAndCacheSeries(cacheKey, filters);
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheSeries(cacheKey, filters),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<Series[]>>,
+			logger: this.logger,
+			logContext: { filters },
+			cacheHitMessage: 'Cache hit for series',
+			cacheMissMessage: 'Cache miss for series, fetching from API'
+		});
 	}
 
 	/**
@@ -106,12 +82,7 @@ export class SeriesService {
 	 * Separated for better cache stampede protection
 	 */
 	private async fetchAndCacheSeries(cacheKey: string, filters: SeriesFilters): Promise<Series[]> {
-		const params: Record<string, string | number | boolean> = {};
-		if (filters.category !== undefined) params.category = filters.category;
-		if (filters.active !== undefined) params.active = filters.active;
-		if (filters.closed !== undefined) params.closed = filters.closed;
-		if (filters.limit !== undefined) params.limit = filters.limit;
-		if (filters.offset !== undefined) params.offset = filters.offset;
+		const params = this.buildParams(filters);
 
 		const series = await this.client.fetchSeries({ params });
 		const filtered = this.applyFilters(series, filters);
@@ -156,48 +127,12 @@ export class SeriesService {
 	 * ```
 	 */
 	async getSeriesById(id: string): Promise<Series | null> {
-		const cacheKey = `series:id:${id}`;
-
-		const cached = this.cache.get<Series>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for series by ID', { id });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { id });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for series by ID, fetching from API', { id });
-
-		const fetchPromise = this.fetchAndCacheSeriesById(cacheKey, id);
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
-	}
-
-	/**
-	 * Internal method to fetch and cache series by ID
-	 * Separated for better cache stampede protection
-	 */
-	private async fetchAndCacheSeriesById(cacheKey: string, id: string): Promise<Series | null> {
-		try {
-			const series = await this.client.fetchSeriesById(id);
-			this.cache.set(cacheKey, series, this.cacheTtl);
-			return series;
-		} catch (error) {
-			if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
-				this.logger.info('Series not found', { id });
-				return null;
-			}
-			throw error;
-		}
+		return this.fetchSingleEntity<Series>(
+			`series:id:${id}`,
+			id,
+			(id) => this.client.fetchSeriesById(id),
+			{ id }
+		);
 	}
 
 	/**
@@ -253,40 +188,10 @@ export class SeriesService {
 		sortBy: 'volume' | 'liquidity' | 'createdAt',
 		sortOrder: 'asc' | 'desc'
 	): Series[] {
-		const sorted = [...series].sort((a, b) => {
-			let aValue: number;
-			let bValue: number;
-
-			switch (sortBy) {
-				case 'volume':
-					aValue = a.volume ?? 0;
-					bValue = b.volume ?? 0;
-					break;
-				case 'liquidity':
-					aValue = a.liquidity ?? 0;
-					bValue = b.liquidity ?? 0;
-					break;
-				case 'createdAt':
-					aValue = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-					bValue = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-					break;
-			}
-
-			if (sortOrder === 'asc') {
-				return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-			} else {
-				return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-			}
+		return genericSort(series, sortBy, sortOrder, {
+			volume: (s) => s.volume ?? 0,
+			liquidity: (s) => s.liquidity ?? 0,
+			createdAt: (s) => parseDateForSort(s.createdAt)
 		});
-
-		return sorted;
-	}
-
-	/**
-	 * Clears the cache - useful for testing
-	 * @internal This method is primarily for testing purposes
-	 */
-	clearCache(): void {
-		this.cache.clear();
 	}
 }

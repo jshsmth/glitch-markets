@@ -9,7 +9,6 @@
 import { ClobClient } from '@polymarket/clob-client';
 import { Wallet } from '@ethersproject/wallet';
 import { Logger } from '../utils/logger';
-import { deriveProxyWalletAddress } from '../utils/proxy-wallet';
 import { decryptData } from '../utils/encryption';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import { deployProxyWallet } from './proxy-deployment';
@@ -72,14 +71,6 @@ export async function registerWithPolymarket(userId: string): Promise<Polymarket
 			address: server_wallet_address
 		});
 
-		const proxyWalletAddress = await deriveProxyWalletAddress(server_wallet_address);
-
-		logger.info('Derived proxy wallet address', {
-			userId,
-			serverWallet: server_wallet_address,
-			proxyWallet: proxyWalletAddress
-		});
-
 		const client = createL1Client(encrypted_server_key_shares);
 
 		logger.info('Created L1 CLOB client', { userId });
@@ -88,22 +79,18 @@ export async function registerWithPolymarket(userId: string): Promise<Polymarket
 
 		logger.info('Successfully created/derived API credentials via CLOB client', {
 			userId,
-			proxyWallet: proxyWalletAddress,
 			hasApiKey: !!apiCreds.key,
 			hasSecret: !!apiCreds.secret,
 			hasPassphrase: !!apiCreds.passphrase
 		});
 
-		logger.info('Deploying proxy wallet on-chain', { userId, proxyWalletAddress });
+		logger.info('Deploying proxy wallet on-chain', { userId });
 
-		const deploymentResult = await deployProxyWallet(
-			encrypted_server_key_shares,
-			proxyWalletAddress
-		);
+		const deploymentResult = await deployProxyWallet(encrypted_server_key_shares);
 
 		logger.info('Proxy wallet deployment completed', {
 			userId,
-			proxyWalletAddress,
+			proxyAddress: deploymentResult.proxyAddress,
 			deployed: deploymentResult.deployed,
 			alreadyDeployed: deploymentResult.alreadyDeployed,
 			transactionHash: deploymentResult.transactionHash
@@ -113,7 +100,7 @@ export async function registerWithPolymarket(userId: string): Promise<Polymarket
 			apiKey: apiCreds.key,
 			secret: apiCreds.secret,
 			passphrase: apiCreds.passphrase,
-			proxyWalletAddress,
+			proxyWalletAddress: deploymentResult.proxyAddress,
 			deployed: deploymentResult.deployed,
 			transactionHash: deploymentResult.transactionHash
 		};

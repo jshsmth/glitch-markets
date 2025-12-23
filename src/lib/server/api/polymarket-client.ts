@@ -769,39 +769,50 @@ export class PolymarketClient {
 		this.logger = new Logger({ component: 'PolymarketClient' });
 	}
 
-	private buildUrl(
+	/**
+	 * Generic URL builder that works with any base URL
+	 * Consolidates duplicate URL building logic across buildUrl and buildDataApiUrl
+	 */
+	private buildUrlWithParams(
+		baseUrl: string,
 		endpoint: string,
-		params?: Record<string, string | number | boolean | string[]>
+		params?: Record<string, string | number | boolean | string[] | number[]>
 	): string {
-		const url = new URL(endpoint, this.baseUrl);
+		const url = new URL(endpoint, baseUrl);
 
 		if (params) {
-			Object.entries(params).forEach(([key, value]) => {
-				if (Array.isArray(value)) {
-					value.forEach((v) => url.searchParams.append(key, v));
-				} else {
-					url.searchParams.append(key, String(value));
-				}
-			});
+			this.appendParamsToUrl(url, params);
 		}
 
 		return url.toString();
 	}
 
+	/**
+	 * Helper to append parameters to a URL object
+	 * Handles arrays by appending each value separately
+	 */
+	private appendParamsToUrl(
+		url: URL,
+		params: Record<string, string | number | boolean | string[] | number[]>
+	): void {
+		Object.entries(params).forEach(([key, value]) => {
+			if (Array.isArray(value)) {
+				value.forEach((v) => url.searchParams.append(key, String(v)));
+			} else {
+				url.searchParams.append(key, String(value));
+			}
+		});
+	}
+
+	private buildUrl(
+		endpoint: string,
+		params?: Record<string, string | number | boolean | string[] | number[]>
+	): string {
+		return this.buildUrlWithParams(this.baseUrl, endpoint, params);
+	}
+
 	private buildDataApiUrl(endpoint: string, params?: Record<string, string | string[]>): string {
-		const url = new URL(endpoint, this.dataApiBaseUrl);
-
-		if (params) {
-			Object.entries(params).forEach(([key, value]) => {
-				if (Array.isArray(value)) {
-					value.forEach((v) => url.searchParams.append(key, v));
-				} else {
-					url.searchParams.append(key, value);
-				}
-			});
-		}
-
-		return url.toString();
+		return this.buildUrlWithParams(this.dataApiBaseUrl, endpoint, params);
 	}
 
 	private async request<T>(url: string, options?: FetchOptions): Promise<T> {
@@ -1487,7 +1498,6 @@ export class PolymarketClient {
 	async fetchComments(options: FetchOptions = {}): Promise<Comment[]> {
 		const { params = {} } = options;
 
-		// Validate input parameters
 		const validatedParams = validateCommentsQueryParams(params);
 
 		const url = this.buildUrl('/comments', validatedParams);
@@ -1495,7 +1505,6 @@ export class PolymarketClient {
 
 		const data = await this.request<unknown>(url);
 
-		// Validate response
 		const validated = validateComments(data);
 		this.logger.info('Comments fetched successfully', { count: validated.length });
 
@@ -1523,7 +1532,6 @@ export class PolymarketClient {
 	async fetchCommentById(id: number, options: FetchOptions = {}): Promise<Comment> {
 		const { params = {} } = options;
 
-		// Validate ID
 		const validatedId = validateCommentId(id);
 
 		// Build query params
@@ -1570,10 +1578,8 @@ export class PolymarketClient {
 	async fetchCommentsByUser(userAddress: string, options: FetchOptions = {}): Promise<Comment[]> {
 		const { params = {} } = options;
 
-		// Validate user address
 		const validatedAddress = validateProxyWallet(userAddress);
 
-		// Validate query parameters
 		const validatedParams = validateUserCommentsQueryParams(params);
 
 		const url = this.buildUrl(`/comments/user_address/${validatedAddress}`, validatedParams);
@@ -1581,7 +1587,6 @@ export class PolymarketClient {
 
 		const data = await this.request<unknown>(url);
 
-		// Validate response
 		const validated = validateComments(data);
 		this.logger.info('User comments fetched successfully', {
 			userAddress: validatedAddress,
@@ -1589,29 +1594,6 @@ export class PolymarketClient {
 		});
 
 		return validated;
-	}
-
-	/**
-	 * Helper to build URL with support for array parameters
-	 */
-	private buildSearchUrl(
-		endpoint: string,
-		params?: Record<string, string | number | boolean | string[] | number[]>
-	): string {
-		const url = new URL(endpoint, this.baseUrl);
-
-		if (params) {
-			Object.entries(params).forEach(([key, value]) => {
-				if (Array.isArray(value)) {
-					// For arrays, append each value separately
-					value.forEach((v) => url.searchParams.append(key, String(v)));
-				} else {
-					url.searchParams.append(key, String(value));
-				}
-			});
-		}
-
-		return url.toString();
 	}
 
 	/**
@@ -1644,15 +1626,13 @@ export class PolymarketClient {
 	}): Promise<SearchResults> {
 		const { params = {}, signal } = options;
 
-		// Validate query parameters
 		const validatedParams = validateSearchQueryParams(params);
 
-		const url = this.buildSearchUrl('/public-search', validatedParams);
+		const url = this.buildUrl('/public-search', validatedParams);
 		this.logger.info('Fetching search results', { params: validatedParams, url });
 
 		const data = await this.request<unknown>(url, signal ? { signal } : undefined);
 
-		// Validate response
 		const validated = validateSearchResults(data);
 		this.logger.info('Search results fetched successfully', {
 			eventsCount: validated.events.length,

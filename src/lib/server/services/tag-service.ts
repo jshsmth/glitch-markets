@@ -4,10 +4,8 @@
  */
 
 import type { Tag, TagRelationship } from '../api/polymarket-client.js';
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
-import { loadConfig } from '../config/api-config.js';
-import { Logger } from '../utils/logger.js';
+import { BaseService } from './base-service.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
 
 /**
@@ -20,25 +18,13 @@ import { CACHE_TTL } from '$lib/config/constants.js';
  * const tags = await service.getTags();
  * ```
  */
-export class TagService {
-	private client: PolymarketClient;
-	private cache: CacheManager;
-	private logger: Logger;
-	private cacheTtl: number;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private pendingRequests: Map<string, Promise<any>>;
-
+export class TagService extends BaseService {
 	/**
 	 * Creates a new TagService instance
 	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 1 minute)
 	 */
 	constructor(cacheTtl: number = CACHE_TTL.DEFAULT) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'TagService' });
-		this.cacheTtl = cacheTtl;
-		this.pendingRequests = new Map();
+		super('TagService', cacheTtl);
 	}
 
 	/**
@@ -56,29 +42,15 @@ export class TagService {
 	async getTags(): Promise<Tag[]> {
 		const cacheKey = 'tags:all';
 
-		const cached = this.cache.get<Tag[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for tags');
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result');
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for tags, fetching from API');
-
-		const fetchPromise = this.fetchAndCacheTags(cacheKey);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheTags(cacheKey),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<Tag[]>>,
+			logger: this.logger,
+			cacheHitMessage: 'Cache hit for tags',
+			cacheMissMessage: 'Cache miss for tags, fetching from API'
+		});
 	}
 
 	/**
@@ -109,46 +81,9 @@ export class TagService {
 	 * ```
 	 */
 	async getTagById(id: string): Promise<Tag | null> {
-		const cacheKey = `tag:id:${id}`;
-
-		const cached = this.cache.get<Tag>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for tag by ID', { id });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { id });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for tag by ID, fetching from API', { id });
-
-		const fetchPromise = (async () => {
-			try {
-				const tag = await this.client.fetchTagById(id);
-				this.cache.set(cacheKey, tag, this.cacheTtl);
-				return tag;
-			} catch (error) {
-				if (
-					error &&
-					typeof error === 'object' &&
-					'statusCode' in error &&
-					error.statusCode === 404
-				) {
-					return null;
-				}
-				throw error;
-			}
-		})();
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			return await fetchPromise;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return this.fetchSingleEntity<Tag>(`tag:id:${id}`, id, (id) => this.client.fetchTagById(id), {
+			id
+		});
 	}
 
 	/**
@@ -169,46 +104,12 @@ export class TagService {
 	 * ```
 	 */
 	async getTagBySlug(slug: string): Promise<Tag | null> {
-		const cacheKey = `tag:slug:${slug}`;
-
-		const cached = this.cache.get<Tag>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for tag by slug', { slug });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { slug });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for tag by slug, fetching from API', { slug });
-
-		const fetchPromise = (async () => {
-			try {
-				const tag = await this.client.fetchTagBySlug(slug);
-				this.cache.set(cacheKey, tag, this.cacheTtl);
-				return tag;
-			} catch (error) {
-				if (
-					error &&
-					typeof error === 'object' &&
-					'statusCode' in error &&
-					error.statusCode === 404
-				) {
-					return null;
-				}
-				throw error;
-			}
-		})();
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			return await fetchPromise;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return this.fetchSingleEntity<Tag>(
+			`tag:slug:${slug}`,
+			slug,
+			(slug) => this.client.fetchTagBySlug(slug),
+			{ slug }
+		);
 	}
 
 	/**
@@ -443,13 +344,5 @@ export class TagService {
 		} finally {
 			this.pendingRequests.delete(cacheKey);
 		}
-	}
-
-	/**
-	 * Clears the cache - useful for testing
-	 * @internal This method is primarily for testing purposes
-	 */
-	clearCache(): void {
-		this.cache.clear();
 	}
 }

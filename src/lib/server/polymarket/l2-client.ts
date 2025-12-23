@@ -29,7 +29,6 @@ interface DecryptedCredentials {
  * Get decrypted Polymarket credentials and server wallet for a user
  */
 async function getUserCredentials(userId: string): Promise<DecryptedCredentials> {
-	// Get both Polymarket credentials and server wallet key shares
 	const { data: creds, error: credsError } = await supabaseAdmin
 		.from('polymarket_credentials')
 		.select('encrypted_api_key, encrypted_secret, encrypted_passphrase, proxy_wallet_address')
@@ -99,12 +98,10 @@ async function getUserWallet(userId: string): Promise<Wallet> {
 export async function createL2Client(userId: string): Promise<ClobClient> {
 	const { apiKey, secret, passphrase, proxyWalletAddress } = await getUserCredentials(userId);
 
-	// Get user's wallet for signing operations
 	const wallet = await getUserWallet(userId);
 
 	logger.info('Creating L2 CLOB client', { userId, proxyWallet: proxyWalletAddress });
 
-	// Create L2 client with BOTH signer and credentials
 	const client = new ClobClient(
 		CLOB_API_URL,
 		CHAIN_ID,

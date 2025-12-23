@@ -4,10 +4,9 @@
  */
 
 import type { SearchResults } from '../api/polymarket-client.js';
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
-import { loadConfig } from '../config/api-config.js';
-import { Logger } from '../utils/logger.js';
+import { BaseService } from './base-service.js';
+import { buildCacheKey } from '../cache/cache-key-builder.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 
 export interface SearchOptions {
 	q: string;
@@ -36,25 +35,13 @@ export interface SearchOptions {
  * const results = await service.search({ q: 'bitcoin', limitPerType: 10 });
  * ```
  */
-export class SearchService {
-	private client: PolymarketClient;
-	private cache: CacheManager;
-	private logger: Logger;
-	private cacheTtl: number;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private pendingRequests: Map<string, Promise<any>>;
-
+export class SearchService extends BaseService {
 	/**
 	 * Creates a new SearchService instance
 	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 60000ms = 1 minute)
 	 */
 	constructor(cacheTtl: number = 60000) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'SearchService' });
-		this.cacheTtl = cacheTtl;
-		this.pendingRequests = new Map();
+		super('SearchService', cacheTtl);
 	}
 
 	/**
@@ -85,29 +72,16 @@ export class SearchService {
 			return this.fetchAndCacheSearch(cacheKey, options, true);
 		}
 
-		const cached = this.cache.get<SearchResults>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for search', { query: options.q });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { query: options.q });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for search, fetching from API', { query: options.q });
-
-		const fetchPromise = this.fetchAndCacheSearch(cacheKey, options);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheSearch(cacheKey, options),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<SearchResults>>,
+			logger: this.logger,
+			logContext: { query: options.q },
+			cacheHitMessage: 'Cache hit for search',
+			cacheMissMessage: 'Cache miss for search, fetching from API'
+		});
 	}
 
 	/**
@@ -119,7 +93,6 @@ export class SearchService {
 		options: SearchOptions,
 		skipCache: boolean = false
 	): Promise<SearchResults> {
-		// Build params object for API client
 		const params: Record<string, string | number | boolean | string[] | number[]> = {
 			q: options.q
 		};
@@ -153,14 +126,6 @@ export class SearchService {
 	 * Builds a cache key from search options
 	 */
 	private buildCacheKey(options: SearchOptions): string {
-		return `search:${JSON.stringify(options)}`;
-	}
-
-	/**
-	 * Clears the cache - useful for testing
-	 * @internal This method is primarily for testing purposes
-	 */
-	clearCache(): void {
-		this.cache.clear();
+		return buildCacheKey('search', options);
 	}
 }

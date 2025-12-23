@@ -4,11 +4,11 @@
  */
 
 import type { Event } from '../api/polymarket-client.js';
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
-import { loadConfig } from '../config/api-config.js';
-import { Logger } from '../utils/logger.js';
+import { BaseService } from './base-service.js';
+import { buildCacheKey } from '../cache/cache-key-builder.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
+import { genericSort, parseDateForSort } from '../utils/sort-utils.js';
 
 export interface EventFilters {
 	category?: string;
@@ -40,25 +40,13 @@ export interface EventSearchOptions extends EventFilters {
  * const events = await service.getEvents({ category: 'crypto', active: true });
  * ```
  */
-export class EventService {
-	private client: PolymarketClient;
-	private cache: CacheManager;
-	private logger: Logger;
-	private cacheTtl: number;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private pendingRequests: Map<string, Promise<any>>;
-
+export class EventService extends BaseService {
 	/**
 	 * Creates a new EventService instance
 	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 1 minute)
 	 */
 	constructor(cacheTtl: number = CACHE_TTL.DEFAULT) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'EventService' });
-		this.cacheTtl = cacheTtl;
-		this.pendingRequests = new Map();
+		super('EventService', cacheTtl);
 	}
 
 	/**
@@ -81,31 +69,18 @@ export class EventService {
 	 * ```
 	 */
 	async getEvents(filters: EventFilters = {}): Promise<Event[]> {
-		const cacheKey = `events:${JSON.stringify(filters)}`;
+		const cacheKey = buildCacheKey('events', filters);
 
-		const cached = this.cache.get<Event[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for events', { filters });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { filters });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for events, fetching from API', { filters });
-
-		const fetchPromise = this.fetchAndCacheEvents(cacheKey, filters);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheEvents(cacheKey, filters),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<Event[]>>,
+			logger: this.logger,
+			logContext: { filters },
+			cacheHitMessage: 'Cache hit for events',
+			cacheMissMessage: 'Cache miss for events, fetching from API'
+		});
 	}
 
 	/**
@@ -113,18 +88,7 @@ export class EventService {
 	 * Separated for better cache stampede protection
 	 */
 	private async fetchAndCacheEvents(cacheKey: string, filters: EventFilters): Promise<Event[]> {
-		const params: Record<string, string | number | boolean | string[]> = {};
-		if (filters.category !== undefined) params.category = filters.category;
-		if (filters.tag_slug !== undefined) params.tag_slug = filters.tag_slug;
-		if (filters.active !== undefined) params.active = filters.active;
-		if (filters.closed !== undefined) params.closed = filters.closed;
-		if (filters.archived !== undefined) params.archived = filters.archived;
-		if (filters.limit !== undefined) params.limit = filters.limit;
-		if (filters.offset !== undefined) params.offset = filters.offset;
-		if (filters.order !== undefined) params.order = filters.order;
-		if (filters.ascending !== undefined) params.ascending = filters.ascending;
-		if (filters.exclude_tag_id !== undefined) params.exclude_tag_id = filters.exclude_tag_id;
-		if (filters.featured_order !== undefined) params.featured_order = filters.featured_order;
+		const params = this.buildParams(filters);
 
 		const events = await this.client.fetchEvents({ params });
 		const filtered = this.applyFilters(events, filters);
@@ -151,46 +115,12 @@ export class EventService {
 	 * ```
 	 */
 	async getEventById(id: string): Promise<Event | null> {
-		const cacheKey = `event:id:${id}`;
-
-		const cached = this.cache.get<Event>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for event by ID', { id });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { id });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for event by ID, fetching from API', { id });
-
-		const fetchPromise = (async () => {
-			try {
-				const event = await this.client.fetchEventById(id);
-				this.cache.set(cacheKey, event, this.cacheTtl);
-				return event;
-			} catch (error) {
-				if (
-					error &&
-					typeof error === 'object' &&
-					'statusCode' in error &&
-					error.statusCode === 404
-				) {
-					return null;
-				}
-				throw error;
-			}
-		})();
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			return await fetchPromise;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return this.fetchSingleEntity<Event>(
+			`event:id:${id}`,
+			id,
+			(id) => this.client.fetchEventById(id),
+			{ id }
+		);
 	}
 
 	/**
@@ -211,46 +141,12 @@ export class EventService {
 	 * ```
 	 */
 	async getEventBySlug(slug: string): Promise<Event | null> {
-		const cacheKey = `event:slug:${slug}`;
-
-		const cached = this.cache.get<Event>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for event by slug', { slug });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { slug });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for event by slug, fetching from API', { slug });
-
-		const fetchPromise = (async () => {
-			try {
-				const event = await this.client.fetchEventBySlug(slug);
-				this.cache.set(cacheKey, event, this.cacheTtl);
-				return event;
-			} catch (error) {
-				if (
-					error &&
-					typeof error === 'object' &&
-					'statusCode' in error &&
-					error.statusCode === 404
-				) {
-					return null;
-				}
-				throw error;
-			}
-		})();
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			return await fetchPromise;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return this.fetchSingleEntity<Event>(
+			`event:slug:${slug}`,
+			slug,
+			(slug) => this.client.fetchEventBySlug(slug),
+			{ slug }
+		);
 	}
 
 	/**
@@ -271,46 +167,12 @@ export class EventService {
 	 * ```
 	 */
 	async getEventTags(id: string): Promise<import('../api/polymarket-client.js').Tag[] | null> {
-		const cacheKey = `event:tags:${id}`;
-
-		const cached = this.cache.get<import('../api/polymarket-client.js').Tag[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for event tags', { id });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { id });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for event tags, fetching from API', { id });
-
-		const fetchPromise = (async () => {
-			try {
-				const tags = await this.client.fetchEventTags(id);
-				this.cache.set(cacheKey, tags, this.cacheTtl);
-				return tags;
-			} catch (error) {
-				if (
-					error &&
-					typeof error === 'object' &&
-					'statusCode' in error &&
-					error.statusCode === 404
-				) {
-					return null;
-				}
-				throw error;
-			}
-		})();
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			return await fetchPromise;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return this.fetchSingleEntity<import('../api/polymarket-client.js').Tag[]>(
+			`event:tags:${id}`,
+			id,
+			(id) => this.client.fetchEventTags(id),
+			{ id }
+		);
 	}
 
 	/**
@@ -372,42 +234,10 @@ export class EventService {
 		sortBy: 'volume' | 'liquidity' | 'createdAt',
 		sortOrder: 'asc' | 'desc'
 	): Event[] {
-		const sorted = [...events];
-
-		sorted.sort((a, b) => {
-			let aValue: number;
-			let bValue: number;
-
-			switch (sortBy) {
-				case 'volume':
-					aValue = a.volume ?? 0;
-					bValue = b.volume ?? 0;
-					break;
-				case 'liquidity':
-					aValue = a.liquidity ?? 0;
-					bValue = b.liquidity ?? 0;
-					break;
-				case 'createdAt':
-					// Parse creationDate for sorting
-					aValue = a.creationDate ? new Date(a.creationDate).getTime() : 0;
-					bValue = b.creationDate ? new Date(b.creationDate).getTime() : 0;
-					break;
-				default:
-					return 0;
-			}
-
-			const comparison = aValue - bValue;
-			return sortOrder === 'asc' ? comparison : -comparison;
+		return genericSort(events, sortBy, sortOrder, {
+			volume: (e) => e.volume ?? 0,
+			liquidity: (e) => e.liquidity ?? 0,
+			createdAt: (e) => parseDateForSort(e.creationDate)
 		});
-
-		return sorted;
-	}
-
-	/**
-	 * Clears the cache - useful for testing
-	 * @internal This method is primarily for testing purposes
-	 */
-	clearCache(): void {
-		this.cache.clear();
 	}
 }

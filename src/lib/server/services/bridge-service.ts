@@ -4,10 +4,8 @@
  */
 
 import type { SupportedAssets, DepositAddresses } from '../api/polymarket-client.js';
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
-import { loadConfig } from '../config/api-config.js';
-import { Logger } from '../utils/logger.js';
+import { BaseService } from './base-service.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { validateEthereumAddress } from '../validation/input-validator.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
 
@@ -22,25 +20,13 @@ import { CACHE_TTL } from '$lib/config/constants.js';
  * const deposits = await service.createDeposit('0x1234...');
  * ```
  */
-export class BridgeService {
-	private client: PolymarketClient;
-	private cache: CacheManager;
-	private logger: Logger;
-	private cacheTtl: number;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private pendingRequests: Map<string, Promise<any>>;
-
+export class BridgeService extends BaseService {
 	/**
 	 * Creates a new BridgeService instance
 	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 5 minutes)
 	 */
 	constructor(cacheTtl: number = CACHE_TTL.EXTENDED) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'BridgeService' });
-		this.cacheTtl = cacheTtl;
-		this.pendingRequests = new Map();
+		super('BridgeService', cacheTtl);
 	}
 
 	/**
@@ -93,28 +79,15 @@ export class BridgeService {
 	async getSupportedAssets(): Promise<SupportedAssets> {
 		const cacheKey = this.buildCacheKey();
 
-		const cached = this.cache.get<SupportedAssets>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for supported assets');
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result');
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for supported assets, fetching from API');
-
-		const fetchPromise = this.fetchAndCacheSupportedAssets(cacheKey);
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheSupportedAssets(cacheKey),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<SupportedAssets>>,
+			logger: this.logger,
+			cacheHitMessage: 'Cache hit for supported assets',
+			cacheMissMessage: 'Cache miss for supported assets, fetching from API'
+		});
 	}
 
 	/**
@@ -139,13 +112,5 @@ export class BridgeService {
 	 */
 	private buildCacheKey(): string {
 		return 'bridge:supported-assets';
-	}
-
-	/**
-	 * Clears the cache - useful for testing
-	 * @internal This method is primarily for testing purposes
-	 */
-	clearCache(): void {
-		this.cache.clear();
 	}
 }

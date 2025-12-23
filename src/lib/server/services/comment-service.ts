@@ -4,10 +4,9 @@
  */
 
 import type { Comment } from '../api/polymarket-client.js';
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
-import { loadConfig } from '../config/api-config.js';
-import { Logger } from '../utils/logger.js';
+import { BaseService } from './base-service.js';
+import { buildCacheKey } from '../cache/cache-key-builder.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
 
 export interface CommentFilters {
@@ -38,25 +37,13 @@ export interface UserCommentFilters {
  * const comments = await service.getComments({ parent_entity_type: 'Event', parent_entity_id: 123 });
  * ```
  */
-export class CommentService {
-	private client: PolymarketClient;
-	private cache: CacheManager;
-	private logger: Logger;
-	private cacheTtl: number;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private pendingRequests: Map<string, Promise<any>>;
-
+export class CommentService extends BaseService {
 	/**
 	 * Creates a new CommentService instance
 	 * @param cacheTtl - Cache time-to-live in milliseconds (default: 1 minute)
 	 */
 	constructor(cacheTtl: number = CACHE_TTL.DEFAULT) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
-		this.logger = new Logger({ component: 'CommentService' });
-		this.cacheTtl = cacheTtl;
-		this.pendingRequests = new Map();
+		super('CommentService', cacheTtl);
 	}
 
 	/**
@@ -79,31 +66,18 @@ export class CommentService {
 	 * ```
 	 */
 	async getComments(filters: CommentFilters = {}): Promise<Comment[]> {
-		const cacheKey = `comments:list:${JSON.stringify(filters)}`;
+		const cacheKey = buildCacheKey('comments:list', filters);
 
-		const cached = this.cache.get<Comment[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for comments list', { filters });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { filters });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for comments list, fetching from API', { filters });
-
-		const fetchPromise = this.fetchAndCacheComments(cacheKey, filters);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheComments(cacheKey, filters),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<Comment[]>>,
+			logger: this.logger,
+			logContext: { filters },
+			cacheHitMessage: 'Cache hit for comments list',
+			cacheMissMessage: 'Cache miss for comments list, fetching from API'
+		});
 	}
 
 	/**
@@ -114,17 +88,7 @@ export class CommentService {
 		cacheKey: string,
 		filters: CommentFilters
 	): Promise<Comment[]> {
-		const params: Record<string, string | number | boolean> = {};
-
-		if (filters.limit !== undefined) params.limit = filters.limit;
-		if (filters.offset !== undefined) params.offset = filters.offset;
-		if (filters.order !== undefined) params.order = filters.order;
-		if (filters.ascending !== undefined) params.ascending = filters.ascending;
-		if (filters.parent_entity_type !== undefined)
-			params.parent_entity_type = filters.parent_entity_type;
-		if (filters.parent_entity_id !== undefined) params.parent_entity_id = filters.parent_entity_id;
-		if (filters.get_positions !== undefined) params.get_positions = filters.get_positions;
-		if (filters.holders_only !== undefined) params.holders_only = filters.holders_only;
+		const params = this.buildParams(filters);
 
 		const comments = await this.client.fetchComments({ params });
 		this.cache.set(cacheKey, comments, this.cacheTtl);
@@ -153,47 +117,16 @@ export class CommentService {
 	async getCommentById(id: number, getPositions: boolean = false): Promise<Comment | null> {
 		const cacheKey = `comment:id:${id}:positions:${getPositions}`;
 
-		const cached = this.cache.get<Comment>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for comment by ID', { id, getPositions });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { id, getPositions });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for comment by ID, fetching from API', { id, getPositions });
-
-		const fetchPromise = (async () => {
-			try {
+		return this.fetchSingleEntity<Comment>(
+			cacheKey,
+			String(id),
+			() => {
 				const params: Record<string, boolean> = {};
 				if (getPositions) params.get_positions = true;
-
-				const comment = await this.client.fetchCommentById(id, { params });
-				this.cache.set(cacheKey, comment, this.cacheTtl);
-				return comment;
-			} catch (error) {
-				if (
-					error &&
-					typeof error === 'object' &&
-					'statusCode' in error &&
-					error.statusCode === 404
-				) {
-					return null;
-				}
-				throw error;
-			}
-		})();
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			return await fetchPromise;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+				return this.client.fetchCommentById(id, { params });
+			},
+			{ id, getPositions }
+		);
 	}
 
 	/**
@@ -219,34 +152,18 @@ export class CommentService {
 		userAddress: string,
 		filters: UserCommentFilters = {}
 	): Promise<Comment[]> {
-		const cacheKey = `comments:user:${userAddress}:${JSON.stringify(filters)}`;
+		const cacheKey = buildCacheKey(`comments:user:${userAddress}`, filters);
 
-		const cached = this.cache.get<Comment[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for comments by user', { userAddress, filters });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { userAddress, filters });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for comments by user, fetching from API', {
-			userAddress,
-			filters
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheUserComments(cacheKey, userAddress, filters),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<Comment[]>>,
+			logger: this.logger,
+			logContext: { userAddress, filters },
+			cacheHitMessage: 'Cache hit for comments by user',
+			cacheMissMessage: 'Cache miss for comments by user, fetching from API'
 		});
-
-		const fetchPromise = this.fetchAndCacheUserComments(cacheKey, userAddress, filters);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
 	}
 
 	/**
@@ -258,24 +175,11 @@ export class CommentService {
 		userAddress: string,
 		filters: UserCommentFilters
 	): Promise<Comment[]> {
-		const params: Record<string, string | number | boolean> = {};
-
-		if (filters.limit !== undefined) params.limit = filters.limit;
-		if (filters.offset !== undefined) params.offset = filters.offset;
-		if (filters.order !== undefined) params.order = filters.order;
-		if (filters.ascending !== undefined) params.ascending = filters.ascending;
+		const params = this.buildParams(filters);
 
 		const comments = await this.client.fetchCommentsByUser(userAddress, { params });
 		this.cache.set(cacheKey, comments, this.cacheTtl);
 
 		return comments;
-	}
-
-	/**
-	 * Clears the cache - useful for testing
-	 * @internal This method is primarily for testing purposes
-	 */
-	clearCache(): void {
-		this.cache.clear();
 	}
 }
