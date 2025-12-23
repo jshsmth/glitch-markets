@@ -19,6 +19,7 @@ const RELAYER_URL = 'https://relayer-v2.polymarket.com';
 const CHAIN_ID = 137;
 const POLYGON_RPC_URL = 'https://polygon-rpc.com';
 
+const USDC_CONTRACT = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
 const CTF_CONTRACT = '0x4d97dcd97ec945f40cf65f87097ace5ea0476045';
 const CTF_EXCHANGE = '0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E';
 
@@ -104,6 +105,30 @@ function encodeCTFApproval(): string {
 	});
 }
 
+/**
+ * Encode USDC approve transaction for unlimited spending by the Exchange contract
+ */
+function encodeUSDCApproval(): string {
+	const maxUint256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+
+	return encodeFunctionData({
+		abi: [
+			{
+				inputs: [
+					{ name: 'spender', type: 'address' },
+					{ name: 'amount', type: 'uint256' }
+				],
+				name: 'approve',
+				outputs: [{ name: '', type: 'bool' }],
+				stateMutability: 'nonpayable',
+				type: 'function'
+			}
+		],
+		functionName: 'approve',
+		args: [CTF_EXCHANGE, maxUint256]
+	});
+}
+
 export interface DeploymentResult {
 	deployed: boolean;
 	alreadyDeployed: boolean;
@@ -159,21 +184,33 @@ export async function deployProxyWallet(
 			chainId: CHAIN_ID
 		});
 
-		const approvalData = encodeCTFApproval();
+		const ctfApprovalData = encodeCTFApproval();
+		const usdcApprovalData = encodeUSDCApproval();
 
-		const transaction = {
-			to: CTF_CONTRACT,
-			data: approvalData,
-			value: '0'
-		};
+		const transactions = [
+			{
+				to: CTF_CONTRACT,
+				data: ctfApprovalData,
+				value: '0'
+			},
+			{
+				to: USDC_CONTRACT,
+				data: usdcApprovalData,
+				value: '0'
+			}
+		];
 
-		logger.info('Executing CTF approval transaction to trigger deployment', {
-			to: CTF_CONTRACT,
+		logger.info('Executing approval transactions to trigger deployment', {
+			ctfContract: CTF_CONTRACT,
+			usdcContract: USDC_CONTRACT,
 			operator: CTF_EXCHANGE,
 			proxyWalletAddress
 		});
 
-		const response = await relayClient.execute([transaction], 'Deploy wallet and approve CTF');
+		const response = await relayClient.execute(
+			transactions,
+			'Deploy wallet and approve CTF + USDC'
+		);
 
 		logger.info('Transaction submitted to relayer', {
 			proxyWalletAddress
@@ -185,7 +222,7 @@ export async function deployProxyWallet(
 			throw new Error('Transaction failed - no result returned');
 		}
 
-		logger.info('Proxy wallet deployed and CTF approved', {
+		logger.info('Proxy wallet deployed with CTF and USDC approvals', {
 			proxyAddress: result.proxyAddress,
 			transactionHash: result.transactionHash,
 			alreadyDeployed: false
