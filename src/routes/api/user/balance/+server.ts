@@ -1,11 +1,11 @@
 /**
  * User Balance Endpoint
  * GET /api/user/balance
- * Returns user's USDC.e balance from Polygon blockchain
+ * Returns user's USDC.e balance and allowance from Polygon blockchain
  */
 
 import { json, type RequestEvent } from '@sveltejs/kit';
-import { getUSDCBalance } from '$lib/server/utils/balance';
+import { getUSDCBalanceAndAllowance } from '$lib/server/utils/balance';
 import { Logger } from '$lib/server/utils/logger';
 
 const logger = new Logger({ component: 'BalanceRoute' });
@@ -33,17 +33,25 @@ export async function GET({ locals }: RequestEvent) {
 			return json({
 				balance: '0',
 				balanceRaw: '0',
+				allowance: '0',
+				allowanceRaw: '0',
 				decimals: 6,
+				hasAllowance: false,
+				needsApproval: false,
 				hasProxyWallet: false
 			});
 		}
 
-		const balanceResult = await getUSDCBalance(credentials.proxy_wallet_address);
+		const balanceResult = await getUSDCBalanceAndAllowance(credentials.proxy_wallet_address);
 
 		return json({
 			balance: balanceResult.balance,
 			balanceRaw: balanceResult.balanceRaw.toString(),
+			allowance: balanceResult.allowance,
+			allowanceRaw: balanceResult.allowanceRaw.toString(),
 			decimals: balanceResult.decimals,
+			hasAllowance: balanceResult.hasAllowance,
+			needsApproval: balanceResult.needsApproval,
 			hasProxyWallet: true
 		});
 	} catch (err) {
