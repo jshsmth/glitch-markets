@@ -21,14 +21,26 @@ async function registerWithPolymarketAsync(userId: string): Promise<void> {
 	try {
 		logger.info('Starting background Polymarket registration', { userId });
 
+		const { data: existingCreds } = await supabaseAdmin
+			.from('polymarket_credentials')
+			.select('proxy_wallet_address, deployed_at, deployment_tx_hash')
+			.eq('user_id', userId)
+			.single();
+
+		if (existingCreds?.deployed_at) {
+			logger.info('User already registered and deployed with Polymarket', {
+				userId,
+				proxyWallet: existingCreds.proxy_wallet_address
+			});
+			return;
+		}
+
 		const credentials = await registerWithPolymarket(userId);
 
-		// Encrypt and save credentials
 		const encryptedApiKey = encryptData(credentials.apiKey);
 		const encryptedSecret = encryptData(credentials.secret);
 		const encryptedPassphrase = encryptData(credentials.passphrase);
 
-		// Get user's server wallet address
 		const { data: user } = await supabaseAdmin
 			.from('users')
 			.select('server_wallet_address')
@@ -40,15 +52,20 @@ async function registerWithPolymarketAsync(userId: string): Promise<void> {
 			return;
 		}
 
-		const { error } = await supabaseAdmin.from('polymarket_credentials').insert({
-			user_id: userId,
-			wallet_address: user.server_wallet_address,
-			proxy_wallet_address: credentials.proxyWalletAddress,
-			encrypted_api_key: encryptedApiKey,
-			encrypted_secret: encryptedSecret,
-			encrypted_passphrase: encryptedPassphrase,
-			created_at: new Date().toISOString()
-		});
+		const { error } = await supabaseAdmin.from('polymarket_credentials').upsert(
+			{
+				user_id: userId,
+				wallet_address: user.server_wallet_address,
+				proxy_wallet_address: credentials.proxyWalletAddress,
+				encrypted_api_key: encryptedApiKey,
+				encrypted_secret: encryptedSecret,
+				encrypted_passphrase: encryptedPassphrase,
+				deployed_at: credentials.deployed ? new Date().toISOString() : null,
+				deployment_tx_hash: credentials.transactionHash || null,
+				created_at: new Date().toISOString()
+			},
+			{ onConflict: 'user_id' }
+		);
 
 		if (error) {
 			logger.error('Failed to save Polymarket credentials', { userId, error });
@@ -57,14 +74,15 @@ async function registerWithPolymarketAsync(userId: string): Promise<void> {
 
 		logger.info('Background Polymarket registration completed', {
 			userId,
-			proxyWallet: credentials.proxyWalletAddress
+			proxyWallet: credentials.proxyWalletAddress,
+			deployed: credentials.deployed,
+			transactionHash: credentials.transactionHash
 		});
 	} catch (error) {
 		logger.error('Background Polymarket registration failed', {
 			userId,
 			error: error instanceof Error ? error.message : 'Unknown error'
 		});
-		// Don't throw - this is a background operation
 	}
 }
 
@@ -126,6 +144,13 @@ export const POST: RequestHandler = async ({ locals }) => {
 					throw updateError;
 				}
 
+				registerWithPolymarketAsync(userId).catch((err) => {
+					logger.error('Failed to register with Polymarket in background', {
+						userId,
+						error: err instanceof Error ? err.message : 'Unknown error'
+					});
+				});
+
 				return json({
 					success: true,
 					user: {
@@ -138,11 +163,17 @@ export const POST: RequestHandler = async ({ locals }) => {
 				});
 			}
 
-			// Update last login for user with wallet (use admin client to bypass RLS)
 			await supabaseAdmin
 				.from('users')
 				.update({ last_login_at: new Date().toISOString() })
 				.eq('id', userId);
+
+			registerWithPolymarketAsync(userId).catch((err) => {
+				logger.error('Failed to register with Polymarket in background', {
+					userId,
+					error: err instanceof Error ? err.message : 'Unknown error'
+				});
+			});
 
 			return json({
 				success: true,

@@ -74,6 +74,39 @@ export async function fetchWalletAddresses(): Promise<void> {
 	}
 }
 
+let pollInterval: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * Poll for registration status until wallet is deployed
+ */
+function startRegistrationPolling(): void {
+	if (pollInterval) return;
+
+	pollInterval = setInterval(async () => {
+		if (!authState.session) {
+			stopRegistrationPolling();
+			return;
+		}
+
+		if (walletState.isRegistered) {
+			stopRegistrationPolling();
+			return;
+		}
+
+		await fetchWalletAddresses();
+	}, 3000);
+}
+
+/**
+ * Stop polling for registration status
+ */
+function stopRegistrationPolling(): void {
+	if (pollInterval) {
+		clearInterval(pollInterval);
+		pollInterval = null;
+	}
+}
+
 /**
  * Auto-fetch wallet addresses when auth state changes
  * Call this in a $effect in your root layout
@@ -90,17 +123,25 @@ export function initializeWalletSync(): () => void {
 				walletState.isLoading = false;
 				walletState.error = null;
 				lastProfileVersion = -1;
+				stopRegistrationPolling();
 				return;
 			}
 
 			if (currentVersion !== lastProfileVersion) {
 				lastProfileVersion = currentVersion;
-				fetchWalletAddresses();
+				fetchWalletAddresses().then(() => {
+					if (!walletState.isRegistered && authState.session) {
+						startRegistrationPolling();
+					}
+				});
 			}
 		});
 	});
 
-	return cleanup;
+	return () => {
+		cleanup();
+		stopRegistrationPolling();
+	};
 }
 
 /**
@@ -111,6 +152,8 @@ export function resetWalletState(): void {
 		abortController.abort();
 		abortController = null;
 	}
+
+	stopRegistrationPolling();
 
 	walletState.serverWalletAddress = null;
 	walletState.proxyWalletAddress = null;

@@ -168,6 +168,35 @@ wss://ws-live-data.polymarket.com
 - **Relayer Client**: https://docs.polymarket.com/developers/builders/relayer-client
 - **Examples**: https://docs.polymarket.com/developers/builders/examples
 
+### Trading Implementation Guide
+
+**Prerequisites for Trading:**
+- ✅ Proxy wallet deployed on-chain (auto-deployed during registration)
+- ✅ CTF contract approval (setApprovalForAll - auto-granted during deployment)
+- ✅ CLOB API credentials (API key, secret, passphrase - auto-generated)
+- ✅ Builder credentials for gasless transactions
+- ⚠️ USDC balance in proxy wallet (user must deposit funds via bridge)
+
+**Key Resources:**
+- **First Order Guide**: https://docs.polymarket.com/quickstart/orders/first-order
+- **CLOB Introduction**: https://docs.polymarket.com/developers/CLOB/introduction
+- **Relayer Client**: https://docs.polymarket.com/developers/builders/relayer-client
+
+**Trading Flow:**
+1. User deposits USDC to proxy wallet (via bridge API)
+2. Initialize ClobClient with L2 credentials (signature_type=1 for Magic Link)
+3. Create order with price, size, side, and token ID
+4. Sign order using ClobClient.create_order()
+5. Submit order via ClobClient.post_order() with OrderType (GTC, FOK, etc.)
+6. Orders are matched off-chain, settled on-chain via Exchange contract
+
+**Important Notes:**
+- All gasless transactions use the relayer at `https://relayer-v2.polymarket.com`
+- Builder credentials must be kept secure on the server
+- Proxy wallets use signature_type=1 (for Magic Link/email authentication)
+- Fee structure: 0 bps maker/taker fees for >0 USDC volume
+- NegRisk markets require additional `negrisk=False` flag
+
 ### Bridge & Swap
 
 - **Overview**: https://docs.polymarket.com/developers/misc-endpoints/bridge-overview
