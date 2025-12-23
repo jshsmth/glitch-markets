@@ -33,7 +33,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 		const { data: credentials } = await locals.supabase
 			.from('polymarket_credentials')
-			.select('proxy_wallet_address')
+			.select('proxy_wallet_address, deployed_at')
 			.eq('user_id', userId)
 			.single();
 
@@ -41,7 +41,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 			id: dbUser.id,
 			email: dbUser.email,
 			serverWalletAddress: dbUser.server_wallet_address,
-			proxyWalletAddress: credentials?.proxy_wallet_address || null
+			proxyWalletAddress: credentials?.proxy_wallet_address || null,
+			isRegistered: !!credentials?.deployed_at
 		});
 	} catch (err) {
 		console.error('Error fetching user profile:', err);

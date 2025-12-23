@@ -149,6 +149,7 @@ wss://ws-live-data.polymarket.com
 
 - **Introduction**: https://docs.polymarket.com/quickstart/introduction/main
 - **Showcase**: https://docs.polymarket.com/quickstart/introduction/showcase
+- **First Order**: https://docs.polymarket.com/quickstart/orders/first-order
 
 ### API Rate Limits
 
@@ -157,6 +158,15 @@ wss://ws-live-data.polymarket.com
 ### Proxy Wallet
 
 - **Proxy Wallet**: https://docs.polymarket.com/developers/proxy-wallet
+
+### Builders Program
+
+- **Builder Introduction**: https://docs.polymarket.com/developers/builders/builder-intro
+- **Builder Tiers**: https://docs.polymarket.com/developers/builders/builder-tiers
+- **Builder Profile**: https://docs.polymarket.com/developers/builders/builder-profile
+- **Order Attribution**: https://docs.polymarket.com/developers/builders/order-attribution
+- **Relayer Client**: https://docs.polymarket.com/developers/builders/relayer-client
+- **Examples**: https://docs.polymarket.com/developers/builders/examples
 
 ### Bridge & Swap
 

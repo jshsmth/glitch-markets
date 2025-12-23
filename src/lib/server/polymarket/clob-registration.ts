@@ -12,22 +12,24 @@ import { Logger } from '../utils/logger';
 import { deriveProxyWalletAddress } from '../utils/proxy-wallet';
 import { decryptData } from '../utils/encryption';
 import { supabaseAdmin } from '$lib/supabase/admin';
+import { deployProxyWallet } from './proxy-deployment';
 
 const logger = new Logger({ component: 'CLOBRegistration' });
 
 const CLOB_API_URL = 'https://clob.polymarket.com';
-const CHAIN_ID = 137; // Polygon mainnet
+const CHAIN_ID = 137;
 
 export interface PolymarketCredentials {
 	apiKey: string;
 	secret: string;
 	passphrase: string;
 	proxyWalletAddress: string;
+	deployed: boolean;
+	transactionHash?: string;
 }
 
 /**
- * Create an ethers Wallet from encrypted key shares
- * The CLOB client uses ethers, so we need to convert from our viem setup
+ * Create an ethers Wallet from encrypted key shares for CLOB client
  */
 function createEthersWallet(encryptedKeyShares: string): Wallet {
 	const privateKey = decryptData(encryptedKeyShares) as string;
@@ -35,8 +37,7 @@ function createEthersWallet(encryptedKeyShares: string): Wallet {
 }
 
 /**
- * Create L1 authenticated CLOB client
- * Used for API key management operations
+ * Create L1 authenticated CLOB client for API key management
  */
 function createL1Client(encryptedKeyShares: string): ClobClient {
 	const wallet = createEthersWallet(encryptedKeyShares);
@@ -44,16 +45,12 @@ function createL1Client(encryptedKeyShares: string): ClobClient {
 }
 
 /**
- * Register user with Polymarket CLOB and create API credentials
- * This allows the user to trade on Polymarket
- *
- * Uses the official CLOB client for L1 authentication
+ * Register user with Polymarket CLOB and deploy their proxy wallet
  */
 export async function registerWithPolymarket(userId: string): Promise<PolymarketCredentials> {
 	try {
 		logger.info('Starting Polymarket CLOB registration', { userId });
 
-		// Get user data from Supabase
 		const { data: user, error: userError } = await supabaseAdmin
 			.from('users')
 			.select('server_wallet_address, encrypted_server_key_shares')
@@ -75,7 +72,6 @@ export async function registerWithPolymarket(userId: string): Promise<Polymarket
 			address: server_wallet_address
 		});
 
-		// Derive the proxy wallet address (deterministic based on server wallet)
 		const proxyWalletAddress = await deriveProxyWalletAddress(server_wallet_address);
 
 		logger.info('Derived proxy wallet address', {
@@ -84,13 +80,10 @@ export async function registerWithPolymarket(userId: string): Promise<Polymarket
 			proxyWallet: proxyWalletAddress
 		});
 
-		// Create L1 authenticated CLOB client
 		const client = createL1Client(encrypted_server_key_shares);
 
 		logger.info('Created L1 CLOB client', { userId });
 
-		// Use CLOB client to create or derive API credentials
-		// This will automatically handle EIP-712 signing and API communication
 		const apiCreds = await client.createOrDeriveApiKey();
 
 		logger.info('Successfully created/derived API credentials via CLOB client', {
@@ -101,11 +94,28 @@ export async function registerWithPolymarket(userId: string): Promise<Polymarket
 			hasPassphrase: !!apiCreds.passphrase
 		});
 
+		logger.info('Deploying proxy wallet on-chain', { userId, proxyWalletAddress });
+
+		const deploymentResult = await deployProxyWallet(
+			encrypted_server_key_shares,
+			proxyWalletAddress
+		);
+
+		logger.info('Proxy wallet deployment completed', {
+			userId,
+			proxyWalletAddress,
+			deployed: deploymentResult.deployed,
+			alreadyDeployed: deploymentResult.alreadyDeployed,
+			transactionHash: deploymentResult.transactionHash
+		});
+
 		return {
 			apiKey: apiCreds.key,
 			secret: apiCreds.secret,
 			passphrase: apiCreds.passphrase,
-			proxyWalletAddress
+			proxyWalletAddress,
+			deployed: deploymentResult.deployed,
+			transactionHash: deploymentResult.transactionHash
 		};
 	} catch (error) {
 		logger.error('Failed to register with Polymarket CLOB', {

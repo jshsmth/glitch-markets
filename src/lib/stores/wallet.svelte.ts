@@ -9,6 +9,7 @@ import { authState } from './auth.svelte';
 interface WalletState {
 	serverWalletAddress: string | null;
 	proxyWalletAddress: string | null;
+	isRegistered: boolean;
 	isLoading: boolean;
 	error: string | null;
 }
@@ -16,6 +17,7 @@ interface WalletState {
 export const walletState = $state<WalletState>({
 	serverWalletAddress: null,
 	proxyWalletAddress: null,
+	isRegistered: false,
 	isLoading: false,
 	error: null
 });
@@ -30,6 +32,7 @@ export async function fetchWalletAddresses(): Promise<void> {
 	if (!browser || !authState.session) {
 		walletState.serverWalletAddress = null;
 		walletState.proxyWalletAddress = null;
+		walletState.isRegistered = false;
 		walletState.isLoading = false;
 		walletState.error = null;
 		return;
@@ -55,6 +58,7 @@ export async function fetchWalletAddresses(): Promise<void> {
 		const data = await response.json();
 		walletState.serverWalletAddress = data.serverWalletAddress || null;
 		walletState.proxyWalletAddress = data.proxyWalletAddress || null;
+		walletState.isRegistered = data.isRegistered || false;
 	} catch (err) {
 		if (err instanceof Error && err.name === 'AbortError') {
 			return;
@@ -63,6 +67,7 @@ export async function fetchWalletAddresses(): Promise<void> {
 		walletState.error = err instanceof Error ? err.message : 'Failed to load wallet';
 		walletState.serverWalletAddress = null;
 		walletState.proxyWalletAddress = null;
+		walletState.isRegistered = false;
 	} finally {
 		walletState.isLoading = false;
 		abortController = null;
@@ -81,6 +86,7 @@ export function initializeWalletSync(): () => void {
 			if (!authState.session) {
 				walletState.serverWalletAddress = null;
 				walletState.proxyWalletAddress = null;
+				walletState.isRegistered = false;
 				walletState.isLoading = false;
 				walletState.error = null;
 				lastProfileVersion = -1;
@@ -108,6 +114,7 @@ export function resetWalletState(): void {
 
 	walletState.serverWalletAddress = null;
 	walletState.proxyWalletAddress = null;
+	walletState.isRegistered = false;
 	walletState.isLoading = false;
 	walletState.error = null;
 	lastProfileVersion = -1;
