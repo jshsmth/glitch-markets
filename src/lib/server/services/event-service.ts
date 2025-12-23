@@ -6,6 +6,7 @@
 import type { Event } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
@@ -82,7 +83,7 @@ export class EventService {
 	 * ```
 	 */
 	async getEvents(filters: EventFilters = {}): Promise<Event[]> {
-		const cacheKey = `events:${JSON.stringify(filters)}`;
+		const cacheKey = buildCacheKey('events', filters);
 
 		return withCacheStampedeProtection({
 			cacheKey,

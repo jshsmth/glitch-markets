@@ -11,6 +11,7 @@ import type {
 } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
@@ -76,7 +77,7 @@ export class BuilderDataService {
 	 * ```
 	 */
 	async getLeaderboard(params: BuilderLeaderboardParams): Promise<BuilderLeaderboardEntry[]> {
-		const cacheKey = `builders:leaderboard:${JSON.stringify(params)}`;
+		const cacheKey = buildCacheKey('builders:leaderboard', params);
 
 		return withCacheStampedeProtection({
 			cacheKey,
@@ -106,7 +107,7 @@ export class BuilderDataService {
 	 * ```
 	 */
 	async getVolumeTimeSeries(params: BuilderVolumeParams): Promise<BuilderVolumeEntry[]> {
-		const cacheKey = `builders:volume:${JSON.stringify(params)}`;
+		const cacheKey = buildCacheKey('builders:volume', params);
 
 		return withCacheStampedeProtection({
 			cacheKey,

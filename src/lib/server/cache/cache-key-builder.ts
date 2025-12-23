@@ -38,12 +38,12 @@
  * // => "search:filters.active=true&filters.category=sports&query=crypto"
  * ```
  */
-export function buildCacheKey(prefix: string, params?: Record<string, unknown>): string {
+export function buildCacheKey(prefix: string, params?: Record<string, unknown> | object): string {
 	if (!params || Object.keys(params).length === 0) {
 		return prefix;
 	}
 
-	const parts = serializeObject(params);
+	const parts = serializeObject(params as Record<string, unknown>);
 	return `${prefix}:${parts}`;
 }
 
@@ -116,7 +116,10 @@ function serializeArray(arr: unknown[]): string {
  * // => 'markets:{"active":true,"limit":50}'
  * ```
  */
-export function buildCacheKeyJSON(prefix: string, params?: Record<string, unknown>): string {
+export function buildCacheKeyJSON(
+	prefix: string,
+	params?: Record<string, unknown> | object
+): string {
 	if (!params || Object.keys(params).length === 0) {
 		return prefix;
 	}

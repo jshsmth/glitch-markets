@@ -776,7 +776,7 @@ describe('SeriesService', () => {
 
 					// Test getSeriesById - 404 case
 					const error404 = new Error('Not found');
-					(error404 as unknown as { status: number }).status = 404;
+					(error404 as unknown as { statusCode: number }).statusCode = 404;
 					mockClientInstance.fetchSeriesById = vi.fn().mockRejectedValue(error404);
 
 					const resultById = await service.getSeriesById(id);

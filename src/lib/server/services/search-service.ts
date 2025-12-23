@@ -6,6 +6,7 @@
 import type { SearchResults } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
@@ -141,7 +142,7 @@ export class SearchService {
 	 * Builds a cache key from search options
 	 */
 	private buildCacheKey(options: SearchOptions): string {
-		return `search:${JSON.stringify(options)}`;
+		return buildCacheKey('search', options);
 	}
 
 	/**

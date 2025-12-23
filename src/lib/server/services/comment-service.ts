@@ -6,6 +6,7 @@
 import type { Comment } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
@@ -80,7 +81,7 @@ export class CommentService {
 	 * ```
 	 */
 	async getComments(filters: CommentFilters = {}): Promise<Comment[]> {
-		const cacheKey = `comments:list:${JSON.stringify(filters)}`;
+		const cacheKey = buildCacheKey('comments:list', filters);
 
 		return withCacheStampedeProtection({
 			cacheKey,
@@ -207,7 +208,7 @@ export class CommentService {
 		userAddress: string,
 		filters: UserCommentFilters = {}
 	): Promise<Comment[]> {
-		const cacheKey = `comments:user:${userAddress}:${JSON.stringify(filters)}`;
+		const cacheKey = buildCacheKey(`comments:user:${userAddress}`, filters);
 
 		return withCacheStampedeProtection({
 			cacheKey,

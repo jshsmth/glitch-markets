@@ -6,6 +6,7 @@
 import type { Team, SportsMetadata, TeamQueryParams } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
@@ -61,7 +62,7 @@ export class SportsService {
 	 * ```
 	 */
 	async getTeams(params: TeamQueryParams): Promise<Team[]> {
-		const cacheKey = `sports:teams:${JSON.stringify(params)}`;
+		const cacheKey = buildCacheKey('sports:teams', params);
 
 		return withCacheStampedeProtection({
 			cacheKey,

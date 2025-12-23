@@ -6,6 +6,7 @@
 import type { Series } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
@@ -76,7 +77,7 @@ export class SeriesService {
 	 * ```
 	 */
 	async getSeries(filters: SeriesFilters = {}): Promise<Series[]> {
-		const cacheKey = `series:${JSON.stringify(filters)}`;
+		const cacheKey = buildCacheKey('series', filters);
 
 		return withCacheStampedeProtection({
 			cacheKey,
