@@ -8,6 +8,7 @@ import { BaseService } from './base-service.js';
 import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
+import { genericSort, parseDateForSort } from '../utils/sort-utils.js';
 
 export interface SeriesFilters {
 	category?: string;
@@ -187,32 +188,10 @@ export class SeriesService extends BaseService {
 		sortBy: 'volume' | 'liquidity' | 'createdAt',
 		sortOrder: 'asc' | 'desc'
 	): Series[] {
-		const sorted = [...series].sort((a, b) => {
-			let aValue: number;
-			let bValue: number;
-
-			switch (sortBy) {
-				case 'volume':
-					aValue = a.volume ?? 0;
-					bValue = b.volume ?? 0;
-					break;
-				case 'liquidity':
-					aValue = a.liquidity ?? 0;
-					bValue = b.liquidity ?? 0;
-					break;
-				case 'createdAt':
-					aValue = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-					bValue = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-					break;
-			}
-
-			if (sortOrder === 'asc') {
-				return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-			} else {
-				return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-			}
+		return genericSort(series, sortBy, sortOrder, {
+			volume: (s) => s.volume ?? 0,
+			liquidity: (s) => s.liquidity ?? 0,
+			createdAt: (s) => parseDateForSort(s.createdAt)
 		});
-
-		return sorted;
 	}
 }

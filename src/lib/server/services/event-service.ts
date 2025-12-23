@@ -8,6 +8,7 @@ import { BaseService } from './base-service.js';
 import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
+import { genericSort, parseDateForSort } from '../utils/sort-utils.js';
 
 export interface EventFilters {
 	category?: string;
@@ -233,34 +234,10 @@ export class EventService extends BaseService {
 		sortBy: 'volume' | 'liquidity' | 'createdAt',
 		sortOrder: 'asc' | 'desc'
 	): Event[] {
-		const sorted = [...events];
-
-		sorted.sort((a, b) => {
-			let aValue: number;
-			let bValue: number;
-
-			switch (sortBy) {
-				case 'volume':
-					aValue = a.volume ?? 0;
-					bValue = b.volume ?? 0;
-					break;
-				case 'liquidity':
-					aValue = a.liquidity ?? 0;
-					bValue = b.liquidity ?? 0;
-					break;
-				case 'createdAt':
-					// Parse creationDate for sorting
-					aValue = a.creationDate ? new Date(a.creationDate).getTime() : 0;
-					bValue = b.creationDate ? new Date(b.creationDate).getTime() : 0;
-					break;
-				default:
-					return 0;
-			}
-
-			const comparison = aValue - bValue;
-			return sortOrder === 'asc' ? comparison : -comparison;
+		return genericSort(events, sortBy, sortOrder, {
+			volume: (e) => e.volume ?? 0,
+			liquidity: (e) => e.liquidity ?? 0,
+			createdAt: (e) => parseDateForSort(e.creationDate)
 		});
-
-		return sorted;
 	}
 }

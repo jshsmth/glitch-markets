@@ -8,6 +8,7 @@ import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
 import { BaseService } from './base-service.js';
+import { genericSort, parseDateForSort } from '../utils/sort-utils.js';
 
 export interface MarketFilters {
 	category?: string;
@@ -229,34 +230,10 @@ export class MarketService extends BaseService {
 		sortBy: 'volume' | 'liquidity' | 'createdAt',
 		sortOrder: 'asc' | 'desc'
 	): Market[] {
-		const sorted = [...markets];
-
-		sorted.sort((a, b) => {
-			let aValue: number;
-			let bValue: number;
-
-			switch (sortBy) {
-				case 'volume':
-					aValue = a.volumeNum ?? 0;
-					bValue = b.volumeNum ?? 0;
-					break;
-				case 'liquidity':
-					aValue = a.liquidityNum ?? 0;
-					bValue = b.liquidityNum ?? 0;
-					break;
-				case 'createdAt':
-					// Parse endDate as a proxy for creation date
-					aValue = a.endDate ? new Date(a.endDate).getTime() : 0;
-					bValue = b.endDate ? new Date(b.endDate).getTime() : 0;
-					break;
-				default:
-					return 0;
-			}
-
-			const comparison = aValue - bValue;
-			return sortOrder === 'asc' ? comparison : -comparison;
+		return genericSort(markets, sortBy, sortOrder, {
+			volume: (m) => m.volumeNum ?? 0,
+			liquidity: (m) => m.liquidityNum ?? 0,
+			createdAt: (m) => parseDateForSort(m.endDate)
 		});
-
-		return sorted;
 	}
 }
