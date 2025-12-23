@@ -2,7 +2,7 @@ import { queryKeys } from '$lib/query/client';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, fetch }) => {
-	const { queryClient } = await parent();
+	const { queryClient, session } = await parent();
 
 	await queryClient.prefetchQuery({
 		queryKey: queryKeys.events.all,
@@ -24,6 +24,17 @@ export const load: PageLoad = async ({ parent, fetch }) => {
 			return response.json();
 		}
 	});
+
+	if (session?.user) {
+		await queryClient.prefetchQuery({
+			queryKey: queryKeys.watchlist.all,
+			queryFn: async () => {
+				const response = await fetch('/api/watchlist');
+				if (!response.ok) return [];
+				return response.json();
+			}
+		});
+	}
 
 	return {};
 };
