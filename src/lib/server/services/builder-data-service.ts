@@ -11,6 +11,7 @@ import type {
 } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
@@ -77,28 +78,16 @@ export class BuilderDataService {
 	async getLeaderboard(params: BuilderLeaderboardParams): Promise<BuilderLeaderboardEntry[]> {
 		const cacheKey = `builders:leaderboard:${JSON.stringify(params)}`;
 
-		const cached = this.cache.get<BuilderLeaderboardEntry[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for builder leaderboard', { params });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { params });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for builder leaderboard, fetching from API', { params });
-
-		const fetchPromise = this.fetchAndCacheLeaderboard(cacheKey, params);
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheLeaderboard(cacheKey, params),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<BuilderLeaderboardEntry[]>>,
+			logger: this.logger,
+			logContext: { params },
+			cacheHitMessage: 'Cache hit for builder leaderboard',
+			cacheMissMessage: 'Cache miss for builder leaderboard, fetching from API'
+		});
 	}
 
 	/**
@@ -119,28 +108,16 @@ export class BuilderDataService {
 	async getVolumeTimeSeries(params: BuilderVolumeParams): Promise<BuilderVolumeEntry[]> {
 		const cacheKey = `builders:volume:${JSON.stringify(params)}`;
 
-		const cached = this.cache.get<BuilderVolumeEntry[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for builder volume', { params });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { params });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for builder volume, fetching from API', { params });
-
-		const fetchPromise = this.fetchAndCacheVolume(cacheKey, params);
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheVolume(cacheKey, params),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<BuilderVolumeEntry[]>>,
+			logger: this.logger,
+			logContext: { params },
+			cacheHitMessage: 'Cache hit for builder volume',
+			cacheMissMessage: 'Cache miss for builder volume, fetching from API'
+		});
 	}
 
 	/**

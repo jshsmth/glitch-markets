@@ -6,6 +6,7 @@
 import type { Comment } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
@@ -81,29 +82,16 @@ export class CommentService {
 	async getComments(filters: CommentFilters = {}): Promise<Comment[]> {
 		const cacheKey = `comments:list:${JSON.stringify(filters)}`;
 
-		const cached = this.cache.get<Comment[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for comments list', { filters });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { filters });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for comments list, fetching from API', { filters });
-
-		const fetchPromise = this.fetchAndCacheComments(cacheKey, filters);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheComments(cacheKey, filters),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<Comment[]>>,
+			logger: this.logger,
+			logContext: { filters },
+			cacheHitMessage: 'Cache hit for comments list',
+			cacheMissMessage: 'Cache miss for comments list, fetching from API'
+		});
 	}
 
 	/**
@@ -221,32 +209,16 @@ export class CommentService {
 	): Promise<Comment[]> {
 		const cacheKey = `comments:user:${userAddress}:${JSON.stringify(filters)}`;
 
-		const cached = this.cache.get<Comment[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for comments by user', { userAddress, filters });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { userAddress, filters });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for comments by user, fetching from API', {
-			userAddress,
-			filters
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheUserComments(cacheKey, userAddress, filters),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<Comment[]>>,
+			logger: this.logger,
+			logContext: { userAddress, filters },
+			cacheHitMessage: 'Cache hit for comments by user',
+			cacheMissMessage: 'Cache miss for comments by user, fetching from API'
 		});
-
-		const fetchPromise = this.fetchAndCacheUserComments(cacheKey, userAddress, filters);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
 	}
 
 	/**

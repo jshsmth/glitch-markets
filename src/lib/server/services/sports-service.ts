@@ -6,6 +6,7 @@
 import type { Team, SportsMetadata, TeamQueryParams } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
@@ -60,32 +61,18 @@ export class SportsService {
 	 * ```
 	 */
 	async getTeams(params: TeamQueryParams): Promise<Team[]> {
-		// Generate cache key from params (includes all query params for proper isolation)
 		const cacheKey = `sports:teams:${JSON.stringify(params)}`;
 
-		const cached = this.cache.get<Team[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for teams', { params });
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result', { params });
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for teams, fetching from API', { params });
-
-		const fetchPromise = this.fetchAndCacheTeams(cacheKey, params);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheTeams(cacheKey, params),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<Team[]>>,
+			logger: this.logger,
+			logContext: { params },
+			cacheHitMessage: 'Cache hit for teams',
+			cacheMissMessage: 'Cache miss for teams, fetching from API'
+		});
 	}
 
 	/**
@@ -104,29 +91,15 @@ export class SportsService {
 	async getSportsMetadata(): Promise<SportsMetadata[]> {
 		const cacheKey = 'sports:metadata:all';
 
-		const cached = this.cache.get<SportsMetadata[]>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for sports metadata');
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result');
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for sports metadata, fetching from API');
-
-		const fetchPromise = this.fetchAndCacheSportsMetadata(cacheKey);
-
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheSportsMetadata(cacheKey),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<SportsMetadata[]>>,
+			logger: this.logger,
+			cacheHitMessage: 'Cache hit for sports metadata',
+			cacheMissMessage: 'Cache miss for sports metadata, fetching from API'
+		});
 	}
 
 	/**

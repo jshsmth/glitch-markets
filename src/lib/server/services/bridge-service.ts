@@ -6,6 +6,7 @@
 import type { SupportedAssets, DepositAddresses } from '../api/polymarket-client.js';
 import { PolymarketClient } from '../api/polymarket-client.js';
 import { CacheManager } from '../cache/cache-manager.js';
+import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { loadConfig } from '../config/api-config.js';
 import { Logger } from '../utils/logger.js';
 import { validateEthereumAddress } from '../validation/input-validator.js';
@@ -93,28 +94,15 @@ export class BridgeService {
 	async getSupportedAssets(): Promise<SupportedAssets> {
 		const cacheKey = this.buildCacheKey();
 
-		const cached = this.cache.get<SupportedAssets>(cacheKey);
-		if (cached) {
-			this.logger.info('Cache hit for supported assets');
-			return cached;
-		}
-
-		if (this.pendingRequests.has(cacheKey)) {
-			this.logger.info('Request already in-flight, waiting for result');
-			return this.pendingRequests.get(cacheKey)!;
-		}
-
-		this.logger.info('Cache miss for supported assets, fetching from API');
-
-		const fetchPromise = this.fetchAndCacheSupportedAssets(cacheKey);
-		this.pendingRequests.set(cacheKey, fetchPromise);
-
-		try {
-			const result = await fetchPromise;
-			return result;
-		} finally {
-			this.pendingRequests.delete(cacheKey);
-		}
+		return withCacheStampedeProtection({
+			cacheKey,
+			fetchFn: () => this.fetchAndCacheSupportedAssets(cacheKey),
+			cache: this.cache,
+			pendingRequests: this.pendingRequests as Map<string, Promise<SupportedAssets>>,
+			logger: this.logger,
+			cacheHitMessage: 'Cache hit for supported assets',
+			cacheMissMessage: 'Cache miss for supported assets, fetching from API'
+		});
 	}
 
 	/**
