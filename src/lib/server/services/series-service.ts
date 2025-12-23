@@ -181,7 +181,7 @@ export class SeriesService {
 			this.cache.set(cacheKey, series, this.cacheTtl);
 			return series;
 		} catch (error) {
-			if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
+			if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
 				this.logger.info('Series not found', { id });
 				return null;
 			}
