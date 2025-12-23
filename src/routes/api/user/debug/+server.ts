@@ -131,7 +131,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			return json({ error: 'User not found' }, { status: 404 });
 		}
 
-		const { data: credentials, error: credsError } = await supabaseAdmin
+		const { data: credentials } = await supabaseAdmin
 			.from('polymarket_credentials')
 			.select('*')
 			.eq('user_id', userId)

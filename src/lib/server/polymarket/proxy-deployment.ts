@@ -7,8 +7,7 @@ import { RelayClient, RelayerTxType } from '@polymarket/builder-relayer-client';
 import { BuilderConfig } from '@polymarket/builder-signing-sdk';
 import { Wallet } from '@ethersproject/wallet';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { createPublicClient, http, encodeFunctionData } from 'viem';
-import { polygon } from 'viem/chains';
+import { encodeFunctionData } from 'viem';
 import { Logger } from '../utils/logger';
 import { decryptData } from '../utils/encryption';
 import { env } from '$env/dynamic/private';
@@ -23,36 +22,7 @@ const USDC_E_CONTRACT = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
 const CTF_CONTRACT = '0x4d97dcd97ec945f40cf65f87097ace5ea0476045';
 const CTF_EXCHANGE = '0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E';
 
-const publicClient = createPublicClient({
-	chain: polygon,
-	transport: http()
-});
-
 const ethersProvider = new JsonRpcProvider(POLYGON_RPC_URL, CHAIN_ID);
-
-/**
- * Check if a contract is deployed at the given address
- */
-async function isContractDeployed(address: string): Promise<boolean> {
-	try {
-		const code = await publicClient.getBytecode({ address: address as `0x${string}` });
-		const deployed = code !== undefined && code !== '0x' && code.length > 2;
-
-		logger.info('Checked contract deployment status', {
-			address,
-			deployed,
-			codeLength: code?.length || 0
-		});
-
-		return deployed;
-	} catch (error) {
-		logger.error('Failed to check contract deployment', {
-			address,
-			error: error instanceof Error ? error.message : 'Unknown error'
-		});
-		return false;
-	}
-}
 
 /**
  * Create an ethers Wallet from encrypted key shares with provider
@@ -142,9 +112,7 @@ export interface DeploymentResult {
  * @param encryptedKeyShares - Encrypted private key for the server wallet
  * @returns Deployment result with transaction details (including actual proxy address from relayer)
  */
-export async function deployProxyWallet(
-	encryptedKeyShares: string
-): Promise<DeploymentResult> {
+export async function deployProxyWallet(encryptedKeyShares: string): Promise<DeploymentResult> {
 	try {
 		logger.info('Starting proxy wallet deployment');
 

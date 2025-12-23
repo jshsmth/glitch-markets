@@ -96,26 +96,8 @@
 			});
 	}
 
-	function formatDate(dateString: string | null): string {
-		if (!dateString) return 'N/A';
-		return new Date(dateString).toLocaleString();
-	}
-
 	function shortenAddress(address: string): string {
 		return `${address.slice(0, 6)}...${address.slice(-4)}`;
-	}
-
-	function formatAllowance(allowance: string): string {
-		const maxUint256 = BigInt(
-			'0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-		);
-		const allowanceBigInt = BigInt(allowance);
-
-		if (allowanceBigInt >= maxUint256 / 2n) {
-			return 'Unlimited (Max Uint256)';
-		}
-
-		return allowance;
 	}
 
 	// Track the last user ID we fetched for to prevent duplicate fetches
@@ -243,9 +225,7 @@
 					</div>
 					<div class="info-row">
 						<span class="label">CTF Approved</span>
-						<span class="value"
-							>{debugInfo.approvals.ctf.isApproved ? '✅ Yes' : '❌ No'}</span
-						>
+						<span class="value">{debugInfo.approvals.ctf.isApproved ? '✅ Yes' : '❌ No'}</span>
 					</div>
 					<div class="info-row">
 						<span class="label">USDC.e Approved</span>
