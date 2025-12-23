@@ -177,7 +177,10 @@
 						{#if debugInfo.serverWallet.address}
 							<button
 								class="copy-btn-small"
-								onclick={() => copyToClipboard(debugInfo.serverWallet.address!, 'serverWallet')}
+								onclick={() => {
+									const address = debugInfo?.serverWallet.address;
+									if (address) copyToClipboard(address, 'serverWallet');
+								}}
 							>
 								{copiedField === 'serverWallet' ? '✓' : '📋'}
 							</button>
@@ -208,8 +211,10 @@
 							<code>{shortenAddress(debugInfo.polymarket.proxyWalletAddress)}</code>
 							<button
 								class="copy-btn-small"
-								onclick={() =>
-									copyToClipboard(debugInfo.polymarket!.proxyWalletAddress, 'proxyWallet')}
+								onclick={() => {
+									const address = debugInfo?.polymarket?.proxyWalletAddress;
+									if (address) copyToClipboard(address, 'proxyWallet');
+								}}
 							>
 								{copiedField === 'proxyWallet' ? '✓' : '📋'}
 							</button>
