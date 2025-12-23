@@ -1550,7 +1550,6 @@ export function validateCommentProfile(data: unknown): CommentProfile {
 
 	const profile = data as Record<string, unknown>;
 
-	// Validate nullable string fields
 	const nullableStringFields = ['name', 'pseudonym', 'bio', 'profileImage'];
 	for (const field of nullableStringFields) {
 		if (
@@ -1565,7 +1564,6 @@ export function validateCommentProfile(data: unknown): CommentProfile {
 		}
 	}
 
-	// Validate proxyWallet (maps to proxyWalletAddress)
 	const proxyWallet = profile.proxyWallet ?? profile.proxyWalletAddress;
 	if (proxyWallet !== null && proxyWallet !== undefined && typeof proxyWallet !== 'string') {
 		throw new ValidationError('CommentProfile proxyWallet must be a string or null', {
@@ -1573,13 +1571,11 @@ export function validateCommentProfile(data: unknown): CommentProfile {
 		});
 	}
 
-	// Validate baseAddress (maps to walletAddress) - may be missing in some cases (e.g., reaction profiles)
 	const baseAddress = profile.baseAddress ?? profile.walletAddress ?? '';
 	if (baseAddress && typeof baseAddress !== 'string') {
 		throw new ValidationError('CommentProfile baseAddress must be a string', { profile });
 	}
 
-	// Validate nullable boolean fields
 	if (profile.isMod !== null && profile.isMod !== undefined && typeof profile.isMod !== 'boolean') {
 		throw new ValidationError('CommentProfile isMod must be a boolean or null', {
 			profile,
@@ -1600,12 +1596,10 @@ export function validateCommentProfile(data: unknown): CommentProfile {
 	const isMod = profile.isMod ?? null;
 	const isCreator = profile.isCreator ?? null;
 
-	// Validate nullable profileImageOptimized (optional)
 	if (profile.profileImageOptimized !== null && profile.profileImageOptimized !== undefined) {
 		validateCommentImageOptimized(profile.profileImageOptimized);
 	}
 
-	// Validate positions array (optional, may not be present)
 	const positions: UserPosition[] = [];
 	if (profile.positions !== null && profile.positions !== undefined) {
 		if (!isArray(profile.positions)) {
@@ -1700,7 +1694,6 @@ export function validateReaction(data: unknown, index?: number): Reaction {
 		throw new ValidationError('Reaction createdAt must be a string or null', { reaction, index });
 	}
 
-	// Validate nested profile
 	validateCommentProfile(reaction.profile);
 
 	return {
@@ -1722,7 +1715,6 @@ export function validateComment(data: unknown): Comment {
 
 	const comment = data as Record<string, unknown>;
 
-	// Validate required fields
 	// Convert string ID to number if needed
 	let id: number;
 	if (typeof comment.id === 'string') {
@@ -1984,7 +1976,6 @@ export function validateSearchResults(data: unknown): SearchResults {
 
 	const results = data as Record<string, unknown>;
 
-	// Validate events array
 	if (!isArray(results.events)) {
 		throw new ValidationError('SearchResults events must be an array', { results });
 	}
@@ -2034,7 +2025,6 @@ export function validateSearchResults(data: unknown): SearchResults {
 		});
 	}
 
-	// Validate pagination
 	if (!isObject(results.pagination)) {
 		throw new ValidationError('SearchResults pagination must be an object', { results });
 	}
@@ -2169,7 +2159,6 @@ function validateDepositAddressMap(addressMap: unknown): DepositAddressMap {
 		);
 	}
 
-	// Validate that present addresses are strings
 	if (hasEvm && !isString(addressMap.evm)) {
 		throw new ValidationError('DepositAddressMap.evm must be a string', { addressMap });
 	}
@@ -2397,7 +2386,6 @@ export function validateTraderLeaderboardEntry(data: unknown): TraderLeaderboard
 
 	const entry = data as Record<string, unknown>;
 
-	// Validate required string fields
 	if (!isString(entry.rank)) {
 		throw new ValidationError('rank must be a string', { rank: entry.rank });
 	}
@@ -2420,14 +2408,12 @@ export function validateTraderLeaderboardEntry(data: unknown): TraderLeaderboard
 		});
 	}
 
-	// Validate required boolean field
 	if (!isBoolean(entry.verifiedBadge)) {
 		throw new ValidationError('verifiedBadge must be a boolean', {
 			verifiedBadge: entry.verifiedBadge
 		});
 	}
 
-	// Validate required number fields
 	if (!isNumber(entry.vol)) {
 		throw new ValidationError('vol must be a number', { vol: entry.vol });
 	}
@@ -2487,7 +2473,6 @@ export function validateBuilderLeaderboardEntry(data: unknown): BuilderLeaderboa
 
 	const entry = data as Record<string, unknown>;
 
-	// Validate required string fields
 	if (!isString(entry.rank)) {
 		throw new ValidationError('rank must be a string', { rank: entry.rank });
 	}
@@ -2500,7 +2485,6 @@ export function validateBuilderLeaderboardEntry(data: unknown): BuilderLeaderboa
 		throw new ValidationError('builderLogo must be a string', { builderLogo: entry.builderLogo });
 	}
 
-	// Validate required number fields
 	if (!isNumber(entry.volume)) {
 		throw new ValidationError('volume must be a number', { volume: entry.volume });
 	}
@@ -2509,7 +2493,6 @@ export function validateBuilderLeaderboardEntry(data: unknown): BuilderLeaderboa
 		throw new ValidationError('activeUsers must be a number', { activeUsers: entry.activeUsers });
 	}
 
-	// Validate required boolean field
 	if (!isBoolean(entry.verified)) {
 		throw new ValidationError('verified must be a boolean', { verified: entry.verified });
 	}
@@ -2563,7 +2546,6 @@ export function validateBuilderVolumeEntry(data: unknown): BuilderVolumeEntry {
 
 	const entry = data as Record<string, unknown>;
 
-	// Validate required string fields
 	if (!isString(entry.dt)) {
 		throw new ValidationError('dt must be a string', { dt: entry.dt });
 	}
@@ -2580,12 +2562,10 @@ export function validateBuilderVolumeEntry(data: unknown): BuilderVolumeEntry {
 		throw new ValidationError('rank must be a string', { rank: entry.rank });
 	}
 
-	// Validate required boolean field
 	if (!isBoolean(entry.verified)) {
 		throw new ValidationError('verified must be a boolean', { verified: entry.verified });
 	}
 
-	// Validate required number fields
 	if (!isNumber(entry.volume)) {
 		throw new ValidationError('volume must be a number', { volume: entry.volume });
 	}

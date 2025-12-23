@@ -1487,7 +1487,6 @@ export class PolymarketClient {
 	async fetchComments(options: FetchOptions = {}): Promise<Comment[]> {
 		const { params = {} } = options;
 
-		// Validate input parameters
 		const validatedParams = validateCommentsQueryParams(params);
 
 		const url = this.buildUrl('/comments', validatedParams);
@@ -1495,7 +1494,6 @@ export class PolymarketClient {
 
 		const data = await this.request<unknown>(url);
 
-		// Validate response
 		const validated = validateComments(data);
 		this.logger.info('Comments fetched successfully', { count: validated.length });
 
@@ -1523,7 +1521,6 @@ export class PolymarketClient {
 	async fetchCommentById(id: number, options: FetchOptions = {}): Promise<Comment> {
 		const { params = {} } = options;
 
-		// Validate ID
 		const validatedId = validateCommentId(id);
 
 		// Build query params
@@ -1570,10 +1567,8 @@ export class PolymarketClient {
 	async fetchCommentsByUser(userAddress: string, options: FetchOptions = {}): Promise<Comment[]> {
 		const { params = {} } = options;
 
-		// Validate user address
 		const validatedAddress = validateProxyWallet(userAddress);
 
-		// Validate query parameters
 		const validatedParams = validateUserCommentsQueryParams(params);
 
 		const url = this.buildUrl(`/comments/user_address/${validatedAddress}`, validatedParams);
@@ -1581,7 +1576,6 @@ export class PolymarketClient {
 
 		const data = await this.request<unknown>(url);
 
-		// Validate response
 		const validated = validateComments(data);
 		this.logger.info('User comments fetched successfully', {
 			userAddress: validatedAddress,
@@ -1644,7 +1638,6 @@ export class PolymarketClient {
 	}): Promise<SearchResults> {
 		const { params = {}, signal } = options;
 
-		// Validate query parameters
 		const validatedParams = validateSearchQueryParams(params);
 
 		const url = this.buildSearchUrl('/public-search', validatedParams);
@@ -1652,7 +1645,6 @@ export class PolymarketClient {
 
 		const data = await this.request<unknown>(url, signal ? { signal } : undefined);
 
-		// Validate response
 		const validated = validateSearchResults(data);
 		this.logger.info('Search results fetched successfully', {
 			eventsCount: validated.events.length,

@@ -468,7 +468,6 @@ export function validateOrderString(order: unknown): string {
 		throw new ValidationError('order cannot be empty', { order });
 	}
 
-	// Validate format: comma-separated field names
 	const fields = order.split(',').map((f) => f.trim());
 	for (const field of fields) {
 		if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field)) {
@@ -805,7 +804,6 @@ export function validateBuilderLeaderboardParams(params: Record<string, unknown>
 		timePeriod: 'DAY' // default
 	};
 
-	// Validate timePeriod
 	if (params.timePeriod !== undefined) {
 		const validPeriods = ['DAY', 'WEEK', 'MONTH', 'ALL'];
 		const timePeriod = params.timePeriod;
@@ -820,7 +818,6 @@ export function validateBuilderLeaderboardParams(params: Record<string, unknown>
 		validated.timePeriod = timePeriod as 'DAY' | 'WEEK' | 'MONTH' | 'ALL';
 	}
 
-	// Validate limit (optional, 0-50)
 	if (params.limit !== undefined) {
 		const limit = Number(params.limit);
 
@@ -835,7 +832,6 @@ export function validateBuilderLeaderboardParams(params: Record<string, unknown>
 		validated.limit = limit;
 	}
 
-	// Validate offset (optional, 0-1000)
 	if (params.offset !== undefined) {
 		const offset = Number(params.offset);
 

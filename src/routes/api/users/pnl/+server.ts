@@ -57,24 +57,21 @@ function calculatePnLTimeSeries(
 ): PnLDataPoint[] {
 	const startTime = getTimeRangeStart(period);
 
-	// Filter closed positions by time period
 	const relevantClosedPositions = closedPositions.filter(
 		(pos) => pos.timestamp * 1000 >= startTime
 	);
 
-	// Sort by timestamp
 	relevantClosedPositions.sort((a, b) => a.timestamp - b.timestamp);
 
 	// Calculate cumulative realized P&L over time
 	const dataPoints: PnLDataPoint[] = [];
 	let cumulativeRealizedPnl = 0;
 
-	// If no closed positions, create data points at start and end with 0 realized P&L
+	const currentUnrealizedPnl = currentPositions.reduce((sum, p) => sum + (p.cashPnl || 0), 0);
+
 	if (relevantClosedPositions.length === 0) {
 		const now = Date.now();
-		const currentUnrealizedPnl = currentPositions.reduce((sum, p) => sum + (p.cashPnl || 0), 0);
 
-		// Start point
 		dataPoints.push({
 			timestamp: startTime,
 			value: 0,
@@ -82,7 +79,6 @@ function calculatePnLTimeSeries(
 			unrealizedPnl: 0
 		});
 
-		// End point (current)
 		dataPoints.push({
 			timestamp: now,
 			value: currentUnrealizedPnl,
@@ -93,20 +89,16 @@ function calculatePnLTimeSeries(
 		return dataPoints;
 	}
 
-	// Create data points from closed positions
 	for (const position of relevantClosedPositions) {
 		cumulativeRealizedPnl += position.realizedPnl || 0;
 
 		dataPoints.push({
-			timestamp: position.timestamp * 1000, // Convert to milliseconds
+			timestamp: position.timestamp * 1000,
 			value: cumulativeRealizedPnl,
 			realizedPnl: cumulativeRealizedPnl,
 			unrealizedPnl: 0
 		});
 	}
-
-	// Add current unrealized P&L to the latest data point
-	const currentUnrealizedPnl = currentPositions.reduce((sum, p) => sum + (p.cashPnl || 0), 0);
 	const now = Date.now();
 
 	dataPoints.push({
@@ -136,16 +128,13 @@ export async function GET({ url }: RequestEvent) {
 
 		logger.info('Calculating P&L', { user, period });
 
-		// Fetch both closed and current positions in parallel
 		const [closedPositions, currentPositions] = await Promise.all([
 			userDataService.getClosedPositions(user),
 			userDataService.getCurrentPositions(user)
 		]);
 
-		// Calculate time-series P&L data
 		const pnlData = calculatePnLTimeSeries(closedPositions, currentPositions, period);
 
-		// Calculate summary stats
 		const latestDataPoint = pnlData[pnlData.length - 1];
 		const totalPnl = latestDataPoint?.value || 0;
 		const realizedPnl = latestDataPoint?.realizedPnl || 0;
