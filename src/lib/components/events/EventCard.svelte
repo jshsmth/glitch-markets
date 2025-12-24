@@ -1,13 +1,10 @@
 <script lang="ts">
 	import type { Event } from '$lib/server/api/polymarket-client';
-	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
-	import WaterLiquidIcon from '$lib/components/icons/WaterLiquidIcon.svelte';
-	import BookmarkIcon from '$lib/components/icons/BookmarkIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
 	import FireIcon from '$lib/components/icons/FireIcon.svelte';
 	import CupIcon from '$lib/components/icons/CupIcon.svelte';
 	import EventCardHeader from '$lib/components/events/EventCardHeader.svelte';
-	import { formatNumber } from '$lib/utils/format';
+	import EventCardFooter from '$lib/components/events/EventCardFooter.svelte';
 	import { parseBinaryMarket, parseMultiMarketOutcomes } from '$lib/utils/market-parser';
 
 	interface Props {
@@ -46,30 +43,9 @@
 		return diffDays > 0 && diffDays <= 7;
 	});
 
-	import { isBookmarked, addToWatchlist, removeFromWatchlist } from '$lib/stores/watchlist.svelte';
-	import { openSignInModal } from '$lib/stores/modal.svelte';
-	import { authState } from '$lib/stores/auth.svelte';
+	import { useBookmark } from '$lib/composables/useBookmark.svelte';
 
-	let isEventBookmarked = $derived(isBookmarked(event.id));
-
-	async function toggleBookmark() {
-		if (!authState.user) {
-			openSignInModal();
-			return;
-		}
-
-		if (isEventBookmarked) {
-			await removeFromWatchlist(event.id);
-		} else {
-			try {
-				await addToWatchlist(event.id);
-			} catch (error) {
-				if (error instanceof Error && error.message === 'UNAUTHORIZED') {
-					openSignInModal();
-				}
-			}
-		}
-	}
+	const bookmark = useBookmark(() => event.id);
 </script>
 
 <div
@@ -194,29 +170,16 @@
 			</div>
 		{/if}
 
-		<div class="card-footer" class:compact-footer={variant === 'compact'}>
-			<div class="stats">
-				<div class="stat">
-					<MoneyIcon size={14} class="stat-icon" />
-					<span class="stat-value">{formatNumber(event.volume24hr)}</span>
-					<span class="stat-label">24h</span>
-				</div>
-				<div class="stat">
-					<WaterLiquidIcon size={14} class="stat-icon" />
-					<span class="stat-value">{formatNumber(event.liquidity)}</span>
-					<span class="stat-label">Liq</span>
-				</div>
-			</div>
-			<button
-				class="bookmark-btn"
-				class:bookmarked={isEventBookmarked}
-				onclick={toggleBookmark}
-				aria-label={isEventBookmarked ? 'Remove bookmark' : 'Bookmark this event'}
-				aria-pressed={isEventBookmarked}
-			>
-				<BookmarkIcon size={18} filled={isEventBookmarked} />
-			</button>
-		</div>
+		<EventCardFooter
+			volume={event.volume}
+			volume24hr={event.volume24hr}
+			liquidity={event.liquidity}
+			showLiquidity={true}
+			showBookmark={true}
+			isBookmarked={bookmark.isBookmarked}
+			onBookmarkToggle={bookmark.toggleBookmark}
+			compact={variant === 'compact'}
+		/>
 	</div>
 </div>
 
@@ -527,110 +490,10 @@
 		color: var(--text-1);
 	}
 
-	/* Footer */
-	.card-footer {
-		margin-top: auto;
-		padding-top: var(--spacing-3);
-		border-top: 1px solid var(--bg-3);
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.card-footer.compact-footer {
-		padding-top: var(--spacing-2);
-	}
-
-	.stats {
-		display: flex;
-		gap: var(--spacing-4);
-		align-items: center;
-	}
-
-	.stat {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-	}
-
-	.stat:not(:last-child)::after {
-		content: '';
-		display: block;
-		width: 1px;
-		height: 12px;
-		background: var(--bg-3);
-		margin-left: var(--spacing-4);
-	}
-
-	.stat :global(.stat-icon) {
-		color: var(--text-3);
-		flex-shrink: 0;
-	}
-
-	.stat-value {
-		font-size: 12px;
-		font-weight: 600;
-		color: var(--text-1);
-	}
-
-	.stat-label {
-		font-size: 11px;
-		color: var(--text-3);
-		font-weight: 500;
-	}
-
-	.bookmark-btn {
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		padding: 0;
-		background: transparent;
-		border: none;
-		border-radius: var(--radius-sm);
-		color: var(--text-3);
-		cursor: pointer;
-		transition: all var(--transition-fast);
-	}
-
-	.bookmark-btn:hover {
-		background: var(--bg-2);
-		color: var(--gold-base);
-	}
-
-	.bookmark-btn.bookmarked {
-		color: var(--gold-base);
-	}
-
-	.bookmark-btn.bookmarked:hover {
-		background: rgba(var(--gold-rgb), 0.1);
-		color: var(--gold-light);
-	}
-
-	.bookmark-btn:active {
-		transform: scale(0.9);
-	}
-
-	.bookmark-btn:focus-visible {
-		outline: none;
-		box-shadow: var(--focus-ring);
-	}
-
-	/* Bookmark fill animation */
-	.bookmark-btn :global(svg) {
-		transition: fill var(--transition-fast);
-	}
-
 	/* Mobile */
 	@media (max-width: 768px) {
 		.event-card {
 			padding: var(--spacing-3);
-		}
-
-		.stats {
-			gap: var(--spacing-4);
 		}
 
 		.card-header {
@@ -640,10 +503,6 @@
 		.corner-badge {
 			font-size: 9px;
 			padding: 3px 8px;
-		}
-
-		.stat:not(:last-child)::after {
-			margin-left: var(--spacing-3);
 		}
 	}
 </style>

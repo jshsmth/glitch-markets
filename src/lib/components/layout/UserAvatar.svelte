@@ -149,7 +149,7 @@
 
 <div class="avatar-container" style="--size: {size}px">
 	{#if authState.isInitializing}
-		<div class="avatar-skeleton"></div>
+		<div class="skeleton avatar-skeleton"></div>
 	{:else if authState.user}
 		<button
 			class="avatar-button"
@@ -291,6 +291,8 @@
 </div>
 
 <style>
+	@import '$lib/styles/skeleton.css';
+
 	.avatar-container {
 		position: relative;
 		display: inline-block;
@@ -300,19 +302,7 @@
 		width: var(--size);
 		height: var(--size);
 		border-radius: 50%;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 2.5s ease-in-out infinite;
 		flex-shrink: 0;
-	}
-
-	@keyframes shimmer {
-		0% {
-			background-position: 100% 0;
-		}
-		100% {
-			background-position: -100% 0;
-		}
 	}
 
 	.avatar-button {

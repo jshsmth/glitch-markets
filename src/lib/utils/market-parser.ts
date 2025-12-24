@@ -1,4 +1,5 @@
 import type { Market } from '$lib/server/api/polymarket-client';
+import { memoize } from './memo';
 
 export interface ParsedMarket {
 	outcomes: string[];
@@ -74,7 +75,7 @@ export function parseMarket(market: Market | null | undefined): ParsedMarket | n
 /**
  * Parses binary market data (Yes/No outcomes with percentages)
  */
-export function parseBinaryMarket(market: Market | null | undefined): BinaryMarketData | null {
+const parseBinaryMarketImpl = (market: Market | null | undefined): BinaryMarketData | null => {
 	const parsed = parseMarket(market);
 	if (!parsed) return null;
 
@@ -89,14 +90,16 @@ export function parseBinaryMarket(market: Market | null | undefined): BinaryMark
 		no: { label: outcomes[1] || 'No', percentage: noPercentage },
 		leansYes: yesPercentage >= 50
 	};
-}
+};
+
+export const parseBinaryMarket = memoize(parseBinaryMarketImpl, (market) => market?.id || 'null');
 
 /**
  * Parses multiple markets into sorted outcome data
  */
-export function parseMultiMarketOutcomes(
+const parseMultiMarketOutcomesImpl = (
 	markets: Market[] | null | undefined
-): OutcomeData[] | null {
+): OutcomeData[] | null => {
 	if (!markets || markets.length === 0) return null;
 
 	const allOutcomes: OutcomeData[] = [];
@@ -114,7 +117,12 @@ export function parseMultiMarketOutcomes(
 	}
 
 	return allOutcomes.length > 0 ? allOutcomes.sort((a, b) => b.percentage - a.percentage) : null;
-}
+};
+
+export const parseMultiMarketOutcomes = memoize(
+	parseMultiMarketOutcomesImpl,
+	(markets) => markets?.map((m) => m.id).join(',') || 'null'
+);
 
 /**
  * Calculates percentage for a given outcome index
