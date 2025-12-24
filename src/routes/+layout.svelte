@@ -185,7 +185,6 @@
 
 	import { onNavigate } from '$app/navigation';
 	import { navigating } from '$app/stores';
-	import { goto } from '$app/navigation';
 
 	let navigationTimeoutId: ReturnType<typeof setTimeout> | null = null;
 

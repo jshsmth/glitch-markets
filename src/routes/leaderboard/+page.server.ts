@@ -4,7 +4,7 @@ import { fetchWithTimeout } from '$lib/server/utils/fetch-with-timeout';
 
 const logger = new Logger({ component: 'LeaderboardPage' });
 
-export const load: PageServerLoad = async ({ fetch, setHeaders }) => {
+export const load: PageServerLoad = async ({ setHeaders }) => {
 	setHeaders({
 		'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600'
 	});

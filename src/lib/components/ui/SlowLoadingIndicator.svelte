@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { TIMEOUTS } from '$lib/config/constants';
 	import { fade } from 'svelte/transition';
 

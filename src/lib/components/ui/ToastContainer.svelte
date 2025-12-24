@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { toastState, dismissToast } from '$lib/stores/toast.svelte';
-	import { fade, fly } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 </script>
 
 <div class="toast-container" role="region" aria-label="Notifications">
