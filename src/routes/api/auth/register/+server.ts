@@ -168,12 +168,21 @@ export const POST: RequestHandler = async ({ locals }) => {
 				.update({ last_login_at: new Date().toISOString() })
 				.eq('id', userId);
 
-			registerWithPolymarketAsync(userId).catch((err) => {
-				logger.error('Failed to register with Polymarket in background', {
-					userId,
-					error: err instanceof Error ? err.message : 'Unknown error'
+			// Only trigger Polymarket registration if not already deployed
+			const { data: existingCreds } = await supabaseAdmin
+				.from('polymarket_credentials')
+				.select('deployed_at')
+				.eq('user_id', userId)
+				.single();
+
+			if (!existingCreds?.deployed_at) {
+				registerWithPolymarketAsync(userId).catch((err) => {
+					logger.error('Failed to register with Polymarket in background', {
+						userId,
+						error: err instanceof Error ? err.message : 'Unknown error'
+					});
 				});
-			});
+			}
 
 			return json({
 				success: true,

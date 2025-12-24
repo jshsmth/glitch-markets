@@ -4,7 +4,7 @@ import type { Database } from '$lib/supabase/database.types';
 import { createQueryClient } from '$lib/query/client';
 import type { LayoutLoad } from './$types';
 
-export const load: LayoutLoad = async ({ depends, fetch }) => {
+export const load: LayoutLoad = async ({ depends, fetch, data }) => {
 	/**
 	 * Declare a dependency so the layout will be invalidated when
 	 * `invalidate('supabase:auth')` is called.
@@ -35,6 +35,7 @@ export const load: LayoutLoad = async ({ depends, fetch }) => {
 	return {
 		session,
 		supabase,
-		queryClient
+		queryClient,
+		profile: data.profile
 	};
 };

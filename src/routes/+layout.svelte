@@ -13,7 +13,11 @@
 		authState
 	} from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
-	import { initializeWalletSync } from '$lib/stores/wallet.svelte';
+	import {
+		initializeWalletSync,
+		initializeWalletFromProfile,
+		walletState
+	} from '$lib/stores/wallet.svelte';
 	import { initializeBalanceSync } from '$lib/stores/balance.svelte';
 	import {
 		initializeWatchlist,
@@ -48,26 +52,38 @@
 	const queryClient = $derived(data?.queryClient || createQueryClient());
 	const supabase = $derived(data?.supabase);
 
+	$effect(() => {
+		if (browser) {
+			initializeAuth(data?.session);
+			initializeWalletFromProfile(data?.profile ?? null);
+		}
+	});
+
 	onMount(() => {
 		initializeTheme();
-		initializeAuth(data?.session);
 		setQueryClient(queryClient);
 
 		const cleanupWalletSync = initializeWalletSync();
 		const cleanupBalanceSync = initializeBalanceSync(queryClient);
 
-		if (data?.session?.user) {
+		// Only call registration if user has session but no server wallet
+		if (data?.session?.user && !data?.profile?.serverWalletAddress) {
 			handleUserSignIn();
 		}
 
 		const {
 			data: { subscription }
-		} = supabase.auth.onAuthStateChange((_event, session) => {
+		} = supabase.auth.onAuthStateChange(async (_event, session) => {
 			updateAuthState(session);
-			invalidate('supabase:auth');
+
+			if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED') {
+				await invalidate('supabase:auth');
+			}
 
 			if (session?.user && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED')) {
-				handleUserSignIn();
+				if (!walletState.serverWalletAddress && !data?.profile?.serverWalletAddress) {
+					handleUserSignIn();
+				}
 			}
 		});
 
