@@ -98,7 +98,7 @@
 	{#if loading && events.length === 0}
 		<div class="event-grid">
 			{#each { length: 6 }, i (i)}
-				<div class="skeleton-card"></div>
+				<div class="skeleton skeleton-card"></div>
 			{/each}
 		</div>
 	{:else if error}
@@ -146,6 +146,8 @@
 </div>
 
 <style>
+	@import '$lib/styles/skeleton.css';
+
 	.event-list-container {
 		width: 100%;
 	}
@@ -191,22 +193,9 @@
 		}
 	}
 
-	/* Loading skeleton styles */
 	.skeleton-card {
 		min-height: 220px;
 		border-radius: var(--radius-card);
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 2.5s ease-in-out infinite;
-	}
-
-	@keyframes shimmer {
-		0% {
-			background-position: 100% 0;
-		}
-		100% {
-			background-position: -100% 0;
-		}
 	}
 
 	/* Empty state styles */

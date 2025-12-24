@@ -74,7 +74,7 @@
 			</div>
 			<div class="watchlist-scroll">
 				{#each { length: 3 }, i (i)}
-					<div class="skeleton-card"></div>
+					<div class="skeleton skeleton-card"></div>
 				{/each}
 			</div>
 		</div>
@@ -165,6 +165,8 @@
 {/if}
 
 <style>
+	@import '$lib/styles/skeleton.css';
+
 	.watchlist-section {
 		margin-bottom: var(--space-lg);
 	}
@@ -423,18 +425,6 @@
 		width: 320px;
 		min-height: 200px;
 		border-radius: var(--radius-card);
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 2.5s ease-in-out infinite;
-	}
-
-	@keyframes shimmer {
-		0% {
-			background-position: 100% 0;
-		}
-		100% {
-			background-position: -100% 0;
-		}
 	}
 
 	.error-state {

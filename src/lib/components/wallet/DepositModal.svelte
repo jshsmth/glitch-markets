@@ -23,23 +23,7 @@
 	import { determineChainType } from '$lib/types/bridge';
 	import { walletState } from '$lib/stores/wallet.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-
-	// Module-level cache persists across modal open/close
-	const CACHE_DURATION_MS = 5 * 60 * 1000;
-
-	interface CacheEntry<T> {
-		data: T;
-		timestamp: number;
-	}
-
-	let assetsCache: CacheEntry<SupportedAsset[]> | null = null;
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- module-level cache, not reactive state
-	let depositAddressCache: Map<string, CacheEntry<string>> = new Map();
-
-	function isCacheValid<T>(cache: CacheEntry<T> | null | undefined): cache is CacheEntry<T> {
-		if (!cache) return false;
-		return Date.now() - cache.timestamp < CACHE_DURATION_MS;
-	}
+	import { createQuery } from '@tanstack/svelte-query';
 
 	interface Props {
 		isOpen: boolean;
@@ -48,18 +32,86 @@
 
 	let { isOpen, onClose }: Props = $props();
 
-	let supportedAssets = $state<SupportedAsset[]>([]);
-	let assetsLoading = $state(true);
-	let assetsError = $state<string | null>(null);
 	let selectedAsset = $state<SupportedAsset | null>(null);
-	let depositAddress = $state<string | null>(null);
-	let addressError = $state<string | null>(null);
 	let qrCanvas = $state<HTMLCanvasElement | null>(null);
 	let qrError = $state(false);
 	let copySuccess = $state(false);
 	let copyTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
 	let chainDropdownOpen = $state(false);
 	let addressTextRef = $state<HTMLParagraphElement | null>(null);
+
+	const assetsQuery = createQuery<SupportedAsset[]>(() => ({
+		queryKey: ['bridge', 'supported-assets'],
+		queryFn: async () => {
+			const response = await fetch('/api/bridge/supported-assets');
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+			}
+
+			const data: SupportedAssetsResponse = await response.json();
+			const evmChainIds = ['1', '10', '137', '42161', '56', '8453', '43114'];
+			const filteredAssets = (data.supportedAssets || []).filter((asset) => {
+				const isUSDC = asset.token.symbol.toUpperCase() === 'USDC';
+				const isEVM =
+					evmChainIds.includes(asset.chainId) ||
+					(!asset.chainId.includes('1151111081099710') &&
+						asset.chainName.toLowerCase() !== 'solana' &&
+						asset.chainName.toLowerCase() !== 'bitcoin' &&
+						!asset.chainId.includes('btc'));
+				return isUSDC && isEVM;
+			});
+
+			const chainMap = new SvelteMap<string, SupportedAsset>();
+			for (const asset of filteredAssets) {
+				if (!chainMap.has(asset.chainId)) {
+					chainMap.set(asset.chainId, asset);
+				}
+			}
+			return Array.from(chainMap.values());
+		},
+		enabled: isOpen,
+		staleTime: 5 * 60 * 1000,
+		gcTime: 10 * 60 * 1000
+	}));
+
+	const userAddress = $derived(walletState.proxyWalletAddress);
+	const chainType = $derived<ChainType | null>(
+		selectedAsset ? determineChainType(selectedAsset.chainId) : null
+	);
+
+	const depositAddressQuery = createQuery<string>(() => ({
+		queryKey: ['bridge', 'deposit-address', userAddress, chainType],
+		queryFn: async () => {
+			if (!userAddress || !chainType) {
+				throw new Error('Missing user address or chain type');
+			}
+
+			const response = await fetch('/api/bridge/deposit', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ address: userAddress })
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+			}
+
+			const data: DepositAddressResponse = await response.json();
+			const address = data.address[chainType];
+
+			if (!address) {
+				throw new Error('No deposit address available for this chain');
+			}
+
+			return address;
+		},
+		enabled: !!(isOpen && selectedAsset && userAddress && chainType),
+		staleTime: 5 * 60 * 1000,
+		gcTime: 10 * 60 * 1000
+	}));
+
+	const supportedAssets = $derived(assetsQuery.data || []);
+	const depositAddress = $derived(depositAddressQuery.data || null);
 
 	let modalTitle = $derived(selectedAsset ? `Deposit USDC` : 'Deposit Funds');
 
@@ -92,19 +144,8 @@
 	}
 
 	$effect(() => {
-		if (isOpen) {
-			if (!isCacheValid(assetsCache)) {
-				assetsLoading = true;
-			}
-			assetsError = null;
-			fetchSupportedAssets();
-		}
-	});
-
-	$effect(() => {
-		const userAddress = walletState.proxyWalletAddress;
-		if (selectedAsset && userAddress) {
-			fetchDepositAddress(selectedAsset, userAddress);
+		if (assetsQuery.isSuccess && supportedAssets.length > 0 && !selectedAsset) {
+			selectedAsset = supportedAssets[0];
 		}
 	});
 
@@ -140,101 +181,6 @@
 		if (copyTimeout) {
 			clearTimeout(copyTimeout);
 			copyTimeout = null;
-		}
-		addressError = null;
-		assetsError = null;
-	}
-
-	async function fetchSupportedAssets() {
-		if (isCacheValid(assetsCache)) {
-			supportedAssets = assetsCache.data;
-			if (supportedAssets.length > 0 && !selectedAsset) {
-				selectedAsset = supportedAssets[0];
-			}
-			assetsLoading = false;
-			return;
-		}
-
-		assetsLoading = true;
-		assetsError = null;
-
-		try {
-			const response = await fetch('/api/bridge/supported-assets');
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-			}
-
-			const data: SupportedAssetsResponse = await response.json();
-			const evmChainIds = ['1', '10', '137', '42161', '56', '8453', '43114'];
-			const filteredAssets = (data.supportedAssets || []).filter((asset) => {
-				const isUSDC = asset.token.symbol.toUpperCase() === 'USDC';
-				const isEVM =
-					evmChainIds.includes(asset.chainId) ||
-					(!asset.chainId.includes('1151111081099710') &&
-						asset.chainName.toLowerCase() !== 'solana' &&
-						asset.chainName.toLowerCase() !== 'bitcoin' &&
-						!asset.chainId.includes('btc'));
-				return isUSDC && isEVM;
-			});
-
-			// Deduplicate by chainId, keeping the first USDC variant per chain
-			const chainMap = new SvelteMap<string, SupportedAsset>();
-			for (const asset of filteredAssets) {
-				if (!chainMap.has(asset.chainId)) {
-					chainMap.set(asset.chainId, asset);
-				}
-			}
-			supportedAssets = Array.from(chainMap.values());
-			assetsCache = { data: supportedAssets, timestamp: Date.now() };
-
-			if (supportedAssets.length > 0 && !selectedAsset) {
-				selectedAsset = supportedAssets[0];
-			}
-		} catch (err) {
-			console.error('Failed to fetch supported assets:', err);
-			assetsError = err instanceof Error ? err.message : 'Failed to load assets';
-		} finally {
-			assetsLoading = false;
-		}
-	}
-
-	async function fetchDepositAddress(asset: SupportedAsset, userAddress: string) {
-		const chainType: ChainType = determineChainType(asset.chainId);
-		const cacheKey = `${userAddress}-${chainType}`;
-
-		const cachedEntry = depositAddressCache.get(cacheKey);
-		if (isCacheValid(cachedEntry)) {
-			depositAddress = cachedEntry.data;
-			addressError = null;
-			return;
-		}
-
-		addressError = null;
-		depositAddress = null;
-
-		try {
-			const response = await fetch('/api/bridge/deposit', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ address: userAddress })
-			});
-
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-			}
-
-			const data: DepositAddressResponse = await response.json();
-			const address = data.address[chainType];
-
-			if (!address) {
-				throw new Error('No deposit address available for this chain');
-			}
-
-			depositAddressCache.set(cacheKey, { data: address, timestamp: Date.now() });
-			depositAddress = address;
-		} catch (err) {
-			console.error('Failed to fetch deposit address:', err);
-			addressError = err instanceof Error ? err.message : 'Failed to generate address';
 		}
 	}
 
@@ -289,42 +235,39 @@
 	}
 
 	function retryFetchAssets() {
-		fetchSupportedAssets();
+		assetsQuery.refetch();
 	}
 
 	function retryFetchAddress() {
-		const userAddress = walletState.proxyWalletAddress;
-		if (selectedAsset && userAddress) {
-			fetchDepositAddress(selectedAsset, userAddress);
-		}
+		depositAddressQuery.refetch();
 	}
 </script>
 
 {#snippet modalContent()}
 	<div class="deposit-modal-content">
-		{#if assetsLoading}
+		{#if assetsQuery.isLoading}
 			<div class="selectors-row">
 				<div class="selector-group">
 					<span class="selector-label">Supported token</span>
-					<div class="skeleton-selector"></div>
+					<div class="skeleton skeleton-selector"></div>
 				</div>
 				<div class="selector-group">
 					<span class="selector-label">Supported chain</span>
-					<div class="skeleton-selector"></div>
+					<div class="skeleton skeleton-selector"></div>
 				</div>
 			</div>
 			<div class="qr-section">
-				<div class="skeleton-qr"></div>
+				<div class="skeleton skeleton-qr"></div>
 			</div>
 			<div class="address-section">
-				<div class="skeleton-address"></div>
-				<div class="skeleton-button"></div>
+				<div class="skeleton skeleton-address"></div>
+				<div class="skeleton skeleton-button"></div>
 			</div>
-			<div class="skeleton-banner"></div>
-		{:else if assetsError}
+			<div class="skeleton skeleton-banner"></div>
+		{:else if assetsQuery.error}
 			<div class="error-state" role="alert">
 				<p class="error-message">Failed to load networks</p>
-				<p class="error-detail">{assetsError}</p>
+				<p class="error-detail">{assetsQuery.error.message}</p>
 				<Button variant="secondary" size="small" onclick={retryFetchAssets}>Try Again</Button>
 			</div>
 		{:else if supportedAssets.length === 0}
@@ -382,7 +325,7 @@
 			</div>
 
 			<div class="qr-section">
-				{#if addressError}
+				{#if depositAddressQuery.error}
 					<div class="qr-error-state">
 						<p class="error-message">Failed to generate address</p>
 						<Button variant="secondary" size="small" onclick={retryFetchAddress}>Retry</Button>
@@ -405,11 +348,11 @@
 						</div>
 					</div>
 				{:else}
-					<div class="skeleton-qr"></div>
+					<div class="skeleton skeleton-qr"></div>
 				{/if}
 			</div>
 
-			{#if addressError}
+			{#if depositAddressQuery.error}
 				<!-- Error state handled in QR section -->
 			{:else if depositAddress}
 				<div class="address-section">
@@ -472,6 +415,8 @@
 </Modal>
 
 <style>
+	@import '$lib/styles/skeleton.css';
+
 	.deposit-modal-content {
 		display: flex;
 		flex-direction: column;
@@ -533,54 +478,30 @@
 		width: 100%;
 		height: 48px;
 		border-radius: 12px;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	.skeleton-qr {
 		width: 180px;
 		height: 180px;
 		border-radius: var(--radius-xl);
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	.skeleton-address {
 		width: 100%;
 		height: 52px;
 		border-radius: 12px;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	.skeleton-button {
 		width: 100%;
 		height: 48px;
 		border-radius: 12px;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 2.5s ease-in-out infinite;
 	}
 
 	.skeleton-banner {
 		width: 100%;
 		height: 48px;
 		border-radius: 12px;
-		background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
-		background-size: 200% 100%;
-		animation: shimmer 2.5s ease-in-out infinite;
-	}
-
-	@keyframes shimmer {
-		0% {
-			background-position: 100% 0;
-		}
-		100% {
-			background-position: -100% 0;
-		}
 	}
 
 	.selector-value {

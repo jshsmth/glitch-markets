@@ -1,9 +1,8 @@
 <script lang="ts">
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
-	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
 	import EventCardHeader from '$lib/components/events/EventCardHeader.svelte';
-	import { formatNumber } from '$lib/utils/format';
+	import EventCardFooter from '$lib/components/events/EventCardFooter.svelte';
 	import { isWinningMarket } from '$lib/utils/market-parser';
 
 	interface Props {
@@ -66,16 +65,7 @@
 			</div>
 		{/if}
 
-		<!-- Footer Stats -->
-		<div class="card-footer">
-			<div class="stats">
-				<div class="stat">
-					<MoneyIcon size={16} class="stat-icon" />
-					<span class="stat-value">{formatNumber(event.volume)}</span>
-					<span class="stat-label">Vol</span>
-				</div>
-			</div>
-		</div>
+		<EventCardFooter volume={event.volume} />
 	</div>
 </div>
 
@@ -190,59 +180,12 @@
 	}
 
 	/* ============================================
-	   FOOTER STATS
-	   ============================================ */
-
-	.card-footer {
-		margin-top: auto;
-		padding-top: 12px;
-		border-top: 1px solid var(--bg-3);
-	}
-
-	.stats {
-		display: flex;
-		gap: 20px;
-		align-items: center;
-	}
-
-	.stat {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
-
-	.stat :global(.stat-icon) {
-		color: var(--text-3);
-		flex-shrink: 0;
-	}
-
-	.stat-value {
-		font-size: 13px;
-		font-weight: 700;
-		color: var(--text-0);
-	}
-
-	.stat-label {
-		font-size: 11px;
-		color: var(--text-3);
-		font-weight: 500;
-	}
-
-	/* ============================================
 	   MOBILE OPTIMIZATIONS
 	   ============================================ */
 
 	@media (max-width: 768px) {
 		.event-card {
 			padding: 16px;
-		}
-
-		.stats {
-			gap: 16px;
-		}
-
-		.stat-value {
-			font-size: 12px;
 		}
 	}
 </style>
