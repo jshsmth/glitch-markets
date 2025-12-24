@@ -113,20 +113,12 @@ export const balanceState = {
 	},
 	get isLoading() {
 		if (!queryClient) return false;
-		const state = queryClient.getQueryState([
-			'user',
-			'balance',
-			walletState.proxyWalletAddress
-		]);
+		const state = queryClient.getQueryState(['user', 'balance', walletState.proxyWalletAddress]);
 		return state?.fetchStatus === 'fetching';
 	},
 	get error() {
 		if (!queryClient) return null;
-		const state = queryClient.getQueryState([
-			'user',
-			'balance',
-			walletState.proxyWalletAddress
-		]);
+		const state = queryClient.getQueryState(['user', 'balance', walletState.proxyWalletAddress]);
 		return state?.error ? (state.error as Error).message : null;
 	}
 };

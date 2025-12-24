@@ -29,31 +29,23 @@ export function useAddToWatchlist() {
 
 			return response.json();
 		},
-		onMutate: async (eventId) => {
-			// Haptic feedback
+		onMutate: async () => {
 			if (browser && 'vibrate' in navigator) {
 				navigator.vibrate(50);
 			}
 
-			// Cancel outgoing refetches
 			await queryClient.cancelQueries({ queryKey: queryKeys.watchlist.all });
 
-			// Snapshot previous value for rollback
 			const previousWatchlist = queryClient.getQueryData<Event[]>(queryKeys.watchlist.all);
-
-			// Optimistically add to bookmarked set
-			// (This is handled by the store for now)
 
 			return { previousWatchlist };
 		},
 		onError: (_err, _eventId, context) => {
-			// Rollback on error
 			if (context?.previousWatchlist) {
 				queryClient.setQueryData(queryKeys.watchlist.all, context.previousWatchlist);
 			}
 		},
 		onSettled: () => {
-			// Refetch to sync with server
 			queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.all });
 		}
 	}));
@@ -75,18 +67,14 @@ export function useRemoveFromWatchlist() {
 			return response.json();
 		},
 		onMutate: async (eventId) => {
-			// Haptic feedback
 			if (browser && 'vibrate' in navigator) {
 				navigator.vibrate([30, 20, 30]);
 			}
 
-			// Cancel outgoing refetches
 			await queryClient.cancelQueries({ queryKey: queryKeys.watchlist.all });
 
-			// Snapshot previous value for rollback
 			const previousWatchlist = queryClient.getQueryData<Event[]>(queryKeys.watchlist.all);
 
-			// Optimistically remove from cache
 			queryClient.setQueryData<Event[]>(queryKeys.watchlist.all, (old) => {
 				if (!old) return old;
 				return old.filter((event) => event.id !== eventId);
@@ -95,13 +83,11 @@ export function useRemoveFromWatchlist() {
 			return { previousWatchlist };
 		},
 		onError: (_err, _eventId, context) => {
-			// Rollback on error
 			if (context?.previousWatchlist) {
 				queryClient.setQueryData(queryKeys.watchlist.all, context.previousWatchlist);
 			}
 		},
 		onSettled: () => {
-			// Refetch to sync with server
 			queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.all });
 		}
 	}));

@@ -10,6 +10,7 @@ import { SvelteSet } from 'svelte/reactivity';
 import { browser } from '$app/environment';
 import { queryKeys } from '$lib/query/client';
 import type { QueryClient } from '@tanstack/svelte-query';
+import type { Event } from '$lib/server/api/polymarket-client';
 
 let queryClient: QueryClient | null = null;
 
@@ -68,15 +69,12 @@ export async function addToWatchlist(eventId: string): Promise<boolean> {
 	if (!browser || !queryClient) return false;
 
 	try {
-		// Optimistically add to local set
 		bookmarkedEventIds.add(eventId);
 
-		// Haptic feedback
 		if ('vibrate' in navigator) {
 			navigator.vibrate(50);
 		}
 
-		// Make API call
 		const response = await fetch('/api/watchlist', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -93,7 +91,6 @@ export async function addToWatchlist(eventId: string): Promise<boolean> {
 			throw new Error('Failed to add bookmark');
 		}
 
-		// Invalidate queries to refetch
 		await queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.all });
 
 		return true;
@@ -116,27 +113,22 @@ export async function removeFromWatchlist(eventId: string): Promise<boolean> {
 	if (!browser || !queryClient) return false;
 
 	try {
-		// Optimistically remove from local set
 		bookmarkedEventIds.delete(eventId);
 
-		// Haptic feedback
 		if ('vibrate' in navigator) {
 			navigator.vibrate([30, 20, 30]);
 		}
 
-		// Optimistically update cache
-		queryClient.setQueryData(queryKeys.watchlist.all, (old: any) => {
+		queryClient.setQueryData<Event[]>(queryKeys.watchlist.all, (old) => {
 			if (!old) return old;
-			return old.filter((event: any) => event.id !== eventId);
+			return old.filter((event) => event.id !== eventId);
 		});
 
-		// Make API call
 		const response = await fetch(`/api/watchlist?eventId=${encodeURIComponent(eventId)}`, {
 			method: 'DELETE'
 		});
 
 		if (!response.ok) {
-			// Rollback on error
 			bookmarkedEventIds.add(eventId);
 			await queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.all });
 			throw new Error('Failed to remove bookmark');
@@ -149,16 +141,10 @@ export async function removeFromWatchlist(eventId: string): Promise<boolean> {
 	}
 }
 
-/**
- * Check if event is bookmarked
- */
 export function isBookmarked(eventId: string): boolean {
 	return bookmarkedEventIds.has(eventId);
 }
 
-/**
- * Clear watchlist (used on sign out)
- */
 export function clearWatchlist(): void {
 	bookmarkedEventIds.clear();
 }

@@ -1,10 +1,10 @@
 import { SvelteURLSearchParams } from 'svelte/reactivity';
 import type { PageLoad } from './$types';
+import type { Event } from '$lib/server/api/polymarket-client';
 
 export const load: PageLoad = async ({ parent, fetch }) => {
 	const { queryClient } = await parent();
 
-	// Prefetch infinite query for new events
 	await queryClient.prefetchInfiniteQuery({
 		queryKey: ['events', 'new'],
 		queryFn: async ({ pageParam = 0 }) => {
@@ -27,9 +27,9 @@ export const load: PageLoad = async ({ parent, fetch }) => {
 			}
 			return response.json();
 		},
-		getNextPageParam: (lastPage: any) => {
+		getNextPageParam: (lastPage: Event[]) => {
 			if (lastPage.length < 20) return undefined;
-			return undefined; // Only prefetch first page
+			return undefined;
 		},
 		initialPageParam: 0,
 		pages: 1
