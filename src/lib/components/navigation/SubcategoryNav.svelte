@@ -10,25 +10,8 @@
 		onTagChange?: (slug: string | null) => void;
 		currentStatus?: string;
 		currentSort?: string;
-		volumeMin?: number;
-		volumeMax?: number;
-		liquidityMin?: number;
-		liquidityMax?: number;
-		startDateMin?: string;
-		startDateMax?: string;
-		endDateMin?: string;
-		endDateMax?: string;
-		showAdvanced?: boolean;
 		onStatusChange?: (status: 'active' | 'closed' | 'all') => void;
 		onSortChange?: (sort: string) => void;
-		onVolumeChange?: (min: number | undefined, max: number | undefined) => void;
-		onLiquidityChange?: (min: number | undefined, max: number | undefined) => void;
-		onDateRangeChange?: (
-			startMin: string | undefined,
-			startMax: string | undefined,
-			endMin: string | undefined,
-			endMax: string | undefined
-		) => void;
 	}
 
 	let {
@@ -37,20 +20,8 @@
 		onTagChange,
 		currentStatus,
 		currentSort,
-		volumeMin = $bindable(),
-		volumeMax = $bindable(),
-		liquidityMin = $bindable(),
-		liquidityMax = $bindable(),
-		startDateMin = $bindable(),
-		startDateMax = $bindable(),
-		endDateMin = $bindable(),
-		endDateMax = $bindable(),
-		showAdvanced = false,
 		onStatusChange,
-		onSortChange,
-		onVolumeChange,
-		onLiquidityChange,
-		onDateRangeChange
+		onSortChange
 	}: Props = $props();
 
 	let isMobileFilterOpen = $state(false);
@@ -149,24 +120,7 @@
 		</div>
 
 		<div class="filter-wrapper">
-			<FilterBar
-				{currentStatus}
-				{currentSort}
-				{onStatusChange}
-				{onSortChange}
-				bind:volumeMin
-				bind:volumeMax
-				bind:liquidityMin
-				bind:liquidityMax
-				bind:startDateMin
-				bind:startDateMax
-				bind:endDateMin
-				bind:endDateMax
-				{onVolumeChange}
-				{onLiquidityChange}
-				{onDateRangeChange}
-				{showAdvanced}
-			/>
+			<FilterBar {currentStatus} {currentSort} {onStatusChange} {onSortChange} />
 		</div>
 	</div>
 

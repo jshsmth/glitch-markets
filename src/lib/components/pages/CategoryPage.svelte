@@ -14,14 +14,6 @@
 	let selectedTag = $state<string | null>(null);
 	let status = $state<'active' | 'closed' | 'all'>('active');
 	let sort = $state<string>('volume24hr');
-	let volumeMin = $state<number | undefined>(undefined);
-	let volumeMax = $state<number | undefined>(undefined);
-	let liquidityMin = $state<number | undefined>(undefined);
-	let liquidityMax = $state<number | undefined>(undefined);
-	let startDateMin = $state<string | undefined>(undefined);
-	let startDateMax = $state<string | undefined>(undefined);
-	let endDateMin = $state<string | undefined>(undefined);
-	let endDateMax = $state<string | undefined>(undefined);
 
 	let tag_slug = $derived(selectedTag || categorySlug);
 	let active = $derived(status === 'all' ? undefined : 'true');
@@ -39,28 +31,6 @@
 		sort = newSort;
 	}
 
-	function handleVolumeChange(min: number | undefined, max: number | undefined) {
-		volumeMin = min;
-		volumeMax = max;
-	}
-
-	function handleLiquidityChange(min: number | undefined, max: number | undefined) {
-		liquidityMin = min;
-		liquidityMax = max;
-	}
-
-	function handleDateRangeChange(
-		sMin: string | undefined,
-		sMax: string | undefined,
-		eMin: string | undefined,
-		eMax: string | undefined
-	) {
-		startDateMin = sMin;
-		startDateMax = sMax;
-		endDateMin = eMin;
-		endDateMax = eMax;
-	}
-
 	const subcategoriesQuery = createQuery(() => ({
 		queryKey: ['tags', categorySlug, 'related'],
 		queryFn: async () => {
@@ -75,21 +45,7 @@
 	}));
 
 	const eventsQuery = createInfiniteQuery(() => ({
-		queryKey: [
-			'events',
-			categorySlug,
-			tag_slug,
-			status,
-			sort,
-			volumeMin,
-			volumeMax,
-			liquidityMin,
-			liquidityMax,
-			startDateMin,
-			startDateMax,
-			endDateMin,
-			endDateMax
-		],
+		queryKey: ['events', categorySlug, tag_slug, status, sort],
 		queryFn: async ({ pageParam = 0 }) => {
 			const params: Record<string, string> = {
 				tag_slug,
@@ -102,14 +58,6 @@
 
 			if (active !== undefined) params.active = active;
 			if (closed !== undefined) params.closed = closed;
-			if (volumeMin !== undefined) params.volume_min = String(volumeMin);
-			if (volumeMax !== undefined) params.volume_max = String(volumeMax);
-			if (liquidityMin !== undefined) params.liquidity_min = String(liquidityMin);
-			if (liquidityMax !== undefined) params.liquidity_max = String(liquidityMax);
-			if (startDateMin !== undefined) params.start_date_min = startDateMin;
-			if (startDateMax !== undefined) params.start_date_max = startDateMax;
-			if (endDateMin !== undefined) params.end_date_min = endDateMin;
-			if (endDateMax !== undefined) params.end_date_max = endDateMax;
 
 			const searchParams = new URLSearchParams(params);
 			const res = await fetch(`/api/events?${searchParams}`);
@@ -147,18 +95,6 @@
 		currentSort={sort}
 		onStatusChange={handleStatusChange}
 		onSortChange={handleSortChange}
-		bind:volumeMin
-		bind:volumeMax
-		bind:liquidityMin
-		bind:liquidityMax
-		bind:startDateMin
-		bind:startDateMax
-		bind:endDateMin
-		bind:endDateMax
-		onVolumeChange={handleVolumeChange}
-		onLiquidityChange={handleLiquidityChange}
-		onDateRangeChange={handleDateRangeChange}
-		showAdvanced={true}
 	/>
 
 	<div class="content">
