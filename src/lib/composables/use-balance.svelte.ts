@@ -32,13 +32,32 @@ export function useBalance() {
 		retry: 2
 	}));
 
+	const balance = $derived(balanceQuery.data?.balance ?? null);
+	const balanceRaw = $derived(balanceQuery.data?.balanceRaw ?? null);
+	const decimals = $derived(balanceQuery.data?.decimals ?? 6);
+	const hasProxyWallet = $derived(balanceQuery.data?.hasProxyWallet ?? false);
+	const isLoading = $derived(balanceQuery.isLoading);
+	const error = $derived(balanceQuery.error?.message ?? null);
+
 	return {
-		balance: $derived(balanceQuery.data?.balance ?? null),
-		balanceRaw: $derived(balanceQuery.data?.balanceRaw ?? null),
-		decimals: $derived(balanceQuery.data?.decimals ?? 6),
-		hasProxyWallet: $derived(balanceQuery.data?.hasProxyWallet ?? false),
-		isLoading: $derived(balanceQuery.isLoading),
-		error: $derived(balanceQuery.error?.message ?? null),
+		get balance() {
+			return balance;
+		},
+		get balanceRaw() {
+			return balanceRaw;
+		},
+		get decimals() {
+			return decimals;
+		},
+		get hasProxyWallet() {
+			return hasProxyWallet;
+		},
+		get isLoading() {
+			return isLoading;
+		},
+		get error() {
+			return error;
+		},
 		refetch: () => balanceQuery.refetch()
 	};
 }

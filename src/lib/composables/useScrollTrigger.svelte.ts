@@ -51,11 +51,9 @@ export function useScrollTrigger(options: UseScrollTriggerOptions) {
 					} finally {
 						loadingMore = false;
 
-						setTimeout(() => {
-							if (sentinelElement && observer) {
-								observer.observe(sentinelElement);
-							}
-						}, 100);
+						if (sentinelElement && observer) {
+							observer.observe(sentinelElement);
+						}
 					}
 				}
 			},

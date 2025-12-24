@@ -7,6 +7,13 @@ import { json, type RequestEvent } from '@sveltejs/kit';
 import { MarketService } from '$lib/server/services/market-service.js';
 import { formatErrorResponse, ApiError } from '$lib/server/errors/api-errors.js';
 import { Logger } from '$lib/server/utils/logger.js';
+import {
+	parseInteger,
+	parseBoolean,
+	parseNumber,
+	parseIntegerArray,
+	validateNonNegative
+} from '$lib/server/utils/query-params.js';
 
 const logger = new Logger({ component: 'MarketsRoute' });
 const marketService = new MarketService();
@@ -50,46 +57,13 @@ export async function GET({ url }: RequestEvent) {
 			include_tag?: boolean;
 		} = {};
 
-		// Helper to parse integer
-		const parseInteger = (value: string | null, name: string): number | null => {
-			if (value === null) return null;
-			const parsed = parseInt(value, 10);
-			if (isNaN(parsed)) {
-				throw new ApiError(`Invalid ${name} parameter`, 400, 'VALIDATION_ERROR');
-			}
-			return parsed;
-		};
-
-		// Helper to parse boolean
-		const parseBoolean = (value: string | null, name: string): boolean | null => {
-			if (value === null) return null;
-			if (value !== 'true' && value !== 'false') {
-				throw new ApiError(`Invalid ${name} parameter`, 400, 'VALIDATION_ERROR');
-			}
-			return value === 'true';
-		};
-
-		// Helper to parse number
-		const parseNumber = (value: string | null, name: string): number | null => {
-			if (value === null) return null;
-			const parsed = parseFloat(value);
-			if (isNaN(parsed)) {
-				throw new ApiError(`Invalid ${name} parameter`, 400, 'VALIDATION_ERROR');
-			}
-			return parsed;
-		};
-
 		// Pagination
 		const limit = parseInteger(url.searchParams.get('limit'), 'limit');
-		if (limit !== null && limit < 0) {
-			throw new ApiError('Invalid limit parameter', 400, 'VALIDATION_ERROR');
-		}
+		validateNonNegative(limit, 'limit');
 		if (limit !== null) filters.limit = limit;
 
 		const offset = parseInteger(url.searchParams.get('offset'), 'offset');
-		if (offset !== null && offset < 0) {
-			throw new ApiError('Invalid offset parameter', 400, 'VALIDATION_ERROR');
-		}
+		validateNonNegative(offset, 'offset');
 		if (offset !== null) filters.offset = offset;
 
 		const order = url.searchParams.get('order');
@@ -101,13 +75,7 @@ export async function GET({ url }: RequestEvent) {
 		// Identifiers
 		const ids = url.searchParams.getAll('id');
 		if (ids.length > 0) {
-			filters.id = ids.map((id) => {
-				const parsed = parseInt(id, 10);
-				if (isNaN(parsed)) {
-					throw new ApiError('Invalid id parameter', 400, 'VALIDATION_ERROR');
-				}
-				return parsed;
-			});
+			filters.id = parseIntegerArray(ids, 'id');
 		}
 
 		const slugs = url.searchParams.getAll('slug');

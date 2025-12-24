@@ -15,7 +15,7 @@
 	import DocumentTextIcon from '$lib/components/icons/DocumentTextIcon.svelte';
 	import { openDepositModal, openWithdrawModal } from '$lib/stores/modal.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
-	import { balanceState } from '$lib/stores/balance.svelte';
+	import { useBalance } from '$lib/composables/use-balance.svelte';
 	import { walletState } from '$lib/stores/wallet.svelte';
 	import ProfitLossChart from '$lib/components/portfolio/ProfitLossChart.svelte';
 	import {
@@ -25,11 +25,13 @@
 		formatDateTime
 	} from '$lib/utils/formatters';
 
-	const formattedBalance = $derived.by(() => {
-		if (!balanceState.hasProxyWallet) return '$0.00';
-		if (balanceState.balance === null) return '$0.00';
+	const balanceQuery = useBalance();
 
-		const numBalance = parseFloat(balanceState.balance);
+	const formattedBalance = $derived.by(() => {
+		if (!balanceQuery.hasProxyWallet) return '$0.00';
+		if (balanceQuery.balance === null) return '$0.00';
+
+		const numBalance = parseFloat(balanceQuery.balance);
 		return formatCurrency(numBalance);
 	});
 

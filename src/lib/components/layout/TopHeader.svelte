@@ -7,15 +7,17 @@
 	import PortfolioStat from '$lib/components/ui/PortfolioStat.svelte';
 	import SearchWithResults from '$lib/components/ui/SearchWithResults.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
-	import { balanceState } from '$lib/stores/balance.svelte';
+	import { useBalance } from '$lib/composables/use-balance.svelte';
 	import { openDepositModal } from '$lib/stores/modal.svelte';
 	import { formatCurrency } from '$lib/utils/formatters';
 
-	const formattedBalance = $derived.by(() => {
-		if (!balanceState.hasProxyWallet) return '$0.00';
-		if (balanceState.balance === null) return '$0.00';
+	const balanceQuery = useBalance();
 
-		const numBalance = parseFloat(balanceState.balance);
+	const formattedBalance = $derived.by(() => {
+		if (!balanceQuery.hasProxyWallet) return '$0.00';
+		if (balanceQuery.balance === null) return '$0.00';
+
+		const numBalance = parseFloat(balanceQuery.balance);
 		return formatCurrency(numBalance);
 	});
 
