@@ -9,15 +9,6 @@
 	let { data } = $props();
 
 	let currentSort = $state<string>('volume24hr');
-	let resolvedCategoryData = $state<{ initialEvents: Event[]; subcategories: unknown[] } | null>(
-		null
-	);
-
-	$effect(() => {
-		Promise.resolve(data.categoryData).then((categoryData) => {
-			resolvedCategoryData = categoryData;
-		});
-	});
 
 	const eventsQuery = createInfiniteQuery(() => ({
 		queryKey: ['events', 'trending', currentSort],
@@ -44,9 +35,9 @@
 		},
 		initialPageParam: 0,
 		initialData:
-			resolvedCategoryData && resolvedCategoryData.initialEvents.length > 0
+			data.categoryData?.initialEvents && data.categoryData.initialEvents.length > 0
 				? {
-						pages: [resolvedCategoryData.initialEvents],
+						pages: [data.categoryData.initialEvents],
 						pageParams: [0]
 					}
 				: undefined
@@ -77,7 +68,7 @@
 
 	<EventList
 		events={allEvents}
-		loading={resolvedCategoryData === null && isInitialLoading}
+		loading={isInitialLoading}
 		error={eventsQuery.error}
 		onRetry={() => eventsQuery.refetch()}
 		onLoadMore={loadMore}

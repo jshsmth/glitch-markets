@@ -6,14 +6,6 @@
 
 	let { data } = $props();
 
-	let resolvedInitialEvents = $state<Event[] | null>(null);
-
-	$effect(() => {
-		Promise.resolve(data.initialEvents).then((events) => {
-			resolvedInitialEvents = events;
-		});
-	});
-
 	const eventsQuery = createInfiniteQuery(() => ({
 		queryKey: ['events', 'trending'],
 		queryFn: async ({ pageParam = 0 }) => {
@@ -39,9 +31,9 @@
 		},
 		initialPageParam: 0,
 		initialData:
-			resolvedInitialEvents && resolvedInitialEvents.length > 0
+			data.initialEvents && data.initialEvents.length > 0
 				? {
-						pages: [resolvedInitialEvents],
+						pages: [data.initialEvents],
 						pageParams: [0]
 					}
 				: undefined
@@ -62,7 +54,7 @@
 	<WatchlistSection />
 	<EventList
 		events={allEvents}
-		loading={resolvedInitialEvents === null && isInitialLoading}
+		loading={isInitialLoading}
 		error={eventsQuery.error}
 		onRetry={() => eventsQuery.refetch()}
 		onLoadMore={loadMore}
