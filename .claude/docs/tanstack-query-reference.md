@@ -95,8 +95,8 @@ TanStack Query is a powerful data synchronization library that provides:
 
 ```typescript
 const result = createQuery({
-  queryKey: ['markets'],
-  queryFn: fetchMarkets
+	queryKey: ['markets'],
+	queryFn: fetchMarkets
 });
 ```
 
@@ -104,8 +104,8 @@ const result = createQuery({
 
 ```typescript
 const result = createQuery({
-  queryKey: ['market', marketId],
-  queryFn: () => fetchMarket(marketId)
+	queryKey: ['market', marketId],
+	queryFn: () => fetchMarket(marketId)
 });
 ```
 
@@ -113,9 +113,9 @@ const result = createQuery({
 
 ```typescript
 const result = createInfiniteQuery({
-  queryKey: ['events'],
-  queryFn: ({ pageParam = 0 }) => fetchEvents(pageParam),
-  getNextPageParam: (lastPage) => lastPage.nextCursor
+	queryKey: ['events'],
+	queryFn: ({ pageParam = 0 }) => fetchEvents(pageParam),
+	getNextPageParam: (lastPage) => lastPage.nextCursor
 });
 ```
 
@@ -123,10 +123,10 @@ const result = createInfiniteQuery({
 
 ```typescript
 const mutation = createMutation({
-  mutationFn: createMarket,
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['markets'] });
-  }
+	mutationFn: createMarket,
+	onSuccess: () => {
+		queryClient.invalidateQueries({ queryKey: ['markets'] });
+	}
 });
 ```
 
