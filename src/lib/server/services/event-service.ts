@@ -8,7 +8,6 @@ import { BaseService } from './base-service.js';
 import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
-import { genericSort, parseDateForSort } from '../utils/sort-utils.js';
 
 export interface EventFilters {
 	// Pagination
@@ -45,12 +44,6 @@ export interface EventFilters {
 	recurrence?: string;
 	include_chat?: boolean;
 	include_template?: boolean;
-}
-
-export interface EventSearchOptions extends EventFilters {
-	query?: string;
-	sortBy?: 'volume' | 'liquidity' | 'createdAt';
-	sortOrder?: 'asc' | 'desc';
 }
 
 /**
@@ -195,53 +188,5 @@ export class EventService extends BaseService {
 			(id) => this.client.fetchEventTags(id),
 			{ id }
 		);
-	}
-
-	/**
-	 * Searches events with text query, filtering, and sorting
-	 * Performs case-insensitive partial text matching on event titles
-	 *
-	 * @param options - Search options including query, filters, and sort parameters
-	 * @returns Promise resolving to an array of events matching the search criteria
-	 * @throws {ApiError} When the API request fails
-	 * @throws {ValidationError} When search parameters are invalid
-	 *
-	 * @example
-	 * ```typescript
-	 * // Search for bitcoin events sorted by volume
-	 * const events = await service.searchEvents({
-	 *   query: 'bitcoin',
-	 *   sortBy: 'volume',
-	 *   sortOrder: 'desc',
-	 *   active: true
-	 * });
-	 * ```
-	 */
-	async searchEvents(options: EventSearchOptions = {}): Promise<Event[]> {
-		const events = await this.getEvents(options);
-
-		let filtered = events;
-		if (options.query) {
-			const queryLower = options.query.toLowerCase();
-			filtered = events.filter((event) => event.title?.toLowerCase().includes(queryLower) ?? false);
-		}
-
-		if (options.sortBy) {
-			filtered = this.sortEvents(filtered, options.sortBy, options.sortOrder || 'desc');
-		}
-
-		return filtered;
-	}
-
-	private sortEvents(
-		events: Event[],
-		sortBy: 'volume' | 'liquidity' | 'createdAt',
-		sortOrder: 'asc' | 'desc'
-	): Event[] {
-		return genericSort(events, sortBy, sortOrder, {
-			volume: (e) => e.volume ?? 0,
-			liquidity: (e) => e.liquidity ?? 0,
-			createdAt: (e) => parseDateForSort(e.creationDate)
-		});
 	}
 }

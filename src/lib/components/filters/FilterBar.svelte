@@ -1,19 +1,51 @@
 <script lang="ts">
+	import AdvancedFilterPanel from './AdvancedFilterPanel.svelte';
+
 	interface Props {
 		currentStatus?: string;
 		currentSort?: string;
+		volumeMin?: number;
+		volumeMax?: number;
+		liquidityMin?: number;
+		liquidityMax?: number;
+		startDateMin?: string;
+		startDateMax?: string;
+		endDateMin?: string;
+		endDateMax?: string;
+		showAdvanced?: boolean;
 		onStatusChange?: (status: 'active' | 'closed' | 'all') => void;
 		onSortChange?: (sort: string) => void;
+		onVolumeChange?: (min: number | undefined, max: number | undefined) => void;
+		onLiquidityChange?: (min: number | undefined, max: number | undefined) => void;
+		onDateRangeChange?: (
+			startMin: string | undefined,
+			startMax: string | undefined,
+			endMin: string | undefined,
+			endMax: string | undefined
+		) => void;
 	}
 
 	let {
 		currentStatus = 'active',
 		currentSort = 'volume24hr',
+		volumeMin = $bindable(),
+		volumeMax = $bindable(),
+		liquidityMin = $bindable(),
+		liquidityMax = $bindable(),
+		startDateMin = $bindable(),
+		startDateMax = $bindable(),
+		endDateMin = $bindable(),
+		endDateMax = $bindable(),
+		showAdvanced = false,
 		onStatusChange,
-		onSortChange
+		onSortChange,
+		onVolumeChange,
+		onLiquidityChange,
+		onDateRangeChange
 	}: Props = $props();
 
 	let isOpen = $state(false);
+	let showAdvancedFilters = $state(false);
 	let buttonElement: HTMLButtonElement | undefined = $state();
 	let panelElement: HTMLDivElement | undefined = $state();
 	let wrapperElement: HTMLDivElement | undefined = $state();
@@ -130,6 +162,44 @@
 					{/each}
 				</div>
 			</div>
+
+			{#if showAdvanced}
+				<div class="filter-group">
+					<button
+						class="advanced-toggle"
+						class:active={showAdvancedFilters}
+						onclick={() => (showAdvancedFilters = !showAdvancedFilters)}
+					>
+						<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+							<path
+								d="M2 7h10M7 2v10"
+								stroke="currentColor"
+								stroke-width="1.5"
+								stroke-linecap="round"
+							/>
+						</svg>
+						{showAdvancedFilters ? 'Hide' : 'Show'} Advanced Filters
+					</button>
+				</div>
+
+				{#if showAdvancedFilters}
+					<div class="advanced-panel-container">
+						<AdvancedFilterPanel
+							bind:volumeMin
+							bind:volumeMax
+							bind:liquidityMin
+							bind:liquidityMax
+							bind:startDateMin
+							bind:startDateMax
+							bind:endDateMin
+							bind:endDateMax
+							{onVolumeChange}
+							{onLiquidityChange}
+							{onDateRangeChange}
+						/>
+					</div>
+				{/if}
+			{/if}
 		</div>
 	{/if}
 </div>
@@ -223,6 +293,45 @@
 		color: var(--bg-0);
 		border-color: var(--primary);
 		font-weight: 600;
+	}
+
+	.advanced-toggle {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 12px;
+		width: 100%;
+		background: var(--bg-2);
+		color: var(--text-1);
+		border: 1px solid var(--bg-3);
+		border-radius: var(--radius-button);
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.advanced-toggle:hover {
+		background: var(--bg-3);
+		color: var(--text-0);
+	}
+
+	.advanced-toggle.active {
+		background: var(--primary);
+		color: var(--bg-0);
+		border-color: var(--primary);
+	}
+
+	.advanced-toggle svg {
+		transition: transform 0.2s;
+	}
+
+	.advanced-toggle.active svg {
+		transform: rotate(45deg);
+	}
+
+	.advanced-panel-container {
+		margin-top: var(--spacing-3);
 	}
 
 	/* Desktop */
