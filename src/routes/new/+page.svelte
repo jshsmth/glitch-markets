@@ -1,101 +1,34 @@
 <script lang="ts">
-	import { createQuery } from '@tanstack/svelte-query';
-	import { queryKeys } from '$lib/query/client';
 	import EventList from '$lib/components/events/EventList.svelte';
-	import type { Event } from '$lib/server/api/polymarket-client';
-	import { browser } from '$app/environment';
+	import { useInfiniteEvents } from '$lib/composables/use-infinite-events.svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
-	import { untrack } from 'svelte';
 
-	const PAGE_SIZE = 20;
-	const MAX_EVENTS = 200; // Cap at 200 events to prevent unbounded memory growth
-	let offset = $state(0);
-	let allEvents = $state<Event[]>([]);
-	let hasMore = $state(true);
-	let isInitialLoad = $state(true);
-
-	const query = createQuery<Event[]>(() => ({
-		queryKey: [...queryKeys.events.all, offset],
-		queryFn: async () => {
+	const state = useInfiniteEvents({
+		buildParams: () => {
 			const params = new SvelteURLSearchParams({
-				limit: PAGE_SIZE.toString(),
 				active: 'true',
 				archived: 'false',
 				closed: 'false',
 				order: 'startDate',
-				ascending: 'false',
-				offset: offset.toString()
+				ascending: 'false'
 			});
 
 			params.append('exclude_tag_id', '100639');
 			params.append('exclude_tag_id', '102169');
 
-			const response = await fetch(`/api/events?${params.toString()}`);
-			if (!response.ok) {
-				throw new Error('Failed to fetch new events');
-			}
-			const data = await response.json();
-			return data;
-		}
-	}));
-
-	// Track last processed offset to prevent reprocessing same data
-	let lastProcessedOffset = -1;
-
-	$effect(() => {
-		const currentOffset = offset;
-		const data = query.data;
-
-		// Only process new data
-		if (browser && data && currentOffset !== lastProcessedOffset) {
-			untrack(() => {
-				lastProcessedOffset = currentOffset;
-
-				if (currentOffset === 0) {
-					allEvents = data;
-				} else {
-					allEvents = [...allEvents, ...data];
-				}
-
-				// Stop loading more if we've hit the maximum
-				if (allEvents.length >= MAX_EVENTS) {
-					hasMore = false;
-				} else {
-					hasMore = data.length === PAGE_SIZE;
-				}
-
-				isInitialLoad = false;
-			});
+			return params;
 		}
 	});
-
-	function handleLoadMore() {
-		if (browser && !query.isFetching && hasMore) {
-			offset += PAGE_SIZE;
-		}
-	}
-
-	function handleRetry() {
-		if (browser) {
-			offset = 0;
-			allEvents = [];
-			hasMore = true;
-			lastProcessedOffset = -1;
-			query.refetch();
-		}
-	}
-
-	const error = $derived(browser ? (query.error as Error | null) : null);
 </script>
 
 <div class="page-container">
 	<EventList
-		events={allEvents}
-		loading={isInitialLoad}
-		error={error as Error}
-		onRetry={handleRetry}
-		onLoadMore={handleLoadMore}
-		{hasMore}
+		events={state.events}
+		loading={state.isLoading}
+		error={state.error}
+		onRetry={state.handleRetry}
+		onLoadMore={state.handleLoadMore}
+		hasMore={state.hasMore}
 		title="New Markets"
 	/>
 </div>

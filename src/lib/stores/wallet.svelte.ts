@@ -5,6 +5,7 @@
 
 import { browser } from '$app/environment';
 import { authState } from './auth.svelte';
+import { CleanupManager } from './utils/cleanup';
 
 interface WalletState {
 	serverWalletAddress: string | null;
@@ -22,7 +23,7 @@ export const walletState = $state<WalletState>({
 	error: null
 });
 
-let abortController: AbortController | null = null;
+const cleanupManager = new CleanupManager();
 let lastProfileVersion = -1;
 
 /**
@@ -38,17 +39,13 @@ export async function fetchWalletAddresses(): Promise<void> {
 		return;
 	}
 
-	if (abortController) {
-		abortController.abort();
-	}
-
-	abortController = new AbortController();
+	const controller = cleanupManager.getAbortController();
 	walletState.isLoading = true;
 	walletState.error = null;
 
 	try {
 		const response = await fetch('/api/user/profile', {
-			signal: abortController.signal
+			signal: controller.signal
 		});
 
 		if (!response.ok) {
@@ -70,7 +67,6 @@ export async function fetchWalletAddresses(): Promise<void> {
 		walletState.isRegistered = false;
 	} finally {
 		walletState.isLoading = false;
-		abortController = null;
 	}
 }
 
@@ -148,11 +144,7 @@ export function initializeWalletSync(): () => void {
  * Reset wallet state (call on logout)
  */
 export function resetWalletState(): void {
-	if (abortController) {
-		abortController.abort();
-		abortController = null;
-	}
-
+	cleanupManager.cleanup();
 	stopRegistrationPolling();
 
 	walletState.serverWalletAddress = null;

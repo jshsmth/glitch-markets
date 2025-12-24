@@ -5,6 +5,7 @@
 
 import { browser } from '$app/environment';
 import { authState } from './auth.svelte';
+import { CleanupManager } from './utils/cleanup';
 
 interface BalanceState {
 	balance: string | null;
@@ -24,9 +25,8 @@ export const balanceState = $state<BalanceState>({
 	error: null
 });
 
-let abortController: AbortController | null = null;
+const cleanupManager = new CleanupManager();
 let lastProfileVersion = -1;
-let refetchInterval: ReturnType<typeof setInterval> | null = null;
 
 const BALANCE_REFETCH_INTERVAL_MS = 60000;
 
@@ -43,17 +43,13 @@ export async function fetchBalance(): Promise<void> {
 		return;
 	}
 
-	if (abortController) {
-		abortController.abort();
-	}
-
-	abortController = new AbortController();
+	const controller = cleanupManager.getAbortController();
 	balanceState.isLoading = true;
 	balanceState.error = null;
 
 	try {
 		const response = await fetch('/api/user/balance', {
-			signal: abortController.signal
+			signal: controller.signal
 		});
 
 		if (!response.ok) {
@@ -76,7 +72,6 @@ export async function fetchBalance(): Promise<void> {
 		balanceState.hasProxyWallet = false;
 	} finally {
 		balanceState.isLoading = false;
-		abortController = null;
 	}
 }
 
@@ -90,10 +85,7 @@ export function initializeBalanceSync(): () => void {
 			const currentVersion = authState.profileVersion;
 
 			if (!authState.session) {
-				if (refetchInterval) {
-					clearInterval(refetchInterval);
-					refetchInterval = null;
-				}
+				cleanupManager.cleanup();
 				balanceState.balance = null;
 				balanceState.balanceRaw = null;
 				balanceState.hasProxyWallet = false;
@@ -107,10 +99,7 @@ export function initializeBalanceSync(): () => void {
 				lastProfileVersion = currentVersion;
 				fetchBalance();
 
-				if (refetchInterval) {
-					clearInterval(refetchInterval);
-				}
-				refetchInterval = setInterval(() => {
+				cleanupManager.setInterval(() => {
 					fetchBalance();
 				}, BALANCE_REFETCH_INTERVAL_MS);
 			}
@@ -119,10 +108,7 @@ export function initializeBalanceSync(): () => void {
 
 	return () => {
 		cleanup();
-		if (refetchInterval) {
-			clearInterval(refetchInterval);
-			refetchInterval = null;
-		}
+		cleanupManager.cleanup();
 	};
 }
 
@@ -130,15 +116,7 @@ export function initializeBalanceSync(): () => void {
  * Reset balance state (call on logout)
  */
 export function resetBalanceState(): void {
-	if (abortController) {
-		abortController.abort();
-		abortController = null;
-	}
-
-	if (refetchInterval) {
-		clearInterval(refetchInterval);
-		refetchInterval = null;
-	}
+	cleanupManager.cleanup();
 
 	balanceState.balance = null;
 	balanceState.balanceRaw = null;

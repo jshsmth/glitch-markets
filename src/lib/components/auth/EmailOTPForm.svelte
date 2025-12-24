@@ -32,7 +32,7 @@
 	let isAuthenticating = $state(false);
 	let emailAddress = $state('');
 	let password = $state('');
-	// Intentionally captures initial value only - isSignUp can be toggled independently
+	// svelte-ignore state_referenced_locally
 	let isSignUp = $state(initialMode === 'signup');
 	let emailSent = $state(false);
 	let sentToEmail = $state('');
