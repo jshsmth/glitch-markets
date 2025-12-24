@@ -15,9 +15,4 @@
 	});
 </script>
 
-<CategoryPage
-	categorySlug="economy"
-	categoryTitle="Economy"
-	{initialEvents}
-	{subcategories}
-/>
+<CategoryPage categorySlug="economy" categoryTitle="Economy" {initialEvents} {subcategories} />

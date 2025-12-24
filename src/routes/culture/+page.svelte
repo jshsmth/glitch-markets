@@ -15,9 +15,4 @@
 	});
 </script>
 
-<CategoryPage
-	categorySlug="culture"
-	categoryTitle="Culture"
-	{initialEvents}
-	{subcategories}
-/>
+<CategoryPage categorySlug="culture" categoryTitle="Culture" {initialEvents} {subcategories} />

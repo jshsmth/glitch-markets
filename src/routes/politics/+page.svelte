@@ -15,9 +15,4 @@
 	});
 </script>
 
-<CategoryPage
-	categorySlug="politics"
-	categoryTitle="Politics"
-	{initialEvents}
-	{subcategories}
-/>
+<CategoryPage categorySlug="politics" categoryTitle="Politics" {initialEvents} {subcategories} />

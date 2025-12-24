@@ -9,7 +9,9 @@
 	let { data } = $props();
 
 	let currentSort = $state<string>('volume24hr');
-	let resolvedCategoryData = $state<{ initialEvents: Event[]; subcategories: unknown[] } | null>(null);
+	let resolvedCategoryData = $state<{ initialEvents: Event[]; subcategories: unknown[] } | null>(
+		null
+	);
 
 	$effect(() => {
 		Promise.resolve(data.categoryData).then((categoryData) => {

@@ -15,9 +15,4 @@
 	});
 </script>
 
-<CategoryPage
-	categorySlug="world"
-	categoryTitle="World"
-	{initialEvents}
-	{subcategories}
-/>
+<CategoryPage categorySlug="world" categoryTitle="World" {initialEvents} {subcategories} />

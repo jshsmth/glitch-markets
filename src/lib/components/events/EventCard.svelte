@@ -45,7 +45,10 @@
 
 	import { useBookmark } from '$lib/composables/useBookmark.svelte';
 
-	const bookmark = useBookmark(() => event.id, () => event);
+	const bookmark = useBookmark(
+		() => event.id,
+		() => event
+	);
 </script>
 
 <div
