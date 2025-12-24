@@ -15,6 +15,23 @@ interface GetByIdOptions<T> {
 	serviceFn: (id: string) => Promise<T | null>;
 }
 
+/**
+ * Centralized error handling for API routes
+ * Handles both ApiError and generic errors with consistent logging and response formatting
+ */
+function handleApiError(error: unknown, logger: Logger, component: string, duration: number) {
+	if (error instanceof ApiError) {
+		logger.error(`API error in ${component}`, error, { duration });
+		return json(formatErrorResponse(error), { status: error.statusCode });
+	}
+
+	logger.error(`Unexpected error in ${component}`, error, { duration });
+	const errorResponse = formatErrorResponse(
+		error instanceof Error ? error : new Error('Unknown error occurred')
+	);
+	return json(errorResponse, { status: 500 });
+}
+
 export function createApiHandler<T>(options: ApiHandlerOptions<T>) {
 	const { loggerComponent, cacheMaxAge = 60, handler } = options;
 	const logger = new Logger({ component: loggerComponent });
@@ -37,17 +54,7 @@ export function createApiHandler<T>(options: ApiHandlerOptions<T>) {
 			});
 		} catch (error) {
 			const duration = Date.now() - startTime;
-
-			if (error instanceof ApiError) {
-				logger.error(`API error in ${loggerComponent}`, error, { duration });
-				return json(formatErrorResponse(error), { status: error.statusCode });
-			}
-
-			logger.error(`Unexpected error in ${loggerComponent}`, error, { duration });
-			const errorResponse = formatErrorResponse(
-				error instanceof Error ? error : new Error('Unknown error occurred')
-			);
-			return json(errorResponse, { status: 500 });
+			return handleApiError(error, logger, loggerComponent, duration);
 		}
 	};
 }
@@ -97,17 +104,7 @@ export function createGetByIdHandler<T>(options: GetByIdOptions<T>) {
 			});
 		} catch (error) {
 			const duration = Date.now() - startTime;
-
-			if (error instanceof ApiError) {
-				logger.error(`API error in ${loggerComponent}`, error, { duration });
-				return json(formatErrorResponse(error), { status: error.statusCode });
-			}
-
-			logger.error(`Unexpected error in ${loggerComponent}`, error, { duration });
-			const errorResponse = formatErrorResponse(
-				error instanceof Error ? error : new Error('Unknown error occurred')
-			);
-			return json(errorResponse, { status: 500 });
+			return handleApiError(error, logger, loggerComponent, duration);
 		}
 	};
 }

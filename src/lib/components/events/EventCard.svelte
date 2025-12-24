@@ -6,6 +6,7 @@
 	import EventCardHeader from '$lib/components/events/EventCardHeader.svelte';
 	import EventCardFooter from '$lib/components/events/EventCardFooter.svelte';
 	import { parseBinaryMarket, parseMultiMarketOutcomes } from '$lib/utils/market-parser';
+	import { RESOLVED_THRESHOLD, CLOSING_SOON_DAYS } from '$lib/config/market-constants';
 
 	interface Props {
 		event: Event;
@@ -29,8 +30,12 @@
 	const outcomeCount = $derived(multiOutcomes?.length || 0);
 
 	const isEffectivelyResolved = $derived.by(() => {
-		if (binaryData) return binaryData.yes.percentage >= 99 || binaryData.no.percentage >= 99;
-		if (leadingOutcome) return leadingOutcome.percentage >= 99;
+		if (binaryData)
+			return (
+				binaryData.yes.percentage >= RESOLVED_THRESHOLD ||
+				binaryData.no.percentage >= RESOLVED_THRESHOLD
+			);
+		if (leadingOutcome) return leadingOutcome.percentage >= RESOLVED_THRESHOLD;
 		return false;
 	});
 
@@ -40,7 +45,7 @@
 		const now = new Date();
 		const diffMs = endDate.getTime() - now.getTime();
 		const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-		return diffDays > 0 && diffDays <= 7;
+		return diffDays > 0 && diffDays <= CLOSING_SOON_DAYS;
 	});
 
 	import { useBookmark } from '$lib/composables/useBookmark.svelte';
@@ -124,7 +129,9 @@
 			<div class="resolved-winner">
 				<CheckCircleIcon size={16} />
 				<span class="winner-name">
-					{binaryData.yes.percentage >= 99 ? binaryData.yes.label : binaryData.no.label}
+					{binaryData.yes.percentage >= RESOLVED_THRESHOLD
+						? binaryData.yes.label
+						: binaryData.no.label}
 				</span>
 			</div>
 		{/if}

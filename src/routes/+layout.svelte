@@ -18,7 +18,6 @@
 		initializeWalletFromProfile,
 		walletState
 	} from '$lib/stores/wallet.svelte';
-	import { initializeBalanceSync } from '$lib/stores/balance.svelte';
 	import {
 		initializeWatchlist,
 		clearWatchlist,
@@ -64,7 +63,6 @@
 		setQueryClient(queryClient);
 
 		const cleanupWalletSync = initializeWalletSync();
-		const cleanupBalanceSync = initializeBalanceSync(queryClient);
 
 		const mainRoutes = [
 			'/',
@@ -118,7 +116,6 @@
 		return () => {
 			subscription.unsubscribe();
 			cleanupWalletSync();
-			cleanupBalanceSync();
 		};
 	});
 
