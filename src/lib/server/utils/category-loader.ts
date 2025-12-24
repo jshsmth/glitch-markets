@@ -1,6 +1,7 @@
 import { EventService } from '$lib/server/services/event-service.js';
 import type { Event, Tag } from '../api/polymarket-client.js';
 import { Logger } from './logger';
+import { fetchWithTimeout } from './fetch-with-timeout';
 
 const eventService = new EventService();
 const logger = new Logger({ component: 'CategoryLoader' });
@@ -10,10 +11,7 @@ export interface CategoryData {
 	subcategories: Tag[];
 }
 
-export async function loadCategoryData(
-	categorySlug: string,
-	fetch: typeof globalThis.fetch
-): Promise<CategoryData> {
+export async function loadCategoryData(categorySlug: string): Promise<CategoryData> {
 	try {
 		const [events, subcategoriesResponse] = await Promise.all([
 			eventService.getEvents({
@@ -26,7 +24,7 @@ export async function loadCategoryData(
 				limit: 20,
 				offset: 0
 			}),
-			fetch(`/api/tags/slug/${categorySlug}/related`)
+			fetchWithTimeout(`/api/tags/slug/${categorySlug}/related`)
 		]);
 
 		const subcategories = subcategoriesResponse.ok ? await subcategoriesResponse.json() : [];

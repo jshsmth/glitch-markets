@@ -44,7 +44,17 @@ export const TIMEOUTS = {
 	/** Fallback setTimeout for SDK initialization when requestIdleCallback unavailable */
 	SDK_INIT_FALLBACK: 100,
 	/** Loading animation fade-out delay */
-	LOADING_FADE: 300
+	LOADING_FADE: 300,
+	/** Navigation timeout - force complete navigation after this duration */
+	NAVIGATION_TIMEOUT: 15000,
+	/** View transition timeout - fallback to instant navigation if transition hangs */
+	VIEW_TRANSITION_TIMEOUT: 2000,
+	/** Show "slow loading" message after this duration */
+	SLOW_LOADING_THRESHOLD: 5000,
+	/** Server-side fetch timeout for internal API calls */
+	SERVER_FETCH_TIMEOUT: 8000,
+	/** Debounce delay for auth invalidation to prevent navigation conflicts */
+	AUTH_INVALIDATION_DEBOUNCE: 500
 } as const;
 
 /**
