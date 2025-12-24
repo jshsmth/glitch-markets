@@ -60,27 +60,17 @@
 
 <div class="page-container">
 	<WatchlistSection />
-	{#if resolvedInitialEvents === null && isInitialLoading}
-		<div class="skeleton-grid">
-			{#each Array(6) as _, i}
-				<div class="skeleton skeleton-card"></div>
-			{/each}
-		</div>
-	{:else}
-		<EventList
-			events={allEvents}
-			loading={isInitialLoading}
-			error={eventsQuery.error}
-			onRetry={() => eventsQuery.refetch()}
-			onLoadMore={loadMore}
-			{hasMore}
-		/>
-	{/if}
+	<EventList
+		events={allEvents}
+		loading={resolvedInitialEvents === null && isInitialLoading}
+		error={eventsQuery.error}
+		onRetry={() => eventsQuery.refetch()}
+		onLoadMore={loadMore}
+		{hasMore}
+	/>
 </div>
 
 <style>
-	@import '$lib/styles/skeleton.css';
-
 	.page-container {
 		max-width: 1400px;
 		margin: 0 auto;
@@ -91,28 +81,5 @@
 		.page-container {
 			padding: var(--space-lg) 24px;
 		}
-	}
-
-	.skeleton-grid {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 12px;
-	}
-
-	@media (min-width: 768px) {
-		.skeleton-grid {
-			grid-template-columns: repeat(3, 1fr);
-		}
-	}
-
-	@media (min-width: 1200px) {
-		.skeleton-grid {
-			grid-template-columns: repeat(4, 1fr);
-		}
-	}
-
-	.skeleton-card {
-		height: 320px;
-		border-radius: var(--radius-card);
 	}
 </style>
