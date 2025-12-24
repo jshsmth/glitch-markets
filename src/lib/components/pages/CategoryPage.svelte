@@ -77,6 +77,7 @@
 
 	let allEvents = $derived(eventsQuery.data?.pages.flat() ?? []);
 	let hasMore = $derived(eventsQuery.hasNextPage ?? false);
+	let isInitialLoading = $derived(eventsQuery.isPending);
 
 	async function loadMore() {
 		if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
@@ -99,7 +100,7 @@
 	<div class="content">
 		<EventList
 			events={allEvents}
-			loading={eventsQuery.isLoading}
+			loading={isInitialLoading}
 			error={eventsQuery.error}
 			onRetry={() => eventsQuery.refetch()}
 			{hasMore}

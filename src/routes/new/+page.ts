@@ -1,23 +1,23 @@
-import { queryKeys } from '$lib/query/client';
+import { SvelteURLSearchParams } from 'svelte/reactivity';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, fetch }) => {
 	const { queryClient } = await parent();
 
-	await queryClient.prefetchQuery({
-		queryKey: queryKeys.events.all,
-		queryFn: async () => {
-			const params = new URLSearchParams({
-				limit: '20',
+	// Prefetch infinite query for new events
+	await queryClient.prefetchInfiniteQuery({
+		queryKey: ['events', 'new'],
+		queryFn: async ({ pageParam = 0 }) => {
+			const params = new SvelteURLSearchParams({
 				active: 'true',
 				archived: 'false',
 				closed: 'false',
 				order: 'startDate',
 				ascending: 'false',
-				offset: '0'
+				limit: '20',
+				offset: String(pageParam)
 			});
 
-			// Add exclude_tag_id parameters (100639 and 102169)
 			params.append('exclude_tag_id', '100639');
 			params.append('exclude_tag_id', '102169');
 
@@ -26,7 +26,13 @@ export const load: PageLoad = async ({ parent, fetch }) => {
 				throw new Error('Failed to fetch new events');
 			}
 			return response.json();
-		}
+		},
+		getNextPageParam: (lastPage: any) => {
+			if (lastPage.length < 20) return undefined;
+			return undefined; // Only prefetch first page
+		},
+		initialPageParam: 0,
+		pages: 1
 	});
 
 	return {};

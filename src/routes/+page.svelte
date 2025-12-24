@@ -1,31 +1,55 @@
 <script lang="ts">
+	import { createInfiniteQuery } from '@tanstack/svelte-query';
 	import EventList from '$lib/components/events/EventList.svelte';
 	import WatchlistSection from '$lib/components/events/WatchlistSection.svelte';
-	import { useInfiniteEvents } from '$lib/composables/use-infinite-events.svelte';
+	import type { Event } from '$lib/server/api/polymarket-client';
 
-	const state = useInfiniteEvents({
-		buildParams: () => {
+	const eventsQuery = createInfiniteQuery(() => ({
+		queryKey: ['events', 'trending'],
+		queryFn: async ({ pageParam = 0 }) => {
 			const params = new URLSearchParams({
 				active: 'true',
 				archived: 'false',
 				closed: 'false',
 				order: 'volume24hr',
-				ascending: 'false'
+				ascending: 'false',
+				limit: '20',
+				offset: String(pageParam)
 			});
-			return params;
+
+			const response = await fetch(`/api/events?${params}`);
+			if (!response.ok) {
+				throw new Error('Failed to fetch events');
+			}
+			return (await response.json()) as Event[];
+		},
+		getNextPageParam: (lastPage, allPages) => {
+			if (lastPage.length < 20) return undefined;
+			return allPages.length * 20;
+		},
+		initialPageParam: 0
+	}));
+
+	const allEvents = $derived(eventsQuery.data?.pages.flat() ?? []);
+	const hasMore = $derived(eventsQuery.hasNextPage ?? false);
+	const isInitialLoading = $derived(eventsQuery.isPending);
+
+	async function loadMore() {
+		if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
+			await eventsQuery.fetchNextPage();
 		}
-	});
+	}
 </script>
 
 <div class="page-container">
 	<WatchlistSection />
 	<EventList
-		events={state.events}
-		loading={state.isLoading}
-		error={state.error}
-		onRetry={state.handleRetry}
-		onLoadMore={state.handleLoadMore}
-		hasMore={state.hasMore}
+		events={allEvents}
+		loading={isInitialLoading}
+		error={eventsQuery.error}
+		onRetry={() => eventsQuery.refetch()}
+		onLoadMore={loadMore}
+		{hasMore}
 	/>
 </div>
 

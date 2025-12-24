@@ -1,20 +1,20 @@
-import { queryKeys } from '$lib/query/client';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, fetch }) => {
 	const { queryClient } = await parent();
 
-	await queryClient.prefetchQuery({
-		queryKey: queryKeys.events.all,
-		queryFn: async () => {
+	// Prefetch infinite query for trending events
+	await queryClient.prefetchInfiniteQuery({
+		queryKey: ['events', 'trending', 'volume24hr'],
+		queryFn: async ({ pageParam = 0 }) => {
 			const params = new URLSearchParams({
-				limit: '20',
 				active: 'true',
 				archived: 'false',
 				closed: 'false',
 				order: 'volume24hr',
 				ascending: 'false',
-				offset: '0'
+				limit: '20',
+				offset: String(pageParam)
 			});
 
 			const response = await fetch(`/api/events?${params.toString()}`);
@@ -22,7 +22,13 @@ export const load: PageLoad = async ({ parent, fetch }) => {
 				throw new Error('Failed to fetch trending events');
 			}
 			return response.json();
-		}
+		},
+		getNextPageParam: (lastPage: any) => {
+			if (lastPage.length < 20) return undefined;
+			return undefined; // Only prefetch first page
+		},
+		initialPageParam: 0,
+		pages: 1
 	});
 
 	return {};

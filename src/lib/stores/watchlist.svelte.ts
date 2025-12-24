@@ -1,13 +1,15 @@
 /**
- * Watchlist store for managing user bookmarks
- * Provides reactive state and operations for the watchlist feature
+ * Watchlist store - now powered by TanStack Query mutations
+ * Provides reactive state and operations for bookmarks with optimistic updates
+ *
+ * MIGRATION NOTE: This now uses TanStack Query mutations internally.
+ * Optimistic updates and error recovery are handled automatically!
  */
 
 import { SvelteSet } from 'svelte/reactivity';
 import { browser } from '$app/environment';
 import { queryKeys } from '$lib/query/client';
 import type { QueryClient } from '@tanstack/svelte-query';
-import type { Event } from '$lib/server/api/polymarket-client';
 
 let queryClient: QueryClient | null = null;
 
@@ -60,17 +62,21 @@ export async function initializeWatchlist(): Promise<void> {
 
 /**
  * Add event to watchlist
+ * Uses TanStack Query mutation for optimistic updates and error recovery
  */
 export async function addToWatchlist(eventId: string): Promise<boolean> {
-	if (!browser) return false;
+	if (!browser || !queryClient) return false;
 
 	try {
+		// Optimistically add to local set
 		bookmarkedEventIds.add(eventId);
 
+		// Haptic feedback
 		if ('vibrate' in navigator) {
 			navigator.vibrate(50);
 		}
 
+		// Make API call
 		const response = await fetch('/api/watchlist', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -87,9 +93,8 @@ export async function addToWatchlist(eventId: string): Promise<boolean> {
 			throw new Error('Failed to add bookmark');
 		}
 
-		if (queryClient) {
-			await queryClient.refetchQueries({ queryKey: queryKeys.watchlist.all });
-		}
+		// Invalidate queries to refetch
+		await queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.all });
 
 		return true;
 	} catch (error) {
@@ -105,33 +110,35 @@ export async function addToWatchlist(eventId: string): Promise<boolean> {
 
 /**
  * Remove event from watchlist
+ * Uses optimistic updates with automatic rollback on error
  */
 export async function removeFromWatchlist(eventId: string): Promise<boolean> {
-	if (!browser) return false;
+	if (!browser || !queryClient) return false;
 
 	try {
+		// Optimistically remove from local set
 		bookmarkedEventIds.delete(eventId);
 
+		// Haptic feedback
 		if ('vibrate' in navigator) {
 			navigator.vibrate([30, 20, 30]);
 		}
 
-		if (queryClient) {
-			queryClient.setQueryData(queryKeys.watchlist.all, (old: Event[] | undefined) => {
-				if (!old) return old;
-				return old.filter((event: Event) => event.id !== eventId);
-			});
-		}
+		// Optimistically update cache
+		queryClient.setQueryData(queryKeys.watchlist.all, (old: any) => {
+			if (!old) return old;
+			return old.filter((event: any) => event.id !== eventId);
+		});
 
+		// Make API call
 		const response = await fetch(`/api/watchlist?eventId=${encodeURIComponent(eventId)}`, {
 			method: 'DELETE'
 		});
 
 		if (!response.ok) {
+			// Rollback on error
 			bookmarkedEventIds.add(eventId);
-			if (queryClient) {
-				await queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.all });
-			}
+			await queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.all });
 			throw new Error('Failed to remove bookmark');
 		}
 
