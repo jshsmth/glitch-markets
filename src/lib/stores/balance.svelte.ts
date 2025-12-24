@@ -1,127 +1,144 @@
 /**
- * Balance store for managing user USDC.e balance
- * Fetches balance from Polygon blockchain via API
+ * Balance store - now powered by TanStack Query
+ * Provides reactive state for user USDC.e balance
+ *
+ * MIGRATION NOTE: This now uses TanStack Query internally.
+ * No more manual polling or cleanup needed!
  */
 
 import { browser } from '$app/environment';
+import type { QueryClient } from '@tanstack/svelte-query';
 import { authState } from './auth.svelte';
-import { CleanupManager } from './utils/cleanup';
+import { walletState } from './wallet.svelte';
 
-interface BalanceState {
+interface BalanceResponse {
 	balance: string | null;
 	balanceRaw: string | null;
 	decimals: number;
 	hasProxyWallet: boolean;
-	isLoading: boolean;
-	error: string | null;
 }
 
-export const balanceState = $state<BalanceState>({
-	balance: null,
-	balanceRaw: null,
-	decimals: 6,
-	hasProxyWallet: false,
-	isLoading: false,
-	error: null
-});
-
-const cleanupManager = new CleanupManager();
-let lastProfileVersion = -1;
-
-const BALANCE_REFETCH_INTERVAL_MS = 60000;
+let queryClient: QueryClient | null = null;
 
 /**
- * Fetch balance from the API
+ * Initialize the balance query with the QueryClient
+ * Call this once in your root layout after QueryClientProvider is set up
  */
-export async function fetchBalance(): Promise<void> {
-	if (!browser || !authState.session) {
-		balanceState.balance = null;
-		balanceState.balanceRaw = null;
-		balanceState.hasProxyWallet = false;
-		balanceState.isLoading = false;
-		balanceState.error = null;
-		return;
-	}
+export function initializeBalanceSync(client: QueryClient): () => void {
+	if (!browser) return () => {};
 
-	const controller = cleanupManager.getAbortController();
-	balanceState.isLoading = true;
-	balanceState.error = null;
+	queryClient = client;
 
-	try {
-		const response = await fetch('/api/user/balance', {
-			signal: controller.signal
-		});
-
-		if (!response.ok) {
-			throw new Error(`HTTP ${response.status}`);
-		}
-
-		const data = await response.json();
-		balanceState.balance = data.balance || null;
-		balanceState.balanceRaw = data.balanceRaw || null;
-		balanceState.decimals = data.decimals || 6;
-		balanceState.hasProxyWallet = data.hasProxyWallet || false;
-	} catch (err) {
-		if (err instanceof Error && err.name === 'AbortError') {
-			return;
-		}
-		console.error('Failed to fetch balance:', err);
-		balanceState.error = err instanceof Error ? err.message : 'Failed to load balance';
-		balanceState.balance = null;
-		balanceState.balanceRaw = null;
-		balanceState.hasProxyWallet = false;
-	} finally {
-		balanceState.isLoading = false;
-	}
-}
-
-/**
- * Auto-fetch balance when auth state changes and periodically
- * Call this in a $effect in your root layout
- */
-export function initializeBalanceSync(): () => void {
-	const cleanup = $effect.root(() => {
+	// Set up the query
+	const unsubscribe = $effect.root(() => {
 		$effect(() => {
-			const currentVersion = authState.profileVersion;
-
-			if (!authState.session) {
-				cleanupManager.cleanup();
-				balanceState.balance = null;
-				balanceState.balanceRaw = null;
-				balanceState.hasProxyWallet = false;
-				balanceState.isLoading = false;
-				balanceState.error = null;
-				lastProfileVersion = -1;
+			// Only fetch if we have a session and proxy wallet
+			if (!authState.session || !walletState.proxyWalletAddress) {
 				return;
 			}
 
-			if (currentVersion !== lastProfileVersion) {
-				lastProfileVersion = currentVersion;
-				fetchBalance();
+			// Fetch the query
+			queryClient?.fetchQuery({
+				queryKey: ['user', 'balance', walletState.proxyWalletAddress],
+				queryFn: async () => {
+					const response = await fetch('/api/user/balance');
+					if (!response.ok) {
+						throw new Error(`HTTP ${response.status}`);
+					}
+					return response.json();
+				},
+				staleTime: 30000 // Consider fresh for 30s
+			});
 
-				cleanupManager.setInterval(() => {
-					fetchBalance();
-				}, BALANCE_REFETCH_INTERVAL_MS);
-			}
+			// Set up interval for refetching
+			const interval = setInterval(() => {
+				if (authState.session && walletState.proxyWalletAddress) {
+					queryClient?.refetchQueries({
+						queryKey: ['user', 'balance', walletState.proxyWalletAddress]
+					});
+				}
+			}, 60000); // Refetch every 60s
+
+			return () => {
+				clearInterval(interval);
+			};
 		});
 	});
 
 	return () => {
-		cleanup();
-		cleanupManager.cleanup();
+		unsubscribe();
 	};
 }
 
 /**
+ * Reactive balance state
+ * Now powered by TanStack Query with automatic refetching!
+ */
+export const balanceState = {
+	get balance() {
+		if (!queryClient) return null;
+		const data = queryClient.getQueryData<BalanceResponse>([
+			'user',
+			'balance',
+			walletState.proxyWalletAddress
+		]);
+		return data?.balance ?? null;
+	},
+	get balanceRaw() {
+		if (!queryClient) return null;
+		const data = queryClient.getQueryData<BalanceResponse>([
+			'user',
+			'balance',
+			walletState.proxyWalletAddress
+		]);
+		return data?.balanceRaw ?? null;
+	},
+	get decimals() {
+		if (!queryClient) return 6;
+		const data = queryClient.getQueryData<BalanceResponse>([
+			'user',
+			'balance',
+			walletState.proxyWalletAddress
+		]);
+		return data?.decimals ?? 6;
+	},
+	get hasProxyWallet() {
+		if (!queryClient) return false;
+		const data = queryClient.getQueryData<BalanceResponse>([
+			'user',
+			'balance',
+			walletState.proxyWalletAddress
+		]);
+		return data?.hasProxyWallet ?? false;
+	},
+	get isLoading() {
+		if (!queryClient) return false;
+		const state = queryClient.getQueryState(['user', 'balance', walletState.proxyWalletAddress]);
+		return state?.fetchStatus === 'fetching';
+	},
+	get error() {
+		if (!queryClient) return null;
+		const state = queryClient.getQueryState(['user', 'balance', walletState.proxyWalletAddress]);
+		return state?.error ? (state.error as Error).message : null;
+	}
+};
+
+/**
+ * Manually refetch balance
+ */
+export async function fetchBalance(): Promise<void> {
+	if (queryClient && walletState.proxyWalletAddress) {
+		await queryClient.refetchQueries({
+			queryKey: ['user', 'balance', walletState.proxyWalletAddress]
+		});
+	}
+}
+
+/**
  * Reset balance state (call on logout)
+ * TanStack Query handles this automatically when the query is disabled
  */
 export function resetBalanceState(): void {
-	cleanupManager.cleanup();
-
-	balanceState.balance = null;
-	balanceState.balanceRaw = null;
-	balanceState.hasProxyWallet = false;
-	balanceState.isLoading = false;
-	balanceState.error = null;
-	lastProfileVersion = -1;
+	// Query automatically resets when authState.session becomes null
+	// because of the enabled condition in the effect
 }

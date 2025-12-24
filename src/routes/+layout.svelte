@@ -54,7 +54,7 @@
 		setQueryClient(queryClient);
 
 		const cleanupWalletSync = initializeWalletSync();
-		const cleanupBalanceSync = initializeBalanceSync();
+		const cleanupBalanceSync = initializeBalanceSync(queryClient);
 
 		if (data?.session?.user) {
 			handleUserSignIn();

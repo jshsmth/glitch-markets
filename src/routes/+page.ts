@@ -1,20 +1,21 @@
 import { queryKeys } from '$lib/query/client';
 import type { PageLoad } from './$types';
+import type { Event } from '$lib/server/api/polymarket-client';
 
 export const load: PageLoad = async ({ parent, fetch }) => {
 	const { queryClient, session } = await parent();
 
-	await queryClient.prefetchQuery({
-		queryKey: queryKeys.events.all,
-		queryFn: async () => {
+	await queryClient.prefetchInfiniteQuery({
+		queryKey: ['events', 'trending'],
+		queryFn: async ({ pageParam = 0 }) => {
 			const params = new URLSearchParams({
-				limit: '20',
 				active: 'true',
 				archived: 'false',
 				closed: 'false',
 				order: 'volume24hr',
 				ascending: 'false',
-				offset: '0'
+				limit: '20',
+				offset: String(pageParam)
 			});
 
 			const response = await fetch(`/api/events?${params.toString()}`);
@@ -22,7 +23,13 @@ export const load: PageLoad = async ({ parent, fetch }) => {
 				throw new Error('Failed to fetch trending events');
 			}
 			return response.json();
-		}
+		},
+		getNextPageParam: (lastPage: Event[]) => {
+			if (lastPage.length < 20) return undefined;
+			return undefined;
+		},
+		initialPageParam: 0,
+		pages: 1
 	});
 
 	if (session?.user) {

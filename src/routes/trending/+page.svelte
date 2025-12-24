@@ -1,36 +1,64 @@
 <script lang="ts">
+	import { createInfiniteQuery } from '@tanstack/svelte-query';
 	import EventList from '$lib/components/events/EventList.svelte';
 	import FilterBar from '$lib/components/filters/FilterBar.svelte';
-	import { useInfiniteEvents } from '$lib/composables/use-infinite-events.svelte';
+	import type { Event } from '$lib/server/api/polymarket-client';
 
-	const state = useInfiniteEvents({
-		buildParams: (_offset, sort) => {
+	let currentSort = $state('volume24hr');
+
+	const eventsQuery = createInfiniteQuery(() => ({
+		queryKey: ['events', 'trending', currentSort],
+		queryFn: async ({ pageParam = 0 }) => {
 			const params = new URLSearchParams({
 				active: 'true',
 				archived: 'false',
 				closed: 'false',
-				order: sort || 'volume24hr',
-				ascending: 'false'
+				order: currentSort,
+				ascending: 'false',
+				limit: '20',
+				offset: String(pageParam)
 			});
-			return params;
+
+			const response = await fetch(`/api/events?${params}`);
+			if (!response.ok) {
+				throw new Error('Failed to fetch events');
+			}
+			return (await response.json()) as Event[];
 		},
-		sort: 'volume24hr',
-		enableSort: true
-	});
+		getNextPageParam: (lastPage, allPages) => {
+			if (lastPage.length < 20) return undefined;
+			return allPages.length * 20;
+		},
+		initialPageParam: 0
+	}));
+
+	const allEvents = $derived(eventsQuery.data?.pages.flat() ?? []);
+	const hasMore = $derived(eventsQuery.hasNextPage ?? false);
+	const isInitialLoading = $derived(eventsQuery.isPending);
+
+	async function loadMore() {
+		if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
+			await eventsQuery.fetchNextPage();
+		}
+	}
+
+	function handleSortChange(sort: string) {
+		currentSort = sort;
+	}
 </script>
 
 <div class="page-container">
 	<div class="filter-container">
-		<FilterBar currentSort={state.currentSort} onSortChange={state.handleSortChange} />
+		<FilterBar {currentSort} onSortChange={handleSortChange} />
 	</div>
 
 	<EventList
-		events={state.events}
-		loading={state.isLoading}
-		error={state.error}
-		onRetry={state.handleRetry}
-		onLoadMore={state.handleLoadMore}
-		hasMore={state.hasMore}
+		events={allEvents}
+		loading={isInitialLoading}
+		error={eventsQuery.error}
+		onRetry={() => eventsQuery.refetch()}
+		onLoadMore={loadMore}
+		{hasMore}
 	/>
 </div>
 
