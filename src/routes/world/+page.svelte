@@ -4,4 +4,9 @@
 	let { data } = $props();
 </script>
 
-<CategoryPage categorySlug="world" categoryTitle="World" initialEvents={data.initialEvents} subcategories={data.subcategories} />
+<CategoryPage
+	categorySlug="world"
+	categoryTitle="World"
+	initialEvents={data.initialEvents}
+	subcategories={data.subcategories}
+/>

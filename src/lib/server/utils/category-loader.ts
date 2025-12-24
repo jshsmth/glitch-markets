@@ -10,7 +10,10 @@ export interface CategoryData {
 	subcategories: Tag[];
 }
 
-export async function loadCategoryData(categorySlug: string, fetch: typeof globalThis.fetch): Promise<CategoryData> {
+export async function loadCategoryData(
+	categorySlug: string,
+	fetch: typeof globalThis.fetch
+): Promise<CategoryData> {
 	try {
 		const [events, subcategoriesResponse] = await Promise.all([
 			eventService.getEvents({

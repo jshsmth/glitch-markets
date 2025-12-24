@@ -48,7 +48,10 @@
 	}));
 
 	const shouldUseInitialData = $derived(
-		tag_slug === categorySlug && status === 'active' && sort === 'volume24hr' && initialEvents?.length > 0
+		tag_slug === categorySlug &&
+			status === 'active' &&
+			sort === 'volume24hr' &&
+			initialEvents?.length > 0
 	);
 
 	const eventsQuery = createInfiniteQuery(() => ({
@@ -80,10 +83,12 @@
 			return allPages.length * 20;
 		},
 		initialPageParam: 0,
-		initialData: shouldUseInitialData ? {
-			pages: [initialEvents],
-			pageParams: [0]
-		} : undefined
+		initialData: shouldUseInitialData
+			? {
+					pages: [initialEvents],
+					pageParams: [0]
+				}
+			: undefined
 	}));
 
 	let allEvents = $derived(eventsQuery.data?.pages.flat() ?? []);

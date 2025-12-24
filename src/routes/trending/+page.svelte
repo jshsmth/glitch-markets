@@ -40,10 +40,13 @@
 			return allPages.length * 20;
 		},
 		initialPageParam: 0,
-		initialData: data?.initialEvents?.length > 0 ? {
-			pages: [data.initialEvents],
-			pageParams: [0]
-		} : undefined
+		initialData:
+			data?.initialEvents?.length > 0
+				? {
+						pages: [data.initialEvents],
+						pageParams: [0]
+					}
+				: undefined
 	}));
 
 	const allEvents = $derived(eventsQuery.data?.pages.flat() ?? []);

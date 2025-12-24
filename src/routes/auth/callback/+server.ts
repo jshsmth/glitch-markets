@@ -108,7 +108,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				// Non-blocking registration with timeout
 				Promise.race([
 					ensureUserRegistered(user.id, user.email || ''),
-					new Promise((_, reject) => setTimeout(() => reject(new Error('Registration timeout')), 8000))
+					new Promise((_, reject) =>
+						setTimeout(() => reject(new Error('Registration timeout')), 8000)
+					)
 				]).catch((err) => {
 					logger.warn('User registration timeout or error, will complete in background', {
 						userId: user.id,

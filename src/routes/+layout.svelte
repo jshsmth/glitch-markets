@@ -13,7 +13,11 @@
 		authState
 	} from '$lib/stores/auth.svelte';
 	import { initializeTheme } from '$lib/stores/theme.svelte';
-	import { initializeWalletSync, initializeWalletFromProfile, walletState } from '$lib/stores/wallet.svelte';
+	import {
+		initializeWalletSync,
+		initializeWalletFromProfile,
+		walletState
+	} from '$lib/stores/wallet.svelte';
 	import { initializeBalanceSync } from '$lib/stores/balance.svelte';
 	import {
 		initializeWatchlist,
