@@ -4,16 +4,7 @@
 	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
 	import ChevronDownIcon from '$lib/components/icons/ChevronDownIcon.svelte';
-	import {
-		UsdcIcon,
-		EthereumIcon,
-		PolygonIcon,
-		OptimismIcon,
-		ArbitrumIcon,
-		BscIcon,
-		BaseIcon,
-		AvalancheIcon
-	} from '$lib/components/icons/chains';
+	import { UsdcIcon } from '$lib/components/icons/chains';
 	import type {
 		SupportedAsset,
 		SupportedAssetsResponse,
@@ -24,6 +15,7 @@
 	import { walletState } from '$lib/stores/wallet.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { createQuery } from '@tanstack/svelte-query';
+	import { getChainIcon, getChainColor } from '$lib/utils/chain-config';
 
 	interface Props {
 		isOpen: boolean;
@@ -114,34 +106,6 @@
 	const depositAddress = $derived(depositAddressQuery.data || null);
 
 	let modalTitle = $derived(selectedAsset ? `Deposit USDC` : 'Deposit Funds');
-
-	const chainIcons: Record<string, typeof EthereumIcon> = {
-		'1': EthereumIcon,
-		'10': OptimismIcon,
-		'137': PolygonIcon,
-		'42161': ArbitrumIcon,
-		'56': BscIcon,
-		'8453': BaseIcon,
-		'43114': AvalancheIcon
-	};
-
-	const chainColors: Record<string, string> = {
-		'1': '#627EEA',
-		'10': '#FF0420',
-		'137': '#8247E5',
-		'42161': '#28A0F0',
-		'56': '#F0B90B',
-		'8453': '#0052FF',
-		'43114': '#E84142'
-	};
-
-	function getChainIcon(chainId: string) {
-		return chainIcons[chainId] || EthereumIcon;
-	}
-
-	function getChainColor(chainId: string) {
-		return chainColors[chainId] || 'var(--text-1)';
-	}
 
 	$effect(() => {
 		if (assetsQuery.isSuccess && supportedAssets.length > 0 && !selectedAsset) {

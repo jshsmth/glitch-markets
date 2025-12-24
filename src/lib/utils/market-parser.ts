@@ -60,7 +60,7 @@ export function parsePrices(prices: string[] | string | null | undefined): strin
 /**
  * Parses both outcomes and prices for a market
  */
-export function parseMarket(market: Market | null | undefined): ParsedMarket | null {
+const parseMarketImpl = (market: Market | null | undefined): ParsedMarket | null => {
 	if (!market) return null;
 
 	const outcomes = parseOutcomes(market.outcomes);
@@ -70,7 +70,9 @@ export function parseMarket(market: Market | null | undefined): ParsedMarket | n
 	if (outcomes.length === 0 || prices.length === 0) return null;
 
 	return { outcomes, prices };
-}
+};
+
+export const parseMarket = memoize(parseMarketImpl, (market) => market?.id || 'null');
 
 /**
  * Parses binary market data (Yes/No outcomes with percentages)

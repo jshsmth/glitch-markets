@@ -18,18 +18,19 @@
 	import { balanceState } from '$lib/stores/balance.svelte';
 	import { walletState } from '$lib/stores/wallet.svelte';
 	import ProfitLossChart from '$lib/components/portfolio/ProfitLossChart.svelte';
+	import {
+		formatCurrency,
+		formatPrice,
+		formatPercent,
+		formatDateTime
+	} from '$lib/utils/formatters';
 
 	const formattedBalance = $derived.by(() => {
 		if (!balanceState.hasProxyWallet) return '$0.00';
 		if (balanceState.balance === null) return '$0.00';
 
 		const numBalance = parseFloat(balanceState.balance);
-		return new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: 'USD',
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2
-		}).format(numBalance);
+		return formatCurrency(numBalance);
 	});
 
 	function handleDeposit() {
@@ -116,35 +117,6 @@
 				(t.outcome && t.outcome.toLowerCase().includes(searchQuery.toLowerCase()))
 		)
 	);
-
-	function formatPrice(price: number): string {
-		return `${(price * 100).toFixed(0)}¢`;
-	}
-
-	function formatCurrency(value: number): string {
-		return new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: 'USD',
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2
-		}).format(value);
-	}
-
-	function formatPercent(percent: number): string {
-		const sign = percent >= 0 ? '+' : '';
-		return `${sign}${percent.toFixed(1)}%`;
-	}
-
-	function formatDateTime(timestamp: number): string {
-		const date = new Date(timestamp * 1000);
-		return new Intl.DateTimeFormat('en-US', {
-			month: 'short',
-			day: 'numeric',
-			hour: 'numeric',
-			minute: '2-digit',
-			hour12: true
-		}).format(date);
-	}
 </script>
 
 <svelte:head>
