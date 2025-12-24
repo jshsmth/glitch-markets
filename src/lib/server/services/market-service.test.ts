@@ -112,20 +112,26 @@ describe('MarketService', () => {
 						const mockClientInstance = vi.mocked(service['client']);
 						const mockCacheInstance = vi.mocked(service['cache']);
 
-						// Setup: Mock cache miss and API response
+						// Pre-filter markets to simulate Polymarket API server-side filtering
+						const filteredMarkets = markets.filter((market) => {
+							if (filters.active !== undefined && market.active !== filters.active) {
+								return false;
+							}
+							if (filters.closed !== undefined && market.closed !== filters.closed) {
+								return false;
+							}
+							return true;
+						});
+
+						// Setup: Mock cache miss and API response (API returns pre-filtered data)
 						mockCacheInstance.get = vi.fn().mockReturnValue(null);
-						mockClientInstance.fetchMarkets = vi.fn().mockResolvedValue(markets);
+						mockClientInstance.fetchMarkets = vi.fn().mockResolvedValue(filteredMarkets);
 
 						// Execute: Get markets with filters
 						const result = await service.getMarkets(filters);
 
 						// Verify: All returned markets satisfy the filter criteria
 						for (const market of result) {
-							// Check category filter
-							if (filters.category !== undefined) {
-								expect(market.category).toBe(filters.category);
-							}
-
 							// Check active filter
 							if (filters.active !== undefined) {
 								expect(market.active).toBe(filters.active);
@@ -137,21 +143,9 @@ describe('MarketService', () => {
 							}
 						}
 
-						// Verify: All markets that match the filters are included
-						const expectedMarkets = markets.filter((market) => {
-							if (filters.category !== undefined && market.category !== filters.category) {
-								return false;
-							}
-							if (filters.active !== undefined && market.active !== filters.active) {
-								return false;
-							}
-							if (filters.closed !== undefined && market.closed !== filters.closed) {
-								return false;
-							}
-							return true;
-						});
-
-						expect(result).toHaveLength(expectedMarkets.length);
+						// Verify: The service returns what the API gave it
+						expect(result).toHaveLength(filteredMarkets.length);
+						expect(result).toEqual(filteredMarkets);
 					}
 				),
 				{ numRuns: 100 }
@@ -255,206 +249,12 @@ describe('MarketService', () => {
 	});
 
 	/**
-	 * Feature: polymarket-api-integration, Property 13: Search result accuracy
-	 * Validates: Requirements 6.1, 6.2, 6.4, 6.5
+	 * NOTE: Search and sorting tests removed
+	 * - searchMarkets() method has been removed from MarketService
+	 * - Text search is now handled by SearchService using Polymarket's /public-search endpoint
+	 * - Sorting is handled server-side via 'order' and 'ascending' query parameters
+	 * - Integration tests for /api/search and /api/markets should cover this functionality
 	 */
-	describe('Property 13: Search result accuracy', () => {
-		it('for any search query, all returned markets should contain the query text (case-insensitive) and all matching markets should be returned', async () => {
-			// Generator for market data
-			const marketArb = fc.record({
-				id: fc.string({ minLength: 1 }),
-				question: fc.string({ minLength: 1 }),
-				conditionId: fc.string(),
-				slug: fc.string({ minLength: 1 }),
-				endDate: fc
-					.integer({ min: 1577836800000, max: 1924905600000 })
-					.map((timestamp) => new Date(timestamp).toISOString()),
-				category: fc.oneof(
-					fc.constant('crypto'),
-					fc.constant('sports'),
-					fc.constant('politics'),
-					fc.constant('entertainment')
-				),
-				liquidity: fc.float({ min: 0 }).map(String),
-				image: fc.webUrl(),
-				icon: fc.webUrl(),
-				description: fc.string(),
-				outcomes: fc.array(fc.string(), { minLength: 2, maxLength: 2 }),
-				outcomePrices: fc.array(fc.float({ min: 0, max: 1 }).map(String), {
-					minLength: 2,
-					maxLength: 2
-				}),
-				volume: fc.float({ min: 0 }).map(String),
-				active: fc.boolean(),
-				marketType: fc.oneof(fc.constant('normal' as const), fc.constant('scalar' as const)),
-				closed: fc.boolean(),
-				volumeNum: fc.float({ min: 0 }),
-				liquidityNum: fc.float({ min: 0 }),
-				volume24hr: fc.float({ min: 0 }),
-				volume1wk: fc.float({ min: 0 }),
-				volume1mo: fc.float({ min: 0 }),
-				lastTradePrice: fc.float({ min: 0, max: 1 }),
-				bestBid: fc.float({ min: 0, max: 1 }),
-				bestAsk: fc.float({ min: 0, max: 1 })
-			});
-
-			// Generator for search query - use a word that might appear in questions
-			const searchQueryArb = fc.oneof(
-				fc.constant('bitcoin'),
-				fc.constant('election'),
-				fc.constant('will'),
-				fc.constant('price'),
-				fc.constant('win'),
-				fc.string({ minLength: 1, maxLength: 10 })
-			);
-
-			await fc.assert(
-				fc.asyncProperty(
-					fc.array(marketArb, { minLength: 0, maxLength: 50 }),
-					searchQueryArb,
-					async (markets, query) => {
-						// Get the mocked instances
-						const mockClientInstance = vi.mocked(service['client']);
-						const mockCacheInstance = vi.mocked(service['cache']);
-
-						// Setup: Mock cache miss and API response
-						mockCacheInstance.get = vi.fn().mockReturnValue(null);
-						mockClientInstance.fetchMarkets = vi.fn().mockResolvedValue(markets);
-
-						// Execute: Search markets with query
-						const result = await service.searchMarkets({ query });
-
-						// Verify: All returned markets contain the query text (case-insensitive)
-						const queryLower = query.toLowerCase();
-						for (const market of result) {
-							expect(market.question?.toLowerCase()).toContain(queryLower);
-						}
-
-						// Verify: All markets that match the query are included
-						const expectedMatches = markets.filter((market) =>
-							market.question?.toLowerCase().includes(queryLower)
-						);
-
-						expect(result).toHaveLength(expectedMatches.length);
-
-						// Verify: The results contain the same markets as expected
-						const resultIds = result.map((m) => m.id).sort();
-						const expectedIds = expectedMatches.map((m) => m.id).sort();
-						expect(resultIds).toEqual(expectedIds);
-					}
-				),
-				{ numRuns: 100 }
-			);
-		});
-	});
-
-	/**
-	 * Feature: polymarket-api-integration, Property 14: Sort order correctness
-	 * Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5
-	 */
-	describe('Property 14: Sort order correctness', () => {
-		it('for any sort parameter and sort order, the returned markets should be sorted correctly by the specified field in the specified direction', async () => {
-			// Generator for market data
-			const marketArb = fc.record({
-				id: fc.string({ minLength: 1 }),
-				question: fc.string({ minLength: 1 }),
-				conditionId: fc.string(),
-				slug: fc.string({ minLength: 1 }),
-				endDate: fc
-					.integer({ min: 1577836800000, max: 1924905600000 })
-					.map((timestamp) => new Date(timestamp).toISOString()),
-				category: fc.oneof(
-					fc.constant('crypto'),
-					fc.constant('sports'),
-					fc.constant('politics'),
-					fc.constant('entertainment')
-				),
-				liquidity: fc.float({ min: 0, max: 10000, noNaN: true }).map(String),
-				image: fc.webUrl(),
-				icon: fc.webUrl(),
-				description: fc.string(),
-				outcomes: fc.array(fc.string(), { minLength: 2, maxLength: 2 }),
-				outcomePrices: fc.array(fc.float({ min: 0, max: 1, noNaN: true }).map(String), {
-					minLength: 2,
-					maxLength: 2
-				}),
-				volume: fc.float({ min: 0, max: 10000, noNaN: true }).map(String),
-				active: fc.boolean(),
-				marketType: fc.oneof(fc.constant('normal' as const), fc.constant('scalar' as const)),
-				closed: fc.boolean(),
-				volumeNum: fc.float({ min: 0, max: 10000, noNaN: true }),
-				liquidityNum: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume24hr: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume1wk: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume1mo: fc.float({ min: 0, max: 10000, noNaN: true }),
-				lastTradePrice: fc.float({ min: 0, max: 1, noNaN: true }),
-				bestBid: fc.float({ min: 0, max: 1, noNaN: true }),
-				bestAsk: fc.float({ min: 0, max: 1, noNaN: true })
-			});
-
-			// Generator for sort options
-			const sortByArb = fc.oneof(
-				fc.constant('volume' as const),
-				fc.constant('liquidity' as const),
-				fc.constant('createdAt' as const)
-			);
-
-			const sortOrderArb = fc.oneof(fc.constant('asc' as const), fc.constant('desc' as const));
-
-			await fc.assert(
-				fc.asyncProperty(
-					fc.array(marketArb, { minLength: 2, maxLength: 50 }),
-					sortByArb,
-					sortOrderArb,
-					async (markets, sortBy, sortOrder) => {
-						// Get the mocked instances
-						const mockClientInstance = vi.mocked(service['client']);
-						const mockCacheInstance = vi.mocked(service['cache']);
-
-						// Setup: Mock cache miss and API response
-						mockCacheInstance.get = vi.fn().mockReturnValue(null);
-						mockClientInstance.fetchMarkets = vi.fn().mockResolvedValue(markets);
-
-						// Execute: Search markets with sorting
-						const result = await service.searchMarkets({ sortBy, sortOrder });
-
-						// Verify: Results are sorted correctly
-						for (let i = 0; i < result.length - 1; i++) {
-							const current = result[i];
-							const next = result[i + 1];
-
-							let currentValue: number;
-							let nextValue: number;
-
-							switch (sortBy) {
-								case 'volume':
-									currentValue = current.volumeNum ?? 0;
-									nextValue = next.volumeNum ?? 0;
-									break;
-								case 'liquidity':
-									currentValue = current.liquidityNum ?? 0;
-									nextValue = next.liquidityNum ?? 0;
-									break;
-								case 'createdAt':
-									currentValue = current.endDate ? new Date(current.endDate).getTime() : 0;
-									nextValue = next.endDate ? new Date(next.endDate).getTime() : 0;
-									break;
-							}
-
-							if (sortOrder === 'asc') {
-								// For ascending order, current should be <= next
-								expect(currentValue).toBeLessThanOrEqual(nextValue);
-							} else {
-								// For descending order, current should be >= next
-								expect(currentValue).toBeGreaterThanOrEqual(nextValue);
-							}
-						}
-					}
-				),
-				{ numRuns: 100 }
-			);
-		});
-	});
 
 	describe('getMarketBySlug', () => {
 		it('should return market from cache if available', async () => {

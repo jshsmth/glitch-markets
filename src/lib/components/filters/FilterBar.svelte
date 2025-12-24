@@ -183,7 +183,7 @@
 	.filter-group {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 12px;
 	}
 
 	.group-label {
@@ -197,11 +197,11 @@
 	.options {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px;
+		gap: 8px;
 	}
 
 	.option-chip {
-		padding: 6px 12px;
+		padding: 8px 16px;
 		background: var(--bg-2);
 		color: var(--text-2);
 		border: 1px solid var(--bg-3);
@@ -210,7 +210,7 @@
 		font-weight: 500;
 		cursor: pointer;
 		transition: all 0.15s;
-		min-height: 32px;
+		min-height: 36px;
 		flex-shrink: 0;
 	}
 
@@ -231,8 +231,8 @@
 			position: absolute;
 			top: calc(100% + 8px);
 			right: 0;
-			min-width: 280px;
-			max-width: 320px;
+			min-width: min(360px, calc(100vw - 32px));
+			max-width: min(420px, calc(100vw - 32px));
 		}
 	}
 
@@ -266,16 +266,20 @@
 		}
 
 		.filter-group {
-			gap: 12px;
+			gap: 16px;
 		}
 
 		.group-label {
 			font-size: 12px;
 		}
 
+		.options {
+			gap: 10px;
+		}
+
 		.option-chip {
-			min-height: 40px;
-			padding: 8px 14px;
+			min-height: 44px;
+			padding: 10px 16px;
 			font-size: 14px;
 		}
 	}

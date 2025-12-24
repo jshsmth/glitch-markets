@@ -139,9 +139,16 @@ export function validateEventQueryParams(
 				break;
 			case 'exclude_tag_id':
 				if (Array.isArray(value)) {
-					validated[key] = value.map((v) => validateNonEmptyString(v, 'exclude_tag_id'));
+					validated[key] = value.map((v) => {
+						if (typeof v === 'number') return String(v);
+						return validateNonEmptyString(v, 'exclude_tag_id');
+					});
 				} else {
-					validated[key] = validateNonEmptyString(value, key);
+					if (typeof value === 'number') {
+						validated[key] = String(value);
+					} else {
+						validated[key] = validateNonEmptyString(value, key);
+					}
 				}
 				break;
 			default:

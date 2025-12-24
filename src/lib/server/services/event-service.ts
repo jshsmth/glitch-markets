@@ -8,26 +8,42 @@ import { BaseService } from './base-service.js';
 import { buildCacheKey } from '../cache/cache-key-builder.js';
 import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
-import { genericSort, parseDateForSort } from '../utils/sort-utils.js';
 
 export interface EventFilters {
-	category?: string;
+	// Pagination
+	limit?: number;
+	offset?: number;
+	// Sorting
+	order?: string;
+	ascending?: boolean;
+	// Identifiers
+	id?: number[];
+	slug?: string[];
+	// Tags
+	tag_id?: number;
 	tag_slug?: string;
+	exclude_tag_id?: number[];
+	related_tags?: boolean;
+	// Status
 	active?: boolean;
 	closed?: boolean;
 	archived?: boolean;
-	limit?: number;
-	offset?: number;
-	order?: string;
-	ascending?: boolean;
-	exclude_tag_id?: string | string[];
-	featured_order?: boolean;
-}
-
-export interface EventSearchOptions extends EventFilters {
-	query?: string;
-	sortBy?: 'volume' | 'liquidity' | 'createdAt';
-	sortOrder?: 'asc' | 'desc';
+	featured?: boolean;
+	cyom?: boolean;
+	// Metrics
+	liquidity_min?: number;
+	liquidity_max?: number;
+	volume_min?: number;
+	volume_max?: number;
+	// Time
+	start_date_min?: string;
+	start_date_max?: string;
+	end_date_min?: string;
+	end_date_max?: string;
+	// Attributes
+	recurrence?: string;
+	include_chat?: boolean;
+	include_template?: boolean;
 }
 
 /**
@@ -91,10 +107,9 @@ export class EventService extends BaseService {
 		const params = this.buildParams(filters);
 
 		const events = await this.client.fetchEvents({ params });
-		const filtered = this.applyFilters(events, filters);
-		this.cache.set(cacheKey, filtered, this.cacheTtl);
+		this.cache.set(cacheKey, events, this.cacheTtl);
 
-		return filtered;
+		return events;
 	}
 
 	/**
@@ -173,71 +188,5 @@ export class EventService extends BaseService {
 			(id) => this.client.fetchEventTags(id),
 			{ id }
 		);
-	}
-
-	/**
-	 * Searches events with text query, filtering, and sorting
-	 * Performs case-insensitive partial text matching on event titles
-	 *
-	 * @param options - Search options including query, filters, and sort parameters
-	 * @returns Promise resolving to an array of events matching the search criteria
-	 * @throws {ApiError} When the API request fails
-	 * @throws {ValidationError} When search parameters are invalid
-	 *
-	 * @example
-	 * ```typescript
-	 * // Search for bitcoin events sorted by volume
-	 * const events = await service.searchEvents({
-	 *   query: 'bitcoin',
-	 *   sortBy: 'volume',
-	 *   sortOrder: 'desc',
-	 *   active: true
-	 * });
-	 * ```
-	 */
-	async searchEvents(options: EventSearchOptions = {}): Promise<Event[]> {
-		const events = await this.getEvents(options);
-
-		let filtered = events;
-		if (options.query) {
-			const queryLower = options.query.toLowerCase();
-			filtered = events.filter((event) => event.title?.toLowerCase().includes(queryLower) ?? false);
-		}
-
-		if (options.sortBy) {
-			filtered = this.sortEvents(filtered, options.sortBy, options.sortOrder || 'desc');
-		}
-
-		return filtered;
-	}
-
-	private applyFilters(events: Event[], filters: EventFilters): Event[] {
-		let filtered = events;
-
-		if (filters.category !== undefined) {
-			filtered = filtered.filter((event) => event.category === filters.category);
-		}
-
-		if (filters.active !== undefined) {
-			filtered = filtered.filter((event) => event.active === filters.active);
-		}
-
-		if (filters.closed !== undefined) {
-			filtered = filtered.filter((event) => event.closed === filters.closed);
-		}
-
-		return filtered;
-	}
-
-	private sortEvents(
-		events: Event[],
-		sortBy: 'volume' | 'liquidity' | 'createdAt',
-		sortOrder: 'asc' | 'desc'
-	): Event[] {
-		return genericSort(events, sortBy, sortOrder, {
-			volume: (e) => e.volume ?? 0,
-			liquidity: (e) => e.liquidity ?? 0,
-			createdAt: (e) => parseDateForSort(e.creationDate)
-		});
 	}
 }

@@ -129,224 +129,12 @@ describe('EventService', () => {
 	});
 
 	/**
-	 * Feature: polymarket-events, Property 9: Text search is case-insensitive
-	 * Validates: Requirements 4.1
+	 * NOTE: Text search and sorting tests removed
+	 * - searchEvents() method has been removed from EventService
+	 * - Text search is now handled by SearchService using Polymarket's /public-search endpoint
+	 * - Sorting is handled server-side via 'order' and 'ascending' query parameters
+	 * - Integration tests for /api/search and /api/events should cover this functionality
 	 */
-	describe('Property 9: Text search is case-insensitive', () => {
-		it('for any text query and event title, the search should match regardless of case differences between query and title', async () => {
-			// Generator for event data
-			const eventArb = fc.record({
-				id: fc.string({ minLength: 1 }),
-				ticker: fc.string({ minLength: 1 }),
-				slug: fc.string({ minLength: 1 }),
-				title: fc.string({ minLength: 1 }),
-				subtitle: fc.string(),
-				description: fc.string(),
-				resolutionSource: fc.string(),
-				startDate: fc
-					.integer({ min: 1577836800000, max: 1924905600000 })
-					.map((timestamp) => new Date(timestamp).toISOString()),
-				creationDate: fc
-					.integer({ min: 1577836800000, max: 1924905600000 })
-					.map((timestamp) => new Date(timestamp).toISOString()),
-				endDate: fc
-					.integer({ min: 1577836800000, max: 1924905600000 })
-					.map((timestamp) => new Date(timestamp).toISOString()),
-				image: fc.webUrl(),
-				icon: fc.webUrl(),
-				active: fc.boolean(),
-				closed: fc.boolean(),
-				archived: fc.boolean(),
-				new: fc.boolean(),
-				featured: fc.boolean(),
-				restricted: fc.boolean(),
-				liquidity: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume: fc.float({ min: 0, max: 10000, noNaN: true }),
-				openInterest: fc.float({ min: 0, max: 10000, noNaN: true }),
-				category: fc.oneof(
-					fc.constant('crypto'),
-					fc.constant('sports'),
-					fc.constant('politics'),
-					fc.constant('entertainment')
-				),
-				subcategory: fc.string(),
-				volume24hr: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume1wk: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume1mo: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume1yr: fc.float({ min: 0, max: 10000, noNaN: true }),
-				commentCount: fc.integer({ min: 0, max: 1000 }),
-				markets: fc.array(fc.record({ id: fc.string() })),
-				categories: fc.array(fc.record({ id: fc.string(), name: fc.string() })),
-				tags: fc.array(fc.record({ id: fc.string(), label: fc.string(), slug: fc.string() }))
-			});
-
-			// Generator for search query - use common words that might appear in titles
-			const searchQueryArb = fc.oneof(
-				fc.constant('bitcoin'),
-				fc.constant('election'),
-				fc.constant('will'),
-				fc.constant('price'),
-				fc.constant('win'),
-				fc.string({ minLength: 1, maxLength: 10 })
-			);
-
-			await fc.assert(
-				fc.asyncProperty(
-					fc.array(eventArb, { minLength: 0, maxLength: 50 }),
-					searchQueryArb,
-					async (events, query) => {
-						// Get the mocked instances
-						const mockClientInstance = vi.mocked(service['client']);
-						const mockCacheInstance = vi.mocked(service['cache']);
-
-						// Setup: Mock cache miss and API response
-						mockCacheInstance.get = vi.fn().mockReturnValue(null);
-						mockClientInstance.fetchEvents = vi.fn().mockResolvedValue(events);
-
-						// Execute: Search events with query
-						const result = await service.searchEvents({ query });
-
-						// Verify: All returned events contain the query text (case-insensitive)
-						const queryLower = query.toLowerCase();
-						for (const event of result) {
-							expect(event.title?.toLowerCase()).toContain(queryLower);
-						}
-
-						// Verify: All events that match the query are included
-						const expectedMatches = events.filter((event) =>
-							event.title?.toLowerCase().includes(queryLower)
-						);
-
-						expect(result).toHaveLength(expectedMatches.length);
-
-						// Verify: The results contain the same events as expected
-						const resultIds = result.map((e) => e.id).sort();
-						const expectedIds = expectedMatches.map((e) => e.id).sort();
-						expect(resultIds).toEqual(expectedIds);
-					}
-				),
-				{ numRuns: 100 }
-			);
-		});
-	});
-
-	/**
-	 * Feature: polymarket-events, Property 10: Sorting works correctly with direction
-	 * Validates: Requirements 4.2, 4.3
-	 */
-	describe('Property 10: Sorting works correctly with direction', () => {
-		it('for any list of events and sort parameters (sortBy and sortOrder), the results should be sorted by the specified field in the specified direction', async () => {
-			// Generator for event data
-			const eventArb = fc.record({
-				id: fc.string({ minLength: 1 }),
-				ticker: fc.string({ minLength: 1 }),
-				slug: fc.string({ minLength: 1 }),
-				title: fc.string({ minLength: 1 }),
-				subtitle: fc.string(),
-				description: fc.string(),
-				resolutionSource: fc.string(),
-				startDate: fc
-					.integer({ min: 1577836800000, max: 1924905600000 })
-					.map((timestamp) => new Date(timestamp).toISOString()),
-				creationDate: fc
-					.integer({ min: 1577836800000, max: 1924905600000 })
-					.map((timestamp) => new Date(timestamp).toISOString()),
-				endDate: fc
-					.integer({ min: 1577836800000, max: 1924905600000 })
-					.map((timestamp) => new Date(timestamp).toISOString()),
-				image: fc.webUrl(),
-				icon: fc.webUrl(),
-				active: fc.boolean(),
-				closed: fc.boolean(),
-				archived: fc.boolean(),
-				new: fc.boolean(),
-				featured: fc.boolean(),
-				restricted: fc.boolean(),
-				liquidity: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume: fc.float({ min: 0, max: 10000, noNaN: true }),
-				openInterest: fc.float({ min: 0, max: 10000, noNaN: true }),
-				category: fc.oneof(
-					fc.constant('crypto'),
-					fc.constant('sports'),
-					fc.constant('politics'),
-					fc.constant('entertainment')
-				),
-				subcategory: fc.string(),
-				volume24hr: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume1wk: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume1mo: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume1yr: fc.float({ min: 0, max: 10000, noNaN: true }),
-				commentCount: fc.integer({ min: 0, max: 1000 }),
-				markets: fc.array(fc.record({ id: fc.string() })),
-				categories: fc.array(fc.record({ id: fc.string(), name: fc.string() })),
-				tags: fc.array(fc.record({ id: fc.string(), label: fc.string(), slug: fc.string() }))
-			});
-
-			// Generator for sort options
-			const sortByArb = fc.oneof(
-				fc.constant('volume' as const),
-				fc.constant('liquidity' as const),
-				fc.constant('createdAt' as const)
-			);
-
-			const sortOrderArb = fc.oneof(fc.constant('asc' as const), fc.constant('desc' as const));
-
-			await fc.assert(
-				fc.asyncProperty(
-					fc.array(eventArb, { minLength: 2, maxLength: 50 }),
-					sortByArb,
-					sortOrderArb,
-					async (events, sortBy, sortOrder) => {
-						// Get the mocked instances
-						const mockClientInstance = vi.mocked(service['client']);
-						const mockCacheInstance = vi.mocked(service['cache']);
-
-						// Setup: Mock cache miss and API response
-						mockCacheInstance.get = vi.fn().mockReturnValue(null);
-						mockClientInstance.fetchEvents = vi.fn().mockResolvedValue(events);
-
-						// Execute: Search events with sorting
-						const result = await service.searchEvents({ sortBy, sortOrder });
-
-						// Verify: Results are sorted correctly
-						for (let i = 0; i < result.length - 1; i++) {
-							const current = result[i];
-							const next = result[i + 1];
-
-							let currentValue: number;
-							let nextValue: number;
-
-							switch (sortBy) {
-								case 'volume':
-									currentValue = current.volume ?? 0;
-									nextValue = next.volume ?? 0;
-									break;
-								case 'liquidity':
-									currentValue = current.liquidity ?? 0;
-									nextValue = next.liquidity ?? 0;
-									break;
-								case 'createdAt':
-									currentValue = current.creationDate
-										? new Date(current.creationDate).getTime()
-										: 0;
-									nextValue = next.creationDate ? new Date(next.creationDate).getTime() : 0;
-									break;
-							}
-
-							if (sortOrder === 'asc') {
-								// For ascending order, current should be <= next
-								expect(currentValue).toBeLessThanOrEqual(nextValue);
-							} else {
-								// For descending order, current should be >= next
-								expect(currentValue).toBeGreaterThanOrEqual(nextValue);
-							}
-						}
-					}
-				),
-				{ numRuns: 100 }
-			);
-		});
-	});
 
 	/**
 	 * Feature: polymarket-events, Property 11: Multiple filters compose correctly
@@ -426,20 +214,26 @@ describe('EventService', () => {
 						const mockClientInstance = vi.mocked(service['client']);
 						const mockCacheInstance = vi.mocked(service['cache']);
 
-						// Setup: Mock cache miss and API response
+						// Pre-filter events to simulate Polymarket API server-side filtering
+						const filteredEvents = events.filter((event) => {
+							if (filters.active !== undefined && event.active !== filters.active) {
+								return false;
+							}
+							if (filters.closed !== undefined && event.closed !== filters.closed) {
+								return false;
+							}
+							return true;
+						});
+
+						// Setup: Mock cache miss and API response (API returns pre-filtered data)
 						mockCacheInstance.get = vi.fn().mockReturnValue(null);
-						mockClientInstance.fetchEvents = vi.fn().mockResolvedValue(events);
+						mockClientInstance.fetchEvents = vi.fn().mockResolvedValue(filteredEvents);
 
 						// Execute: Get events with filters
 						const result = await service.getEvents(filters);
 
 						// Verify: All returned events satisfy the filter criteria
 						for (const event of result) {
-							// Check category filter
-							if (filters.category !== undefined) {
-								expect(event.category).toBe(filters.category);
-							}
-
 							// Check active filter
 							if (filters.active !== undefined) {
 								expect(event.active).toBe(filters.active);
@@ -451,21 +245,9 @@ describe('EventService', () => {
 							}
 						}
 
-						// Verify: All events that match the filters are included
-						const expectedEvents = events.filter((event) => {
-							if (filters.category !== undefined && event.category !== filters.category) {
-								return false;
-							}
-							if (filters.active !== undefined && event.active !== filters.active) {
-								return false;
-							}
-							if (filters.closed !== undefined && event.closed !== filters.closed) {
-								return false;
-							}
-							return true;
-						});
-
-						expect(result).toHaveLength(expectedEvents.length);
+						// Verify: The service returns what the API gave it
+						expect(result).toHaveLength(filteredEvents.length);
+						expect(result).toEqual(filteredEvents);
 					}
 				),
 				{ numRuns: 100 }
