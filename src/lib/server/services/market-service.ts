@@ -11,11 +11,41 @@ import { BaseService } from './base-service.js';
 import { genericSort, parseDateForSort } from '../utils/sort-utils.js';
 
 export interface MarketFilters {
-	category?: string;
-	active?: boolean;
-	closed?: boolean;
+	// Pagination
 	limit?: number;
 	offset?: number;
+	// Sorting
+	order?: string;
+	ascending?: boolean;
+	// Identifiers
+	id?: number[];
+	slug?: string[];
+	clob_token_ids?: string[];
+	condition_ids?: string[];
+	market_maker_address?: string[];
+	question_ids?: string[];
+	// Metrics
+	liquidity_num_min?: number;
+	liquidity_num_max?: number;
+	volume_num_min?: number;
+	volume_num_max?: number;
+	// Time
+	start_date_min?: string;
+	start_date_max?: string;
+	end_date_min?: string;
+	end_date_max?: string;
+	// Categories & Tags
+	tag_id?: number;
+	related_tags?: boolean;
+	sports_market_types?: string[];
+	// Status & Type
+	uma_resolution_status?: string;
+	game_id?: string;
+	rewards_min_size?: number;
+	cyom?: boolean;
+	closed?: boolean;
+	active?: boolean;
+	include_tag?: boolean;
 }
 
 export interface MarketSearchOptions extends MarketFilters {
@@ -85,10 +115,9 @@ export class MarketService extends BaseService {
 		const params = this.buildParams(filters);
 
 		const markets = await this.client.fetchMarkets({ params });
-		const filtered = this.applyFilters(markets, filters);
-		this.cache.set(cacheKey, filtered, this.cacheTtl);
+		this.cache.set(cacheKey, markets, this.cacheTtl);
 
-		return filtered;
+		return markets;
 	}
 
 	/**
@@ -202,24 +231,6 @@ export class MarketService extends BaseService {
 
 		if (options.sortBy) {
 			filtered = this.sortMarkets(filtered, options.sortBy, options.sortOrder || 'desc');
-		}
-
-		return filtered;
-	}
-
-	private applyFilters(markets: Market[], filters: MarketFilters): Market[] {
-		let filtered = markets;
-
-		if (filters.category !== undefined) {
-			filtered = filtered.filter((market) => market.category === filters.category);
-		}
-
-		if (filters.active !== undefined) {
-			filtered = filtered.filter((market) => market.active === filters.active);
-		}
-
-		if (filters.closed !== undefined) {
-			filtered = filtered.filter((market) => market.closed === filters.closed);
 		}
 
 		return filtered;

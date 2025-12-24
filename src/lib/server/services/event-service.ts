@@ -11,17 +11,40 @@ import { CACHE_TTL } from '$lib/config/constants.js';
 import { genericSort, parseDateForSort } from '../utils/sort-utils.js';
 
 export interface EventFilters {
-	category?: string;
+	// Pagination
+	limit?: number;
+	offset?: number;
+	// Sorting
+	order?: string;
+	ascending?: boolean;
+	// Identifiers
+	id?: number[];
+	slug?: string[];
+	// Tags
+	tag_id?: number;
 	tag_slug?: string;
+	exclude_tag_id?: number[];
+	related_tags?: boolean;
+	// Status
 	active?: boolean;
 	closed?: boolean;
 	archived?: boolean;
-	limit?: number;
-	offset?: number;
-	order?: string;
-	ascending?: boolean;
-	exclude_tag_id?: string | string[];
-	featured_order?: boolean;
+	featured?: boolean;
+	cyom?: boolean;
+	// Metrics
+	liquidity_min?: number;
+	liquidity_max?: number;
+	volume_min?: number;
+	volume_max?: number;
+	// Time
+	start_date_min?: string;
+	start_date_max?: string;
+	end_date_min?: string;
+	end_date_max?: string;
+	// Attributes
+	recurrence?: string;
+	include_chat?: boolean;
+	include_template?: boolean;
 }
 
 export interface EventSearchOptions extends EventFilters {
@@ -91,10 +114,9 @@ export class EventService extends BaseService {
 		const params = this.buildParams(filters);
 
 		const events = await this.client.fetchEvents({ params });
-		const filtered = this.applyFilters(events, filters);
-		this.cache.set(cacheKey, filtered, this.cacheTtl);
+		this.cache.set(cacheKey, events, this.cacheTtl);
 
-		return filtered;
+		return events;
 	}
 
 	/**
@@ -206,24 +228,6 @@ export class EventService extends BaseService {
 
 		if (options.sortBy) {
 			filtered = this.sortEvents(filtered, options.sortBy, options.sortOrder || 'desc');
-		}
-
-		return filtered;
-	}
-
-	private applyFilters(events: Event[], filters: EventFilters): Event[] {
-		let filtered = events;
-
-		if (filters.category !== undefined) {
-			filtered = filtered.filter((event) => event.category === filters.category);
-		}
-
-		if (filters.active !== undefined) {
-			filtered = filtered.filter((event) => event.active === filters.active);
-		}
-
-		if (filters.closed !== undefined) {
-			filtered = filtered.filter((event) => event.closed === filters.closed);
 		}
 
 		return filtered;
