@@ -116,12 +116,10 @@ export async function GET({ url }: RequestEvent) {
 			options.cache = cache === 'true';
 		}
 
-		// Parse events_status
 		if (eventsStatus !== null) {
 			options.eventsStatus = eventsStatus;
 		}
 
-		// Parse and validate limit_per_type
 		if (limitPerType !== null) {
 			const parsedLimit = parseInt(limitPerType, 10);
 			if (isNaN(parsedLimit) || parsedLimit < 0) {
@@ -136,7 +134,6 @@ export async function GET({ url }: RequestEvent) {
 			options.limitPerType = parsedLimit;
 		}
 
-		// Parse and validate page
 		if (page !== null) {
 			const parsedPage = parseInt(page, 10);
 			if (isNaN(parsedPage) || parsedPage < 0) {
@@ -149,7 +146,6 @@ export async function GET({ url }: RequestEvent) {
 			options.page = parsedPage;
 		}
 
-		// Parse and validate keep_closed_markets
 		if (keepClosedMarkets !== null) {
 			const parsedKeep = parseInt(keepClosedMarkets, 10);
 			if (isNaN(parsedKeep) || (parsedKeep !== 0 && parsedKeep !== 1)) {
@@ -164,12 +160,10 @@ export async function GET({ url }: RequestEvent) {
 			options.keepClosedMarkets = parsedKeep;
 		}
 
-		// Parse sort
 		if (sort !== null) {
 			options.sort = sort;
 		}
 
-		// Parse and validate ascending
 		if (ascending !== null) {
 			if (ascending !== 'true' && ascending !== 'false') {
 				logger.error('Invalid ascending parameter', undefined, { ascending });
@@ -181,7 +175,6 @@ export async function GET({ url }: RequestEvent) {
 			options.ascending = ascending === 'true';
 		}
 
-		// Parse and validate search_tags
 		if (searchTags !== null) {
 			if (searchTags !== 'true' && searchTags !== 'false') {
 				logger.error('Invalid search_tags parameter', undefined, { searchTags });
@@ -195,7 +188,6 @@ export async function GET({ url }: RequestEvent) {
 			options.searchTags = searchTags === 'true';
 		}
 
-		// Parse and validate search_profiles
 		if (searchProfiles !== null) {
 			if (searchProfiles !== 'true' && searchProfiles !== 'false') {
 				logger.error('Invalid search_profiles parameter', undefined, { searchProfiles });
@@ -209,12 +201,10 @@ export async function GET({ url }: RequestEvent) {
 			options.searchProfiles = searchProfiles === 'true';
 		}
 
-		// Parse recurrence
 		if (recurrence !== null) {
 			options.recurrence = recurrence;
 		}
 
-		// Parse and validate optimized
 		if (optimized !== null) {
 			if (optimized !== 'true' && optimized !== 'false') {
 				logger.error('Invalid optimized parameter', undefined, { optimized });
@@ -226,7 +216,6 @@ export async function GET({ url }: RequestEvent) {
 			options.optimized = optimized === 'true';
 		}
 
-		// Parse events_tag array parameter
 		if (eventsTagsParam.length > 0) {
 			// Support both ?tag=a&tag=b and ?tag=a,b formats
 			const allTags: string[] = [];
@@ -241,7 +230,6 @@ export async function GET({ url }: RequestEvent) {
 			}
 		}
 
-		// Parse exclude_tag_id array parameter
 		if (excludeTagIdParam.length > 0) {
 			try {
 				const allIds: number[] = [];

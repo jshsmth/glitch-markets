@@ -6,7 +6,7 @@
 
 <CategoryPage
 	categorySlug="geopolitics"
-	categoryTitle="Geopolitics"
-	initialEvents={data.initialEvents}
-	subcategories={data.subcategories}
+	categoryTitle="geopolitics"
+	initialEvents={data.categoryData.initialEvents}
+	subcategories={data.categoryData.subcategories}
 />

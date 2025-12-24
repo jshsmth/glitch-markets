@@ -1,7 +1,17 @@
 import type { LayoutServerLoad } from './$types';
 import { Logger } from '$lib/server/utils/logger';
+import { CacheManager } from '$lib/server/cache/cache-manager';
 
 const logger = new Logger({ component: 'Layout' });
+const profileCache = new CacheManager(500);
+
+interface UserProfile {
+	id: string;
+	email: string | null;
+	serverWalletAddress: string | null;
+	proxyWalletAddress: string | null;
+	isRegistered: boolean;
+}
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	/**
@@ -22,31 +32,39 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	if (session?.user) {
 		try {
 			const userId = session.user.id;
+			const cacheKey = `user-profile:${userId}`;
 
-			const [dbUserResult, credentialsResult] = await Promise.all([
-				locals.supabase
-					.from('users')
-					.select('id, email, server_wallet_address')
-					.eq('id', userId)
-					.single(),
-				locals.supabase
-					.from('polymarket_credentials')
-					.select('proxy_wallet_address, deployed_at')
-					.eq('user_id', userId)
-					.single()
-			]);
+			const cached = profileCache.get<UserProfile>(cacheKey);
+			if (cached) {
+				profile = cached;
+			} else {
+				const [dbUserResult, credentialsResult] = await Promise.all([
+					locals.supabase
+						.from('users')
+						.select('id, email, server_wallet_address')
+						.eq('id', userId)
+						.single(),
+					locals.supabase
+						.from('polymarket_credentials')
+						.select('proxy_wallet_address, deployed_at')
+						.eq('user_id', userId)
+						.single()
+				]);
 
-			const dbUser = dbUserResult.data;
-			const credentials = credentialsResult.data;
+				const dbUser = dbUserResult.data;
+				const credentials = credentialsResult.data;
 
-			if (dbUser) {
-				profile = {
-					id: dbUser.id,
-					email: dbUser.email,
-					serverWalletAddress: dbUser.server_wallet_address,
-					proxyWalletAddress: credentials?.proxy_wallet_address || null,
-					isRegistered: !!credentials?.deployed_at
-				};
+				if (dbUser) {
+					profile = {
+						id: dbUser.id,
+						email: dbUser.email,
+						serverWalletAddress: dbUser.server_wallet_address,
+						proxyWalletAddress: credentials?.proxy_wallet_address || null,
+						isRegistered: !!credentials?.deployed_at
+					};
+
+					profileCache.set(cacheKey, profile, 60_000);
+				}
 			}
 		} catch (err) {
 			logger.error('Error loading user profile in layout', {

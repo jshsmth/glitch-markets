@@ -48,7 +48,6 @@ export async function GET({ url }: RequestEvent) {
 			include_template?: boolean;
 		} = {};
 
-		// Helper to parse integer
 		const parseInteger = (value: string | null, name: string): number | null => {
 			if (value === null) return null;
 			const parsed = parseInt(value, 10);
@@ -58,7 +57,6 @@ export async function GET({ url }: RequestEvent) {
 			return parsed;
 		};
 
-		// Helper to parse boolean
 		const parseBoolean = (value: string | null, name: string): boolean | null => {
 			if (value === null) return null;
 			if (value !== 'true' && value !== 'false') {
@@ -67,7 +65,6 @@ export async function GET({ url }: RequestEvent) {
 			return value === 'true';
 		};
 
-		// Helper to parse number
 		const parseNumber = (value: string | null, name: string): number | null => {
 			if (value === null) return null;
 			const parsed = parseFloat(value);
@@ -90,7 +87,6 @@ export async function GET({ url }: RequestEvent) {
 		}
 		if (offset !== null) filters.offset = offset;
 
-		// Sorting
 		const order = url.searchParams.get('order');
 		if (order !== null) filters.order = order;
 

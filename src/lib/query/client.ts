@@ -24,7 +24,6 @@ function shouldRetry(failureCount: number, error: unknown): boolean {
 			}
 		}
 
-		// Handle Error objects with status in message
 		if (error instanceof Error) {
 			// Don't retry on 404 Not Found
 			if (error.message.includes('404') || error.message.includes('Not Found')) {

@@ -34,7 +34,6 @@ export async function GET({ locals }: RequestEvent) {
 
 		logger.info('Open orders fetched', { userId, count: clobOrders.length });
 
-		// Transform CLOB orders to our Order interface
 		const orders: Order[] = clobOrders.map((order) => {
 			const originalSize = parseFloat(order.original_size);
 			const sizeMatched = parseFloat(order.size_matched);

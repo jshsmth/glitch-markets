@@ -127,22 +127,6 @@ export const parseMultiMarketOutcomes = memoize(
 );
 
 /**
- * Calculates percentage for a given outcome index
- */
-export function calculateOutcomePercentage(
-	market: Market | null | undefined,
-	outcomeIndex: number
-): number | null {
-	const parsed = parseMarket(market);
-	if (!parsed) return null;
-
-	const { prices } = parsed;
-	if (outcomeIndex >= prices.length) return null;
-
-	return parseFloat(prices[outcomeIndex]) * 100;
-}
-
-/**
  * Checks if a market is effectively resolved (>=99% probability)
  */
 export function isMarketEffectivelyResolved(market: Market | null | undefined): boolean {
@@ -151,20 +135,6 @@ export function isMarketEffectivelyResolved(market: Market | null | undefined): 
 
 	const { prices } = parsed;
 	return prices.some((price) => parseFloat(price) * 100 >= 99);
-}
-
-/**
- * Gets the outcome label for a specific index
- */
-export function getOutcomeLabel(
-	market: Market | null | undefined,
-	outcomeIndex: number
-): string | null {
-	const parsed = parseMarket(market);
-	if (!parsed) return null;
-
-	const { outcomes } = parsed;
-	return outcomes[outcomeIndex] ?? null;
 }
 
 /**

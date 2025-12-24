@@ -34,9 +34,9 @@
 		},
 		initialPageParam: 0,
 		initialData:
-			data?.initialEvents?.length > 0
+			data.categoryData?.initialEvents && data.categoryData.initialEvents.length > 0
 				? {
-						pages: [data.initialEvents],
+						pages: [data.categoryData.initialEvents],
 						pageParams: [0]
 					}
 				: undefined

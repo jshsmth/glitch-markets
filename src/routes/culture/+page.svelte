@@ -5,8 +5,8 @@
 </script>
 
 <CategoryPage
-	categorySlug="pop-culture"
+	categorySlug="culture"
 	categoryTitle="Culture"
-	initialEvents={data.initialEvents}
-	subcategories={data.subcategories}
+	initialEvents={data.categoryData.initialEvents}
+	subcategories={data.categoryData.subcategories}
 />

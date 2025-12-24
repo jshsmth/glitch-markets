@@ -10,8 +10,8 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 		'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=120'
 	});
 
-	try {
-		const events = await eventService.getEvents({
+	const initialEvents = await eventService
+		.getEvents({
 			active: true,
 			archived: false,
 			closed: false,
@@ -19,17 +19,15 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 			ascending: false,
 			limit: 20,
 			offset: 0
+		})
+		.catch((err) => {
+			logger.error('Error loading homepage events', {
+				error: err instanceof Error ? err.message : 'Unknown error'
+			});
+			return [];
 		});
 
-		return {
-			initialEvents: events
-		};
-	} catch (err) {
-		logger.error('Error loading homepage events', {
-			error: err instanceof Error ? err.message : 'Unknown error'
-		});
-		return {
-			initialEvents: []
-		};
-	}
+	return {
+		initialEvents
+	};
 };

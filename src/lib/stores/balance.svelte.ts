@@ -29,7 +29,6 @@ export function initializeBalanceSync(client: QueryClient): () => void {
 
 	queryClient = client;
 
-	// Set up the query
 	const unsubscribe = $effect.root(() => {
 		$effect(() => {
 			// Only fetch if we have a session and proxy wallet
@@ -37,7 +36,6 @@ export function initializeBalanceSync(client: QueryClient): () => void {
 				return;
 			}
 
-			// Fetch the query
 			queryClient?.fetchQuery({
 				queryKey: ['user', 'balance', walletState.proxyWalletAddress],
 				queryFn: async () => {
@@ -50,7 +48,6 @@ export function initializeBalanceSync(client: QueryClient): () => void {
 				staleTime: 30000 // Consider fresh for 30s
 			});
 
-			// Set up interval for refetching
 			const interval = setInterval(() => {
 				if (authState.session && walletState.proxyWalletAddress) {
 					queryClient?.refetchQueries({

@@ -65,7 +65,7 @@ export async function initializeWatchlist(): Promise<void> {
  * Add event to watchlist
  * Uses TanStack Query mutation for optimistic updates and error recovery
  */
-export async function addToWatchlist(eventId: string): Promise<boolean> {
+export async function addToWatchlist(eventId: string, event?: Event): Promise<boolean> {
 	if (!browser || !queryClient) return false;
 
 	try {
@@ -73,6 +73,15 @@ export async function addToWatchlist(eventId: string): Promise<boolean> {
 
 		if ('vibrate' in navigator) {
 			navigator.vibrate(50);
+		}
+
+		if (event) {
+			queryClient.setQueryData<Event[]>(queryKeys.watchlist.all, (old) => {
+				if (!old) return [event];
+				const exists = old.some((e) => e.id === eventId);
+				if (exists) return old;
+				return [event, ...old];
+			});
 		}
 
 		const response = await fetch('/api/watchlist', {
@@ -83,11 +92,23 @@ export async function addToWatchlist(eventId: string): Promise<boolean> {
 
 		if (response.status === 401) {
 			bookmarkedEventIds.delete(eventId);
+			if (event) {
+				queryClient.setQueryData<Event[]>(queryKeys.watchlist.all, (old) => {
+					if (!old) return old;
+					return old.filter((e) => e.id !== eventId);
+				});
+			}
 			throw new Error('UNAUTHORIZED');
 		}
 
 		if (!response.ok) {
 			bookmarkedEventIds.delete(eventId);
+			if (event) {
+				queryClient.setQueryData<Event[]>(queryKeys.watchlist.all, (old) => {
+					if (!old) return old;
+					return old.filter((e) => e.id !== eventId);
+				});
+			}
 			throw new Error('Failed to add bookmark');
 		}
 

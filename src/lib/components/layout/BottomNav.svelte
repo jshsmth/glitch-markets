@@ -5,15 +5,23 @@
 	import HomeIcon from '$lib/components/icons/HomeIcon.svelte';
 	import CompassIcon from '$lib/components/icons/CompassIcon.svelte';
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
+	import MenuIcon from '$lib/components/icons/MenuIcon.svelte';
 	import PokerChipIcon from '$lib/components/icons/PokerChipIcon.svelte';
 	import UserIcon from '$lib/components/icons/UserIcon.svelte';
 	import DollarCircleIcon from '$lib/components/icons/DollarCircleIcon.svelte';
 	import SettingsIcon from '$lib/components/icons/SettingsIcon.svelte';
 	import LogoutIcon from '$lib/components/icons/LogoutIcon.svelte';
+	import LeaderboardIcon from '$lib/components/icons/LeaderboardIcon.svelte';
+	import DocumentTextIcon from '$lib/components/icons/DocumentTextIcon.svelte';
+	import LegalIcon from '$lib/components/icons/LegalIcon.svelte';
+	import ElectricityIcon from '$lib/components/icons/ElectricityIcon.svelte';
+	import MoonIcon from '$lib/components/icons/MoonIcon.svelte';
+	import SunIcon from '$lib/components/icons/SunIcon.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
-	import CategoryPicker from '$lib/components/navigation/CategoryPicker.svelte';
 	import { openDepositModal, openSignInModal } from '$lib/stores/modal.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
+	import { themeState, toggleTheme } from '$lib/stores/theme.svelte';
+	import { categories } from '$lib/config/categories';
 	import { TIMEOUTS } from '$lib/config/constants';
 	import { goto } from '$app/navigation';
 
@@ -32,7 +40,7 @@
 
 	type NavActionItem = NavItemBase & {
 		type: 'action';
-		action: 'explore' | 'profile';
+		action: 'discover' | 'more';
 	};
 
 	type NavItem = NavLinkItem | NavActionItem;
@@ -46,15 +54,9 @@
 		},
 		{
 			type: 'action',
-			label: 'Explore',
+			label: 'Discover',
 			icon: CompassIcon,
-			action: 'explore'
-		},
-		{
-			type: 'link',
-			label: 'Search',
-			href: '/search',
-			icon: SearchIcon
+			action: 'discover'
 		},
 		{
 			type: 'link',
@@ -65,19 +67,19 @@
 		},
 		{
 			type: 'action',
-			label: 'Profile',
-			icon: UserIcon,
-			action: 'profile'
+			label: 'More',
+			icon: MenuIcon,
+			action: 'more'
 		}
 	];
 
-	let exploreOpen = $state(false);
-	let profileMenuOpen = $state(false);
+	let discoverOpen = $state(false);
+	let moreMenuOpen = $state(false);
 
 	function isActive(item: NavItem): boolean {
 		if (item.type === 'action') {
-			if (item.action === 'explore') return exploreOpen;
-			if (item.action === 'profile') return profileMenuOpen;
+			if (item.action === 'discover') return discoverOpen;
+			if (item.action === 'more') return moreMenuOpen;
 			return false;
 		}
 		return $page.url.pathname === item.href;
@@ -86,10 +88,10 @@
 	function handleNavClick(event: MouseEvent, item: NavItem) {
 		if (item.type === 'action') {
 			event.preventDefault();
-			if (item.action === 'explore') {
-				exploreOpen = true;
-			} else if (item.action === 'profile') {
-				profileMenuOpen = true;
+			if (item.action === 'discover') {
+				discoverOpen = true;
+			} else if (item.action === 'more') {
+				moreMenuOpen = true;
 			}
 			return;
 		}
@@ -101,12 +103,12 @@
 	}
 
 	function handleDeposit() {
-		profileMenuOpen = false;
+		moreMenuOpen = false;
 		openDepositModal();
 	}
 
 	function handleSignIn() {
-		profileMenuOpen = false;
+		moreMenuOpen = false;
 		openSignInModal();
 	}
 
@@ -116,19 +118,48 @@
 
 		try {
 			await supabase.auth.signOut();
-			profileMenuOpen = false;
+			moreMenuOpen = false;
 			goto('/');
 		} catch (err) {
 			console.error('Logout error:', err);
 		}
 	}
 
-	function closeExplore() {
-		exploreOpen = false;
+	function handleThemeToggle() {
+		toggleTheme();
 	}
 
-	function closeProfileMenu() {
-		profileMenuOpen = false;
+	function handleLeaderboardClick() {
+		moreMenuOpen = false;
+		goto('/leaderboard');
+	}
+
+	function handleSettingsClick() {
+		moreMenuOpen = false;
+		goto('/settings');
+	}
+
+	function handleDiscoverSearch() {
+		discoverOpen = false;
+		goto('/search');
+	}
+
+	function handleCategoryClick(href: string) {
+		discoverOpen = false;
+		goto(href);
+	}
+
+	function closeDiscover() {
+		discoverOpen = false;
+	}
+
+	const featuredCategories = $derived(
+		categories.filter((c) => c.href === '/' || c.href === '/new')
+	);
+	const regularCategories = $derived(categories.filter((c) => c.href !== '/' && c.href !== '/new'));
+
+	function closeMoreMenu() {
+		moreMenuOpen = false;
 	}
 
 	onMount(() => {
@@ -170,10 +201,58 @@
 	{/each}
 </nav>
 
-<CategoryPicker open={exploreOpen} onClose={closeExplore} />
+<!-- Discover Sheet - combines category exploration and search -->
+<BottomSheet open={discoverOpen} title="Discover" onClose={closeDiscover}>
+	<div class="discover-content">
+		<button class="discover-search-btn" onclick={handleDiscoverSearch}>
+			<SearchIcon size={22} color="currentColor" />
+			<span>Search Markets</span>
+		</button>
+		<div class="discover-divider"></div>
+		<nav class="discover-categories" aria-label="Market categories">
+			<div class="category-section">
+				<h3 class="category-section-title">Featured</h3>
+				<div class="category-grid">
+					{#each featuredCategories as category (category.href)}
+						{@const Icon = category.icon}
+						<button
+							class="category-item"
+							class:active={$page.url.pathname === category.href}
+							onclick={() => handleCategoryClick(category.href)}
+						>
+							<span class="category-icon">
+								<Icon size={20} color="currentColor" />
+							</span>
+							<span class="category-label">{category.name}</span>
+						</button>
+					{/each}
+				</div>
+			</div>
+			<div class="category-section">
+				<h3 class="category-section-title">Categories</h3>
+				<div class="category-grid">
+					{#each regularCategories as category (category.href)}
+						{@const Icon = category.icon}
+						<button
+							class="category-item"
+							class:active={$page.url.pathname === category.href}
+							onclick={() => handleCategoryClick(category.href)}
+						>
+							<span class="category-icon">
+								<Icon size={20} color="currentColor" />
+							</span>
+							<span class="category-label">{category.name}</span>
+						</button>
+					{/each}
+				</div>
+			</div>
+		</nav>
+	</div>
+</BottomSheet>
 
-<BottomSheet open={profileMenuOpen} title="Profile" onClose={closeProfileMenu}>
-	<nav aria-label="Profile options">
+<!-- More Menu Sheet -->
+<BottomSheet open={moreMenuOpen} title="More" onClose={closeMoreMenu}>
+	<nav aria-label="More options">
 		<ul class="menu-list" role="menu">
 			{#if authState.user}
 				<li>
@@ -182,12 +261,69 @@
 						<span>Deposit</span>
 					</button>
 				</li>
-				<li>
-					<a href="/settings" class="menu-item" role="menuitem" onclick={closeProfileMenu}>
-						<SettingsIcon size={22} color="currentColor" />
-						<span>Settings</span>
-					</a>
-				</li>
+			{/if}
+			<li>
+				<button class="menu-item" role="menuitem" onclick={handleLeaderboardClick}>
+					<LeaderboardIcon size={22} color="currentColor" />
+					<span>Leaderboard</span>
+				</button>
+			</li>
+			<li>
+				<button class="menu-item" role="menuitem" onclick={handleSettingsClick}>
+					<SettingsIcon size={22} color="currentColor" />
+					<span>Settings</span>
+				</button>
+			</li>
+			<li>
+				<button class="menu-item" role="menuitem" onclick={handleThemeToggle}>
+					{#if themeState.current === 'dark'}
+						<SunIcon size={22} color="currentColor" />
+						<span>Light Mode</span>
+					{:else}
+						<MoonIcon size={22} color="currentColor" />
+						<span>Dark Mode</span>
+					{/if}
+				</button>
+			</li>
+			<li class="menu-divider"></li>
+			<li>
+				<a
+					href="https://docs.polymarket.com/quickstart/introduction/main"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="menu-item"
+					role="menuitem"
+				>
+					<ElectricityIcon size={22} color="currentColor" />
+					<span>APIs</span>
+				</a>
+			</li>
+			<li>
+				<a
+					href="https://docs.polymarket.com/polymarket-learn/get-started/what-is-polymarket#introduction"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="menu-item"
+					role="menuitem"
+				>
+					<DocumentTextIcon size={22} color="currentColor" />
+					<span>Documentation</span>
+				</a>
+			</li>
+			<li>
+				<a
+					href="https://polymarket.com/tos"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="menu-item"
+					role="menuitem"
+				>
+					<LegalIcon size={22} color="currentColor" />
+					<span>Terms of Use</span>
+				</a>
+			</li>
+			{#if authState.user}
+				<li class="menu-divider"></li>
 				<li>
 					<button class="menu-item menu-item-danger" role="menuitem" onclick={handleLogout}>
 						<LogoutIcon size={22} color="currentColor" />
@@ -195,17 +331,12 @@
 					</button>
 				</li>
 			{:else}
+				<li class="menu-divider"></li>
 				<li>
 					<button class="menu-item menu-item-primary" role="menuitem" onclick={handleSignIn}>
 						<UserIcon size={22} color="currentColor" />
 						<span>Sign In</span>
 					</button>
-				</li>
-				<li>
-					<a href="/settings" class="menu-item" role="menuitem" onclick={closeProfileMenu}>
-						<SettingsIcon size={22} color="currentColor" />
-						<span>Settings</span>
-					</a>
 				</li>
 			{/if}
 		</ul>
@@ -344,5 +475,139 @@
 
 	.menu-item-danger:hover {
 		background: var(--danger-bg);
+	}
+
+	.menu-divider {
+		height: 1px;
+		background: var(--bg-3);
+		margin: var(--spacing-2) 0;
+		list-style: none;
+	}
+
+	/* Discover content */
+	.discover-content {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-3);
+	}
+
+	.discover-search-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--spacing-3);
+		width: 100%;
+		padding: var(--spacing-4);
+		background: var(--primary);
+		color: var(--button-primary-text);
+		border: none;
+		border-radius: var(--radius-lg);
+		font-size: var(--text-lg);
+		font-weight: var(--font-semibold);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		min-height: var(--target-comfortable);
+	}
+
+	.discover-search-btn:hover {
+		background: var(--primary-hover);
+		transform: translateY(-1px);
+	}
+
+	.discover-search-btn:active {
+		transform: translateY(0);
+	}
+
+	.discover-divider {
+		height: 1px;
+		background: var(--bg-3);
+		margin: var(--spacing-2) 0;
+	}
+
+	.discover-categories {
+		margin: 0;
+	}
+
+	.category-section {
+		margin-bottom: var(--spacing-4);
+	}
+
+	.category-section:last-child {
+		margin-bottom: 0;
+	}
+
+	.category-section-title {
+		font-size: var(--text-sm);
+		font-weight: var(--font-semibold);
+		color: var(--text-2);
+		margin: 0 0 var(--spacing-2) 0;
+		text-transform: uppercase;
+		letter-spacing: var(--tracking-wide);
+	}
+
+	.category-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+		gap: var(--spacing-2);
+	}
+
+	.category-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: var(--spacing-2);
+		padding: var(--spacing-4);
+		background: var(--bg-2);
+		border: 1px solid var(--bg-3);
+		border-radius: var(--radius-lg);
+		color: var(--text-1);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		min-height: 80px;
+	}
+
+	.category-item:hover {
+		background: var(--primary-hover-bg);
+		border-color: var(--primary);
+		color: var(--primary);
+	}
+
+	.category-item:active {
+		transform: scale(0.98);
+	}
+
+	.category-item.active {
+		background: var(--primary);
+		border-color: var(--primary);
+		color: var(--button-primary-text);
+	}
+
+	.category-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.category-label {
+		font-size: var(--text-sm);
+		font-weight: var(--font-medium);
+		text-align: center;
+		line-height: 1.2;
+	}
+
+	@media (max-width: 640px) {
+		.category-grid {
+			grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+		}
+
+		.category-item {
+			min-height: 70px;
+			padding: var(--spacing-3);
+		}
+
+		.category-label {
+			font-size: 12px;
+		}
 	}
 </style>

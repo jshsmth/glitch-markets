@@ -6,7 +6,7 @@
 
 <CategoryPage
 	categorySlug="economy"
-	categoryTitle="Economy"
-	initialEvents={data.initialEvents}
-	subcategories={data.subcategories}
+	categoryTitle="economy"
+	initialEvents={data.categoryData.initialEvents}
+	subcategories={data.categoryData.subcategories}
 />

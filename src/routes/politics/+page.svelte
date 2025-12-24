@@ -6,7 +6,7 @@
 
 <CategoryPage
 	categorySlug="politics"
-	categoryTitle="Politics"
-	initialEvents={data.initialEvents}
-	subcategories={data.subcategories}
+	categoryTitle="politics"
+	initialEvents={data.categoryData.initialEvents}
+	subcategories={data.categoryData.subcategories}
 />

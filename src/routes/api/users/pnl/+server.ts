@@ -63,7 +63,6 @@ function calculatePnLTimeSeries(
 
 	relevantClosedPositions.sort((a, b) => a.timestamp - b.timestamp);
 
-	// Calculate cumulative realized P&L over time
 	const dataPoints: PnLDataPoint[] = [];
 	let cumulativeRealizedPnl = 0;
 

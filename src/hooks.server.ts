@@ -51,7 +51,6 @@ function getRateLimitConfig(pathname: string): RateLimitConfig {
 }
 
 function isRateLimited(clientId: string, pathname: string): boolean {
-	// Trigger cleanup if store gets too large
 	if (rateLimitStore.size > MAX_RATE_LIMIT_ENTRIES) {
 		logger.warn(`Rate limit store exceeded ${MAX_RATE_LIMIT_ENTRIES} entries, forcing cleanup`);
 		cleanupRateLimitStore();
@@ -96,7 +95,6 @@ function cleanupRateLimitStore(): void {
 	}
 }
 
-// Runs every 5 minutes to clean expired rate limit entries
 setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
 
 const supabaseHandle: Handle = async ({ event, resolve }) => {

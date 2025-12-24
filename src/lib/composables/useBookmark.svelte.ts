@@ -6,8 +6,9 @@
 import { isBookmarked, addToWatchlist, removeFromWatchlist } from '$lib/stores/watchlist.svelte';
 import { openSignInModal } from '$lib/stores/modal.svelte';
 import { authState } from '$lib/stores/auth.svelte';
+import type { Event } from '$lib/server/api/polymarket-client';
 
-export function useBookmark(getEventId: () => string) {
+export function useBookmark(getEventId: () => string, getEvent?: () => Event) {
 	const isEventBookmarked = $derived(isBookmarked(getEventId()));
 
 	async function toggleBookmark() {
@@ -22,7 +23,8 @@ export function useBookmark(getEventId: () => string) {
 			await removeFromWatchlist(eventId);
 		} else {
 			try {
-				await addToWatchlist(eventId);
+				const event = getEvent?.();
+				await addToWatchlist(eventId, event);
 			} catch (error) {
 				if (error instanceof Error && error.message === 'UNAUTHORIZED') {
 					openSignInModal();

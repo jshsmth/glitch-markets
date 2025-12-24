@@ -10,12 +10,6 @@
 
 	let currentSort = $state<string>('volume24hr');
 
-	$effect(() => {
-		if (data?.initialSort) {
-			currentSort = data.initialSort;
-		}
-	});
-
 	const eventsQuery = createInfiniteQuery(() => ({
 		queryKey: ['events', 'trending', currentSort],
 		queryFn: async ({ pageParam = 0 }) => {
@@ -41,9 +35,9 @@
 		},
 		initialPageParam: 0,
 		initialData:
-			data?.initialEvents?.length > 0
+			data.categoryData?.initialEvents && data.categoryData.initialEvents.length > 0
 				? {
-						pages: [data.initialEvents],
+						pages: [data.categoryData.initialEvents],
 						pageParams: [0]
 					}
 				: undefined

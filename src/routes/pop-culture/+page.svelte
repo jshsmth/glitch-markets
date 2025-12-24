@@ -6,7 +6,7 @@
 
 <CategoryPage
 	categorySlug="pop-culture"
-	categoryTitle="Pop Culture"
-	initialEvents={data.initialEvents}
-	subcategories={data.subcategories}
+	categoryTitle="pop culture"
+	initialEvents={data.categoryData.initialEvents}
+	subcategories={data.categoryData.subcategories}
 />

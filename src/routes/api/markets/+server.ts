@@ -92,7 +92,6 @@ export async function GET({ url }: RequestEvent) {
 		}
 		if (offset !== null) filters.offset = offset;
 
-		// Sorting
 		const order = url.searchParams.get('order');
 		if (order !== null) filters.order = order;
 

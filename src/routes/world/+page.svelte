@@ -6,7 +6,7 @@
 
 <CategoryPage
 	categorySlug="world"
-	categoryTitle="World"
-	initialEvents={data.initialEvents}
-	subcategories={data.subcategories}
+	categoryTitle="world"
+	initialEvents={data.categoryData.initialEvents}
+	subcategories={data.categoryData.subcategories}
 />

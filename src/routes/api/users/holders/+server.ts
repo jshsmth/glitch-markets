@@ -28,7 +28,6 @@ export async function GET({ url }: RequestEvent) {
 			params.market = market;
 		}
 
-		// Validate parameters (will throw if no market is provided)
 		const validated = validateTopHoldersParams(params);
 
 		logger.info('Fetching top holders', { markets: validated.market });

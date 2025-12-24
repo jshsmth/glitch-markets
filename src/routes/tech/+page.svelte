@@ -6,7 +6,7 @@
 
 <CategoryPage
 	categorySlug="tech"
-	categoryTitle="Tech"
-	initialEvents={data.initialEvents}
-	subcategories={data.subcategories}
+	categoryTitle="tech"
+	initialEvents={data.categoryData.initialEvents}
+	subcategories={data.categoryData.subcategories}
 />

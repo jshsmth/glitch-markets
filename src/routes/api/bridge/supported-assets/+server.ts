@@ -21,7 +21,6 @@ export async function GET() {
 	try {
 		logger.info('Fetching supported bridge assets');
 
-		// Fetch supported assets via service (with caching)
 		const result = await bridgeService.getSupportedAssets();
 
 		const duration = Date.now() - startTime;

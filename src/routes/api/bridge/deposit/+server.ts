@@ -19,7 +19,6 @@ export async function POST({ request }: RequestEvent) {
 	const startTime = Date.now();
 
 	try {
-		// Parse JSON body
 		let body: unknown;
 		try {
 			body = await request.json();
@@ -48,7 +47,6 @@ export async function POST({ request }: RequestEvent) {
 
 		logger.info('Creating deposit addresses', { address });
 
-		// Create deposit addresses via service
 		const result = await bridgeService.createDeposit(address as string);
 
 		const duration = Date.now() - startTime;

@@ -31,7 +31,7 @@
 		},
 		initialPageParam: 0,
 		initialData:
-			data?.initialEvents?.length > 0
+			data.initialEvents && data.initialEvents.length > 0
 				? {
 						pages: [data.initialEvents],
 						pageParams: [0]

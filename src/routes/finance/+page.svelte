@@ -6,7 +6,7 @@
 
 <CategoryPage
 	categorySlug="finance"
-	categoryTitle="Finance"
-	initialEvents={data.initialEvents}
-	subcategories={data.subcategories}
+	categoryTitle="finance"
+	initialEvents={data.categoryData.initialEvents}
+	subcategories={data.categoryData.subcategories}
 />
