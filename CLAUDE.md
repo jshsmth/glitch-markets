@@ -15,9 +15,10 @@ This is the main documentation hub for Claude Code. All detailed documentation l
 
 ### API References
 
-- **[Polymarket API](.claude/polymarket-api-reference.md)** - Complete Polymarket API endpoint documentation
+- **[Polymarket API](.claude/docs/polymarket-api-reference.md)** - Complete Polymarket API endpoint documentation
 - **[Porto SDK](.claude/porto-api-reference.md)** - Porto SDK integration guides
 - **[Dynamic Docs](.claude/dynamic.txt)** - Comprehensive Dynamic.xyz documentation with all API endpoints and guides
+- **[TanStack Query](.claude/docs/tanstack-query-reference.md)** - TanStack Query (React Query) documentation for Svelte
 
 ---
 
@@ -83,11 +84,15 @@ You have access to the Svelte MCP server with comprehensive Svelte 5 and SvelteK
 
 ```
 .claude/
-├── technical.md              # Tech stack, architecture, workflows
+├── docs/
+│   ├── polymarket-api-reference.md  # Polymarket API docs
+│   ├── tanstack-query-reference.md  # TanStack Query docs
+│   ├── technical.md                 # Tech stack, architecture, workflows
+│   ├── brand-colors.md              # Design system and color palette
+│   └── vitest.md                    # Testing documentation
+├── technical.md              # Tech stack, architecture, workflows (legacy)
 ├── modes.md                  # Spec Mode & Vibe Mode documentation
 ├── code-style.md             # Code style guide and best practices
-├── brand-colors.md           # Design system and color palette
-├── polymarket-api-reference.md  # Polymarket API docs
 ├── porto-api-reference.md    # Porto SDK docs
 └── dynamic.txt               # Complete Dynamic.xyz documentation
 ```

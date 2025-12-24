@@ -2,6 +2,7 @@
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
 	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
+	import EventCardHeader from '$lib/components/events/EventCardHeader.svelte';
 	import { formatNumber } from '$lib/utils/format';
 	import { isWinningMarket } from '$lib/utils/market-parser';
 
@@ -35,22 +36,8 @@
 
 <div class="event-card">
 	<div class="card-content">
-		<!-- Header with Icon + Title -->
 		<div class="card-header">
-			<div class="title-row">
-				{#if event.image}
-					<div class="event-icon">
-						<img src={event.image} alt={event.title || 'Event icon'} loading="lazy" />
-					</div>
-				{/if}
-				<a
-					href={`/event/${event.slug || event.id}`}
-					class="event-title-link"
-					data-sveltekit-preload-data="hover"
-				>
-					<h3 class="event-title">{event.title || 'Untitled Event'}</h3>
-				</a>
-			</div>
+			<EventCardHeader {event} />
 		</div>
 
 		<!-- Resolved Multi-Outcome Display -->
@@ -118,59 +105,6 @@
 		flex-direction: column;
 		gap: 16px;
 		width: 100%;
-	}
-
-	/* ============================================
-	   HEADER
-	   ============================================ */
-
-	.title-row {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
-	.event-icon {
-		flex-shrink: 0;
-		width: 40px;
-		height: 40px;
-		border-radius: var(--radius-md);
-		overflow: hidden;
-		background: var(--bg-2);
-		border: 1px solid var(--bg-4);
-	}
-
-	.event-icon img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-
-	.event-title-link {
-		flex: 1;
-		text-decoration: none;
-		color: inherit;
-		min-width: 0;
-	}
-
-	.event-title-link:hover .event-title {
-		color: var(--primary);
-		text-decoration: underline;
-	}
-
-	.event-title-link:focus-visible {
-		outline: none;
-		border-radius: 4px;
-		box-shadow: var(--focus-ring);
-	}
-
-	.event-title {
-		font-size: 17px;
-		font-weight: 700;
-		color: var(--text-0);
-		line-height: 1.4;
-		margin: 0;
-		letter-spacing: -0.01em;
 	}
 
 	/* ============================================
@@ -301,15 +235,6 @@
 	@media (max-width: 768px) {
 		.event-card {
 			padding: 16px;
-		}
-
-		.event-title {
-			font-size: 16px;
-		}
-
-		.event-icon {
-			width: 36px;
-			height: 36px;
 		}
 
 		.stats {
