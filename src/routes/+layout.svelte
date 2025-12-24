@@ -76,7 +76,7 @@
 		} = supabase.auth.onAuthStateChange(async (_event, session) => {
 			updateAuthState(session);
 
-			if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED') {
+			if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED' || _event === 'SIGNED_OUT') {
 				await invalidate('supabase:auth');
 			}
 
