@@ -9,18 +9,14 @@
 	import { authState } from '$lib/stores/auth.svelte';
 	import { balanceState } from '$lib/stores/balance.svelte';
 	import { openDepositModal } from '$lib/stores/modal.svelte';
+	import { formatCurrency } from '$lib/utils/formatters';
 
 	const formattedBalance = $derived.by(() => {
 		if (!balanceState.hasProxyWallet) return '$0.00';
 		if (balanceState.balance === null) return '$0.00';
 
 		const numBalance = parseFloat(balanceState.balance);
-		return new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: 'USD',
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2
-		}).format(numBalance);
+		return formatCurrency(numBalance);
 	});
 
 	function handleDepositClick() {

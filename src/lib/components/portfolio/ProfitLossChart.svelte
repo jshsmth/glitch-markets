@@ -4,6 +4,7 @@
 	import { LayerCake, Svg } from 'layercake';
 	import Area from '$lib/components/charts/Area.svelte';
 	import { walletState } from '$lib/stores/wallet.svelte';
+	import { formatCurrency } from '$lib/utils/formatters';
 
 	type TimePeriod = '1D' | '1W' | '1M' | 'ALL';
 
@@ -68,14 +69,7 @@
 	const isPositive = $derived(totalPnl > 0);
 	const isNegative = $derived(totalPnl < 0);
 
-	const formattedPnl = $derived(
-		new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: 'USD',
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2
-		}).format(totalPnl)
-	);
+	const formattedPnl = $derived(formatCurrency(totalPnl));
 
 	function handlePeriodChange(period: TimePeriod) {
 		selectedPeriod = period;

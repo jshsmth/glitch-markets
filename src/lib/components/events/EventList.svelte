@@ -3,6 +3,7 @@
 	import EventCard from './EventCard.svelte';
 	import ResolvedEventCard from './ResolvedEventCard.svelte';
 	import ResolvedMultiEventCard from './ResolvedMultiEventCard.svelte';
+	import { useScrollTrigger } from '$lib/composables/useScrollTrigger.svelte';
 
 	interface Props {
 		events: Event[];
@@ -36,60 +37,22 @@
 		return (event.markets?.length || 0) > 1;
 	}
 
-	let loadingMore = $state(false);
-	let sentinelElement = $state<HTMLElement | null>(null);
-	let lastLoadTime = $state(0);
-
-	$effect(() => {
-		if (!sentinelElement || !hasMore || !onLoadMore) return;
-
-		const observer = new IntersectionObserver(
-			async (entries) => {
-				const entry = entries[0];
-				const now = Date.now();
-
-				if (
-					entry.isIntersecting &&
-					!loadingMore &&
-					!loading &&
-					hasMore &&
-					onLoadMore &&
-					now - lastLoadTime >= loadMoreInterval
-				) {
-					loadingMore = true;
-					lastLoadTime = now;
-
-					if (sentinelElement) {
-						observer.unobserve(sentinelElement);
-					}
-
-					try {
-						await onLoadMore();
-					} catch (error) {
-						if (error instanceof Error) {
-							console.error('Error loading more:', error);
-						}
-					} finally {
-						loadingMore = false;
-
-						setTimeout(() => {
-							if (sentinelElement && observer) {
-								observer.observe(sentinelElement);
-							}
-						}, 100);
-					}
-				}
-			},
-			{
-				rootMargin: loadMoreRootMargin
-			}
-		);
-
-		observer.observe(sentinelElement);
-
-		return () => {
-			observer.disconnect();
-		};
+	const scrollTrigger = useScrollTrigger({
+		get onLoadMore() {
+			return onLoadMore || (() => {});
+		},
+		get hasMore() {
+			return hasMore;
+		},
+		get isLoading() {
+			return loading;
+		},
+		get loadMoreInterval() {
+			return loadMoreInterval;
+		},
+		get rootMargin() {
+			return loadMoreRootMargin;
+		}
 	});
 </script>
 
@@ -132,8 +95,8 @@
 		</div>
 
 		{#if hasMore}
-			<div bind:this={sentinelElement} class="sentinel">
-				{#if loadingMore}
+			<div bind:this={scrollTrigger.sentinelRef} class="sentinel">
+				{#if scrollTrigger.isLoadingMore}
 					<div class="loading-dots">
 						<span></span>
 						<span></span>
