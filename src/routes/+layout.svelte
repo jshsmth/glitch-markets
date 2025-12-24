@@ -35,7 +35,7 @@
 	} from '$lib/stores/modal.svelte';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
-	import { invalidate } from '$app/navigation';
+	import { invalidate, preloadData } from '$app/navigation';
 	import TopHeader from '$lib/components/layout/TopHeader.svelte';
 	import BottomNav from '$lib/components/layout/BottomNav.svelte';
 	import SignInModal from '$lib/components/auth/SignInModal.svelte';
@@ -65,6 +65,34 @@
 
 		const cleanupWalletSync = initializeWalletSync();
 		const cleanupBalanceSync = initializeBalanceSync(queryClient);
+
+		const mainRoutes = [
+			'/',
+			'/trending',
+			'/new',
+			'/politics',
+			'/finance',
+			'/tech',
+			'/culture',
+			'/economy',
+			'/geopolitics',
+			'/pop-culture',
+			'/world'
+		];
+
+		if ('requestIdleCallback' in window) {
+			requestIdleCallback(() => {
+				mainRoutes.forEach((route) => {
+					preloadData(route);
+				});
+			});
+		} else {
+			setTimeout(() => {
+				mainRoutes.forEach((route) => {
+					preloadData(route);
+				});
+			}, 1000);
+		}
 
 		// Only call registration if user has session but no server wallet
 		if (data?.session?.user && !data?.profile?.serverWalletAddress) {
