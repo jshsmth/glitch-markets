@@ -35,12 +35,16 @@
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { invalidate, preloadData } from '$app/navigation';
+	import { TIMEOUTS } from '$lib/config/constants';
 	import TopHeader from '$lib/components/layout/TopHeader.svelte';
 	import BottomNav from '$lib/components/layout/BottomNav.svelte';
 	import SignInModal from '$lib/components/auth/SignInModal.svelte';
 	import DepositModal from '$lib/components/wallet/DepositModal.svelte';
 	import LazyWithdrawModal from '$lib/components/modals/LazyWithdrawModal.svelte';
 	import ReloadPrompt from '$lib/components/pwa/ReloadPrompt.svelte';
+	import ToastContainer from '$lib/components/ui/ToastContainer.svelte';
+	import SlowLoadingIndicator from '$lib/components/ui/SlowLoadingIndicator.svelte';
+	import { showToast } from '$lib/stores/toast.svelte';
 	// @ts-expect-error - virtual module from vite-plugin-pwa
 	import { pwaInfo } from 'virtual:pwa-info';
 
@@ -81,13 +85,13 @@
 		if ('requestIdleCallback' in window) {
 			requestIdleCallback(() => {
 				mainRoutes.forEach((route) => {
-					preloadData(route);
+					preloadData(route).catch(() => {});
 				});
 			});
 		} else {
 			setTimeout(() => {
 				mainRoutes.forEach((route) => {
-					preloadData(route);
+					preloadData(route).catch(() => {});
 				});
 			}, 1000);
 		}
@@ -97,13 +101,21 @@
 			handleUserSignIn();
 		}
 
+		let authInvalidationTimeout: ReturnType<typeof setTimeout> | null = null;
+
 		const {
 			data: { subscription }
 		} = supabase.auth.onAuthStateChange(async (_event, session) => {
 			updateAuthState(session);
 
 			if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED' || _event === 'SIGNED_OUT') {
-				await invalidate('supabase:auth');
+				if (authInvalidationTimeout) {
+					clearTimeout(authInvalidationTimeout);
+				}
+
+				authInvalidationTimeout = setTimeout(async () => {
+					await invalidate('supabase:auth');
+				}, TIMEOUTS.AUTH_INVALIDATION_DEBOUNCE);
 			}
 
 			if (session?.user && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED')) {
@@ -116,6 +128,9 @@
 		return () => {
 			subscription.unsubscribe();
 			cleanupWalletSync();
+			if (authInvalidationTimeout) {
+				clearTimeout(authInvalidationTimeout);
+			}
 		};
 	});
 
@@ -170,12 +185,41 @@
 
 	import { onNavigate } from '$app/navigation';
 	import { navigating } from '$app/stores';
+	import { goto } from '$app/navigation';
+
+	let navigationTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+	$effect(() => {
+		if ($navigating) {
+			navigationTimeoutId = setTimeout(() => {
+				showToast(
+					'Navigation is taking longer than expected. Please refresh if this persists.',
+					'warning',
+					8000
+				);
+			}, TIMEOUTS.NAVIGATION_TIMEOUT);
+		} else {
+			if (navigationTimeoutId) {
+				clearTimeout(navigationTimeoutId);
+				navigationTimeoutId = null;
+			}
+		}
+	});
 
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
 
 		return new Promise((resolve) => {
+			let viewTransitionTimeout: ReturnType<typeof setTimeout> | null = null;
+
+			viewTransitionTimeout = setTimeout(() => {
+				resolve();
+			}, TIMEOUTS.VIEW_TRANSITION_TIMEOUT);
+
 			document.startViewTransition(async () => {
+				if (viewTransitionTimeout) {
+					clearTimeout(viewTransitionTimeout);
+				}
 				resolve();
 				await navigation.complete;
 			});
@@ -195,6 +239,12 @@
 	{#if $navigating}
 		<div class="loading-bar"></div>
 	{/if}
+
+	<!-- Slow loading indicator -->
+	<SlowLoadingIndicator isNavigating={!!$navigating} />
+
+	<!-- Toast notifications -->
+	<ToastContainer />
 
 	<a href="#main-content" class="skip-link">Skip to main content</a>
 

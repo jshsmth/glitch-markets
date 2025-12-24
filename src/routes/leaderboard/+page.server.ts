@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { Logger } from '$lib/server/utils/logger';
+import { fetchWithTimeout } from '$lib/server/utils/fetch-with-timeout';
 
 const logger = new Logger({ component: 'LeaderboardPage' });
 
@@ -24,8 +25,8 @@ export const load: PageServerLoad = async ({ fetch, setHeaders }) => {
 		});
 
 		const [tradersResponse, buildersResponse] = await Promise.all([
-			fetch(`/api/traders/leaderboard?${tradersParams.toString()}`),
-			fetch(`/api/builders/leaderboard?${buildersParams.toString()}`)
+			fetchWithTimeout(`/api/traders/leaderboard?${tradersParams.toString()}`),
+			fetchWithTimeout(`/api/builders/leaderboard?${buildersParams.toString()}`)
 		]);
 
 		const traders = tradersResponse.ok ? await tradersResponse.json() : [];
