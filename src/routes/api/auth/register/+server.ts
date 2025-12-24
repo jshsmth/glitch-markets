@@ -196,7 +196,6 @@ export const POST: RequestHandler = async ({ locals }) => {
 			});
 		}
 
-		// Create server wallet for new user
 		logger.info('Creating server wallet for new user', { userId, email });
 		let serverWallet;
 		try {
@@ -217,7 +216,6 @@ export const POST: RequestHandler = async ({ locals }) => {
 			throw walletError;
 		}
 
-		// Insert new user into Supabase (use admin client to bypass RLS)
 		const { error: insertError } = await supabaseAdmin.from('users').insert({
 			id: userId,
 			email,

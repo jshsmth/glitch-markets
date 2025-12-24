@@ -9,11 +9,12 @@
 	let { data } = $props();
 
 	let currentSort = $state<string>('volume24hr');
+	let resolvedCategoryData = $state<{ initialEvents: Event[]; subcategories: unknown[] } | null>(null);
 
 	$effect(() => {
-		if (data?.initialSort) {
-			currentSort = data.initialSort;
-		}
+		Promise.resolve(data.categoryData).then((categoryData) => {
+			resolvedCategoryData = categoryData;
+		});
 	});
 
 	const eventsQuery = createInfiniteQuery(() => ({
@@ -41,9 +42,9 @@
 		},
 		initialPageParam: 0,
 		initialData:
-			data?.initialEvents?.length > 0
+			resolvedCategoryData && resolvedCategoryData.initialEvents.length > 0
 				? {
-						pages: [data.initialEvents],
+						pages: [resolvedCategoryData.initialEvents],
 						pageParams: [0]
 					}
 				: undefined
@@ -72,17 +73,27 @@
 		<FilterBar {currentSort} onSortChange={handleSortChange} />
 	</div>
 
-	<EventList
-		events={allEvents}
-		loading={isInitialLoading}
-		error={eventsQuery.error}
-		onRetry={() => eventsQuery.refetch()}
-		onLoadMore={loadMore}
-		{hasMore}
-	/>
+	{#if resolvedCategoryData === null && isInitialLoading}
+		<div class="skeleton-grid">
+			{#each Array(6) as _}
+				<div class="skeleton skeleton-card"></div>
+			{/each}
+		</div>
+	{:else}
+		<EventList
+			events={allEvents}
+			loading={isInitialLoading}
+			error={eventsQuery.error}
+			onRetry={() => eventsQuery.refetch()}
+			onLoadMore={loadMore}
+			{hasMore}
+		/>
+	{/if}
 </div>
 
 <style>
+	@import '$lib/styles/skeleton.css';
+
 	.page-container {
 		max-width: 1400px;
 		margin: 0 auto;
@@ -99,5 +110,28 @@
 		display: flex;
 		justify-content: flex-end;
 		margin-bottom: var(--space-lg);
+	}
+
+	.skeleton-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 12px;
+	}
+
+	@media (min-width: 768px) {
+		.skeleton-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+
+	@media (min-width: 1200px) {
+		.skeleton-grid {
+			grid-template-columns: repeat(4, 1fr);
+		}
+	}
+
+	.skeleton-card {
+		height: 320px;
+		border-radius: var(--radius-card);
 	}
 </style>

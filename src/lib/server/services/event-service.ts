@@ -10,10 +10,8 @@ import { withCacheStampedeProtection } from '../cache/cache-stampede.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
 
 export interface EventFilters {
-	// Pagination
 	limit?: number;
 	offset?: number;
-	// Sorting
 	order?: string;
 	ascending?: boolean;
 	// Identifiers

@@ -40,7 +40,6 @@ export async function GET({ params, url }: RequestEvent) {
 			);
 		}
 
-		// Parse get_positions query parameter
 		const get_positions = url.searchParams.get('get_positions');
 		let includePositions = false;
 

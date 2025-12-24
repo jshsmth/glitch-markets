@@ -5,5 +5,7 @@ export const load: PageServerLoad = async ({ fetch, setHeaders }) => {
 	setHeaders({
 		'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=120'
 	});
-	return await loadCategoryData('pop-culture', fetch);
+	return {
+		categoryData: loadCategoryData('culture', fetch)
+	};
 };

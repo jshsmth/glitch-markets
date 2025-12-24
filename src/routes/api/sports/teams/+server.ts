@@ -50,7 +50,6 @@ export const GET: RequestHandler = async ({ url }) => {
 			);
 		}
 
-		// Parse numbers
 		const limit = parseInt(limitParam, 10);
 		const offset = parseInt(offsetParam, 10);
 
@@ -63,7 +62,6 @@ export const GET: RequestHandler = async ({ url }) => {
 			);
 		}
 
-		// Build params object
 		const params: {
 			limit: number;
 			offset: number;
@@ -77,19 +75,16 @@ export const GET: RequestHandler = async ({ url }) => {
 			offset
 		};
 
-		// Parse optional string param
 		const order = url.searchParams.get('order');
 		if (order !== null) {
 			params.order = order;
 		}
 
-		// Parse optional boolean param
 		const ascendingParam = url.searchParams.get('ascending');
 		if (ascendingParam !== null) {
 			params.ascending = ascendingParam === 'true';
 		}
 
-		// Parse optional array params (can appear multiple times)
 		const leagues = url.searchParams.getAll('league');
 		if (leagues.length > 0) {
 			params.league = leagues;

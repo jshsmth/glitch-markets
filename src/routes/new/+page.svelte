@@ -6,6 +6,14 @@
 
 	let { data } = $props();
 
+	let resolvedCategoryData = $state<{ initialEvents: Event[] } | null>(null);
+
+	$effect(() => {
+		Promise.resolve(data.categoryData).then((categoryData) => {
+			resolvedCategoryData = categoryData;
+		});
+	});
+
 	const eventsQuery = createInfiniteQuery(() => ({
 		queryKey: ['events', 'new'],
 		queryFn: async ({ pageParam = 0 }) => {
@@ -34,9 +42,9 @@
 		},
 		initialPageParam: 0,
 		initialData:
-			data?.initialEvents?.length > 0
+			resolvedCategoryData && resolvedCategoryData.initialEvents.length > 0
 				? {
-						pages: [data.initialEvents],
+						pages: [resolvedCategoryData.initialEvents],
 						pageParams: [0]
 					}
 				: undefined
@@ -54,18 +62,28 @@
 </script>
 
 <div class="page-container">
-	<EventList
-		events={allEvents}
-		loading={isInitialLoading}
-		error={eventsQuery.error}
-		onRetry={() => eventsQuery.refetch()}
-		onLoadMore={loadMore}
-		{hasMore}
-		title="New Markets"
-	/>
+	{#if resolvedCategoryData === null && isInitialLoading}
+		<div class="skeleton-grid">
+			{#each Array(6) as _}
+				<div class="skeleton skeleton-card"></div>
+			{/each}
+		</div>
+	{:else}
+		<EventList
+			events={allEvents}
+			loading={isInitialLoading}
+			error={eventsQuery.error}
+			onRetry={() => eventsQuery.refetch()}
+			onLoadMore={loadMore}
+			{hasMore}
+			title="New Markets"
+		/>
+	{/if}
 </div>
 
 <style>
+	@import '$lib/styles/skeleton.css';
+
 	.page-container {
 		max-width: 1400px;
 		margin: 0 auto;
@@ -76,5 +94,28 @@
 		.page-container {
 			padding: var(--space-lg) 24px;
 		}
+	}
+
+	.skeleton-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 12px;
+	}
+
+	@media (min-width: 768px) {
+		.skeleton-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+
+	@media (min-width: 1200px) {
+		.skeleton-grid {
+			grid-template-columns: repeat(4, 1fr);
+		}
+	}
+
+	.skeleton-card {
+		height: 320px;
+		border-radius: var(--radius-card);
 	}
 </style>

@@ -6,6 +6,14 @@
 
 	let { data } = $props();
 
+	let resolvedInitialEvents = $state<Event[] | null>(null);
+
+	$effect(() => {
+		Promise.resolve(data.initialEvents).then((events) => {
+			resolvedInitialEvents = events;
+		});
+	});
+
 	const eventsQuery = createInfiniteQuery(() => ({
 		queryKey: ['events', 'trending'],
 		queryFn: async ({ pageParam = 0 }) => {
@@ -31,9 +39,9 @@
 		},
 		initialPageParam: 0,
 		initialData:
-			data?.initialEvents?.length > 0
+			resolvedInitialEvents && resolvedInitialEvents.length > 0
 				? {
-						pages: [data.initialEvents],
+						pages: [resolvedInitialEvents],
 						pageParams: [0]
 					}
 				: undefined
@@ -52,17 +60,27 @@
 
 <div class="page-container">
 	<WatchlistSection />
-	<EventList
-		events={allEvents}
-		loading={isInitialLoading}
-		error={eventsQuery.error}
-		onRetry={() => eventsQuery.refetch()}
-		onLoadMore={loadMore}
-		{hasMore}
-	/>
+	{#if resolvedInitialEvents === null && isInitialLoading}
+		<div class="skeleton-grid">
+			{#each Array(6) as _, i}
+				<div class="skeleton skeleton-card"></div>
+			{/each}
+		</div>
+	{:else}
+		<EventList
+			events={allEvents}
+			loading={isInitialLoading}
+			error={eventsQuery.error}
+			onRetry={() => eventsQuery.refetch()}
+			onLoadMore={loadMore}
+			{hasMore}
+		/>
+	{/if}
 </div>
 
 <style>
+	@import '$lib/styles/skeleton.css';
+
 	.page-container {
 		max-width: 1400px;
 		margin: 0 auto;
@@ -73,5 +91,28 @@
 		.page-container {
 			padding: var(--space-lg) 24px;
 		}
+	}
+
+	.skeleton-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 12px;
+	}
+
+	@media (min-width: 768px) {
+		.skeleton-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+
+	@media (min-width: 1200px) {
+		.skeleton-grid {
+			grid-template-columns: repeat(4, 1fr);
+		}
+	}
+
+	.skeleton-card {
+		height: 320px;
+		border-radius: var(--radius-card);
 	}
 </style>

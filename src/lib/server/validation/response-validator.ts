@@ -1640,7 +1640,6 @@ export function validateReaction(data: unknown, index?: number): Reaction {
 
 	const reaction = data as Record<string, unknown>;
 
-	// Convert string ID to number if needed
 	let id: number;
 	if (typeof reaction.id === 'string') {
 		id = parseInt(reaction.id, 10);
@@ -1656,7 +1655,6 @@ export function validateReaction(data: unknown, index?: number): Reaction {
 		});
 	}
 
-	// Convert string commentID to number if needed
 	let commentID: number;
 	if (typeof reaction.commentID === 'string') {
 		commentID = parseInt(reaction.commentID, 10);
@@ -1685,7 +1683,6 @@ export function validateReaction(data: unknown, index?: number): Reaction {
 		throw new ValidationError('Reaction userAddress must be a string', { reaction, index });
 	}
 
-	// createdAt is optional
 	if (
 		reaction.createdAt !== null &&
 		reaction.createdAt !== undefined &&
@@ -1715,7 +1712,6 @@ export function validateComment(data: unknown): Comment {
 
 	const comment = data as Record<string, unknown>;
 
-	// Convert string ID to number if needed
 	let id: number;
 	if (typeof comment.id === 'string') {
 		id = parseInt(comment.id, 10);
@@ -1775,7 +1771,6 @@ export function validateComment(data: unknown): Comment {
 		throw new ValidationError('Comment createdAt must be a string', { comment });
 	}
 
-	// updatedAt is optional and may be null
 	if (
 		comment.updatedAt !== null &&
 		comment.updatedAt !== undefined &&
@@ -1792,12 +1787,10 @@ export function validateComment(data: unknown): Comment {
 		throw new ValidationError('Comment reactionCount must be a number', { comment });
 	}
 
-	// Validate nested profile - may be null in user comments endpoint
 	if (comment.profile !== null && comment.profile !== undefined) {
 		validateCommentProfile(comment.profile);
 	}
 
-	// Validate reactions array - can be null or an array
 	const reactions: unknown[] = [];
 	if (comment.reactions !== null && comment.reactions !== undefined) {
 		if (!isArray(comment.reactions)) {
