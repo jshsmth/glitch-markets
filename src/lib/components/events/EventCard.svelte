@@ -54,14 +54,16 @@
 	class:resolved={isEffectivelyResolved}
 >
 	{#if isEffectivelyResolved}
-		<div class="corner-badge resolved-badge">
+		<div class="corner-badge resolved-badge" class:compact={variant === 'compact'}>
 			<CheckCircleIcon size={12} />
 			<span>Resolved</span>
 		</div>
 	{:else if closingSoon}
-		<div class="closing-indicator">
-			<FireIcon size={12} />
-			<span>Ending soon</span>
+		<div class="closing-indicator" class:compact={variant === 'compact'}>
+			<FireIcon size={variant === 'compact' ? 14 : 12} />
+			{#if variant !== 'compact'}
+				<span>Ending soon</span>
+			{/if}
 		</div>
 	{/if}
 
@@ -234,6 +236,14 @@
 		border: 1px solid var(--success-light);
 	}
 
+	.corner-badge.compact {
+		top: 6px;
+		right: 6px;
+		padding: 3px 8px;
+		font-size: 9px;
+		gap: 2px;
+	}
+
 	.closing-indicator {
 		position: absolute;
 		top: 8px;
@@ -246,6 +256,12 @@
 		color: var(--danger);
 		white-space: nowrap;
 		z-index: 1;
+	}
+
+	.closing-indicator.compact {
+		top: 8px;
+		right: 8px;
+		gap: 0;
 	}
 
 	/* Compact variant */
