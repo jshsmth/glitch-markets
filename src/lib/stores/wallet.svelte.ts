@@ -15,6 +15,14 @@ interface WalletState {
 	error: string | null;
 }
 
+export interface UserProfile {
+	id: string;
+	email: string | null;
+	serverWalletAddress: string | null;
+	proxyWalletAddress: string | null;
+	isRegistered: boolean;
+}
+
 export const walletState = $state<WalletState>({
 	serverWalletAddress: null,
 	proxyWalletAddress: null,
@@ -26,9 +34,6 @@ export const walletState = $state<WalletState>({
 const cleanupManager = new CleanupManager();
 let lastProfileVersion = -1;
 
-/**
- * Fetch wallet addresses from the API
- */
 export async function fetchWalletAddresses(): Promise<void> {
 	if (!browser || !authState.session) {
 		walletState.serverWalletAddress = null;
@@ -72,9 +77,6 @@ export async function fetchWalletAddresses(): Promise<void> {
 
 let pollInterval: ReturnType<typeof setInterval> | null = null;
 
-/**
- * Poll for registration status until wallet is deployed
- */
 function startRegistrationPolling(): void {
 	if (pollInterval) return;
 
@@ -93,9 +95,6 @@ function startRegistrationPolling(): void {
 	}, 3000);
 }
 
-/**
- * Stop polling for registration status
- */
 function stopRegistrationPolling(): void {
 	if (pollInterval) {
 		clearInterval(pollInterval);
@@ -103,8 +102,31 @@ function stopRegistrationPolling(): void {
 	}
 }
 
+export function initializeWalletFromProfile(profile: UserProfile | null): void {
+	if (!profile) {
+		walletState.serverWalletAddress = null;
+		walletState.proxyWalletAddress = null;
+		walletState.isRegistered = false;
+		walletState.isLoading = false;
+		walletState.error = null;
+		return;
+	}
+
+	walletState.serverWalletAddress = profile.serverWalletAddress;
+	walletState.proxyWalletAddress = profile.proxyWalletAddress;
+	walletState.isRegistered = profile.isRegistered;
+	walletState.isLoading = false;
+	walletState.error = null;
+
+	// Prevent redundant fetch by syncing version
+	lastProfileVersion = authState.profileVersion;
+
+	if (!profile.isRegistered) {
+		startRegistrationPolling();
+	}
+}
+
 /**
- * Auto-fetch wallet addresses when auth state changes
  * Call this in a $effect in your root layout
  */
 export function initializeWalletSync(): () => void {
@@ -140,9 +162,6 @@ export function initializeWalletSync(): () => void {
 	};
 }
 
-/**
- * Reset wallet state (call on logout)
- */
 export function resetWalletState(): void {
 	cleanupManager.cleanup();
 	stopRegistrationPolling();

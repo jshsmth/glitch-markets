@@ -17,30 +17,18 @@ export const authState = $state({
 	profileVersion: 0
 });
 
-/**
- * Function: Check if user is authenticated
- */
 export function isAuthenticated(): boolean {
 	return !!authState.user;
 }
 
-/**
- * Function: Get user ID
- */
 export function getUserId(): string | null {
 	return authState.user?.id ?? null;
 }
 
-/**
- * Function: Get user email
- */
 export function getUserEmail(): string | null {
 	return authState.user?.email ?? null;
 }
 
-/**
- * Initialize auth state from session
- */
 export function initializeAuth(session: Session | null) {
 	if (!browser) return;
 
@@ -49,24 +37,17 @@ export function initializeAuth(session: Session | null) {
 	authState.isInitializing = false;
 }
 
-/**
- * Update auth state when session changes
- */
 export function updateAuthState(session: Session | null) {
 	authState.session = session;
 	authState.user = session?.user ?? null;
 }
 
-/**
- * Set initialization complete
- */
 export function setInitializationComplete() {
 	authState.isInitializing = false;
 }
 
 /**
- * Trigger a profile refetch by incrementing the version
- * Call this after wallet creation or profile updates
+ * Call after wallet creation or profile updates
  */
 export function refreshProfile() {
 	authState.profileVersion++;

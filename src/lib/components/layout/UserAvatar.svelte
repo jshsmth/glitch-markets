@@ -191,6 +191,11 @@
 							</div>
 							{#if walletState.isRegistered}
 								<div class="header-subtext ready-badge">Ready to Trade</div>
+							{:else if walletState.proxyWalletAddress}
+								<div class="header-subtext deploying-badge">
+									<div class="deployment-spinner"></div>
+									Deploying wallet...
+								</div>
 							{/if}
 						{/if}
 					</div>
@@ -555,5 +560,29 @@
 		color: var(--success);
 		font-weight: 600;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	}
+
+	.deploying-badge {
+		color: var(--warning);
+		font-weight: 600;
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.deployment-spinner {
+		width: 10px;
+		height: 10px;
+		border: 2px solid currentColor;
+		border-top-color: transparent;
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>

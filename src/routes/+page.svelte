@@ -4,6 +4,8 @@
 	import WatchlistSection from '$lib/components/events/WatchlistSection.svelte';
 	import type { Event } from '$lib/server/api/polymarket-client';
 
+	let { data } = $props();
+
 	const eventsQuery = createInfiniteQuery(() => ({
 		queryKey: ['events', 'trending'],
 		queryFn: async ({ pageParam = 0 }) => {
@@ -27,7 +29,11 @@
 			if (lastPage.length < 20) return undefined;
 			return allPages.length * 20;
 		},
-		initialPageParam: 0
+		initialPageParam: 0,
+		initialData: data?.initialEvents?.length > 0 ? {
+			pages: [data.initialEvents],
+			pageParams: [0]
+		} : undefined
 	}));
 
 	const allEvents = $derived(eventsQuery.data?.pages.flat() ?? []);

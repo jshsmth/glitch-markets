@@ -7,9 +7,11 @@
 	interface Props {
 		categorySlug: string;
 		categoryTitle: string;
+		initialEvents?: Event[];
+		subcategories?: Tag[];
 	}
 
-	let { categorySlug, categoryTitle }: Props = $props();
+	let { categorySlug, categoryTitle, initialEvents = [], subcategories = [] }: Props = $props();
 
 	let selectedTag = $state<string | null>(null);
 	let status = $state<'active' | 'closed' | 'all'>('active');
@@ -41,8 +43,13 @@
 			}
 
 			return res.json() as Promise<Tag[]>;
-		}
+		},
+		initialData: subcategories?.length > 0 ? subcategories : undefined
 	}));
+
+	const shouldUseInitialData = $derived(
+		tag_slug === categorySlug && status === 'active' && sort === 'volume24hr' && initialEvents?.length > 0
+	);
 
 	const eventsQuery = createInfiniteQuery(() => ({
 		queryKey: ['events', categorySlug, tag_slug, status, sort],
@@ -72,7 +79,11 @@
 			if (lastPage.length < 20) return undefined;
 			return allPages.length * 20;
 		},
-		initialPageParam: 0
+		initialPageParam: 0,
+		initialData: shouldUseInitialData ? {
+			pages: [initialEvents],
+			pageParams: [0]
+		} : undefined
 	}));
 
 	let allEvents = $derived(eventsQuery.data?.pages.flat() ?? []);

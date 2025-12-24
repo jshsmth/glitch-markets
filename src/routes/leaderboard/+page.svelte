@@ -7,6 +7,8 @@
 	} from '$lib/server/api/polymarket-client';
 	import { browser } from '$app/environment';
 
+	let { data } = $props();
+
 	type TimePeriod = 'DAY' | 'WEEK' | 'MONTH' | 'ALL';
 	type LeaderboardType = 'traders' | 'builders';
 
@@ -30,7 +32,8 @@
 			}
 			return response.json();
 		},
-		enabled: browser && selectedType === 'traders'
+		enabled: browser && selectedType === 'traders',
+		initialData: selectedPeriod === 'DAY' ? data?.initialTraders : undefined
 	}));
 
 	const buildersQuery = createQuery<BuilderLeaderboardEntry[]>(() => ({
@@ -48,7 +51,8 @@
 			}
 			return response.json();
 		},
-		enabled: browser && selectedType === 'builders'
+		enabled: browser && selectedType === 'builders',
+		initialData: selectedPeriod === 'DAY' ? data?.initialBuilders : undefined
 	}));
 
 	const isPending = $derived(

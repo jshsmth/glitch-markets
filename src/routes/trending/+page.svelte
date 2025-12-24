@@ -1,10 +1,20 @@
 <script lang="ts">
 	import { createInfiniteQuery } from '@tanstack/svelte-query';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import EventList from '$lib/components/events/EventList.svelte';
 	import FilterBar from '$lib/components/filters/FilterBar.svelte';
 	import type { Event } from '$lib/server/api/polymarket-client';
 
-	let currentSort = $state('volume24hr');
+	let { data } = $props();
+
+	let currentSort = $state<string>('volume24hr');
+
+	$effect(() => {
+		if (data?.initialSort) {
+			currentSort = data.initialSort;
+		}
+	});
 
 	const eventsQuery = createInfiniteQuery(() => ({
 		queryKey: ['events', 'trending', currentSort],
@@ -29,7 +39,11 @@
 			if (lastPage.length < 20) return undefined;
 			return allPages.length * 20;
 		},
-		initialPageParam: 0
+		initialPageParam: 0,
+		initialData: data?.initialEvents?.length > 0 ? {
+			pages: [data.initialEvents],
+			pageParams: [0]
+		} : undefined
 	}));
 
 	const allEvents = $derived(eventsQuery.data?.pages.flat() ?? []);
@@ -44,6 +58,9 @@
 
 	function handleSortChange(sort: string) {
 		currentSort = sort;
+		const url = new URL($page.url);
+		url.searchParams.set('order', sort);
+		goto(url.toString(), { replaceState: true, noScroll: true });
 	}
 </script>
 
