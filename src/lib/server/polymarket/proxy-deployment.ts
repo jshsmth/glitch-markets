@@ -8,7 +8,7 @@ import { BuilderConfig } from '@polymarket/builder-signing-sdk';
 import { Wallet } from '@ethersproject/wallet';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { encodeFunctionData } from 'viem';
-import { Logger } from '../utils/logger';
+import { Logger } from '$lib/utils/logger';
 import { decryptData } from '../utils/encryption';
 import { env } from '$env/dynamic/private';
 

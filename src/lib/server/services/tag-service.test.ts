@@ -2,13 +2,20 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as fc from 'fast-check';
 import { TagService } from './tag-service';
 import { loadConfig } from '../config/api-config';
-import { Logger } from '../utils/logger';
 
 // Mock the dependencies
 vi.mock('../api/polymarket-client');
 vi.mock('../cache/cache-manager');
 vi.mock('../config/api-config');
-vi.mock('../utils/logger');
+vi.mock('$lib/utils/logger', () => ({
+	Logger: class {
+		info = vi.fn();
+		error = vi.fn();
+		warn = vi.fn();
+		debug = vi.fn();
+		child = vi.fn().mockReturnThis();
+	}
+}));
 
 describe('TagService', () => {
 	let service: TagService;
@@ -27,16 +34,6 @@ describe('TagService', () => {
 			cacheTtl: 60,
 			enableCache: true
 		});
-
-		// Mock Logger constructor
-		vi.mocked(Logger).mockImplementation(function (this: unknown) {
-			return {
-				info: vi.fn(),
-				error: vi.fn(),
-				warn: vi.fn(),
-				debug: vi.fn()
-			} as never;
-		} as never);
 
 		service = new TagService();
 	});

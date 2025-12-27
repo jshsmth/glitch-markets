@@ -1,3 +1,7 @@
+import { Logger } from '$lib/utils/logger';
+
+const log = Logger.forModule('CleanupManager');
+
 export function createAbortController(): {
 	controller: AbortController | null;
 	abort: () => void;
@@ -133,7 +137,7 @@ export class CleanupManager {
 			try {
 				callback();
 			} catch (error) {
-				console.error('Error in cleanup callback:', error);
+				log.error('Error in cleanup callback', error);
 			}
 		});
 		this.cleanupCallbacks.clear();

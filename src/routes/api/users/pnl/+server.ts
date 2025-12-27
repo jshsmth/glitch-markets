@@ -9,7 +9,7 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { UserDataService } from '$lib/server/services/user-data-service.js';
 import { formatErrorResponse, ApiError } from '$lib/server/errors/api-errors.js';
-import { Logger } from '$lib/server/utils/logger.js';
+import { Logger } from '$lib/utils/logger';
 
 const logger = new Logger({ component: 'PnLRoute' });
 const userDataService = new UserDataService();

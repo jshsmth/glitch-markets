@@ -2,6 +2,9 @@ import { browser } from '$app/environment';
 import { initializeWatchlist, clearWatchlist } from '$lib/stores/watchlist.svelte';
 import { migrateLocalStorageBookmarks, shouldOfferMigration } from '$lib/utils/migrate-bookmarks';
 import { authState } from '$lib/stores/auth.svelte';
+import { Logger } from '$lib/utils/logger';
+
+const log = Logger.forModule('WatchlistInit');
 
 export function useWatchlistInitialization() {
 	$effect(() => {
@@ -11,7 +14,7 @@ export function useWatchlistInitialization() {
 			if (shouldOfferMigration()) {
 				migrateLocalStorageBookmarks().then((result) => {
 					if (result.migrated > 0) {
-						console.log(`Migrated ${result.migrated} bookmarks to database`);
+						log.info('Migrated bookmarks to database', { count: result.migrated });
 					}
 				});
 			}

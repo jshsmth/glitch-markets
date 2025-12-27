@@ -40,7 +40,7 @@ export function mockLogger() {
  */
 export async function setupServiceMocks() {
 	const { loadConfig } = await import('$lib/server/config/api-config');
-	const { Logger } = await import('$lib/server/utils/logger');
+	const { Logger } = await import('$lib/utils/logger');
 
 	vi.mocked(loadConfig).mockReturnValue(mockApiConfig());
 	vi.mocked(Logger).mockImplementation(function (this: unknown) {

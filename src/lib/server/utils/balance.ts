@@ -7,7 +7,7 @@ import { createPublicClient, http, formatUnits } from 'viem';
 import { polygon } from 'viem/chains';
 import { env } from '$env/dynamic/private';
 import { CacheManager } from '$lib/server/cache/cache-manager';
-import { Logger } from './logger';
+import { Logger } from '$lib/utils/logger';
 
 const logger = new Logger({ component: 'Balance' });
 

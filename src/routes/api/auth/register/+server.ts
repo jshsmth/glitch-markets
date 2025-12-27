@@ -7,7 +7,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createServerWallet } from '$lib/server/wallet/server-wallet';
-import { Logger } from '$lib/server/utils/logger';
+import { Logger } from '$lib/utils/logger';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import { registerWithPolymarket } from '$lib/server/polymarket/clob-registration';
 import { encryptData } from '$lib/server/utils/encryption';
@@ -205,14 +205,10 @@ export const POST: RequestHandler = async ({ locals }) => {
 				address: serverWallet.accountAddress
 			});
 		} catch (walletError) {
-			logger.error('Server wallet creation failed', {
+			logger.error('Server wallet creation failed', walletError, {
 				userId,
-				email,
-				error: walletError instanceof Error ? walletError.message : 'Unknown error',
-				stack: walletError instanceof Error ? walletError.stack : undefined,
-				errorName: walletError instanceof Error ? walletError.name : undefined
+				email
 			});
-			console.error('Detailed wallet creation error:', walletError);
 			throw walletError;
 		}
 

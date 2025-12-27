@@ -7,7 +7,7 @@
  */
 
 import { json } from '@sveltejs/kit';
-import { Logger } from '$lib/server/utils/logger.js';
+import { Logger } from '$lib/utils/logger';
 import { TIMEOUTS } from '$lib/config/constants.js';
 
 const logger = new Logger({ component: 'HealthRoute' });

@@ -10,8 +10,10 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { EventService } from '$lib/server/services/event-service';
+import { Logger } from '$lib/utils/logger';
 
 const eventService = new EventService();
+const log = Logger.forRoute('/api/watchlist');
 
 /**
  * GET /api/watchlist
@@ -37,7 +39,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			.order('created_at', { ascending: false });
 
 		if (watchlistError) {
-			console.error('Failed to fetch watchlist:', watchlistError);
+			log.error('Failed to fetch watchlist:', watchlistError);
 			return json({ error: 'Failed to fetch watchlist' }, { status: 500 });
 		}
 
@@ -56,7 +58,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 				try {
 					return await eventService.getEventById(eventId);
 				} catch {
-					console.warn('Event not found or unavailable:', eventId);
+					log.warn('Event not found or unavailable', { eventId });
 					return null;
 				}
 			})
@@ -70,7 +72,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error in watchlist GET:', error);
+		log.error('Error in watchlist GET:', error);
 		return json({ error: 'Failed to fetch watchlist' }, { status: 500 });
 	}
 };
@@ -110,13 +112,13 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 				return json({ success: true, message: 'Event already bookmarked' });
 			}
 
-			console.error('Failed to add bookmark:', insertError);
+			log.error('Failed to add bookmark:', insertError);
 			return json({ error: 'Failed to add bookmark' }, { status: 500 });
 		}
 
 		return json({ success: true, message: 'Event bookmarked' });
 	} catch (error) {
-		console.error('Error in watchlist POST:', error);
+		log.error('Error in watchlist POST:', error);
 		return json({ error: 'Failed to add bookmark' }, { status: 500 });
 	}
 };
@@ -150,13 +152,13 @@ export const DELETE: RequestHandler = async ({ locals, url }) => {
 			.eq('event_id', eventId);
 
 		if (deleteError) {
-			console.error('Failed to remove bookmark:', deleteError);
+			log.error('Failed to remove bookmark:', deleteError);
 			return json({ error: 'Failed to remove bookmark' }, { status: 500 });
 		}
 
 		return json({ success: true, message: 'Bookmark removed' });
 	} catch (error) {
-		console.error('Error in watchlist DELETE:', error);
+		log.error('Error in watchlist DELETE:', error);
 		return json({ error: 'Failed to remove bookmark' }, { status: 500 });
 	}
 };

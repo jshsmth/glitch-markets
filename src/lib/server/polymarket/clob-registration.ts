@@ -8,7 +8,7 @@
 
 import { ClobClient } from '@polymarket/clob-client';
 import { Wallet } from '@ethersproject/wallet';
-import { Logger } from '../utils/logger';
+import { Logger } from '$lib/utils/logger';
 import { decryptData } from '../utils/encryption';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import { deployProxyWallet } from './proxy-deployment';

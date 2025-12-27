@@ -1,3 +1,7 @@
+import { Logger } from '$lib/utils/logger';
+
+const log = Logger.forModule('ScrollTrigger');
+
 export interface UseScrollTriggerOptions {
 	onLoadMore: () => void | Promise<void>;
 	hasMore: boolean;
@@ -46,7 +50,7 @@ export function useScrollTrigger(options: UseScrollTriggerOptions) {
 						await onLoadMore();
 					} catch (error) {
 						if (error instanceof Error) {
-							console.error('Error loading more:', error);
+							log.error('Error loading more', error);
 						}
 					} finally {
 						loadingMore = false;

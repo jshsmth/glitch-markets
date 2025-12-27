@@ -11,8 +11,11 @@ import { browser } from '$app/environment';
 import { queryKeys } from '$lib/query/client';
 import type { QueryClient } from '@tanstack/svelte-query';
 import type { Event } from '$lib/server/api/polymarket-client';
+import { Logger } from '$lib/utils/logger';
 
 let queryClient: QueryClient | null = null;
+
+const log = Logger.forModule('WatchlistStore');
 
 export function setQueryClient(client: QueryClient) {
 	queryClient = client;
@@ -54,7 +57,7 @@ export async function initializeWatchlist(): Promise<void> {
 			bookmarkedEventIds.add(event.id);
 		});
 	} catch (error) {
-		console.error('Failed to initialize watchlist:', error);
+		log.error('Failed to initialize watchlist', error);
 		watchlistState.error = error instanceof Error ? error.message : 'Unknown error';
 	} finally {
 		watchlistState.isLoading = false;
@@ -116,7 +119,7 @@ export async function addToWatchlist(eventId: string, event?: Event): Promise<bo
 
 		return true;
 	} catch (error) {
-		console.error('Failed to add to watchlist:', error);
+		log.error('Failed to add to watchlist', error, { eventId });
 
 		if (error instanceof Error && error.message === 'UNAUTHORIZED') {
 			throw error;
@@ -157,7 +160,7 @@ export async function removeFromWatchlist(eventId: string): Promise<boolean> {
 
 		return true;
 	} catch (error) {
-		console.error('Failed to remove from watchlist:', error);
+		log.error('Failed to remove from watchlist', error, { eventId });
 		return false;
 	}
 }

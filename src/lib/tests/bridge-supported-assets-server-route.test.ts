@@ -18,7 +18,7 @@ vi.mock('$lib/server/services/bridge-service', () => ({
 }));
 
 // Mock logger to avoid console noise
-vi.mock('$lib/server/utils/logger', () => ({
+vi.mock('$lib/utils/logger', () => ({
 	Logger: class {
 		info = vi.fn();
 		error = vi.fn();

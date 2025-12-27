@@ -11,7 +11,7 @@ import type { RequestHandler } from './$types';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import type { Database } from '$lib/supabase/database.types';
 import { getUSDCBalanceAndAllowance } from '$lib/server/utils/balance';
-import { Logger } from '$lib/server/utils/logger';
+import { Logger } from '$lib/utils/logger';
 import { createPublicClient, http } from 'viem';
 import { polygon } from 'viem/chains';
 

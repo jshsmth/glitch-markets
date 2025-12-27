@@ -3,7 +3,7 @@ import * as fc from 'fast-check';
 import { MarketService } from './market-service';
 import type { Market } from '../api/polymarket-client';
 import { loadConfig } from '../config/api-config';
-import { Logger } from '../utils/logger';
+import { Logger } from '$lib/utils/logger';
 import { marketArbitrary } from '$lib/tests/helpers/test-arbitraries';
 import { createMockMarket } from '$lib/tests/helpers/test-mocks';
 
@@ -11,7 +11,15 @@ import { createMockMarket } from '$lib/tests/helpers/test-mocks';
 vi.mock('../api/polymarket-client');
 vi.mock('../cache/cache-manager');
 vi.mock('../config/api-config');
-vi.mock('../utils/logger');
+vi.mock('$lib/utils/logger', () => ({
+	Logger: class {
+		info = vi.fn();
+		error = vi.fn();
+		warn = vi.fn();
+		debug = vi.fn();
+		child = vi.fn().mockReturnThis();
+	}
+}));
 
 describe('MarketService', () => {
 	let service: MarketService;
@@ -30,16 +38,6 @@ describe('MarketService', () => {
 			cacheTtl: 60,
 			enableCache: true
 		});
-
-		// Mock Logger constructor
-		vi.mocked(Logger).mockImplementation(function (this: unknown) {
-			return {
-				info: vi.fn(),
-				error: vi.fn(),
-				warn: vi.fn(),
-				debug: vi.fn()
-			} as never;
-		} as never);
 
 		service = new MarketService();
 	});

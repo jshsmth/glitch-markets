@@ -391,7 +391,7 @@ describe('Series Server Route', () => {
 	describe('Property 17: Request logging completeness', () => {
 		it('should log request with filters for any valid request', async () => {
 			// We'll need to mock the Logger to verify logging
-			const { Logger } = await import('$lib/server/utils/logger');
+			const { Logger } = await import('$lib/utils/logger');
 			const mockLoggerInfo = vi.spyOn(Logger.prototype, 'info');
 
 			await fc.assert(
@@ -453,7 +453,7 @@ describe('Series Server Route', () => {
 	 */
 	describe('Property 18: Response logging completeness', () => {
 		it('should log response with count and duration for any successful request', async () => {
-			const { Logger } = await import('$lib/server/utils/logger');
+			const { Logger } = await import('$lib/utils/logger');
 			const mockLoggerInfo = vi.spyOn(Logger.prototype, 'info');
 
 			await fc.assert(
@@ -503,7 +503,7 @@ describe('Series Server Route', () => {
 	 */
 	describe('Property 19: Error logging completeness', () => {
 		it('should log errors with duration and context', async () => {
-			const { Logger } = await import('$lib/server/utils/logger');
+			const { Logger } = await import('$lib/utils/logger');
 			const { ApiError } = await import('$lib/server/errors/api-errors');
 			const mockLoggerError = vi.spyOn(Logger.prototype, 'error');
 
@@ -550,7 +550,7 @@ describe('Series Server Route', () => {
 		});
 
 		it('should log unexpected errors with duration', async () => {
-			const { Logger } = await import('$lib/server/utils/logger');
+			const { Logger } = await import('$lib/utils/logger');
 			const mockLoggerError = vi.spyOn(Logger.prototype, 'error');
 
 			mockLoggerError.mockClear();

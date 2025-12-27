@@ -13,6 +13,9 @@
 	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
 	import DocumentTextIcon from '$lib/components/icons/DocumentTextIcon.svelte';
 	import LegalIcon from '$lib/components/icons/LegalIcon.svelte';
+	import { Logger } from '$lib/utils/logger';
+
+	const log = Logger.forComponent('UserAvatar');
 	import ElectricityIcon from '$lib/components/icons/ElectricityIcon.svelte';
 	import LogoutIcon from '$lib/components/icons/LogoutIcon.svelte';
 	import { openSignInModal } from '$lib/stores/modal.svelte';
@@ -101,7 +104,7 @@
 			showDropdown = false;
 			goto('/');
 		} catch (err) {
-			console.error('Logout error:', err);
+			log.error('Logout error', err);
 		}
 	}
 
@@ -125,7 +128,7 @@
 		try {
 			await navigator.clipboard.writeText(address);
 		} catch (err) {
-			console.error('Failed to copy address:', err);
+			log.error('Failed to copy address', err);
 		}
 	}
 

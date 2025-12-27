@@ -13,6 +13,9 @@
 	import LogoutIcon from '$lib/components/icons/LogoutIcon.svelte';
 	import LeaderboardIcon from '$lib/components/icons/LeaderboardIcon.svelte';
 	import DocumentTextIcon from '$lib/components/icons/DocumentTextIcon.svelte';
+	import { Logger } from '$lib/utils/logger';
+
+	const log = Logger.forComponent('BottomNav');
 	import LegalIcon from '$lib/components/icons/LegalIcon.svelte';
 	import ElectricityIcon from '$lib/components/icons/ElectricityIcon.svelte';
 	import MoonIcon from '$lib/components/icons/MoonIcon.svelte';
@@ -121,7 +124,7 @@
 			moreMenuOpen = false;
 			goto('/');
 		} catch (err) {
-			console.error('Logout error:', err);
+			log.error('Logout error', err);
 		}
 	}
 

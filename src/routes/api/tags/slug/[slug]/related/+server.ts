@@ -6,7 +6,7 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { TagService } from '$lib/server/services/tag-service.js';
 import { formatErrorResponse, ApiError } from '$lib/server/errors/api-errors.js';
-import { Logger } from '$lib/server/utils/logger.js';
+import { Logger } from '$lib/utils/logger';
 
 const logger = new Logger({ component: 'RelatedTagsBySlugRoute' });
 const tagService = new TagService();

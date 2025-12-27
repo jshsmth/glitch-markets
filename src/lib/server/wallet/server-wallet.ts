@@ -7,7 +7,7 @@
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { createWalletClient, http } from 'viem';
 import { polygon } from 'viem/chains';
-import { Logger } from '$lib/server/utils/logger';
+import { Logger } from '$lib/utils/logger';
 import { encryptData, decryptData } from '$lib/server/utils/encryption';
 
 const logger = new Logger({ component: 'ServerWallet' });

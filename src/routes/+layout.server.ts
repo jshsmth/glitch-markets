@@ -1,6 +1,6 @@
 import type { LayoutServerLoad } from './$types';
 import type { UserProfile } from '$lib/types/user';
-import { Logger } from '$lib/server/utils/logger';
+import { Logger } from '$lib/utils/logger';
 import { CacheManager } from '$lib/server/cache/cache-manager';
 
 const logger = new Logger({ component: 'Layout' });

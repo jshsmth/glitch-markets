@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { Logger } from '$lib/server/utils/logger';
+import { Logger } from '$lib/utils/logger';
 import { fetchWithTimeout } from '$lib/server/utils/fetch-with-timeout';
 
 const logger = new Logger({ component: 'LeaderboardPage' });

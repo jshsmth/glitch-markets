@@ -1,4 +1,4 @@
-import { Logger } from '$lib/server/utils/logger';
+import { Logger } from '$lib/utils/logger';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import { registerWithPolymarket } from '$lib/server/polymarket/clob-registration';
 import { encryptData } from '$lib/server/utils/encryption';

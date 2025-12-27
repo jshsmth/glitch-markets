@@ -6,7 +6,7 @@
 import { encodePacked, keccak256, getContractAddress } from 'viem';
 import { createPublicClient, http } from 'viem';
 import { polygon } from 'viem/chains';
-import { Logger } from './logger';
+import { Logger } from '$lib/utils/logger';
 
 const logger = new Logger({ component: 'ProxyWallet' });
 

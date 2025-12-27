@@ -5,7 +5,7 @@
 
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
-import { Logger } from '../utils/logger.js';
+import { Logger } from '$lib/utils/logger';
 
 describe('Logger', () => {
 	let consoleSpies: {

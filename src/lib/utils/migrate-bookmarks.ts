@@ -4,6 +4,9 @@
  */
 
 import { addToWatchlist } from '$lib/stores/watchlist.svelte';
+import { Logger } from '$lib/utils/logger';
+
+const log = Logger.forModule('BookmarkMigration');
 
 const BOOKMARKS_KEY = 'glitch-bookmarks';
 const MIGRATION_FLAG_KEY = 'glitch-bookmarks-migrated';
@@ -36,7 +39,7 @@ export async function migrateLocalStorageBookmarks(): Promise<{
 					failed++;
 				}
 			} catch (error) {
-				console.error('Failed to migrate bookmark:', eventId, error);
+				log.error('Failed to migrate bookmark', error, { eventId });
 				failed++;
 			}
 		}
@@ -47,7 +50,7 @@ export async function migrateLocalStorageBookmarks(): Promise<{
 
 		return { migrated, failed };
 	} catch (error) {
-		console.error('Failed to migrate bookmarks:', error);
+		log.error('Failed to migrate bookmarks', error);
 		return { migrated: 0, failed: 0 };
 	}
 }
