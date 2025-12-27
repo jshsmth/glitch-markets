@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BridgeService } from './bridge-service.js';
 import { ValidationError } from '../errors/api-errors.js';
+import { resetSharedInstances } from '../cache/shared-instances.js';
 
 // Mock dependencies (but NOT cache-manager, we need it to work for caching tests)
 vi.mock('../api/polymarket-client.js');
@@ -16,6 +17,7 @@ describe('BridgeService', () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
+		resetSharedInstances();
 		service = new BridgeService(300000); // 5 minute cache
 	});
 
@@ -73,10 +75,6 @@ describe('BridgeService', () => {
 			// Create a spy on the fetchSupportedBridgeAssets method directly
 			const fetchSpy = vi.fn().mockResolvedValue(mockAssets);
 			service['client'].fetchSupportedBridgeAssets = fetchSpy;
-
-			// Clear cache to ensure test isolation
-			service['cache'].clear();
-			service['pendingRequests'].clear();
 
 			// First call - should hit API
 			const result1 = await service.getSupportedAssets();

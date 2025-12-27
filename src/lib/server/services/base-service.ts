@@ -3,15 +3,18 @@
  * Provides shared functionality for all service layer classes
  */
 
-import { PolymarketClient } from '../api/polymarket-client.js';
-import { CacheManager } from '../cache/cache-manager.js';
-import { loadConfig } from '../config/api-config.js';
+import type { PolymarketClient } from '../api/polymarket-client.js';
+import type { CacheManager } from '../cache/cache-manager.js';
+import { getSharedCache, getSharedClient } from '../cache/shared-instances.js';
 import { Logger } from '../utils/logger.js';
 import { CACHE_TTL } from '$lib/config/constants.js';
 
 /**
  * Base class for all service layer classes
  * Handles common initialization, caching, and data fetching patterns
+ *
+ * Uses singleton instances of PolymarketClient and CacheManager
+ * to improve cache hit rates and reduce memory usage across all services.
  */
 export abstract class BaseService {
 	protected client: PolymarketClient;
@@ -23,13 +26,14 @@ export abstract class BaseService {
 
 	/**
 	 * Creates a new BaseService instance
+	 * Uses shared singleton instances for client and cache
+	 *
 	 * @param componentName - Name of the component for logging
 	 * @param cacheTtl - Cache time-to-live in milliseconds
 	 */
 	constructor(componentName: string, cacheTtl: number = CACHE_TTL.DEFAULT) {
-		const config = loadConfig();
-		this.client = new PolymarketClient(config);
-		this.cache = new CacheManager(100);
+		this.client = getSharedClient();
+		this.cache = getSharedCache();
 		this.logger = new Logger({ component: componentName });
 		this.cacheTtl = cacheTtl;
 		this.pendingRequests = new Map();
@@ -154,7 +158,8 @@ export abstract class BaseService {
 	}
 
 	/**
-	 * Clears the cache - useful for testing
+	 * Clears the shared cache - useful for testing
+	 * Note: This clears the cache for ALL services since they share the same instance
 	 * @internal This method is primarily for testing purposes
 	 */
 	clearCache(): void {
