@@ -15,6 +15,7 @@
 	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
 	import PriceChart from '$lib/components/charts/PriceChart.svelte';
+	import OutcomeCard from '$lib/components/event/OutcomeCard.svelte';
 	import { formatNumber } from '$lib/utils/format';
 
 	let { data }: { data: PageData } = $props();
@@ -410,65 +411,21 @@
 							{#if isMultiMarket}
 								{#each filteredMarkets as market (market.id)}
 									{@const marketData = parseMarketData(market)}
-									<div class="outcome-card">
-										<div class="outcome-card-header">
-											<span class="outcome-card-name">{getMarketDisplayTitle(market)}</span>
-											<span class="outcome-card-volume"
-												>{formatNumber(Number(market.volume) || 0)} Vol.</span
-											>
-										</div>
-										<div class="outcome-card-body">
-											<span class="outcome-card-percentage">
-												{#if marketData?.[0]?.isResolved}
-													<span class="resolved-tag" class:won={marketData[0].won}>
-														{marketData[0].priceFormatted}
-													</span>
-												{:else}
-													{marketData?.[0]?.priceFormatted || '—'}%
-												{/if}
-											</span>
-											{#if marketData && !marketData[0]?.isResolved}
-												<div class="outcome-card-actions">
-													<button class="bet-btn yes">
-														Yes · {marketData[0]?.priceFormatted || '—'}¢
-													</button>
-													<button class="bet-btn no">
-														No · {marketData[1]?.priceFormatted || '—'}¢
-													</button>
-												</div>
-											{/if}
-										</div>
-									</div>
+									{#if marketData}
+										<OutcomeCard
+											name={getMarketDisplayTitle(market)}
+											volume={Number(market.volume) || 0}
+											outcomeData={marketData}
+										/>
+									{/if}
 								{/each}
 							{:else if selectedMarketData}
-								{#each selectedMarketData as outcome (outcome.label)}
-									<div class="outcome-card">
-										<div class="outcome-card-header">
-											<span class="outcome-card-name">{outcome.label}</span>
-											<span class="outcome-card-volume"
-												>{formatNumber(Number(selectedMarket?.volume) || 0)} Vol.</span
-											>
-										</div>
-										<div class="outcome-card-body">
-											<span class="outcome-card-percentage">
-												{#if outcome.isResolved}
-													<span class="resolved-tag" class:won={outcome.won}
-														>{outcome.priceFormatted}</span
-													>
-												{:else}
-													{outcome.priceFormatted}%
-												{/if}
-											</span>
-											{#if !outcome.isResolved}
-												<div class="outcome-card-actions">
-													<button class="bet-btn yes">
-														Yes · {outcome.priceFormatted}¢
-													</button>
-												</div>
-											{/if}
-										</div>
-									</div>
-								{/each}
+								<OutcomeCard
+									name={selectedMarket?.question || 'Unknown'}
+									volume={Number(selectedMarket?.volume) || 0}
+									outcomeData={selectedMarketData}
+									showBetButtons={selectedMarketData.length === 1}
+								/>
 							{/if}
 						</div>
 					{:else if activeTab === 'about'}
@@ -555,65 +512,21 @@
 					{#if isMultiMarket}
 						{#each filteredMarkets as market (market.id)}
 							{@const marketData = parseMarketData(market)}
-							<div class="outcome-card">
-								<div class="outcome-card-header">
-									<span class="outcome-card-name">{getMarketDisplayTitle(market)}</span>
-									<span class="outcome-card-volume"
-										>{formatNumber(Number(market.volume) || 0)} Vol.</span
-									>
-								</div>
-								<div class="outcome-card-body">
-									<span class="outcome-card-percentage">
-										{#if marketData?.[0]?.isResolved}
-											<span class="resolved-tag" class:won={marketData[0].won}>
-												{marketData[0].priceFormatted}
-											</span>
-										{:else}
-											{marketData?.[0]?.priceFormatted || '—'}%
-										{/if}
-									</span>
-									{#if marketData && !marketData[0]?.isResolved}
-										<div class="outcome-card-actions">
-											<button class="bet-btn yes">
-												Yes · {marketData[0]?.priceFormatted || '—'}¢
-											</button>
-											<button class="bet-btn no">
-												No · {marketData[1]?.priceFormatted || '—'}¢
-											</button>
-										</div>
-									{/if}
-								</div>
-							</div>
+							{#if marketData}
+								<OutcomeCard
+									name={getMarketDisplayTitle(market)}
+									volume={Number(market.volume) || 0}
+									outcomeData={marketData}
+								/>
+							{/if}
 						{/each}
 					{:else if selectedMarketData}
-						{#each selectedMarketData as outcome (outcome.label)}
-							<div class="outcome-card">
-								<div class="outcome-card-header">
-									<span class="outcome-card-name">{outcome.label}</span>
-									<span class="outcome-card-volume"
-										>{formatNumber(Number(selectedMarket?.volume) || 0)} Vol.</span
-									>
-								</div>
-								<div class="outcome-card-body">
-									<span class="outcome-card-percentage">
-										{#if outcome.isResolved}
-											<span class="resolved-tag" class:won={outcome.won}
-												>{outcome.priceFormatted}</span
-											>
-										{:else}
-											{outcome.priceFormatted}%
-										{/if}
-									</span>
-									{#if !outcome.isResolved}
-										<div class="outcome-card-actions">
-											<button class="bet-btn yes">
-												Yes · {outcome.priceFormatted}¢
-											</button>
-										</div>
-									{/if}
-								</div>
-							</div>
-						{/each}
+						<OutcomeCard
+							name={selectedMarket?.question || 'Unknown'}
+							volume={Number(selectedMarket?.volume) || 0}
+							outcomeData={selectedMarketData}
+							showBetButtons={selectedMarketData.length === 1}
+						/>
 					{/if}
 				</div>
 			</div>
@@ -756,20 +669,6 @@
 		padding: 16px;
 	}
 
-	.resolved-tag {
-		font-size: 12px;
-		font-weight: 600;
-		padding: 4px 8px;
-		border-radius: 6px;
-		background: var(--bg-3);
-		color: var(--text-2);
-	}
-
-	.resolved-tag.won {
-		background: rgba(0, 196, 71, 0.15);
-		color: var(--success);
-	}
-
 	/* Chart */
 	.chart-card {
 		padding: 0;
@@ -888,108 +787,13 @@
 	.outcomes-grid {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
-	}
-
-	.outcome-card {
-		background: var(--bg-1);
-		border: 1px solid var(--bg-3);
-		border-radius: 12px;
-		padding: 16px;
-		transition: all var(--transition-fast);
-	}
-
-	.outcomes-grid .outcome-card:not(:last-child) {
-		margin-bottom: 12px;
-	}
-
-	.outcomes-scroll .outcome-card:not(:last-child) {
-		margin-bottom: 12px;
-	}
-
-	.outcome-card:hover {
-		background: var(--bg-2);
-	}
-
-	.outcome-card-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		margin-bottom: 10px;
-		gap: 8px;
-	}
-
-	.outcome-card-name {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-0);
-		flex: 1;
-		min-width: 0;
-		line-height: 1.4;
-	}
-
-	.outcome-card-volume {
-		font-size: 10px;
-		font-weight: 500;
-		color: var(--text-3);
-		flex-shrink: 0;
-	}
-
-	.outcome-card-body {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
 		gap: 12px;
 	}
 
-	.outcome-card-percentage {
-		font-size: 20px;
-		font-weight: 600;
-		color: var(--text-1);
-		flex-shrink: 0;
-	}
-
-	.outcome-card-actions {
+	.outcomes-scroll {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
-		flex: 1;
-	}
-
-	.bet-btn {
-		padding: 10px 16px;
-		font-size: 14px;
-		font-weight: 600;
-		border: none;
-		border-radius: 8px;
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		white-space: nowrap;
-	}
-
-	.bet-btn.yes {
-		background: rgba(0, 196, 71, 0.08);
-		color: var(--success);
-		border: 1px solid transparent;
-	}
-
-	.bet-btn.yes:hover:not(:disabled) {
-		background: rgba(0, 196, 71, 0.12);
-	}
-
-	.bet-btn.no {
-		background: rgba(255, 51, 102, 0.08);
-		color: var(--danger);
-		border: 1px solid transparent;
-	}
-
-	.bet-btn.no:hover:not(:disabled) {
-		background: rgba(255, 51, 102, 0.12);
-	}
-
-	.bet-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+		gap: 12px;
 	}
 
 	/* About Content */
@@ -1119,7 +923,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
-		padding: 0;
 		max-height: calc(100vh - 200px);
 		overflow-y: auto;
 	}

@@ -46,9 +46,13 @@
 	const session = $derived(data?.session);
 	const profile = $derived(data?.profile);
 
+	// Composables use $effect internally which properly tracks these reactive values
+	// svelte-ignore state_referenced_locally
 	useAuthInitialization(session, profile);
+	// svelte-ignore state_referenced_locally
 	useClientInitialization(queryClient);
 	useRoutePreloading();
+	// svelte-ignore state_referenced_locally
 	useAuthListener(supabase, session, profile, handleUserRegistration);
 	useWatchlistInitialization();
 	useNavigationTimeout();
