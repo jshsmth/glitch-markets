@@ -3,7 +3,6 @@ import * as fc from 'fast-check';
 import { EventService } from './event-service';
 import type { Event } from '../api/polymarket-client';
 import { loadConfig } from '../config/api-config';
-import { Logger } from '$lib/utils/logger';
 
 // Mock the dependencies
 vi.mock('../api/polymarket-client');

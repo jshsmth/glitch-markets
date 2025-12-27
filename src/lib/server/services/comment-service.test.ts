@@ -4,7 +4,6 @@ import * as fc from 'fast-check';
 import { CommentService } from './comment-service';
 import type { Comment } from '../api/polymarket-client';
 import { loadConfig } from '../config/api-config';
-import { Logger } from '$lib/utils/logger';
 import { arbitraries } from '$lib/tests/arbitraries/common-arbitraries.js';
 
 // Mock the dependencies

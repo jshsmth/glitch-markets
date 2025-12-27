@@ -3,7 +3,6 @@ import * as fc from 'fast-check';
 import { MarketService } from './market-service';
 import type { Market } from '../api/polymarket-client';
 import { loadConfig } from '../config/api-config';
-import { Logger } from '$lib/utils/logger';
 import { marketArbitrary } from '$lib/tests/helpers/test-arbitraries';
 import { createMockMarket } from '$lib/tests/helpers/test-mocks';
 

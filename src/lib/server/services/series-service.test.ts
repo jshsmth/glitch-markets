@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as fc from 'fast-check';
 import { SeriesService } from './series-service';
 import { loadConfig } from '../config/api-config';
-import { Logger } from '$lib/utils/logger';
 
 // Mock the dependencies
 vi.mock('../api/polymarket-client');
