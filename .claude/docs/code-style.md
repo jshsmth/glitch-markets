@@ -47,19 +47,21 @@ This guide documents the code style and conventions used in Glitch Markets. Thes
 - Document edge cases and business logic
 
 **Bad:**
+
 ```typescript
 // Check cache first
 if (cache.has(key)) {
-  // Return cached result
-  return cache.get(key);
+	// Return cached result
+	return cache.get(key);
 }
 ```
 
 **Good:**
+
 ```typescript
 // Skip cache for real-time data to ensure users see latest market prices
 if (options.realtime) {
-  return fetchFromAPI();
+	return fetchFromAPI();
 }
 ```
 
@@ -76,14 +78,14 @@ if (options.realtime) {
 ```typescript
 // Types and interfaces
 interface SearchOptions {
-  query: string;
-  limit?: number;
+	query: string;
+	limit?: number;
 }
 
 type Theme = 'light' | 'dark';
 
 // Functions and variables
-function formatNumber(value: number): string { }
+function formatNumber(value: number): string {}
 const currentTheme = 'dark';
 
 // Constants
@@ -94,6 +96,7 @@ const API_BASE_URL = 'https://api.example.com';
 ### Type Definitions
 
 Always define types for:
+
 - Function parameters and return values
 - Object shapes and interfaces
 - API responses
@@ -111,10 +114,10 @@ Always define types for:
  * formatNumber(123) // "$123"
  */
 export function formatNumber(num: number | null | undefined): string {
-  if (num === null || num === undefined) return '$0';
-  if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
-  if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
-  return `$${num.toFixed(0)}`;
+	if (num === null || num === undefined) return '$0';
+	if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
+	if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
+	return `$${num.toFixed(0)}`;
 }
 ```
 
@@ -122,7 +125,7 @@ export function formatNumber(num: number | null | undefined): string {
 
 Use JSDoc for exported functions and classes:
 
-```typescript
+````typescript
 /**
  * Service layer for search operations
  * Coordinates between API client and server routes, handles caching
@@ -134,18 +137,18 @@ Use JSDoc for exported functions and classes:
  * ```
  */
 export class SearchService extends BaseService {
-  /**
-   * Searches for markets, events, and profiles
-   *
-   * @param options - Search options including query and filters
-   * @returns Promise resolving to search results
-   * @throws {ApiError} When the API request fails
-   */
-  async search(options: SearchOptions): Promise<SearchResults> {
-    // Implementation
-  }
+	/**
+	 * Searches for markets, events, and profiles
+	 *
+	 * @param options - Search options including query and filters
+	 * @returns Promise resolving to search results
+	 * @throws {ApiError} When the API request fails
+	 */
+	async search(options: SearchOptions): Promise<SearchResults> {
+		// Implementation
+	}
 }
-```
+````
 
 ### File Headers
 
@@ -158,9 +161,9 @@ Add file-level JSDoc for client-side type files:
  */
 
 export interface BridgeToken {
-  name: string;
-  symbol: string;
-  // ...
+	name: string;
+	symbol: string;
+	// ...
 }
 ```
 
@@ -172,13 +175,13 @@ export interface BridgeToken {
 
 ```typescript
 try {
-  await addToWatchlist(eventId, event);
+	await addToWatchlist(eventId, event);
 } catch (error) {
-  if (error instanceof Error && error.message === 'UNAUTHORIZED') {
-    openSignInModal();
-    return;
-  }
-  throw error; // Re-throw unexpected errors
+	if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+		openSignInModal();
+		return;
+	}
+	throw error; // Re-throw unexpected errors
 }
 ```
 
@@ -200,50 +203,53 @@ Use the `$props()` rune with TypeScript interfaces:
 
 ```svelte
 <script lang="ts">
-  import type { Snippet } from 'svelte';
-  import type { HTMLButtonAttributes } from 'svelte/elements';
+	import type { Snippet } from 'svelte';
+	import type { HTMLButtonAttributes } from 'svelte/elements';
 
-  interface Props extends HTMLButtonAttributes {
-    variant?: 'primary' | 'secondary' | 'tertiary';
-    size?: 'small' | 'medium' | 'large';
-    loading?: boolean;
-    children?: Snippet;
-    onclick?: (event: MouseEvent) => void;
-  }
+	interface Props extends HTMLButtonAttributes {
+		variant?: 'primary' | 'secondary' | 'tertiary';
+		size?: 'small' | 'medium' | 'large';
+		loading?: boolean;
+		children?: Snippet;
+		onclick?: (event: MouseEvent) => void;
+	}
 
-  let {
-    variant = 'primary',
-    size = 'medium',
-    loading = false,
-    children,
-    onclick,
-    class: className,
-    ...restProps
-  }: Props = $props();
+	let {
+		variant = 'primary',
+		size = 'medium',
+		loading = false,
+		children,
+		onclick,
+		class: className,
+		...restProps
+	}: Props = $props();
 
-  const isDisabled = $derived(disabled || loading);
+	const isDisabled = $derived(disabled || loading);
 </script>
 ```
 
 ### Reactive State with Runes
 
 **$state** - Reactive state:
+
 ```typescript
 export const themeState = $state({
-  current: 'dark' as Theme
+	current: 'dark' as Theme
 });
 ```
 
 **$derived** - Computed values:
+
 ```typescript
 const isDisabled = $derived(disabled || loading);
 const isEventBookmarked = $derived(isBookmarked(getEventId()));
 ```
 
 **$effect** - Side effects:
+
 ```typescript
 $effect(() => {
-  console.log(`Theme changed to: ${themeState.current}`);
+	console.log(`Theme changed to: ${themeState.current}`);
 });
 ```
 
@@ -254,71 +260,75 @@ Create reusable reactive logic in `.svelte.ts` files:
 ```typescript
 // useBookmark.svelte.ts
 export function useBookmark(getEventId: () => string) {
-  const isEventBookmarked = $derived(isBookmarked(getEventId()));
+	const isEventBookmarked = $derived(isBookmarked(getEventId()));
 
-  async function toggleBookmark() {
-    if (!authState.user) {
-      openSignInModal();
-      return;
-    }
-    // Implementation
-  }
+	async function toggleBookmark() {
+		if (!authState.user) {
+			openSignInModal();
+			return;
+		}
+		// Implementation
+	}
 
-  return {
-    get isBookmarked() {
-      return isEventBookmarked;
-    },
-    toggleBookmark
-  };
+	return {
+		get isBookmarked() {
+			return isEventBookmarked;
+		},
+		toggleBookmark
+	};
 }
 ```
 
 Usage in components:
+
 ```svelte
 <script lang="ts">
-  import { useBookmark } from '$lib/composables/useBookmark.svelte';
+	import { useBookmark } from '$lib/composables/useBookmark.svelte';
 
-  const bookmark = useBookmark(() => event.id);
+	const bookmark = useBookmark(() => event.id);
 </script>
 
 <button onclick={bookmark.toggleBookmark}>
-  {bookmark.isBookmarked ? 'Remove' : 'Add'}
+	{bookmark.isBookmarked ? 'Remove' : 'Add'}
 </button>
 ```
 
 ### Template Syntax
 
 **Snippets for composition:**
+
 ```svelte
 <script lang="ts">
-  interface Props {
-    iconBefore?: Snippet;
-    children?: Snippet;
-  }
-  let { iconBefore, children }: Props = $props();
+	interface Props {
+		iconBefore?: Snippet;
+		children?: Snippet;
+	}
+	let { iconBefore, children }: Props = $props();
 </script>
 
 {#if iconBefore}
-  {@render iconBefore()}
+	{@render iconBefore()}
 {/if}
 {@render children?.()}
 ```
 
 **Conditional rendering:**
+
 ```svelte
 {#if loading}
-  <LoadingSpinner />
+	<LoadingSpinner />
 {:else if error}
-  <ErrorMessage />
+	<ErrorMessage />
 {:else}
-  <Content />
+	<Content />
 {/if}
 ```
 
 **List rendering:**
+
 ```svelte
 {#each items as item (item.id)}
-  <ItemCard {item} />
+	<ItemCard {item} />
 {/each}
 ```
 
@@ -333,16 +343,16 @@ Usage in components:
 ```css
 /* ❌ BAD - Hard-coded values */
 .button {
-  background: #8b5cf6;
-  color: #ffffff;
-  padding: 12px 24px;
+	background: #8b5cf6;
+	color: #ffffff;
+	padding: 12px 24px;
 }
 
 /* ✅ GOOD - CSS variables */
 .button {
-  background: var(--primary);
-  color: var(--bg-0);
-  padding: var(--spacing-3) var(--spacing-6);
+	background: var(--primary);
+	color: var(--bg-0);
+	padding: var(--spacing-3) var(--spacing-6);
 }
 ```
 
@@ -388,23 +398,23 @@ Write mobile styles first, then enhance for larger screens:
 ```css
 /* Mobile first (default) */
 .card {
-  padding: var(--spacing-4);
-  font-size: var(--text-base);
+	padding: var(--spacing-4);
+	font-size: var(--text-base);
 }
 
 /* Tablet and up */
 @media (min-width: 768px) {
-  .card {
-    padding: var(--spacing-6);
-  }
+	.card {
+		padding: var(--spacing-6);
+	}
 }
 
 /* Desktop and up */
 @media (min-width: 1024px) {
-  .card {
-    padding: var(--spacing-8);
-    font-size: var(--text-lg);
-  }
+	.card {
+		padding: var(--spacing-8);
+		font-size: var(--text-lg);
+	}
 }
 ```
 
@@ -414,21 +424,21 @@ Ensure interactive elements meet WCAG 2.2 AA (44×44px):
 
 ```css
 .button.size-small {
-  min-height: 36px;
+	min-height: 36px;
 }
 
 /* Touch target expansion on touch devices */
 .button.size-small::before {
-  content: '';
-  position: absolute;
-  width: max(100%, var(--target-comfortable)); /* 44px */
-  height: max(100%, var(--target-comfortable));
+	content: '';
+	position: absolute;
+	width: max(100%, var(--target-comfortable)); /* 44px */
+	height: max(100%, var(--target-comfortable));
 }
 
 @media (pointer: fine) {
-  .button.size-small::before {
-    display: none; /* Remove on mouse/trackpad devices */
-  }
+	.button.size-small::before {
+		display: none; /* Remove on mouse/trackpad devices */
+	}
 }
 ```
 
@@ -438,16 +448,16 @@ Ensure interactive elements meet WCAG 2.2 AA (44×44px):
 
 ### Conventions
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| Components | PascalCase.svelte | `Button.svelte`, `SearchResultItem.svelte` |
-| Pages/Routes | +page.svelte | `+page.svelte`, `+layout.svelte` |
-| Utilities | kebab-case.ts | `format.ts`, `cache-headers.ts` |
-| Stores (Svelte 5) | kebab-case.svelte.ts | `theme.svelte.ts`, `auth.svelte.ts` |
-| Composables | camelCase.svelte.ts | `useBookmark.svelte.ts`, `use-balance.svelte.ts` |
-| Services | PascalCase-kebab.ts | `search-service.ts`, `user-data-service.ts` |
-| Types | kebab-case.ts | `bridge.ts`, `modal.ts` |
-| Tests | same-name.test.ts | `format.test.ts`, `search-service.test.ts` |
+| Type              | Pattern              | Example                                          |
+| ----------------- | -------------------- | ------------------------------------------------ |
+| Components        | PascalCase.svelte    | `Button.svelte`, `SearchResultItem.svelte`       |
+| Pages/Routes      | +page.svelte         | `+page.svelte`, `+layout.svelte`                 |
+| Utilities         | kebab-case.ts        | `format.ts`, `cache-headers.ts`                  |
+| Stores (Svelte 5) | kebab-case.svelte.ts | `theme.svelte.ts`, `auth.svelte.ts`              |
+| Composables       | camelCase.svelte.ts  | `useBookmark.svelte.ts`, `use-balance.svelte.ts` |
+| Services          | PascalCase-kebab.ts  | `search-service.ts`, `user-data-service.ts`      |
+| Types             | kebab-case.ts        | `bridge.ts`, `modal.ts`                          |
+| Tests             | same-name.test.ts    | `format.test.ts`, `search-service.test.ts`       |
 
 ### Directory Structure
 
@@ -493,19 +503,19 @@ import { describe, it, expect } from 'vitest';
 import { formatNumber } from './format';
 
 describe('formatNumber', () => {
-  it('formats millions correctly', () => {
-    expect(formatNumber(1000000)).toBe('$1.0M');
-    expect(formatNumber(1234567)).toBe('$1.2M');
-  });
+	it('formats millions correctly', () => {
+		expect(formatNumber(1000000)).toBe('$1.0M');
+		expect(formatNumber(1234567)).toBe('$1.2M');
+	});
 
-  it('formats thousands correctly', () => {
-    expect(formatNumber(1000)).toBe('$1.0K');
-  });
+	it('formats thousands correctly', () => {
+		expect(formatNumber(1000)).toBe('$1.0K');
+	});
 
-  it('handles null and undefined', () => {
-    expect(formatNumber(null)).toBe('$0');
-    expect(formatNumber(undefined)).toBe('$0');
-  });
+	it('handles null and undefined', () => {
+		expect(formatNumber(null)).toBe('$0');
+		expect(formatNumber(undefined)).toBe('$0');
+	});
 });
 ```
 
@@ -525,6 +535,7 @@ See [vitest.md](./vitest.md) for more testing documentation.
 ### When to Comment
 
 **DO comment:**
+
 - Complex business logic or algorithms
 - Non-obvious workarounds or hacks
 - Performance optimizations
@@ -532,6 +543,7 @@ See [vitest.md](./vitest.md) for more testing documentation.
 - WCAG compliance notes
 
 **DON'T comment:**
+
 - What the code does (should be self-evident)
 - Variable assignments
 - Standard control flow
@@ -540,36 +552,38 @@ See [vitest.md](./vitest.md) for more testing documentation.
 ### Examples
 
 **❌ Bad Comments (Restating Code):**
+
 ```typescript
 // Set the user variable to null
 const user = null;
 
 // Loop through all items
 for (const item of items) {
-  // Add item to cart
-  cart.add(item);
+	// Add item to cart
+	cart.add(item);
 }
 
 // Check if user is logged in
 if (user.isLoggedIn) {
-  // Redirect to dashboard
-  redirect('/dashboard');
+	// Redirect to dashboard
+	redirect('/dashboard');
 }
 ```
 
 **✅ Good Comments (Explaining Why):**
+
 ```typescript
 // Null initial state prevents flash of wrong user data during SSR
 const user = null;
 
 // Batch additions to trigger single cart recalculation instead of N
 for (const item of items) {
-  cart.add(item);
+	cart.add(item);
 }
 
 // Redirect must happen before layout renders to avoid auth state race condition
 if (user.isLoggedIn) {
-  redirect('/dashboard');
+	redirect('/dashboard');
 }
 ```
 
@@ -583,7 +597,7 @@ Use JSDoc for all exported functions, classes, and types:
  * This MUST be called synchronously during component initialization
  */
 export function initializeTheme() {
-  // Implementation
+	// Implementation
 }
 ```
 
@@ -601,6 +615,7 @@ export function initializeTheme() {
 8. **Test utilities** - All pure functions should have tests
 
 For more details, see:
+
 - [Technical Documentation](./technical.md)
 - [Design System](./brand-colors.md)
 - [Testing Guide](./vitest.md)

@@ -27,6 +27,7 @@ Glitch Markets supports two development workflows optimized for different scenar
 - ✅ Estimated effort is **Medium, Large, or XL**
 
 **Examples:**
+
 - "Add user authentication system with social logins"
 - "Implement real-time notifications with WebSockets"
 - "Create a new betting interface for markets"
@@ -44,6 +45,7 @@ Glitch Markets supports two development workflows optimized for different scenar
 - ✅ Estimated effort is **Small**
 
 **Examples:**
+
 - "Change the primary button color to match brand"
 - "Add a loading spinner to the search input"
 - "Fix the navigation menu on mobile"
@@ -60,6 +62,7 @@ Spec Mode uses the **spec-architect agent** to guide you through structured feat
 #### 1. **Phase 1: Requirements (What)**
 
 Define **what** you're building:
+
 - Feature overview and purpose
 - User stories with acceptance criteria
 - Success metrics
@@ -71,6 +74,7 @@ Define **what** you're building:
 #### 2. **Phase 2: Design (How)**
 
 Plan **how** to build it:
+
 - System architecture and data flow
 - Component hierarchy and relationships
 - API contracts and data models
@@ -83,6 +87,7 @@ Plan **how** to build it:
 #### 3. **Phase 3: Tasks (Steps)**
 
 Break down into **actionable steps**:
+
 - Ordered list of implementation tasks
 - Dependencies between tasks
 - Risk assessment per task
@@ -96,6 +101,7 @@ Break down into **actionable steps**:
 All planning is saved to `.claude/specs/[feature-name].md` for reference during implementation and future maintenance.
 
 The spec document includes:
+
 - Visual progress tracking with boxes and progress bars
 - Clear sections with hierarchy
 - Acceptance criteria for each story
@@ -221,16 +227,16 @@ You can use both:
 
 ## Mode Comparison
 
-| Aspect | Spec Mode | Vibe Mode |
-|--------|-----------|-----------|
-| **When** | Complex features, architectural changes | Quick fixes, simple changes |
-| **Planning** | 3-phase structured planning | Minimal/no planning |
-| **Documentation** | Spec document in `.claude/specs/` | None (code is documentation) |
-| **Gates** | 3 approval gates | None |
-| **Speed** | Slower upfront, faster overall | Fast immediate results |
-| **Risk** | Low (validated before implementation) | Higher (implement first, validate after) |
-| **Best for** | Features, systems, architecture | Fixes, polish, experiments |
-| **Rework** | Minimal (caught in planning) | May require iteration |
+| Aspect            | Spec Mode                               | Vibe Mode                                |
+| ----------------- | --------------------------------------- | ---------------------------------------- |
+| **When**          | Complex features, architectural changes | Quick fixes, simple changes              |
+| **Planning**      | 3-phase structured planning             | Minimal/no planning                      |
+| **Documentation** | Spec document in `.claude/specs/`       | None (code is documentation)             |
+| **Gates**         | 3 approval gates                        | None                                     |
+| **Speed**         | Slower upfront, faster overall          | Fast immediate results                   |
+| **Risk**          | Low (validated before implementation)   | Higher (implement first, validate after) |
+| **Best for**      | Features, systems, architecture         | Fixes, polish, experiments               |
+| **Rework**        | Minimal (caught in planning)            | May require iteration                    |
 
 ---
 
@@ -239,9 +245,11 @@ You can use both:
 ### Spec Mode Example
 
 **Request:**
+
 > "I want to add a wallet connection feature that supports MetaMask, WalletConnect, and email login with passkeys."
 
 **Claude:**
+
 > I'll guide you through Spec Mode for this wallet feature. This is a complex feature with authentication, multiple providers, and security considerations.
 >
 > Let's start Phase 1: Requirements...
@@ -253,9 +261,11 @@ You can use both:
 ### Vibe Mode Example
 
 **Request:**
+
 > "Add a copy button next to the wallet address that copies to clipboard"
 
 **Claude:**
+
 > I'll add a copy button next to wallet addresses.
 
 **Result:** Implementation is done immediately—new `CopyButton` component, integrated into address display, tested and working.
@@ -287,18 +297,21 @@ Is it a quick fix, polish, or well-defined task?
 ## Tips for Success
 
 ### For Complex Projects
+
 1. Start with Spec Mode for the overall feature
 2. Create a detailed task list in Phase 3
 3. Use Vibe Mode to implement each task
 4. Reference the spec document throughout
 
 ### For Rapid Development
+
 1. Use Vibe Mode for all quick changes
 2. Keep changes focused and small
 3. Test thoroughly since there's no formal review
 4. Consider Spec Mode if you iterate 3+ times on the same task
 
 ### For Teams
+
 1. Use Spec Mode for features that affect multiple developers
 2. Share spec documents for review and feedback
 3. Use Vibe Mode for personal tasks that don't require coordination
@@ -313,6 +326,7 @@ Is it a quick fix, polish, or well-defined task?
 Choose the mode that fits your task complexity and risk tolerance. When in doubt, start with Vibe Mode—you can always upgrade to Spec Mode if needed.
 
 For more information:
+
 - [Spec Architect Agent](../.claude/agents/spec-architect.md) - Full spec mode documentation
 - [Code Style Guide](./code-style.md) - Implementation patterns
 - [Technical Documentation](./technical.md) - Architecture and setup
