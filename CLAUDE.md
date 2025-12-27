@@ -8,16 +8,14 @@ This is the main documentation hub for Claude Code. All detailed documentation l
 
 ### Core Documentation
 
-- **[Technical Guide](.claude/technical.md)** - Tech stack, architecture, development workflows, testing, deployment
-- **[Development Modes](.claude/modes.md)** - Spec Mode vs Vibe Mode workflows
-- **[Code Style Guide](.claude/code-style.md)** - TypeScript, Svelte, CSS conventions and best practices
-- **[Design System](.claude/brand-colors.md)** - Color palette, CSS variables, component styling guidelines
+- **[Technical Guide](.claude/docs/technical.md)** - Tech stack, architecture, development workflows, testing, deployment
+- **[Development Modes](.claude/docs/modes.md)** - Spec Mode vs Vibe Mode workflows
+- **[Code Style Guide](.claude/docs/code-style.md)** - TypeScript, Svelte, CSS conventions and best practices
+- **[Design System](.claude/docs/brand-colors.md)** - Color palette, CSS variables, component styling guidelines
 
 ### API References
 
 - **[Polymarket API](.claude/docs/polymarket-api-reference.md)** - Complete Polymarket API endpoint documentation
-- **[Porto SDK](.claude/porto-api-reference.md)** - Porto SDK integration guides
-- **[Dynamic Docs](.claude/dynamic.txt)** - Comprehensive Dynamic.xyz documentation with all API endpoints and guides
 - **[TanStack Query](.claude/docs/tanstack-query-reference.md)** - TanStack Query (React Query) documentation for Svelte
 
 ---
@@ -33,15 +31,15 @@ Glitch Markets is a modern prediction market platform built with SvelteKit and T
 ### For New Features
 
 1. **Choose your mode**: Claude will ask if you want Spec Mode (structured planning) or Vibe Mode (rapid implementation)
-2. **Follow the workflow**: See [modes.md](.claude/modes.md) for details on each mode
-3. **Use the design system**: Always use CSS variables from [brand-colors.md](.claude/brand-colors.md)
-4. **Follow code style**: Check [code-style.md](.claude/code-style.md) for conventions
+2. **Follow the workflow**: See [modes.md](.claude/docs/modes.md) for details on each mode
+3. **Use the design system**: Always use CSS variables from [brand-colors.md](.claude/docs/brand-colors.md)
+4. **Follow code style**: Check [code-style.md](.claude/docs/code-style.md) for conventions
 
 ### For Technical Questions
 
-- **Architecture & Setup**: See [technical.md](.claude/technical.md)
-- **API Integration**: See API reference docs in `.claude/`
-- **Code Patterns**: See [code-style.md](.claude/code-style.md)
+- **Architecture & Setup**: See [technical.md](.claude/docs/technical.md)
+- **API Integration**: See API reference docs in `.claude/docs/`
+- **Code Patterns**: See [code-style.md](.claude/docs/code-style.md)
 
 ---
 
@@ -85,24 +83,27 @@ You have access to the Svelte MCP server with comprehensive Svelte 5 and SvelteK
 ```
 .claude/
 ├── docs/
+│   ├── technical.md                 # Tech stack, architecture, workflows
+│   ├── modes.md                     # Spec Mode & Vibe Mode documentation
+│   ├── code-style.md                # Code style guide and best practices
+│   ├── brand-colors.md              # Design system and color palette
 │   ├── polymarket-api-reference.md  # Polymarket API docs
 │   ├── tanstack-query-reference.md  # TanStack Query docs
-│   ├── technical.md                 # Tech stack, architecture, workflows
-│   ├── brand-colors.md              # Design system and color palette
 │   └── vitest.md                    # Testing documentation
-├── technical.md              # Tech stack, architecture, workflows (legacy)
-├── modes.md                  # Spec Mode & Vibe Mode documentation
-├── code-style.md             # Code style guide and best practices
-├── porto-api-reference.md    # Porto SDK docs
-└── dynamic.txt               # Complete Dynamic.xyz documentation
+├── agents/
+│   └── spec-architect.md            # Spec Mode agent configuration
+├── specs/                           # Feature specifications (temporary)
+│   └── [feature-name].md            # Individual feature specs
+└── settings.local.json              # Claude Code settings & permissions
 ```
 
 ---
 
 ## Need Help?
 
-- **Feature Planning**: See [modes.md](.claude/modes.md)
-- **Code Style Questions**: See [code-style.md](.claude/code-style.md)
-- **Design/Styling**: See [brand-colors.md](.claude/brand-colors.md)
-- **Architecture**: See [technical.md](.claude/technical.md)
-- **API Integration**: See API reference docs in `.claude/`
+- **Feature Planning**: See [modes.md](.claude/docs/modes.md)
+- **Code Style Questions**: See [code-style.md](.claude/docs/code-style.md)
+- **Design/Styling**: See [brand-colors.md](.claude/docs/brand-colors.md)
+- **Architecture**: See [technical.md](.claude/docs/technical.md)
+- **Testing**: See [vitest.md](.claude/docs/vitest.md)
+- **API Integration**: See API reference docs in `.claude/docs/`
