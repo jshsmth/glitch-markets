@@ -6,6 +6,9 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { Logger } from '$lib/utils/logger';
+
+const log = Logger.forRoute('/api/user/profile');
 
 export const GET: RequestHandler = async ({ locals }) => {
 	try {
@@ -27,7 +30,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			.single();
 
 		if (userError || !dbUser) {
-			console.error('User not found in database:', { userId, error: userError });
+			log.error('User not found in database:', undefined, { userId, error: userError });
 			return json({ error: 'User not found' }, { status: 404 });
 		}
 
@@ -45,7 +48,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			isRegistered: !!credentials?.deployed_at
 		});
 	} catch (err) {
-		console.error('Error fetching user profile:', err);
+		log.error('Error fetching user profile:', err);
 		return json({ error: 'Failed to fetch user profile' }, { status: 500 });
 	}
 };

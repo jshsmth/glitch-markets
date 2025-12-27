@@ -6,6 +6,9 @@
 import { browser } from '$app/environment';
 import { authState } from './auth.svelte';
 import { CleanupManager } from './utils/cleanup';
+import { Logger } from '$lib/utils/logger';
+
+const log = Logger.forModule('WalletStore');
 
 interface WalletState {
 	serverWalletAddress: string | null;
@@ -65,7 +68,7 @@ export async function fetchWalletAddresses(): Promise<void> {
 		if (err instanceof Error && err.name === 'AbortError') {
 			return;
 		}
-		console.error('Failed to fetch wallet addresses:', err);
+		log.error('Failed to fetch wallet addresses', err);
 		walletState.error = err instanceof Error ? err.message : 'Failed to load wallet';
 		walletState.serverWalletAddress = null;
 		walletState.proxyWalletAddress = null;

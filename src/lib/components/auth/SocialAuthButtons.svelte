@@ -3,6 +3,9 @@
 	import GoogleIcon from '$lib/components/icons/GoogleIcon.svelte';
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
+	import { Logger } from '$lib/utils/logger';
+
+	const log = Logger.forComponent('SocialAuthButtons');
 
 	interface Props {
 		/**
@@ -44,7 +47,7 @@
 
 			if (error) throw error;
 		} catch (err) {
-			console.error(`[SocialAuthButtons] ${provider} auth failed:`, err);
+			log.error(`${provider} auth failed`, err);
 
 			const error = err as { message?: string };
 			let userMessage = `Failed to authenticate with ${provider}.`;

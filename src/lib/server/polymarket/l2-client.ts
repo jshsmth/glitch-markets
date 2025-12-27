@@ -10,7 +10,7 @@ import { ClobClient } from '@polymarket/clob-client';
 import { Wallet } from '@ethersproject/wallet';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import { decryptData } from '../utils/encryption';
-import { Logger } from '../utils/logger';
+import { Logger } from '$lib/utils/logger';
 
 const logger = new Logger({ component: 'L2Client' });
 

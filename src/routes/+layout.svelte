@@ -5,6 +5,7 @@
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { dev } from '$app/environment';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
+	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
 	import { createQueryClient } from '$lib/query/client';
 	import {
 		signInModalState,
@@ -37,6 +38,7 @@
 	import { pwaInfo } from 'virtual:pwa-info';
 
 	injectAnalytics({ mode: dev ? 'development' : 'production' });
+	injectSpeedInsights();
 
 	let { children, data } = $props();
 

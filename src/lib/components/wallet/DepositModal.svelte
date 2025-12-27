@@ -16,6 +16,9 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { getChainIcon, getChainColor } from '$lib/utils/chain-config';
+	import { Logger } from '$lib/utils/logger';
+
+	const log = Logger.forComponent('DepositModal');
 
 	interface Props {
 		isOpen: boolean;
@@ -177,7 +180,7 @@
 				copySuccess = false;
 			}, 2000);
 		} catch (err) {
-			console.error('Failed to copy address:', err);
+			log.error('Failed to copy address', err);
 			if (addressTextRef) {
 				const selection = window.getSelection();
 				const range = document.createRange();

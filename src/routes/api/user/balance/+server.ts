@@ -6,7 +6,7 @@
 
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { getUSDCBalanceAndAllowance } from '$lib/server/utils/balance';
-import { Logger } from '$lib/server/utils/logger';
+import { Logger } from '$lib/utils/logger';
 
 const logger = new Logger({ component: 'BalanceRoute' });
 

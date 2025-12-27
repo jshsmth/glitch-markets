@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { EventService } from '$lib/server/services/event-service.js';
-import { Logger } from '$lib/server/utils/logger';
+import { Logger } from '$lib/utils/logger';
 
 const eventService = new EventService();
 const logger = new Logger({ component: 'HomePage' });

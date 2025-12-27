@@ -3,6 +3,9 @@
 	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
 	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
+	import { Logger } from '$lib/utils/logger';
+
+	const log = Logger.forComponent('EventHeader');
 
 	interface Props {
 		title: string;
@@ -19,7 +22,7 @@
 			copyState = 'copied';
 			setTimeout(() => (copyState = 'idle'), 2000);
 		} catch (error) {
-			console.error('Failed to copy link:', error);
+			log.error('Failed to copy link', error);
 			copyState = 'idle';
 		}
 	}

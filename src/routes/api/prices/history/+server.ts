@@ -7,7 +7,7 @@ import { json, type RequestEvent } from '@sveltejs/kit';
 import { PolymarketClient } from '$lib/server/api/polymarket-client.js';
 import { loadConfig } from '$lib/server/config/api-config.js';
 import { formatErrorResponse, ApiError } from '$lib/server/errors/api-errors.js';
-import { Logger } from '$lib/server/utils/logger.js';
+import { Logger } from '$lib/utils/logger';
 
 const logger = new Logger({ component: 'PriceHistoryRoute' });
 const config = loadConfig();

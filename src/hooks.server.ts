@@ -5,7 +5,7 @@
 
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { Logger } from '$lib/server/utils/logger';
+import { Logger } from '$lib/utils/logger';
 import { createSupabaseServerClient } from '$lib/supabase/server';
 
 const logger = new Logger({ component: 'ServerHooks' });

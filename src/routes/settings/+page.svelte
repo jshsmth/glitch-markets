@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { authState } from '$lib/stores/auth.svelte';
+	import { Logger } from '$lib/utils/logger';
+
+	const log = Logger.forComponent('SettingsPage');
 
 	interface DebugInfo {
 		user: {
@@ -58,25 +61,25 @@
 
 	function fetchDebugInfo() {
 		error = null;
-		console.log('Fetching debug info...');
+		log.debug('Fetching debug info...');
 
 		fetch('/api/user/debug')
 			.then(async (response) => {
-				console.log('Response status:', response.status);
+				log.debug('Response status', { status: response.status });
 				if (!response.ok) {
 					const errorData = await response.json();
-					console.error('API error:', errorData);
+					log.error('API error:', errorData);
 					throw new Error(errorData.message || 'Failed to fetch debug information');
 				}
 				return response.json();
 			})
 			.then((data) => {
 				debugInfo = data;
-				console.log('Debug info received:', data);
+				log.debug('Debug info received', { data });
 				isLoading = false;
 			})
 			.catch((err) => {
-				console.error('Fetch error:', err);
+				log.error('Fetch error:', err);
 				error = err instanceof Error ? err.message : 'Unknown error';
 				isLoading = false;
 			});
@@ -92,7 +95,7 @@
 				}, 2000);
 			})
 			.catch((err) => {
-				console.error('Failed to copy:', err);
+				log.error('Failed to copy:', err);
 			});
 	}
 
@@ -104,12 +107,10 @@
 	let lastFetchedUserId = $state<string | null>(null);
 
 	$effect(() => {
-		console.log(
-			'Effect triggered. Auth initializing:',
-			authState.isInitializing,
-			'User:',
-			authState.user?.id
-		);
+		log.debug('Effect triggered', {
+			authInitializing: authState.isInitializing,
+			userId: authState.user?.id
+		});
 
 		// Don't do anything while auth is still initializing
 		if (authState.isInitializing) {
@@ -119,12 +120,12 @@
 		if (authState.user) {
 			// Only fetch if we haven't fetched for this user yet
 			if (lastFetchedUserId !== authState.user.id) {
-				console.log('Fetching debug info for new user:', authState.user.id);
+				log.debug('Fetching debug info for new user', { userId: authState.user.id });
 				lastFetchedUserId = authState.user.id;
 				fetchDebugInfo();
 			}
 		} else {
-			console.log('No authenticated user, resetting state');
+			log.debug('No authenticated user, resetting state');
 			isLoading = false;
 			debugInfo = null;
 			lastFetchedUserId = null;

@@ -4,14 +4,21 @@ import * as fc from 'fast-check';
 import { SportsService } from './sports-service';
 import type { Team, SportsMetadata } from '../api/polymarket-client';
 import { loadConfig } from '../config/api-config';
-import { Logger } from '../utils/logger';
 import { arbitraries } from '$lib/tests/arbitraries/common-arbitraries.js';
 
 // Mock the dependencies
 vi.mock('../api/polymarket-client');
 vi.mock('../cache/cache-manager');
 vi.mock('../config/api-config');
-vi.mock('../utils/logger');
+vi.mock('$lib/utils/logger', () => ({
+	Logger: class {
+		info = vi.fn();
+		error = vi.fn();
+		warn = vi.fn();
+		debug = vi.fn();
+		child = vi.fn().mockReturnThis();
+	}
+}));
 
 describe('SportsService', () => {
 	let service: SportsService;
@@ -30,16 +37,6 @@ describe('SportsService', () => {
 			cacheTtl: 60,
 			enableCache: true
 		});
-
-		// Mock Logger constructor
-		vi.mocked(Logger).mockImplementation(function (this: unknown) {
-			return {
-				info: vi.fn(),
-				error: vi.fn(),
-				warn: vi.fn(),
-				debug: vi.fn()
-			} as never;
-		} as never);
 
 		service = new SportsService();
 	});

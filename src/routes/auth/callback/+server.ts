@@ -6,7 +6,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createServerWallet } from '$lib/server/wallet/server-wallet';
-import { Logger } from '$lib/server/utils/logger';
+import { Logger } from '$lib/utils/logger';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import { registerWithPolymarketAsync } from '$lib/server/auth/register-helpers';
 

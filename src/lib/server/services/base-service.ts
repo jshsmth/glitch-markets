@@ -6,7 +6,7 @@
 import type { PolymarketClient } from '../api/polymarket-client.js';
 import type { CacheManager } from '../cache/cache-manager.js';
 import { getSharedCache, getSharedClient } from '../cache/shared-instances.js';
-import { Logger } from '../utils/logger.js';
+import { Logger } from '$lib/utils/logger';
 import { CACHE_TTL } from '$lib/config/constants.js';
 
 /**

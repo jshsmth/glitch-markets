@@ -6,7 +6,7 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { CommentService } from '$lib/server/services/comment-service.js';
 import { formatErrorResponse, ApiError } from '$lib/server/errors/api-errors.js';
-import { Logger } from '$lib/server/utils/logger.js';
+import { Logger } from '$lib/utils/logger';
 import type { UserCommentFilters } from '$lib/server/services/comment-service.js';
 
 const logger = new Logger({ component: 'CommentsByUserRoute' });

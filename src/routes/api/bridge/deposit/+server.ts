@@ -6,7 +6,7 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { BridgeService } from '$lib/server/services/bridge-service.js';
 import { formatErrorResponse, ApiError, ValidationError } from '$lib/server/errors/api-errors.js';
-import { Logger } from '$lib/server/utils/logger.js';
+import { Logger } from '$lib/utils/logger';
 
 const logger = new Logger({ component: 'BridgeDepositRoute' });
 const bridgeService = new BridgeService();

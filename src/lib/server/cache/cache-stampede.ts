@@ -13,7 +13,7 @@
  */
 
 import type { CacheManager } from './cache-manager';
-import type { Logger } from '../utils/logger';
+import type { Logger } from '$lib/utils/logger';
 
 export interface CacheStampedeOptions<T> {
 	/**

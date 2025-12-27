@@ -11,7 +11,7 @@ import type { RequestHandler } from './$types';
 import { registerWithPolymarket } from '$lib/server/polymarket/clob-registration';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import { encryptData } from '$lib/server/utils/encryption';
-import { Logger } from '$lib/server/utils/logger';
+import { Logger } from '$lib/utils/logger';
 
 const logger = new Logger({ component: 'PolymarketRegistration' });
 

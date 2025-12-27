@@ -7,7 +7,7 @@
  */
 
 import { json, type RequestEvent } from '@sveltejs/kit';
-import { Logger } from '$lib/server/utils/logger.js';
+import { Logger } from '$lib/utils/logger';
 import { createL2Client } from '$lib/server/polymarket/l2-client.js';
 import { formatErrorResponse } from '$lib/server/errors/api-errors.js';
 import type { Order } from '$lib/types/user.js';

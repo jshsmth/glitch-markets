@@ -6,7 +6,7 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { BuilderDataService } from '$lib/server/services/builder-data-service.js';
 import { formatErrorResponse, ApiError } from '$lib/server/errors/api-errors.js';
-import { Logger } from '$lib/server/utils/logger.js';
+import { Logger } from '$lib/utils/logger';
 import { validateBuilderLeaderboardParams } from '$lib/server/validation/input-validator.js';
 
 const logger = new Logger({ component: 'BuilderLeaderboardRoute' });

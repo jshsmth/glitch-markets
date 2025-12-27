@@ -2,7 +2,9 @@
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
 	import EmailIcon from '$lib/components/icons/EmailIcon.svelte';
+	import { Logger } from '$lib/utils/logger';
 
+	const log = Logger.forComponent('EmailOTPForm');
 	const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 	interface Props {
@@ -82,7 +84,7 @@
 			sentToEmail = email;
 			emailSent = true;
 		} catch (err) {
-			console.error('[EmailOTPForm] Sign up failed:', err);
+			log.error('Sign up failed', err);
 			const error = err as { message?: string };
 			onError?.(error.message || 'Failed to create account. Please try again.');
 		} finally {
@@ -116,7 +118,7 @@
 
 			onSuccess?.();
 		} catch (err) {
-			console.error('[EmailOTPForm] Sign in failed:', err);
+			log.error('Sign in failed', err);
 			const error = err as { message?: string };
 			onError?.(error.message || 'Invalid email or password.');
 		} finally {

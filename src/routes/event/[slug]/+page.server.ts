@@ -1,8 +1,10 @@
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import { EventService } from '$lib/server/services/event-service.js';
+import { Logger } from '$lib/utils/logger';
 
 const eventService = new EventService();
+const log = Logger.forRoute('/event/[slug]');
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { slug } = params;
@@ -25,7 +27,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		if (err && typeof err === 'object' && 'status' in err) {
 			throw err;
 		}
-		console.error('Error fetching event:', err);
+		log.error('Error fetching event', err, { slug });
 		throw error(500, 'Failed to load event');
 	}
 };

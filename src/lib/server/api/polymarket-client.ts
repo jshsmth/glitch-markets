@@ -14,7 +14,7 @@ import {
 	isAbortError,
 	isNetworkError
 } from '../errors/api-errors.js';
-import { Logger } from '../utils/logger.js';
+import { Logger } from '$lib/utils/logger';
 import {
 	validateMarketQueryParams,
 	validateMarketId,

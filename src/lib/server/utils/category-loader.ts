@@ -1,6 +1,6 @@
 import { EventService } from '$lib/server/services/event-service.js';
 import type { Event, Tag } from '../api/polymarket-client.js';
-import { Logger } from './logger';
+import { Logger } from '$lib/utils/logger';
 
 const eventService = new EventService();
 const logger = new Logger({ component: 'CategoryLoader' });
