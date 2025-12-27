@@ -2,6 +2,14 @@
  * User-related types for API responses
  */
 
+export interface UserProfile {
+	id: string;
+	email: string | null;
+	serverWalletAddress: string | null;
+	proxyWalletAddress: string | null;
+	isRegistered: boolean;
+}
+
 export interface Order {
 	id: string;
 	market: string;

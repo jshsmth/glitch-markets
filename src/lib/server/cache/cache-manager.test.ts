@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fc from 'fast-check';
 import { CacheManager } from './cache-manager';
 
@@ -8,6 +8,10 @@ describe('CacheManager', () => {
 	beforeEach(() => {
 		cache = new CacheManager();
 		vi.useFakeTimers();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
 	});
 
 	describe('basic operations', () => {

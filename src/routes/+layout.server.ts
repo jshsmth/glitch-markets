@@ -1,17 +1,10 @@
 import type { LayoutServerLoad } from './$types';
+import type { UserProfile } from '$lib/types/user';
 import { Logger } from '$lib/server/utils/logger';
 import { CacheManager } from '$lib/server/cache/cache-manager';
 
 const logger = new Logger({ component: 'Layout' });
 const profileCache = new CacheManager(500);
-
-interface UserProfile {
-	id: string;
-	email: string | null;
-	serverWalletAddress: string | null;
-	proxyWalletAddress: string | null;
-	isRegistered: boolean;
-}
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	/**

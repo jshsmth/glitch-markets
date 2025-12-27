@@ -4,6 +4,8 @@ import { MarketService } from './market-service';
 import type { Market } from '../api/polymarket-client';
 import { loadConfig } from '../config/api-config';
 import { Logger } from '../utils/logger';
+import { marketArbitrary } from '$lib/tests/helpers/test-arbitraries';
+import { createMockMarket } from '$lib/tests/helpers/test-mocks';
 
 // Mock the dependencies
 vi.mock('../api/polymarket-client');
@@ -48,44 +50,6 @@ describe('MarketService', () => {
 	 */
 	describe('Property 7: Filter application correctness', () => {
 		it('for any combination of filter parameters, all returned markets should satisfy all provided filter criteria', async () => {
-			// Generator for market data
-			const marketArb = fc.record({
-				id: fc.string({ minLength: 1 }),
-				question: fc.string({ minLength: 1 }),
-				conditionId: fc.string(),
-				slug: fc.string({ minLength: 1 }),
-				endDate: fc
-					.integer({ min: 1577836800000, max: 1924905600000 })
-					.map((timestamp) => new Date(timestamp).toISOString()),
-				category: fc.oneof(
-					fc.constant('crypto'),
-					fc.constant('sports'),
-					fc.constant('politics'),
-					fc.constant('entertainment')
-				),
-				liquidity: fc.float({ min: 0, max: 10000, noNaN: true }).map(String),
-				image: fc.webUrl(),
-				icon: fc.webUrl(),
-				description: fc.string(),
-				outcomes: fc.array(fc.string(), { minLength: 2, maxLength: 2 }),
-				outcomePrices: fc.array(fc.float({ min: 0, max: 1, noNaN: true }).map(String), {
-					minLength: 2,
-					maxLength: 2
-				}),
-				volume: fc.float({ min: 0, max: 10000, noNaN: true }).map(String),
-				active: fc.boolean(),
-				marketType: fc.oneof(fc.constant('normal' as const), fc.constant('scalar' as const)),
-				closed: fc.boolean(),
-				volumeNum: fc.float({ min: 0, max: 10000, noNaN: true }),
-				liquidityNum: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume24hr: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume1wk: fc.float({ min: 0, max: 10000, noNaN: true }),
-				volume1mo: fc.float({ min: 0, max: 10000, noNaN: true }),
-				lastTradePrice: fc.float({ min: 0, max: 1, noNaN: true }),
-				bestBid: fc.float({ min: 0, max: 1, noNaN: true }),
-				bestAsk: fc.float({ min: 0, max: 1, noNaN: true })
-			});
-
 			// Generator for filter parameters
 			const filtersArb = fc.record({
 				category: fc.option(
@@ -105,7 +69,7 @@ describe('MarketService', () => {
 
 			await fc.assert(
 				fc.asyncProperty(
-					fc.array(marketArb, { minLength: 0, maxLength: 50 }),
+					fc.array(marketArbitrary, { minLength: 0, maxLength: 50 }),
 					filtersArb,
 					async (markets, filters) => {
 						// Get the mocked instances
@@ -155,32 +119,7 @@ describe('MarketService', () => {
 
 	describe('getMarketById', () => {
 		it('should return market from cache if available', async () => {
-			const mockMarket: Market = {
-				id: '123',
-				question: 'Test question?',
-				conditionId: 'cond123',
-				slug: 'test-question',
-				endDate: '2024-12-31T00:00:00Z',
-				category: 'crypto',
-				liquidity: '1000',
-				image: 'https://example.com/image.png',
-				icon: 'https://example.com/icon.png',
-				description: 'Test description',
-				outcomes: ['Yes', 'No'],
-				outcomePrices: ['0.5', '0.5'],
-				volume: '5000',
-				active: true,
-				marketType: 'normal',
-				closed: false,
-				volumeNum: 5000,
-				liquidityNum: 1000,
-				volume24hr: 100,
-				volume1wk: 500,
-				volume1mo: 2000,
-				lastTradePrice: 0.5,
-				bestBid: 0.49,
-				bestAsk: 0.51
-			};
+			const mockMarket = createMockMarket() as Market;
 
 			const mockCacheInstance = vi.mocked(service['cache']);
 			const mockClientInstance = vi.mocked(service['client']);
@@ -194,32 +133,7 @@ describe('MarketService', () => {
 		});
 
 		it('should fetch from API on cache miss', async () => {
-			const mockMarket: Market = {
-				id: '123',
-				question: 'Test question?',
-				conditionId: 'cond123',
-				slug: 'test-question',
-				endDate: '2024-12-31T00:00:00Z',
-				category: 'crypto',
-				liquidity: '1000',
-				image: 'https://example.com/image.png',
-				icon: 'https://example.com/icon.png',
-				description: 'Test description',
-				outcomes: ['Yes', 'No'],
-				outcomePrices: ['0.5', '0.5'],
-				volume: '5000',
-				active: true,
-				marketType: 'normal',
-				closed: false,
-				volumeNum: 5000,
-				liquidityNum: 1000,
-				volume24hr: 100,
-				volume1wk: 500,
-				volume1mo: 2000,
-				lastTradePrice: 0.5,
-				bestBid: 0.49,
-				bestAsk: 0.51
-			};
+			const mockMarket = createMockMarket() as Market;
 
 			const mockCacheInstance = vi.mocked(service['cache']);
 			const mockClientInstance = vi.mocked(service['client']);
@@ -258,32 +172,7 @@ describe('MarketService', () => {
 
 	describe('getMarketBySlug', () => {
 		it('should return market from cache if available', async () => {
-			const mockMarket: Market = {
-				id: '123',
-				question: 'Test question?',
-				conditionId: 'cond123',
-				slug: 'test-question',
-				endDate: '2024-12-31T00:00:00Z',
-				category: 'crypto',
-				liquidity: '1000',
-				image: 'https://example.com/image.png',
-				icon: 'https://example.com/icon.png',
-				description: 'Test description',
-				outcomes: ['Yes', 'No'],
-				outcomePrices: ['0.5', '0.5'],
-				volume: '5000',
-				active: true,
-				marketType: 'normal',
-				closed: false,
-				volumeNum: 5000,
-				liquidityNum: 1000,
-				volume24hr: 100,
-				volume1wk: 500,
-				volume1mo: 2000,
-				lastTradePrice: 0.5,
-				bestBid: 0.49,
-				bestAsk: 0.51
-			};
+			const mockMarket = createMockMarket() as Market;
 
 			const mockCacheInstance = vi.mocked(service['cache']);
 			const mockClientInstance = vi.mocked(service['client']);
@@ -297,32 +186,7 @@ describe('MarketService', () => {
 		});
 
 		it('should fetch from API on cache miss', async () => {
-			const mockMarket: Market = {
-				id: '123',
-				question: 'Test question?',
-				conditionId: 'cond123',
-				slug: 'test-question',
-				endDate: '2024-12-31T00:00:00Z',
-				category: 'crypto',
-				liquidity: '1000',
-				image: 'https://example.com/image.png',
-				icon: 'https://example.com/icon.png',
-				description: 'Test description',
-				outcomes: ['Yes', 'No'],
-				outcomePrices: ['0.5', '0.5'],
-				volume: '5000',
-				active: true,
-				marketType: 'normal',
-				closed: false,
-				volumeNum: 5000,
-				liquidityNum: 1000,
-				volume24hr: 100,
-				volume1wk: 500,
-				volume1mo: 2000,
-				lastTradePrice: 0.5,
-				bestBid: 0.49,
-				bestAsk: 0.51
-			};
+			const mockMarket = createMockMarket() as Market;
 
 			const mockCacheInstance = vi.mocked(service['cache']);
 			const mockClientInstance = vi.mocked(service['client']);

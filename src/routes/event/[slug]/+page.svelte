@@ -1,103 +1,31 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import type { Market, Comment } from '$lib/server/api/polymarket-client';
+	import type { Comment } from '$lib/server/api/polymarket-client';
+	import type { TimeRange } from '$lib/utils/event-helpers';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { page } from '$app/stores';
-	import MoneyIcon from '$lib/components/icons/MoneyIcon.svelte';
-	import CalendarIcon from '$lib/components/icons/CalendarIcon.svelte';
-	import GlobalIcon from '$lib/components/icons/GlobalIcon.svelte';
-	import XIcon from '$lib/components/icons/XIcon.svelte';
-	import GitHubIcon from '$lib/components/icons/GitHubIcon.svelte';
-	import LinkedInIcon from '$lib/components/icons/LinkedInIcon.svelte';
-	import DiscordIcon from '$lib/components/icons/DiscordIcon.svelte';
 	import MessageTextIcon from '$lib/components/icons/MessageTextIcon.svelte';
-	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
-	import CopyIcon from '$lib/components/icons/CopyIcon.svelte';
-	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
-	import PriceChart from '$lib/components/charts/PriceChart.svelte';
-	import { formatNumber } from '$lib/utils/format';
+	import EventHeader from '$lib/components/event/EventHeader.svelte';
+	import ProbabilitySummary from '$lib/components/event/ProbabilitySummary.svelte';
+	import PriceChartSection from '$lib/components/event/PriceChartSection.svelte';
+	import AboutTab from '$lib/components/event/AboutTab.svelte';
+	import CommentsTab from '$lib/components/event/CommentsTab.svelte';
+	import OutcomesSidebar from '$lib/components/event/OutcomesSidebar.svelte';
+	import OutcomeCard from '$lib/components/event/OutcomeCard.svelte';
+	import {
+		parseMarketData,
+		isPlaceholderMarket,
+		getMarketPrice,
+		getMarketDisplayTitle,
+		getClobTokenId,
+		getSeriesColor,
+		getIntervalForTimeRange,
+		getFidelityForTimeRange
+	} from '$lib/utils/event-helpers';
+	import { parseTextWithUrls } from '$lib/utils/text-parser';
 
 	let { data }: { data: PageData } = $props();
 
 	const event = $derived(data.event);
-
-	function formatDate(dateStr: string | null | undefined): string {
-		if (!dateStr) return '';
-		try {
-			const date = new Date(dateStr);
-			return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-		} catch {
-			return '';
-		}
-	}
-
-	function getMarketDisplayTitle(market: Market): string {
-		if (market.groupItemTitle) return market.groupItemTitle;
-		try {
-			const outcomes =
-				typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : market.outcomes;
-			if (Array.isArray(outcomes) && outcomes[0]) return outcomes[0];
-		} catch {
-			// Invalid JSON, fall through to default
-		}
-		return market.question || 'Unknown';
-	}
-
-	function parseMarketData(market: Market) {
-		try {
-			const outcomes =
-				typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : market.outcomes;
-			const prices =
-				typeof market.outcomePrices === 'string'
-					? JSON.parse(market.outcomePrices)
-					: market.outcomePrices;
-			if (!Array.isArray(outcomes) || !Array.isArray(prices)) return null;
-			return outcomes.map((outcome: string, i: number) => {
-				const price = parseFloat(prices[i]) * 100;
-				const isResolved = market.closed && (price === 0 || price === 100);
-				return {
-					label: outcome,
-					price,
-					priceFormatted: isResolved ? (price === 100 ? 'Won' : 'Lost') : price.toFixed(0),
-					isResolved,
-					won: isResolved && price === 100
-				};
-			});
-		} catch {
-			return null;
-		}
-	}
-
-	function isPlaceholderMarket(market: Market): boolean {
-		const title = getMarketDisplayTitle(market);
-		const placeholderPrefixes = [
-			'Person',
-			'Candidate',
-			'Company',
-			'Team',
-			'Player',
-			'Country',
-			'Option',
-			'Choice',
-			'Entry',
-			'Participant',
-			'Contestant',
-			'Nominee',
-			'Artist',
-			'Song',
-			'Film',
-			'Movie',
-			'Show',
-			'Act'
-		];
-		const prefixPattern = new RegExp(`^(${placeholderPrefixes.join('|')}) [A-Z]$`, 'i');
-		return prefixPattern.test(title) || /^Other$/i.test(title);
-	}
-
-	function getMarketPrice(market: Market): number {
-		const data = parseMarketData(market);
-		return data?.[0]?.price ?? 0;
-	}
 
 	const filteredMarkets = $derived(
 		(event.markets || [])
@@ -113,7 +41,6 @@
 	let activeTab = $state<TabType>(
 		typeof window !== 'undefined' && window.innerWidth < 768 ? 'outcomes' : 'about'
 	);
-	type TimeRange = '1H' | '6H' | '1D' | '1W' | '1M' | 'MAX';
 	let selectedTimeRange = $state<TimeRange>('MAX');
 
 	const commentsQuery = createQuery<Comment[]>(() => ({
@@ -136,45 +63,6 @@
 	interface PriceHistoryResponse {
 		history: Array<{ t: number; p: number }>;
 	}
-
-	const getIntervalForTimeRange = (range: TimeRange): '1h' | '6h' | '1d' | '1w' | '1m' | 'max' => {
-		const mapping: Record<TimeRange, '1h' | '6h' | '1d' | '1w' | '1m' | 'max'> = {
-			'1H': '1h',
-			'6H': '6h',
-			'1D': '1d',
-			'1W': '1w',
-			'1M': '1m',
-			MAX: 'max'
-		};
-		return mapping[range];
-	};
-
-	const getFidelityForTimeRange = (range: TimeRange): number | undefined => {
-		const fidelityMap: Record<TimeRange, number | undefined> = {
-			'1H': undefined,
-			'6H': undefined,
-			'1D': undefined,
-			'1W': 5,
-			'1M': 10,
-			MAX: undefined
-		};
-		return fidelityMap[range];
-	};
-
-	const getClobTokenId = (market: Market | null): string | null => {
-		if (!market?.clobTokenIds) return null;
-		try {
-			const tokenIds = JSON.parse(market.clobTokenIds);
-			return Array.isArray(tokenIds) && tokenIds[0] ? tokenIds[0] : null;
-		} catch {
-			return null;
-		}
-	};
-
-	const getSeriesColor = (index: number): string => {
-		const colors = ['#00d9ff', '#ff006e', '#a855f7'];
-		return colors[index] || '#00d9ff';
-	};
 
 	const top3Markets = $derived(filteredMarkets.slice(0, 3));
 
@@ -217,84 +105,7 @@
 	const isAnyLoading = $derived(priceHistoryQueries.some((q) => q.isPending));
 	const anyError = $derived(priceHistoryQueries.find((q) => q.error)?.error?.message ?? null);
 
-	function formatRelativeTime(dateStr: string | null): string {
-		if (!dateStr) return '';
-		try {
-			const date = new Date(dateStr);
-			const now = new Date();
-			const diffMs = now.getTime() - date.getTime();
-			const diffMins = Math.floor(diffMs / 60000);
-			const diffHours = Math.floor(diffMs / 3600000);
-			const diffDays = Math.floor(diffMs / 86400000);
-			if (diffMins < 1) return 'just now';
-			if (diffMins < 60) return `${diffMins}m ago`;
-			if (diffHours < 24) return `${diffHours}h ago`;
-			if (diffDays < 7) return `${diffDays}d ago`;
-			return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-		} catch {
-			return '';
-		}
-	}
-
-	interface ParsedSegment {
-		type: 'text' | 'url';
-		content: string;
-		domain?: string;
-		iconType?: 'x' | 'github' | 'linkedin' | 'discord' | 'global';
-	}
-
-	function getDomainFromUrl(url: string): string {
-		try {
-			return new URL(url).hostname.replace(/^www\./, '');
-		} catch {
-			return url;
-		}
-	}
-
-	function getIconTypeForDomain(domain: string): ParsedSegment['iconType'] {
-		if (domain.includes('twitter.com') || domain.includes('x.com')) return 'x';
-		if (domain.includes('github.com')) return 'github';
-		if (domain.includes('linkedin.com')) return 'linkedin';
-		if (domain.includes('discord.com') || domain.includes('discord.gg')) return 'discord';
-		return 'global';
-	}
-
-	function parseTextWithUrls(text: string): ParsedSegment[] {
-		const urlRegex = /(https?:\/\/[^\s<>()[\]]+?)([.,;:!?)]*(?:\s|$))/g;
-		const segments: ParsedSegment[] = [];
-		let lastIndex = 0;
-		let match;
-		while ((match = urlRegex.exec(text)) !== null) {
-			if (match.index > lastIndex) {
-				segments.push({ type: 'text', content: text.slice(lastIndex, match.index) });
-			}
-			const url = match[1];
-			const domain = getDomainFromUrl(url);
-			segments.push({ type: 'url', content: url, domain, iconType: getIconTypeForDomain(domain) });
-			if (match[2]) {
-				segments.push({ type: 'text', content: match[2] });
-			}
-			lastIndex = match.index + match[0].length;
-		}
-		if (lastIndex < text.length) {
-			segments.push({ type: 'text', content: text.slice(lastIndex) });
-		}
-		return segments;
-	}
-
 	const parsedDescription = $derived(event.description ? parseTextWithUrls(event.description) : []);
-
-	let copyState = $state<'idle' | 'copied'>('idle');
-	async function copyShareLink() {
-		try {
-			await navigator.clipboard.writeText($page.url.href);
-			copyState = 'copied';
-			setTimeout(() => (copyState = 'idle'), 2000);
-		} catch (error) {
-			console.error('Failed to copy link:', error);
-			copyState = 'idle';
-		}
-	}
 </script>
 
 <svelte:head>
@@ -302,81 +113,21 @@
 </svelte:head>
 
 <div class="event-page">
-	<!-- Back Link -->
-	<a href="/" class="back-link">
-		<ChevronLeftIcon size={18} />
-		<span>Back</span>
-	</a>
-
-	<!-- Header -->
-	<header class="event-header">
-		<div class="header-row">
-			{#if event.image}
-				<img src={event.image} alt={event.title || 'Event icon'} class="event-icon" />
-			{/if}
-			<h1 class="event-title">{event.title || 'Untitled Event'}</h1>
-			<button
-				class="share-btn"
-				class:copied={copyState === 'copied'}
-				onclick={copyShareLink}
-				aria-label="Copy link"
-			>
-				{#if copyState === 'copied'}
-					<CheckCircleIcon size={18} />
-				{:else}
-					<CopyIcon size={18} />
-				{/if}
-			</button>
-		</div>
-	</header>
+	<EventHeader title={event.title || 'Untitled Event'} image={event.image} />
 
 	<!-- Main Content -->
 	<div class="content-grid">
 		<!-- Left Column -->
 		<main class="main-content">
-			<!-- Probability Summary -->
-			<section class="probability-summary">
-				{#if isMultiMarket}
-					{#each filteredMarkets.slice(0, 3) as market, index (market.id)}
-						{@const marketData = parseMarketData(market)}
-						{@const percentage = marketData?.[0]?.priceFormatted || '—'}
-						<div class="summary-item">
-							<span class="summary-dot" style="background-color: {getSeriesColor(index)}"></span>
-							<span class="summary-name">{getMarketDisplayTitle(market)}</span>
-							<span class="summary-percentage">{percentage}%</span>
-						</div>
-					{/each}
-				{:else if selectedMarketData}
-					{#each selectedMarketData as outcome, index (index)}
-						<div class="summary-item">
-							<span
-								class="summary-dot"
-								style="background-color: {index === 0 ? 'var(--success)' : 'var(--danger)'}"
-							></span>
-							<span class="summary-name">{outcome.label}</span>
-							<span class="summary-percentage">{outcome.priceFormatted}%</span>
-						</div>
-					{/each}
-				{/if}
-			</section>
+			<ProbabilitySummary markets={filteredMarkets} {isMultiMarket} {selectedMarketData} />
 
-			<!-- Chart -->
-			<section class="card chart-card">
-				<div class="chart-wrapper">
-					<PriceChart series={chartSeries} loading={isAnyLoading} error={anyError} />
-				</div>
-				<div class="time-controls">
-					{#each ['1H', '6H', '1D', '1W', '1M', 'MAX'] as range (range)}
-						<button
-							class="time-btn"
-							class:active={selectedTimeRange === range}
-							onclick={() => (selectedTimeRange = range as TimeRange)}
-						>
-							{range}
-						</button>
-					{/each}
-				</div>
-			</section>
+			<PriceChartSection
+				series={chartSeries}
+				loading={isAnyLoading}
+				error={anyError}
+				{selectedTimeRange}
+				onTimeRangeChange={(range) => (selectedTimeRange = range)}
+			/>
 
 			<!-- Tabs -->
 			<section class="tabs-section">
@@ -410,219 +161,47 @@
 							{#if isMultiMarket}
 								{#each filteredMarkets as market (market.id)}
 									{@const marketData = parseMarketData(market)}
-									<div class="outcome-card">
-										<div class="outcome-card-header">
-											<span class="outcome-card-name">{getMarketDisplayTitle(market)}</span>
-											<span class="outcome-card-volume"
-												>{formatNumber(Number(market.volume) || 0)} Vol.</span
-											>
-										</div>
-										<div class="outcome-card-body">
-											<span class="outcome-card-percentage">
-												{#if marketData?.[0]?.isResolved}
-													<span class="resolved-tag" class:won={marketData[0].won}>
-														{marketData[0].priceFormatted}
-													</span>
-												{:else}
-													{marketData?.[0]?.priceFormatted || '—'}%
-												{/if}
-											</span>
-											{#if marketData && !marketData[0]?.isResolved}
-												<div class="outcome-card-actions">
-													<button class="bet-btn yes">
-														Yes · {marketData[0]?.priceFormatted || '—'}¢
-													</button>
-													<button class="bet-btn no">
-														No · {marketData[1]?.priceFormatted || '—'}¢
-													</button>
-												</div>
-											{/if}
-										</div>
-									</div>
+									{#if marketData}
+										<OutcomeCard
+											name={getMarketDisplayTitle(market)}
+											volume={Number(market.volume) || 0}
+											outcomeData={marketData}
+										/>
+									{/if}
 								{/each}
 							{:else if selectedMarketData}
-								{#each selectedMarketData as outcome (outcome.label)}
-									<div class="outcome-card">
-										<div class="outcome-card-header">
-											<span class="outcome-card-name">{outcome.label}</span>
-											<span class="outcome-card-volume"
-												>{formatNumber(Number(selectedMarket?.volume) || 0)} Vol.</span
-											>
-										</div>
-										<div class="outcome-card-body">
-											<span class="outcome-card-percentage">
-												{#if outcome.isResolved}
-													<span class="resolved-tag" class:won={outcome.won}
-														>{outcome.priceFormatted}</span
-													>
-												{:else}
-													{outcome.priceFormatted}%
-												{/if}
-											</span>
-											{#if !outcome.isResolved}
-												<div class="outcome-card-actions">
-													<button class="bet-btn yes">
-														Yes · {outcome.priceFormatted}¢
-													</button>
-												</div>
-											{/if}
-										</div>
-									</div>
-								{/each}
+								<OutcomeCard
+									name={selectedMarket?.question || 'Unknown'}
+									volume={Number(selectedMarket?.volume) || 0}
+									outcomeData={selectedMarketData}
+									showBetButtons={selectedMarketData.length === 1}
+								/>
 							{/if}
 						</div>
 					{:else if activeTab === 'about'}
-						{#if event.description}
-							<div class="about-content">
-								<p class="about-text">
-									{#each parsedDescription as segment, i (i)}{#if segment.type === 'text'}{segment.content}{:else}<a
-												href={segment.content}
-												target="_blank"
-												rel="noopener noreferrer"
-												class="rules-link"
-												>{#if segment.iconType === 'x'}<XIcon
-														size={12}
-													/>{:else if segment.iconType === 'github'}<GitHubIcon
-														size={12}
-													/>{:else if segment.iconType === 'linkedin'}<LinkedInIcon
-														size={12}
-													/>{:else if segment.iconType === 'discord'}<DiscordIcon
-														size={12}
-													/>{:else}<GlobalIcon size={12} />{/if}<span>{segment.domain}</span></a
-											>{/if}{/each}
-								</p>
-								{#if event.endDate}
-									<div class="about-meta">
-										<div class="meta-row">
-											<CalendarIcon size={14} />
-											<span>Ends {formatDate(event.endDate)}</span>
-										</div>
-									</div>
-								{/if}
-								{#if event.volume}
-									<div class="about-meta">
-										<div class="meta-row">
-											<MoneyIcon size={14} />
-											<span>{formatNumber(event.volume)} Volume</span>
-										</div>
-									</div>
-								{/if}
-							</div>
-						{:else}
-							<div class="tab-empty">No description available</div>
-						{/if}
+						<AboutTab
+							description={event.description}
+							{parsedDescription}
+							endDate={event.endDate ?? null}
+							volume={event.volume ? Number(event.volume) : null}
+						/>
 					{:else if activeTab === 'comments'}
-						{#if commentsQuery.isLoading}
-							<div class="tab-empty">Loading...</div>
-						{:else if commentsQuery.data?.length}
-							<div class="comments-list">
-								{#each commentsQuery.data as comment (comment.id)}
-									<div class="comment">
-										<div class="comment-avatar">
-											{#if comment.profile?.profileImage}
-												<img
-													src={comment.profile.profileImage}
-													alt={comment.profile?.name || comment.profile?.pseudonym || 'User avatar'}
-													loading="lazy"
-												/>
-											{/if}
-										</div>
-										<div class="comment-body">
-											<div class="comment-meta">
-												<span class="comment-author">
-													{comment.profile?.name || comment.profile?.pseudonym || 'Anon'}
-												</span>
-												<span class="comment-time">{formatRelativeTime(comment.createdAt)}</span>
-											</div>
-											<p>{comment.body}</p>
-										</div>
-									</div>
-								{/each}
-							</div>
-						{:else}
-							<div class="tab-empty">No comments yet</div>
-						{/if}
+						<CommentsTab comments={commentsQuery.data} isLoading={commentsQuery.isLoading} />
 					{/if}
 				</div>
 			</section>
 		</main>
 
-		<!-- Right Sidebar (Desktop only) -->
-		<aside class="sidebar desktop-only">
-			<div class="outcomes-panel">
-				<h2 class="outcomes-panel-title">Outcomes</h2>
-				<div class="outcomes-scroll">
-					{#if isMultiMarket}
-						{#each filteredMarkets as market (market.id)}
-							{@const marketData = parseMarketData(market)}
-							<div class="outcome-card">
-								<div class="outcome-card-header">
-									<span class="outcome-card-name">{getMarketDisplayTitle(market)}</span>
-									<span class="outcome-card-volume"
-										>{formatNumber(Number(market.volume) || 0)} Vol.</span
-									>
-								</div>
-								<div class="outcome-card-body">
-									<span class="outcome-card-percentage">
-										{#if marketData?.[0]?.isResolved}
-											<span class="resolved-tag" class:won={marketData[0].won}>
-												{marketData[0].priceFormatted}
-											</span>
-										{:else}
-											{marketData?.[0]?.priceFormatted || '—'}%
-										{/if}
-									</span>
-									{#if marketData && !marketData[0]?.isResolved}
-										<div class="outcome-card-actions">
-											<button class="bet-btn yes">
-												Yes · {marketData[0]?.priceFormatted || '—'}¢
-											</button>
-											<button class="bet-btn no">
-												No · {marketData[1]?.priceFormatted || '—'}¢
-											</button>
-										</div>
-									{/if}
-								</div>
-							</div>
-						{/each}
-					{:else if selectedMarketData}
-						{#each selectedMarketData as outcome (outcome.label)}
-							<div class="outcome-card">
-								<div class="outcome-card-header">
-									<span class="outcome-card-name">{outcome.label}</span>
-									<span class="outcome-card-volume"
-										>{formatNumber(Number(selectedMarket?.volume) || 0)} Vol.</span
-									>
-								</div>
-								<div class="outcome-card-body">
-									<span class="outcome-card-percentage">
-										{#if outcome.isResolved}
-											<span class="resolved-tag" class:won={outcome.won}
-												>{outcome.priceFormatted}</span
-											>
-										{:else}
-											{outcome.priceFormatted}%
-										{/if}
-									</span>
-									{#if !outcome.isResolved}
-										<div class="outcome-card-actions">
-											<button class="bet-btn yes">
-												Yes · {outcome.priceFormatted}¢
-											</button>
-										</div>
-									{/if}
-								</div>
-							</div>
-						{/each}
-					{/if}
-				</div>
-			</div>
-		</aside>
+		<OutcomesSidebar
+			markets={filteredMarkets}
+			{isMultiMarket}
+			{selectedMarket}
+			{selectedMarketData}
+		/>
 	</div>
 </div>
 
 <style>
-	/* Reset & Base */
 	.event-page {
 		max-width: 1400px;
 		margin: 0 auto;
@@ -630,112 +209,6 @@
 		padding-bottom: 80px;
 	}
 
-	/* Back Link */
-	.back-link {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 8px 0;
-		font-size: 14px;
-		font-weight: 500;
-		color: var(--text-2);
-		text-decoration: none;
-	}
-
-	.back-link:hover {
-		color: var(--primary);
-	}
-
-	/* Header */
-	.event-header {
-		margin-bottom: 16px;
-	}
-
-	.header-row {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
-	.event-icon {
-		width: 44px;
-		height: 44px;
-		border-radius: 10px;
-		object-fit: cover;
-		flex-shrink: 0;
-		border: 1.5px solid var(--bg-3);
-		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
-	}
-
-	.event-title {
-		font-size: 18px;
-		font-weight: 700;
-		color: var(--text-0);
-		line-height: 1.3;
-		margin: 0;
-		flex: 1;
-		min-width: 0;
-	}
-
-	.share-btn {
-		width: 36px;
-		height: 36px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: var(--bg-2);
-		border: 1px solid var(--bg-3);
-		border-radius: 8px;
-		color: var(--text-2);
-		cursor: pointer;
-		flex-shrink: 0;
-		transition: all var(--transition-fast);
-	}
-
-	.share-btn:hover {
-		color: var(--primary);
-		border-color: var(--bg-4);
-	}
-
-	.share-btn.copied {
-		color: var(--gold-dark);
-		border-color: var(--gold-base);
-		background: rgba(var(--gold-rgb), 0.1);
-	}
-
-	/* Probability Summary */
-	.probability-summary {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		margin-bottom: 8px;
-	}
-
-	.summary-item {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		font-size: 13px;
-	}
-
-	.summary-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		flex-shrink: 0;
-	}
-
-	.summary-name {
-		color: var(--text-0);
-		font-weight: 500;
-	}
-
-	.summary-percentage {
-		font-weight: 700;
-		color: var(--text-0);
-	}
-
-	/* Content Grid */
 	.content-grid {
 		display: flex;
 		flex-direction: column;
@@ -748,91 +221,6 @@
 		gap: 12px;
 	}
 
-	/* Cards */
-	.card {
-		background: var(--bg-1);
-		border: 1px solid var(--bg-3);
-		border-radius: 12px;
-		padding: 16px;
-	}
-
-	.resolved-tag {
-		font-size: 12px;
-		font-weight: 600;
-		padding: 4px 8px;
-		border-radius: 6px;
-		background: var(--bg-3);
-		color: var(--text-2);
-	}
-
-	.resolved-tag.won {
-		background: rgba(0, 196, 71, 0.15);
-		color: var(--success);
-	}
-
-	/* Chart */
-	.chart-card {
-		padding: 0;
-		overflow: hidden;
-		background: transparent;
-		border: none;
-	}
-
-	.chart-wrapper {
-		height: 220px;
-		width: 100%;
-	}
-
-	.time-controls {
-		display: flex;
-		gap: 8px;
-		padding: 12px 0;
-		justify-content: flex-end;
-	}
-
-	.time-btn {
-		padding: 6px 12px;
-		font-size: 13px;
-		font-weight: 500;
-		background: transparent;
-		border: none;
-		border-radius: 6px;
-		color: var(--text-3);
-		cursor: pointer;
-		transition: all var(--transition-fast);
-	}
-
-	.time-btn:hover {
-		background: var(--bg-2);
-		color: var(--text-0);
-	}
-
-	.time-btn.active {
-		background: var(--bg-2);
-		color: var(--text-0);
-		font-weight: 600;
-	}
-
-	.rules-link {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 2px 6px;
-		background: var(--bg-2);
-		border-radius: 4px;
-		color: var(--primary);
-		text-decoration: none;
-		font-size: 12px;
-	}
-
-	.rules-link span {
-		max-width: 120px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	/* Tabs */
 	.tabs-section {
 		display: flex;
 		flex-direction: column;
@@ -875,281 +263,24 @@
 		min-height: 150px;
 	}
 
-	.tab-empty {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		height: 100px;
-		color: var(--text-3);
-		font-size: 14px;
-	}
-
-	/* Outcome Cards */
 	.outcomes-grid {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
-	}
-
-	.outcome-card {
-		background: var(--bg-1);
-		border: 1px solid var(--bg-3);
-		border-radius: 12px;
-		padding: 16px;
-		transition: all var(--transition-fast);
-	}
-
-	.outcomes-grid .outcome-card:not(:last-child) {
-		margin-bottom: 12px;
-	}
-
-	.outcomes-scroll .outcome-card:not(:last-child) {
-		margin-bottom: 12px;
-	}
-
-	.outcome-card:hover {
-		background: var(--bg-2);
-	}
-
-	.outcome-card-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		margin-bottom: 10px;
-		gap: 8px;
-	}
-
-	.outcome-card-name {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-0);
-		flex: 1;
-		min-width: 0;
-		line-height: 1.4;
-	}
-
-	.outcome-card-volume {
-		font-size: 10px;
-		font-weight: 500;
-		color: var(--text-3);
-		flex-shrink: 0;
-	}
-
-	.outcome-card-body {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
 		gap: 12px;
 	}
 
-	.outcome-card-percentage {
-		font-size: 20px;
-		font-weight: 600;
-		color: var(--text-1);
-		flex-shrink: 0;
-	}
-
-	.outcome-card-actions {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		flex: 1;
-	}
-
-	.bet-btn {
-		padding: 10px 16px;
-		font-size: 14px;
-		font-weight: 600;
-		border: none;
-		border-radius: 8px;
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		white-space: nowrap;
-	}
-
-	.bet-btn.yes {
-		background: rgba(0, 196, 71, 0.08);
-		color: var(--success);
-		border: 1px solid transparent;
-	}
-
-	.bet-btn.yes:hover:not(:disabled) {
-		background: rgba(0, 196, 71, 0.12);
-	}
-
-	.bet-btn.no {
-		background: rgba(255, 51, 102, 0.08);
-		color: var(--danger);
-		border: 1px solid transparent;
-	}
-
-	.bet-btn.no:hover:not(:disabled) {
-		background: rgba(255, 51, 102, 0.12);
-	}
-
-	.bet-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	/* About Content */
-	.about-content {
-		display: flex;
-		flex-direction: column;
-		gap: 16px;
-	}
-
-	.about-text {
-		font-size: 14px;
-		line-height: 1.6;
-		color: var(--text-1);
-		margin: 0;
-		white-space: pre-wrap;
-	}
-
-	.about-meta {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		padding-top: 12px;
-		border-top: 1px solid var(--bg-3);
-	}
-
-	.meta-row {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		font-size: 13px;
-		color: var(--text-2);
-	}
-
-	/* Comments */
-	.comments-list {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-	}
-
-	.comment {
-		display: flex;
-		gap: 10px;
-	}
-
-	.comment-avatar {
-		width: 32px;
-		height: 32px;
-		border-radius: 50%;
-		background: var(--bg-3);
-		overflow: hidden;
-		flex-shrink: 0;
-	}
-
-	.comment-avatar img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-
-	.comment-body {
-		flex: 1;
-		min-width: 0;
-	}
-
-	.comment-meta {
-		display: flex;
-		gap: 8px;
-		margin-bottom: 4px;
-	}
-
-	.comment-author {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-0);
-	}
-
-	.comment-time {
-		font-size: 12px;
-		color: var(--text-3);
-	}
-
-	.comment-body p {
-		font-size: 14px;
-		color: var(--text-1);
-		margin: 0;
-		line-height: 1.5;
-	}
-
-	/* Mobile/Desktop visibility */
 	.mobile-only {
 		display: block;
 	}
 
-	.desktop-only {
-		display: none;
-	}
-
-	/* Sidebar (Desktop) */
-	.sidebar {
-		position: sticky;
-		top: 80px;
-		height: fit-content;
-		max-height: calc(100vh - 100px);
-		overflow-y: auto;
-	}
-
-	.outcomes-panel {
-		background: transparent;
-		border: none;
-		border-radius: 12px;
-		overflow: hidden;
-	}
-
-	.outcomes-panel-title {
-		font-size: 11px;
-		font-weight: 700;
-		color: var(--text-3);
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		margin: 0;
-		padding: 8px 0 16px 0;
-		border-bottom: none;
-	}
-
-	.outcomes-scroll {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		padding: 0;
-		max-height: calc(100vh - 200px);
-		overflow-y: auto;
-	}
-
-	/* Desktop Layout */
 	@media (min-width: 768px) {
 		.event-page {
 			padding: 24px;
 			padding-bottom: 48px;
 		}
 
-		.event-title {
-			font-size: 20px;
-		}
-
-		.event-icon {
-			width: 48px;
-			height: 48px;
-		}
-
-		.chart-wrapper {
-			height: 380px;
-		}
-
 		.mobile-only {
 			display: none;
-		}
-
-		.desktop-only {
-			display: block;
 		}
 
 		.content-grid {
@@ -1162,30 +293,9 @@
 		.main-content {
 			gap: 16px;
 		}
-
-		.card {
-			padding: 20px;
-		}
-
-		.chart-card {
-			padding: 0;
-		}
-
-		.time-controls {
-			padding: 16px;
-		}
 	}
 
 	@media (min-width: 1024px) {
-		.event-title {
-			font-size: 24px;
-		}
-
-		.event-icon {
-			width: 56px;
-			height: 56px;
-		}
-
 		.content-grid {
 			grid-template-columns: 1fr 420px;
 		}
