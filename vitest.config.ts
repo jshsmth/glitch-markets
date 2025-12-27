@@ -9,9 +9,12 @@ export default defineConfig({
 		globals: true,
 		environment: 'jsdom',
 		setupFiles: ['./src/lib/tests/setup.ts'],
+		clearMocks: true,
+		restoreMocks: true,
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'html', 'lcov'],
+			include: ['src/lib/**/*.ts', 'src/routes/**/*.ts'],
 			exclude: [
 				'node_modules/',
 				'src/lib/tests/',

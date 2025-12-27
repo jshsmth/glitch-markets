@@ -2,94 +2,25 @@
  * Property-based tests for /api/series server route
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fc from 'fast-check';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { Series } from '$lib/server/api/polymarket-client';
+import { seriesArbitrary } from './helpers/test-arbitraries';
 
-// Mock the SeriesService to control responses
 const mockGetSeries = vi.fn();
 
-vi.mock('$lib/server/services/series-service', () => {
-	return {
-		SeriesService: class {
-			getSeries = mockGetSeries;
-		}
-	};
-});
+vi.mock('$lib/server/services/series-service', () => ({
+	SeriesService: class {
+		getSeries = mockGetSeries;
+	}
+}));
 
 const { GET } = await import('../../routes/api/series/+server');
-
-// Helper to generate valid series data
-const seriesArbitrary = fc.record({
-	id: fc.string({ minLength: 1 }),
-	ticker: fc.string({ minLength: 1 }),
-	slug: fc.string({ minLength: 1 }),
-	title: fc.string({ minLength: 1 }),
-	subtitle: fc.option(fc.string(), { nil: null }),
-	seriesType: fc.string(),
-	recurrence: fc.string(),
-	description: fc.string(),
-	image: fc.option(fc.webUrl(), { nil: null }),
-	icon: fc.option(fc.webUrl(), { nil: null }),
-	layout: fc.string(),
-	active: fc.boolean(),
-	closed: fc.boolean(),
-	archived: fc.boolean(),
-	new: fc.boolean(),
-	featured: fc.boolean(),
-	restricted: fc.boolean(),
-	isTemplate: fc.boolean(),
-	templateVariables: fc.boolean(),
-	publishedAt: fc
-		.integer({ min: 1577836800000, max: 1924905600000 })
-		.map((timestamp) => new Date(timestamp).toISOString()),
-	createdBy: fc.string(),
-	updatedBy: fc.string(),
-	createdAt: fc
-		.integer({ min: 1577836800000, max: 1924905600000 })
-		.map((timestamp) => new Date(timestamp).toISOString()),
-	updatedAt: fc
-		.integer({ min: 1577836800000, max: 1924905600000 })
-		.map((timestamp) => new Date(timestamp).toISOString()),
-	commentsEnabled: fc.boolean(),
-	competitive: fc.string(),
-	volume24hr: fc.float({ min: 0, max: 10000, noNaN: true }),
-	volume: fc.float({ min: 0, max: 10000, noNaN: true }),
-	liquidity: fc.float({ min: 0, max: 10000, noNaN: true }),
-	startDate: fc
-		.integer({ min: 1577836800000, max: 1924905600000 })
-		.map((timestamp) => new Date(timestamp).toISOString()),
-	pythTokenID: fc.option(fc.string(), { nil: null }),
-	cgAssetName: fc.option(fc.string(), { nil: null }),
-	score: fc.float({ min: 0, max: 100, noNaN: true }),
-	events: fc.array(fc.record({ id: fc.string() })),
-	collections: fc.array(fc.record({ id: fc.string() })),
-	categories: fc.array(
-		fc.record({
-			id: fc.string(),
-			name: fc.oneof(
-				fc.constant('crypto'),
-				fc.constant('sports'),
-				fc.constant('politics'),
-				fc.constant('entertainment')
-			)
-		})
-	),
-	tags: fc.array(fc.record({ id: fc.string(), name: fc.string() })),
-	commentCount: fc.integer({ min: 0, max: 1000 }),
-	chats: fc.array(fc.record({ id: fc.string() }))
-}) as unknown as fc.Arbitrary<Series>;
 
 describe('Series Server Route', () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
-		mockGetSeries.mockReset();
-	});
-
-	afterEach(() => {
-		vi.resetAllMocks();
-		mockGetSeries.mockReset();
 	});
 
 	/**
@@ -103,7 +34,6 @@ describe('Series Server Route', () => {
 		it('should return valid JSON for any valid request with filters', async () => {
 			await fc.assert(
 				fc.asyncProperty(
-					// Generate random valid filter combinations
 					fc.record({
 						limit: fc.option(fc.integer({ min: 1, max: 100 })),
 						offset: fc.option(fc.integer({ min: 0, max: 1000 })),
@@ -111,10 +41,8 @@ describe('Series Server Route', () => {
 						active: fc.option(fc.boolean()),
 						closed: fc.option(fc.boolean())
 					}),
-					// Generate random series data that the service would return
 					fc.array(seriesArbitrary, { minLength: 0, maxLength: 10 }),
 					async (filters, series: Series[]) => {
-						// Reset the mock for each iteration
 						mockGetSeries.mockReset();
 						mockGetSeries.mockResolvedValue(series);
 
@@ -171,7 +99,6 @@ describe('Series Server Route', () => {
 		});
 
 		it('should return valid JSON for empty series lists', async () => {
-			mockGetSeries.mockReset();
 			mockGetSeries.mockResolvedValue([]);
 
 			const mockUrl = new URL('http://localhost/api/series');
@@ -200,8 +127,6 @@ describe('Series Server Route', () => {
 		it('should reject negative limit values', async () => {
 			await fc.assert(
 				fc.asyncProperty(fc.integer({ min: -1000, max: -1 }), async (invalidLimit) => {
-					mockGetSeries.mockReset();
-
 					const mockUrl = new URL('http://localhost/api/series');
 					mockUrl.searchParams.set('limit', String(invalidLimit));
 
@@ -233,8 +158,6 @@ describe('Series Server Route', () => {
 		it('should reject negative offset values', async () => {
 			await fc.assert(
 				fc.asyncProperty(fc.integer({ min: -1000, max: -1 }), async (invalidOffset) => {
-					mockGetSeries.mockReset();
-
 					const mockUrl = new URL('http://localhost/api/series');
 					mockUrl.searchParams.set('offset', String(invalidOffset));
 
@@ -268,8 +191,6 @@ describe('Series Server Route', () => {
 				fc.asyncProperty(
 					fc.string().filter((s) => s !== 'true' && s !== 'false'),
 					async (invalidBoolean) => {
-						mockGetSeries.mockReset();
-
 						const mockUrl = new URL('http://localhost/api/series');
 						mockUrl.searchParams.set('active', invalidBoolean);
 
@@ -304,8 +225,6 @@ describe('Series Server Route', () => {
 				fc.asyncProperty(
 					fc.string().filter((s) => s !== 'true' && s !== 'false'),
 					async (invalidBoolean) => {
-						mockGetSeries.mockReset();
-
 						const mockUrl = new URL('http://localhost/api/series');
 						mockUrl.searchParams.set('closed', invalidBoolean);
 
@@ -336,8 +255,6 @@ describe('Series Server Route', () => {
 		});
 
 		it('should reject non-numeric limit values', async () => {
-			mockGetSeries.mockReset();
-
 			const mockUrl = new URL('http://localhost/api/series');
 			mockUrl.searchParams.set('limit', 'not-a-number');
 
@@ -355,8 +272,6 @@ describe('Series Server Route', () => {
 		});
 
 		it('should reject non-numeric offset values', async () => {
-			mockGetSeries.mockReset();
-
 			const mockUrl = new URL('http://localhost/api/series');
 			mockUrl.searchParams.set('offset', 'not-a-number');
 
@@ -385,7 +300,6 @@ describe('Series Server Route', () => {
 		it('should include cache headers for any valid request', async () => {
 			await fc.assert(
 				fc.asyncProperty(
-					// Generate random valid filter combinations
 					fc.record({
 						limit: fc.option(fc.integer({ min: 1, max: 100 })),
 						offset: fc.option(fc.integer({ min: 0, max: 1000 })),
@@ -393,11 +307,8 @@ describe('Series Server Route', () => {
 						active: fc.option(fc.boolean()),
 						closed: fc.option(fc.boolean())
 					}),
-					// Generate random series data
 					fc.array(seriesArbitrary, { minLength: 0, maxLength: 10 }),
 					async (filters, series: Series[]) => {
-						// Reset the mock
-						mockGetSeries.mockReset();
 						mockGetSeries.mockResolvedValue(series);
 
 						// Build URL with filters
@@ -440,7 +351,6 @@ describe('Series Server Route', () => {
 		});
 
 		it('should include appropriate cache directives', async () => {
-			mockGetSeries.mockReset();
 			mockGetSeries.mockResolvedValue([]);
 
 			const mockUrl = new URL('http://localhost/api/series');
@@ -495,7 +405,6 @@ describe('Series Server Route', () => {
 					}),
 					fc.array(seriesArbitrary, { minLength: 0, maxLength: 5 }),
 					async (filters, series: Series[]) => {
-						mockGetSeries.mockReset();
 						mockGetSeries.mockResolvedValue(series);
 						mockLoggerInfo.mockClear();
 
@@ -551,7 +460,6 @@ describe('Series Server Route', () => {
 				fc.asyncProperty(
 					fc.array(seriesArbitrary, { minLength: 0, maxLength: 20 }),
 					async (series: Series[]) => {
-						mockGetSeries.mockReset();
 						mockGetSeries.mockResolvedValue(series);
 						mockLoggerInfo.mockClear();
 
@@ -604,7 +512,6 @@ describe('Series Server Route', () => {
 					fc.string({ minLength: 1, maxLength: 100 }),
 					fc.integer({ min: 400, max: 599 }),
 					async (errorMessage, statusCode) => {
-						mockGetSeries.mockReset();
 						mockLoggerError.mockClear();
 
 						// Mock service to throw an error
@@ -646,7 +553,6 @@ describe('Series Server Route', () => {
 			const { Logger } = await import('$lib/server/utils/logger');
 			const mockLoggerError = vi.spyOn(Logger.prototype, 'error');
 
-			mockGetSeries.mockReset();
 			mockLoggerError.mockClear();
 
 			// Mock service to throw an unexpected error

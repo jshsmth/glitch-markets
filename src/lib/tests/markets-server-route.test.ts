@@ -2,66 +2,25 @@
  * Property-based tests for /api/markets server route
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fc from 'fast-check';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { Market } from '$lib/server/api/polymarket-client';
+import { marketArbitrary } from './helpers/test-arbitraries';
 
-// Mock the PolymarketClient to control API responses
 const mockFetchMarkets = vi.fn();
 
-vi.mock('$lib/server/api/polymarket-client', () => {
-	return {
-		PolymarketClient: class {
-			fetchMarkets = mockFetchMarkets;
-		}
-	};
-});
+vi.mock('$lib/server/api/polymarket-client', () => ({
+	PolymarketClient: class {
+		fetchMarkets = mockFetchMarkets;
+	}
+}));
 
 const { GET } = await import('../../routes/api/markets/+server');
-
-// Helper to generate valid market data
-const marketArbitrary = fc.record({
-	id: fc.string({ minLength: 1 }),
-	question: fc.string({ minLength: 1 }),
-	conditionId: fc.string({ minLength: 1 }),
-	slug: fc.string({ minLength: 1 }),
-	endDate: fc
-		.integer({ min: Date.parse('2020-01-01'), max: Date.parse('2030-12-31') })
-		.map((ts) => new Date(ts).toISOString()),
-	category: fc.string({ minLength: 1 }),
-	liquidity: fc.float({ min: 0, max: 1000000 }).map(String),
-	image: fc.webUrl(),
-	icon: fc.webUrl(),
-	description: fc.string(),
-	outcomes: fc.array(fc.string({ minLength: 1 }), { minLength: 2, maxLength: 2 }),
-	outcomePrices: fc.array(fc.float({ min: 0, max: 1 }).map(String), {
-		minLength: 2,
-		maxLength: 2
-	}),
-	volume: fc.float({ min: 0, max: 1000000 }).map(String),
-	active: fc.boolean(),
-	marketType: fc.constantFrom('normal' as const, 'scalar' as const),
-	closed: fc.boolean(),
-	volumeNum: fc.float({ min: 0, max: 1000000 }),
-	liquidityNum: fc.float({ min: 0, max: 1000000 }),
-	volume24hr: fc.float({ min: 0, max: 100000 }),
-	volume1wk: fc.float({ min: 0, max: 500000 }),
-	volume1mo: fc.float({ min: 0, max: 1000000 }),
-	lastTradePrice: fc.float({ min: 0, max: 1 }),
-	bestBid: fc.float({ min: 0, max: 1 }),
-	bestAsk: fc.float({ min: 0, max: 1 })
-});
 
 describe('Markets Server Route', () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
-		mockFetchMarkets.mockReset();
-	});
-
-	afterEach(() => {
-		vi.resetAllMocks();
-		mockFetchMarkets.mockReset();
 	});
 
 	/**
@@ -75,7 +34,6 @@ describe('Markets Server Route', () => {
 		it('should return valid JSON for any valid request with filters', async () => {
 			await fc.assert(
 				fc.asyncProperty(
-					// Generate random valid filter combinations
 					fc.record({
 						limit: fc.option(fc.integer({ min: 1, max: 100 })),
 						offset: fc.option(fc.integer({ min: 0, max: 1000 })),
@@ -83,11 +41,8 @@ describe('Markets Server Route', () => {
 						active: fc.option(fc.boolean()),
 						closed: fc.option(fc.boolean())
 					}),
-					// Generate random market data that the API would return
 					fc.array(marketArbitrary, { minLength: 0, maxLength: 10 }),
 					async (filters, markets: Market[]) => {
-						// Reset the mock for each iteration
-						mockFetchMarkets.mockReset();
 						mockFetchMarkets.mockResolvedValue(markets);
 
 						// Build URL with filters
@@ -122,7 +77,6 @@ describe('Markets Server Route', () => {
 		});
 
 		it('should return valid JSON for empty market lists', async () => {
-			mockFetchMarkets.mockReset();
 			mockFetchMarkets.mockResolvedValue([]);
 
 			const mockUrl = new URL('http://localhost/api/markets');
@@ -151,14 +105,8 @@ describe('Markets Server Route', () => {
 			await fc.assert(
 				fc.asyncProperty(
 					fc.integer({ min: 1, max: 100 }),
-					// Generate more markets than the limit to test pagination
 					fc.array(marketArbitrary, { minLength: 10, maxLength: 200 }),
 					async (limit, allMarkets: Market[]) => {
-						// Reset the mock
-						mockFetchMarkets.mockReset();
-
-						// The API client will receive the limit parameter and should return
-						// markets respecting that limit
 						const limitedMarkets = allMarkets.slice(0, limit);
 						mockFetchMarkets.mockResolvedValue(limitedMarkets);
 
@@ -194,10 +142,6 @@ describe('Markets Server Route', () => {
 					fc.integer({ min: 0, max: 50 }),
 					fc.array(marketArbitrary, { minLength: 100, maxLength: 100 }),
 					async (offset, allMarkets: Market[]) => {
-						// Reset the mock
-						mockFetchMarkets.mockReset();
-
-						// The API client will receive the offset parameter
 						const offsetMarkets = allMarkets.slice(offset);
 						mockFetchMarkets.mockResolvedValue(offsetMarkets);
 
@@ -261,9 +205,6 @@ describe('Markets Server Route', () => {
 				bestAsk: 0.51
 			}));
 
-			mockFetchMarkets.mockReset();
-
-			// Test with limit=10, offset=5
 			const limit = 10;
 			const offset = 5;
 			const expectedMarkets = allMarkets.slice(offset, offset + limit);
@@ -310,8 +251,6 @@ describe('Property 12: Cache header presence', () => {
 				// Generate random market data
 				fc.array(marketArbitrary, { minLength: 0, maxLength: 10 }),
 				async (filters, markets: Market[]) => {
-					// Reset the mock
-					mockFetchMarkets.mockReset();
 					mockFetchMarkets.mockResolvedValue(markets);
 
 					// Build URL with filters

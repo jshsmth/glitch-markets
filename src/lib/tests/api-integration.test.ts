@@ -4,36 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { Market } from '$lib/server/api/polymarket-client';
-
-// Mock data for testing
-const createMockMarket = (overrides: Partial<Market> = {}): Market => ({
-	id: 'market-1',
-	question: 'Will Bitcoin reach $100k by end of 2024?',
-	conditionId: 'condition-1',
-	slug: 'bitcoin-100k-2024',
-	endDate: '2024-12-31T23:59:59Z',
-	category: 'crypto',
-	liquidity: '50000',
-	image: 'https://example.com/bitcoin.jpg',
-	icon: 'https://example.com/bitcoin-icon.jpg',
-	description: 'A market about Bitcoin price prediction',
-	outcomes: ['Yes', 'No'],
-	outcomePrices: ['0.45', '0.55'],
-	volume: '100000',
-	active: true,
-	marketType: 'normal',
-	closed: false,
-	volumeNum: 100000,
-	liquidityNum: 50000,
-	volume24hr: 5000,
-	volume1wk: 25000,
-	volume1mo: 80000,
-	lastTradePrice: 0.45,
-	bestBid: 0.44,
-	bestAsk: 0.46,
-	...overrides
-});
+import { createMockMarket } from './helpers/test-mocks';
 
 // Mock the PolymarketClient
 const mockFetchMarkets = vi.fn();
@@ -52,10 +23,6 @@ vi.mock('$lib/server/api/polymarket-client', () => {
 
 describe('API Integration Tests', () => {
 	beforeEach(() => {
-		vi.resetAllMocks();
-	});
-
-	afterEach(() => {
 		vi.resetAllMocks();
 	});
 
