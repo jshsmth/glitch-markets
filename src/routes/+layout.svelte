@@ -7,24 +7,6 @@
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import { createQueryClient } from '$lib/query/client';
 	import {
-		initializeAuth,
-		updateAuthState,
-		refreshProfile,
-		authState
-	} from '$lib/stores/auth.svelte';
-	import { initializeTheme } from '$lib/stores/theme.svelte';
-	import {
-		initializeWalletSync,
-		initializeWalletFromProfile,
-		walletState
-	} from '$lib/stores/wallet.svelte';
-	import {
-		initializeWatchlist,
-		clearWatchlist,
-		setQueryClient
-	} from '$lib/stores/watchlist.svelte';
-	import { migrateLocalStorageBookmarks, shouldOfferMigration } from '$lib/utils/migrate-bookmarks';
-	import {
 		signInModalState,
 		closeSignInModal,
 		depositModalState,
@@ -32,10 +14,7 @@
 		withdrawModalState,
 		closeWithdrawModal
 	} from '$lib/stores/modal.svelte';
-	import { browser } from '$app/environment';
-	import { onMount } from 'svelte';
-	import { invalidate, preloadData } from '$app/navigation';
-	import { TIMEOUTS } from '$lib/config/constants';
+	import { navigating } from '$app/stores';
 	import TopHeader from '$lib/components/layout/TopHeader.svelte';
 	import BottomNav from '$lib/components/layout/BottomNav.svelte';
 	import SignInModal from '$lib/components/auth/SignInModal.svelte';
@@ -44,7 +23,16 @@
 	import ReloadPrompt from '$lib/components/pwa/ReloadPrompt.svelte';
 	import ToastContainer from '$lib/components/ui/ToastContainer.svelte';
 	import SlowLoadingIndicator from '$lib/components/ui/SlowLoadingIndicator.svelte';
-	import { showToast } from '$lib/stores/toast.svelte';
+	import { useAuthInitialization } from '$lib/composables/layout/use-auth-initialization.svelte';
+	import { useClientInitialization } from '$lib/composables/layout/use-client-initialization';
+	import { useRoutePreloading } from '$lib/composables/layout/use-route-preloading';
+	import { useAuthListener } from '$lib/composables/layout/use-auth-listener.svelte';
+	import { useWatchlistInitialization } from '$lib/composables/layout/use-watchlist-initialization.svelte';
+	import {
+		useNavigationTimeout,
+		useViewTransitions
+	} from '$lib/composables/layout/use-navigation-handling.svelte';
+	import { handleUserRegistration } from '$lib/composables/layout/use-user-registration';
 	// @ts-expect-error - virtual module from vite-plugin-pwa
 	import { pwaInfo } from 'virtual:pwa-info';
 
@@ -54,176 +42,17 @@
 
 	const queryClient = $derived(data?.queryClient || createQueryClient());
 	const supabase = $derived(data?.supabase);
-
-	$effect(() => {
-		if (browser) {
-			initializeAuth(data?.session);
-			initializeWalletFromProfile(data?.profile ?? null);
-		}
-	});
-
-	onMount(() => {
-		initializeTheme();
-		setQueryClient(queryClient);
-
-		const cleanupWalletSync = initializeWalletSync();
-
-		const mainRoutes = [
-			'/',
-			'/trending',
-			'/new',
-			'/politics',
-			'/finance',
-			'/tech',
-			'/culture',
-			'/economy',
-			'/geopolitics',
-			'/pop-culture',
-			'/world'
-		];
-
-		if ('requestIdleCallback' in window) {
-			requestIdleCallback(() => {
-				mainRoutes.forEach((route) => {
-					preloadData(route).catch(() => {});
-				});
-			});
-		} else {
-			setTimeout(() => {
-				mainRoutes.forEach((route) => {
-					preloadData(route).catch(() => {});
-				});
-			}, 1000);
-		}
-
-		// Only call registration if user has session but no server wallet
-		if (data?.session?.user && !data?.profile?.serverWalletAddress) {
-			handleUserSignIn();
-		}
-
-		let authInvalidationTimeout: ReturnType<typeof setTimeout> | null = null;
-
-		const {
-			data: { subscription }
-		} = supabase.auth.onAuthStateChange(async (_event, session) => {
-			updateAuthState(session);
-
-			if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED' || _event === 'SIGNED_OUT') {
-				if (authInvalidationTimeout) {
-					clearTimeout(authInvalidationTimeout);
-				}
-
-				authInvalidationTimeout = setTimeout(async () => {
-					await invalidate('supabase:auth');
-				}, TIMEOUTS.AUTH_INVALIDATION_DEBOUNCE);
-			}
-
-			if (session?.user && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED')) {
-				if (!walletState.serverWalletAddress && !data?.profile?.serverWalletAddress) {
-					handleUserSignIn();
-				}
-			}
-		});
-
-		return () => {
-			subscription.unsubscribe();
-			cleanupWalletSync();
-			if (authInvalidationTimeout) {
-				clearTimeout(authInvalidationTimeout);
-			}
-		};
-	});
-
-	$effect(() => {
-		if (browser && authState.user) {
-			initializeWatchlist();
-
-			if (shouldOfferMigration()) {
-				migrateLocalStorageBookmarks().then((result) => {
-					if (result.migrated > 0) {
-						console.log(`Migrated ${result.migrated} bookmarks to database`);
-					}
-				});
-			}
-
-			if ('requestIdleCallback' in window) {
-				requestIdleCallback(
-					() => {
-						fetch('/api/bridge/supported-assets')
-							.then((r) => r.json())
-							.catch(() => {});
-					},
-					{ timeout: 2000 }
-				);
-			} else {
-				setTimeout(() => {
-					fetch('/api/bridge/supported-assets')
-						.then((r) => r.json())
-						.catch(() => {});
-				}, 1000);
-			}
-		} else if (browser) {
-			clearWatchlist();
-		}
-	});
-
-	async function handleUserSignIn() {
-		try {
-			const response = await fetch('/api/auth/register', { method: 'POST' });
-
-			if (!response.ok) {
-				return;
-			}
-
-			refreshProfile();
-		} catch {
-			// Silent fail - user can still use the app
-		}
-	}
-
 	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
+	const session = $derived(data?.session);
+	const profile = $derived(data?.profile);
 
-	import { onNavigate } from '$app/navigation';
-	import { navigating } from '$app/stores';
-
-	let navigationTimeoutId: ReturnType<typeof setTimeout> | null = null;
-
-	$effect(() => {
-		if ($navigating) {
-			navigationTimeoutId = setTimeout(() => {
-				showToast(
-					'Navigation is taking longer than expected. Please refresh if this persists.',
-					'warning',
-					8000
-				);
-			}, TIMEOUTS.NAVIGATION_TIMEOUT);
-		} else {
-			if (navigationTimeoutId) {
-				clearTimeout(navigationTimeoutId);
-				navigationTimeoutId = null;
-			}
-		}
-	});
-
-	onNavigate((navigation) => {
-		if (!document.startViewTransition) return;
-
-		return new Promise((resolve) => {
-			let viewTransitionTimeout: ReturnType<typeof setTimeout> | null = null;
-
-			viewTransitionTimeout = setTimeout(() => {
-				resolve();
-			}, TIMEOUTS.VIEW_TRANSITION_TIMEOUT);
-
-			document.startViewTransition(async () => {
-				if (viewTransitionTimeout) {
-					clearTimeout(viewTransitionTimeout);
-				}
-				resolve();
-				await navigation.complete;
-			});
-		});
-	});
+	useAuthInitialization(session, profile);
+	useClientInitialization(queryClient);
+	useRoutePreloading();
+	useAuthListener(supabase, session, profile, handleUserRegistration);
+	useWatchlistInitialization();
+	useNavigationTimeout();
+	useViewTransitions();
 </script>
 
 <svelte:head>

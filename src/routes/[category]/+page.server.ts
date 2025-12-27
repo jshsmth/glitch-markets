@@ -13,7 +13,7 @@ const VALID_CATEGORIES = [
 	'politics'
 ] as const;
 
-export const load: PageServerLoad = async ({ params, setHeaders }) => {
+export const load: PageServerLoad = async ({ params, setHeaders, fetch }) => {
 	if (!VALID_CATEGORIES.includes(params.category as (typeof VALID_CATEGORIES)[number])) {
 		throw error(404, 'Category not found');
 	}
@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 		'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=120'
 	});
 
-	const categoryData = await loadCategoryData(params.category);
+	const categoryData = await loadCategoryData(params.category, fetch);
 
 	return {
 		categoryData,
