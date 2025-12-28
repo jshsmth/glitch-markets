@@ -110,65 +110,65 @@ Quick reference for looking up official Vite PWA Plugin documentation.
 
 ```typescript
 // vite.config.ts
-import { VitePWA } from 'vite-plugin-pwa'
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  plugins: [
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
-      manifest: {
-        name: 'My App',
-        short_name: 'App',
-        description: 'My awesome Progressive Web App',
-        theme_color: '#ffffff',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      }
-    })
-  ]
-})
+	plugins: [
+		VitePWA({
+			registerType: 'autoUpdate',
+			includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+			manifest: {
+				name: 'My App',
+				short_name: 'App',
+				description: 'My awesome Progressive Web App',
+				theme_color: '#ffffff',
+				icons: [
+					{
+						src: 'pwa-192x192.png',
+						sizes: '192x192',
+						type: 'image/png'
+					},
+					{
+						src: 'pwa-512x512.png',
+						sizes: '512x512',
+						type: 'image/png'
+					}
+				]
+			}
+		})
+	]
+});
 ```
 
 ### Svelte Auto-Update with Virtual Module
 
 ```typescript
 // src/main.ts
-import { registerSW } from 'virtual:pwa-register'
+import { registerSW } from 'virtual:pwa-register';
 
 const updateSW = registerSW({
-  immediate: true,
-  onNeedRefresh() {
-    // Show update prompt
-  },
-  onOfflineReady() {
-    // Show offline ready message
-  }
-})
+	immediate: true,
+	onNeedRefresh() {
+		// Show update prompt
+	},
+	onOfflineReady() {
+		// Show offline ready message
+	}
+});
 ```
 
 ### Svelte Reactive Stores (Prompt for Update)
 
 ```typescript
 // src/lib/pwa.ts
-import { useRegisterSW } from 'virtual:pwa-register/svelte'
+import { useRegisterSW } from 'virtual:pwa-register/svelte';
 
-const { needRefresh, offlineReady, updateServiceWorker } = useRegisterSW()
+const { needRefresh, offlineReady, updateServiceWorker } = useRegisterSW();
 
 // In your component:
 if ($needRefresh) {
-  // Show update UI
-  await updateServiceWorker(true) // Reload page after update
+	// Show update UI
+	await updateServiceWorker(true); // Reload page after update
 }
 ```
 
@@ -176,35 +176,35 @@ if ($needRefresh) {
 
 ```typescript
 // vite.config.ts
-import { VitePWA } from 'vite-plugin-pwa'
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  plugins: [
-    VitePWA({
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.ts',
-      registerType: 'autoUpdate',
-      injectManifest: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
-      }
-    })
-  ]
-})
+	plugins: [
+		VitePWA({
+			strategies: 'injectManifest',
+			srcDir: 'src',
+			filename: 'sw.ts',
+			registerType: 'autoUpdate',
+			injectManifest: {
+				globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+			}
+		})
+	]
+});
 ```
 
 ```typescript
 // src/sw.ts
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
-import { clientsClaim } from 'workbox-core'
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+import { clientsClaim } from 'workbox-core';
 
-declare let self: ServiceWorkerGlobalScope
+declare let self: ServiceWorkerGlobalScope;
 
-self.skipWaiting()
-clientsClaim()
+self.skipWaiting();
+clientsClaim();
 
-cleanupOutdatedCaches()
-precacheAndRoute(self.__WB_MANIFEST)
+cleanupOutdatedCaches();
+precacheAndRoute(self.__WB_MANIFEST);
 ```
 
 ### Including Additional Static Assets
@@ -212,28 +212,29 @@ precacheAndRoute(self.__WB_MANIFEST)
 ```typescript
 // vite.config.ts
 VitePWA({
-  includeAssets: ['fonts/*.ttf', 'images/*.png'],
-  workbox: {
-    globPatterns: ['**/*.{js,css,html,ico,png,svg,ttf,woff,woff2}']
-  }
-})
+	includeAssets: ['fonts/*.ttf', 'images/*.png'],
+	workbox: {
+		globPatterns: ['**/*.{js,css,html,ico,png,svg,ttf,woff,woff2}']
+	}
+});
 ```
 
 ### Periodic Updates
 
 ```typescript
 // src/main.ts
-import { registerSW } from 'virtual:pwa-register'
+import { registerSW } from 'virtual:pwa-register';
 
-const intervalMS = 60 * 60 * 1000 // 1 hour
+const intervalMS = 60 * 60 * 1000; // 1 hour
 
 const updateSW = registerSW({
-  onRegistered(r) {
-    r && setInterval(() => {
-      r.update()
-    }, intervalMS)
-  }
-})
+	onRegistered(r) {
+		r &&
+			setInterval(() => {
+				r.update();
+			}, intervalMS);
+	}
+});
 ```
 
 ### Development Mode
@@ -241,12 +242,12 @@ const updateSW = registerSW({
 ```typescript
 // vite.config.ts
 VitePWA({
-  devOptions: {
-    enabled: true,
-    type: 'module',
-    navigateFallback: 'index.html'
-  }
-})
+	devOptions: {
+		enabled: true,
+		type: 'module',
+		navigateFallback: 'index.html'
+	}
+});
 ```
 
 ---

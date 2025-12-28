@@ -2,7 +2,7 @@
 	import { useRegisterSW } from 'virtual:pwa-register/svelte';
 	import { onMount } from 'svelte';
 
-	const { offlineReady, updateServiceWorker } = useRegisterSW({
+	const { offlineReady } = useRegisterSW({
 		immediate: true,
 		onRegisteredSW(swScriptUrl, registration) {
 			if (registration) {
