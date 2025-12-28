@@ -130,29 +130,25 @@
 
 	.event-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-		gap: 12px;
-		align-items: start;
+		grid-template-columns: 1fr;
+		gap: 8px;
 	}
 
-	@media (max-width: 640px) {
+	@media (min-width: 641px) {
 		.event-grid {
-			grid-template-columns: 1fr;
-			gap: 12px;
+			grid-template-columns: repeat(2, 1fr);
 		}
 	}
 
-	@media (min-width: 641px) and (max-width: 1024px) {
+	@media (min-width: 1025px) {
 		.event-grid {
-			grid-template-columns: repeat(2, 1fr);
-			gap: 12px;
+			grid-template-columns: repeat(3, 1fr);
 		}
 	}
 
 	@media (min-width: 1400px) {
 		.event-grid {
 			grid-template-columns: repeat(4, 1fr);
-			gap: 14px;
 		}
 	}
 

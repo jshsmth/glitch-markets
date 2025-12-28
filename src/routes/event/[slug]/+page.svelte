@@ -205,32 +205,32 @@
 	.event-page {
 		max-width: 1400px;
 		margin: 0 auto;
-		padding: 12px;
+		padding: var(--spacing-3);
 		padding-bottom: 80px;
 	}
 
 	.content-grid {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: var(--spacing-4);
 	}
 
 	.main-content {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: var(--spacing-3);
 	}
 
 	.tabs-section {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: var(--spacing-4);
 	}
 
 	.tabs-header {
 		display: flex;
 		border-bottom: 1px solid var(--bg-3);
-		gap: 4px;
+		gap: var(--spacing-1);
 	}
 
 	.tab {
@@ -239,7 +239,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 6px;
-		padding: 14px 8px;
+		padding: 14px var(--spacing-2);
 		font-size: 14px;
 		font-weight: 600;
 		color: var(--text-2);
@@ -247,11 +247,15 @@
 		border: none;
 		border-bottom: 2px solid transparent;
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition:
+			color var(--transition-fast),
+			border-bottom-color var(--transition-fast);
 	}
 
-	.tab:hover {
-		color: var(--text-0);
+	@media (hover: hover) {
+		.tab:hover {
+			color: var(--text-0);
+		}
 	}
 
 	.tab.active {
@@ -266,7 +270,7 @@
 	.outcomes-grid {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: var(--spacing-3);
 	}
 
 	.mobile-only {
@@ -275,8 +279,8 @@
 
 	@media (min-width: 768px) {
 		.event-page {
-			padding: 24px;
-			padding-bottom: 48px;
+			padding: var(--spacing-6);
+			padding-bottom: var(--spacing-12);
 		}
 
 		.mobile-only {
@@ -286,12 +290,12 @@
 		.content-grid {
 			display: grid;
 			grid-template-columns: 1fr 380px;
-			gap: 24px;
+			gap: var(--spacing-6);
 			align-items: start;
 		}
 
 		.main-content {
-			gap: 16px;
+			gap: var(--spacing-4);
 		}
 	}
 

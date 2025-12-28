@@ -12,7 +12,13 @@
 <div class="title-row" class:compact={variant === 'compact'}>
 	{#if event.image}
 		<div class="event-icon" class:compact={variant === 'compact'}>
-			<img src={event.image} alt={event.title || 'Event icon'} loading="lazy" />
+			<img
+				src={event.image}
+				alt={event.title || 'Event icon'}
+				width={variant === 'compact' ? 32 : 44}
+				height={variant === 'compact' ? 32 : 44}
+				loading="lazy"
+			/>
 		</div>
 	{/if}
 	<a

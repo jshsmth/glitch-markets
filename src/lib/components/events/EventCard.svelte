@@ -202,16 +202,27 @@
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
 		border-radius: var(--radius-card);
-		padding: var(--spacing-4);
+		padding: var(--spacing-3);
 		box-shadow: var(--shadow-sm);
 		height: 100%;
-		transition: all var(--transition-fast);
+		transition:
+			border-color var(--transition-fast),
+			box-shadow var(--transition-fast),
+			transform var(--transition-fast),
+			opacity var(--transition-fast),
+			background-color var(--transition-fast);
 	}
 
-	.event-card:hover {
-		border-color: var(--bg-4);
-		box-shadow: var(--shadow-md);
-		transform: translateY(-2px);
+	@media (hover: hover) {
+		.event-card:hover {
+			border-color: var(--bg-4);
+			box-shadow: var(--shadow-md);
+			transform: translateY(-2px);
+		}
+	}
+
+	.event-card:active {
+		transform: translateY(-1px);
 	}
 
 	/* Resolved state */
@@ -220,8 +231,10 @@
 		background: var(--bg-2);
 	}
 
-	.event-card.resolved:hover {
-		opacity: 0.8;
+	@media (hover: hover) {
+		.event-card.resolved:hover {
+			opacity: 0.8;
+		}
 	}
 
 	/* Corner badges - pill shaped for differentiation */
@@ -232,9 +245,9 @@
 		display: flex;
 		align-items: center;
 		gap: 3px;
-		padding: 4px 10px;
+		padding: 3px 8px;
 		border-radius: var(--radius-full);
-		font-size: 10px;
+		font-size: var(--font-xs);
 		font-weight: 600;
 		white-space: nowrap;
 		z-index: 1;
@@ -261,7 +274,7 @@
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		font-size: 10px;
+		font-size: var(--font-xs);
 		font-weight: 600;
 		color: var(--danger);
 		white-space: nowrap;
@@ -284,13 +297,15 @@
 		flex-direction: column;
 		gap: var(--spacing-3);
 		width: 100%;
+		min-width: 0;
 	}
 
 	/* Header */
 	.card-header {
 		display: flex;
 		align-items: flex-start;
-		padding-right: 70px; /* Space for corner badge */
+		padding-right: 60px;
+		min-width: 0;
 	}
 
 	/* Binary Market Display */
@@ -298,12 +313,14 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-2);
+		min-width: 0;
 	}
 
 	.binary-row {
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
+		min-width: 0;
 	}
 
 	.binary-row:not(.leading) {
@@ -319,12 +336,18 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--spacing-2);
+		min-width: 0;
 	}
 
 	.binary-label {
-		font-size: 13px;
+		font-size: var(--font-base);
 		font-weight: 500;
 		color: var(--text-2);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		flex: 1;
+		min-width: 0;
 	}
 
 	.binary-label.label-yes {
@@ -338,7 +361,7 @@
 	}
 
 	.binary-percentage {
-		font-size: 15px;
+		font-size: var(--font-lg);
 		font-weight: 700;
 		letter-spacing: -0.01em;
 	}
@@ -353,7 +376,7 @@
 
 	.binary-percentage.pct-muted {
 		color: var(--text-3);
-		font-size: 13px;
+		font-size: var(--font-base);
 		font-weight: 600;
 	}
 
@@ -389,6 +412,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-2);
+		min-width: 0;
 	}
 
 	/* Outcome Row - shared between 1st and 2nd */
@@ -414,7 +438,7 @@
 	}
 
 	.outcome-name {
-		font-size: 13px;
+		font-size: var(--font-base);
 		font-weight: 600;
 		color: var(--text-0);
 		overflow: hidden;
@@ -425,12 +449,12 @@
 	}
 
 	.first-place .outcome-name {
-		font-size: 14px;
+		font-size: var(--font-md);
 		font-weight: 700;
 	}
 
 	.outcome-percentage {
-		font-size: 15px;
+		font-size: var(--font-lg);
 		font-weight: 700;
 		letter-spacing: -0.01em;
 		white-space: nowrap;
@@ -438,7 +462,7 @@
 
 	.outcome-percentage.first {
 		color: var(--gold-dark);
-		font-size: 16px;
+		font-size: var(--font-xl);
 	}
 
 	.outcome-percentage.second {
@@ -454,7 +478,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 10px;
+		font-size: var(--font-xs);
 		font-weight: 700;
 		margin-top: 1px;
 	}
@@ -487,7 +511,7 @@
 	.second-place .outcome-name {
 		font-weight: 500;
 		color: var(--text-2);
-		font-size: 12px;
+		font-size: var(--font-sm);
 	}
 
 	.second-place .probability-bar {
@@ -496,7 +520,7 @@
 
 	/* More outcomes indicator */
 	.more-outcomes {
-		font-size: 11px;
+		font-size: var(--font-xs);
 		color: var(--text-3);
 		padding-left: 26px;
 		font-weight: 500;
@@ -508,27 +532,33 @@
 		align-items: center;
 		gap: 8px;
 		color: var(--success);
+		min-width: 0;
 	}
 
 	.winner-name {
-		font-size: 13px;
+		font-size: var(--font-base);
 		font-weight: 600;
 		color: var(--text-1);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		flex: 1;
+		min-width: 0;
 	}
 
-	/* Mobile */
-	@media (max-width: 768px) {
+	/* Mobile-first: default styles are for mobile, override for desktop */
+	@media (min-width: 769px) {
 		.event-card {
-			padding: var(--spacing-3);
+			padding: var(--spacing-4);
 		}
 
 		.card-header {
-			padding-right: 60px;
+			padding-right: 70px;
 		}
 
 		.corner-badge {
-			font-size: 9px;
-			padding: 3px 8px;
+			font-size: var(--font-xs);
+			padding: 4px 10px;
 		}
 	}
 </style>

@@ -43,18 +43,23 @@
 		background-color: var(--bg-2);
 		border: 1px solid var(--bg-3);
 		border-radius: var(--radius-button);
-		font-size: 13px;
+		font-size: var(--font-base);
 		font-weight: 500;
 		color: var(--text-0);
 		text-decoration: none;
 		cursor: pointer;
-		transition: all 0.15s ease;
+		transition:
+			background-color 0.15s ease,
+			border-color 0.15s ease,
+			transform 0.15s ease;
 		user-select: none;
 	}
 
-	.tag-chip:hover {
-		background-color: var(--primary-hover-bg);
-		border-color: rgba(var(--primary-rgb), 0.3);
+	@media (hover: hover) {
+		.tag-chip:hover {
+			background-color: var(--primary-hover-bg);
+			border-color: rgba(var(--primary-rgb), 0.3);
+		}
 	}
 
 	.tag-chip:focus-visible {
@@ -71,12 +76,12 @@
 	}
 
 	.tag-count {
-		font-size: 12px;
+		font-size: var(--font-sm);
 		font-weight: 600;
 		color: var(--text-2);
 		padding: 2px 6px;
 		background-color: var(--bg-3);
-		border-radius: 4px;
+		border-radius: var(--radius-sm);
 	}
 
 	.tag-chip:hover .tag-count {
