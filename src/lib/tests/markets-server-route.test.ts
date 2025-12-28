@@ -8,11 +8,11 @@ import type { RequestEvent } from '@sveltejs/kit';
 import type { Market } from '$lib/server/api/polymarket-client';
 import { marketArbitrary } from './helpers/test-arbitraries';
 
-const mockFetchMarkets = vi.fn();
+const mockGetMarkets = vi.fn();
 
-vi.mock('$lib/server/api/polymarket-client', () => ({
-	PolymarketClient: class {
-		fetchMarkets = mockFetchMarkets;
+vi.mock('$lib/server/services/market-service', () => ({
+	MarketService: class {
+		getMarkets = mockGetMarkets;
 	}
 }));
 
@@ -43,7 +43,7 @@ describe('Markets Server Route', () => {
 					}),
 					fc.array(marketArbitrary, { minLength: 0, maxLength: 10 }),
 					async (filters, markets: Market[]) => {
-						mockFetchMarkets.mockResolvedValue(markets);
+						mockGetMarkets.mockResolvedValue(markets);
 
 						// Build URL with filters
 						const mockUrl = new URL('http://localhost/api/markets');
@@ -77,7 +77,7 @@ describe('Markets Server Route', () => {
 		});
 
 		it('should return valid JSON for empty market lists', async () => {
-			mockFetchMarkets.mockResolvedValue([]);
+			mockGetMarkets.mockResolvedValue([]);
 
 			const mockUrl = new URL('http://localhost/api/markets');
 			const mockEvent: RequestEvent = {
@@ -108,7 +108,7 @@ describe('Markets Server Route', () => {
 					fc.array(marketArbitrary, { minLength: 10, maxLength: 200 }),
 					async (limit, allMarkets: Market[]) => {
 						const limitedMarkets = allMarkets.slice(0, limit);
-						mockFetchMarkets.mockResolvedValue(limitedMarkets);
+						mockGetMarkets.mockResolvedValue(limitedMarkets);
 
 						// Build URL with limit parameter
 						const mockUrl = new URL('http://localhost/api/markets');
@@ -143,7 +143,7 @@ describe('Markets Server Route', () => {
 					fc.array(marketArbitrary, { minLength: 100, maxLength: 100 }),
 					async (offset, allMarkets: Market[]) => {
 						const offsetMarkets = allMarkets.slice(offset);
-						mockFetchMarkets.mockResolvedValue(offsetMarkets);
+						mockGetMarkets.mockResolvedValue(offsetMarkets);
 
 						// Build URL with offset parameter
 						const mockUrl = new URL('http://localhost/api/markets');
@@ -208,7 +208,7 @@ describe('Markets Server Route', () => {
 			const limit = 10;
 			const offset = 5;
 			const expectedMarkets = allMarkets.slice(offset, offset + limit);
-			mockFetchMarkets.mockResolvedValue(expectedMarkets);
+			mockGetMarkets.mockResolvedValue(expectedMarkets);
 
 			const mockUrl = new URL('http://localhost/api/markets');
 			mockUrl.searchParams.set('limit', String(limit));
@@ -251,7 +251,7 @@ describe('Property 12: Cache header presence', () => {
 				// Generate random market data
 				fc.array(marketArbitrary, { minLength: 0, maxLength: 10 }),
 				async (filters, markets: Market[]) => {
-					mockFetchMarkets.mockResolvedValue(markets);
+					mockGetMarkets.mockResolvedValue(markets);
 
 					// Build URL with filters
 					const mockUrl = new URL('http://localhost/api/markets');
@@ -283,8 +283,8 @@ describe('Property 12: Cache header presence', () => {
 	});
 
 	it('should include appropriate cache directives', async () => {
-		mockFetchMarkets.mockReset();
-		mockFetchMarkets.mockResolvedValue([]);
+		mockGetMarkets.mockReset();
+		mockGetMarkets.mockResolvedValue([]);
 
 		const mockUrl = new URL('http://localhost/api/markets');
 		const mockEvent: RequestEvent = {

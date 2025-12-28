@@ -17,6 +17,7 @@ This is the main documentation hub for Claude Code. All detailed documentation l
 
 - **[Polymarket API](.claude/docs/polymarket-api-reference.md)** - Complete Polymarket API endpoint documentation
 - **[TanStack Query](.claude/docs/tanstack-query-reference.md)** - TanStack Query (React Query) documentation for Svelte
+- **[Vite PWA Plugin](.claude/docs/vite-pwa-reference.md)** - Vite PWA Plugin documentation and patterns
 
 ---
 
@@ -90,6 +91,7 @@ You have access to the Svelte MCP server with comprehensive Svelte 5 and SvelteK
 │   ├── brand-colors.md              # Design system and color palette
 │   ├── polymarket-api-reference.md  # Polymarket API docs
 │   ├── tanstack-query-reference.md  # TanStack Query docs
+│   ├── vite-pwa-reference.md        # Vite PWA Plugin docs
 │   └── vitest.md                    # Testing documentation
 ├── agents/
 │   └── spec-architect.md            # Spec Mode agent configuration
