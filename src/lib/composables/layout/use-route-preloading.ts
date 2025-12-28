@@ -3,7 +3,6 @@ import { preloadData } from '$app/navigation';
 
 const MAIN_ROUTES = [
 	'/',
-	'/trending',
 	'/new',
 	'/politics',
 	'/finance',

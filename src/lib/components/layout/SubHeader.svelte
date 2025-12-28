@@ -5,6 +5,7 @@
 	import { categories, SCROLL_AMOUNT, SCROLL_THRESHOLD } from '$lib/config/categories';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import { EXCLUDED_SPORTS_TAG_IDS, appendExcludedTags } from '$lib/config/filters';
 
 	let activeCategory = $derived.by(() => {
 		const pathname = $page.url.pathname;
@@ -77,6 +78,7 @@
 						ascending: 'false',
 						offset: '0'
 					});
+					appendExcludedTags(params, EXCLUDED_SPORTS_TAG_IDS);
 					const res = await fetch(`/api/events?${params}`);
 					if (!res.ok) throw new Error('Failed to fetch');
 					return res.json();

@@ -16,15 +16,13 @@
 		}
 	});
 
-	let showToast = $state(false);
 	let timeoutId: number | undefined;
 
 	$effect(() => {
-		if ($offlineReady && !showToast) {
-			showToast = true;
+		if ($offlineReady) {
 			if (timeoutId) clearTimeout(timeoutId);
 			timeoutId = window.setTimeout(() => {
-				showToast = false;
+				offlineReady.set(false);
 			}, 4000);
 		}
 	});
@@ -36,12 +34,12 @@
 	});
 
 	function handleClose() {
-		showToast = false;
+		offlineReady.set(false);
 		if (timeoutId) clearTimeout(timeoutId);
 	}
 </script>
 
-{#if showToast}
+{#if $offlineReady}
 	<div class="toast-container" role="status" aria-live="polite">
 		<div class="toast">
 			<div class="toast-content">
