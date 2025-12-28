@@ -14,7 +14,6 @@ This document contains comprehensive technical documentation for developers work
 - [Deployment](#deployment)
 - [API Documentation](#api-documentation)
 - [Security](#security)
-- [Roadmap](#roadmap)
 
 ---
 
@@ -58,11 +57,13 @@ Visit `http://localhost:5173` to see the application.
 
 - **Framework**: [SvelteKit](https://kit.svelte.dev/) - Fast, modern web framework with Svelte 5 runes
 - **Language**: [TypeScript](https://www.typescriptlang.org/) - Type-safe JavaScript
-- **Database**: [Supabase](https://supabase.com/) (PostgreSQL) with Drizzle ORM
+- **Database**: [Supabase](https://supabase.com/) (PostgreSQL) - User data and encrypted wallet storage
 - **Authentication**: [Supabase Auth](https://supabase.com/auth) - Google OAuth & Email/Password
-- **Wallet**: [viem](https://viem.sh/) - Server-side wallet management for Polygon
+- **Blockchain**: [viem](https://viem.sh/) - Server-side wallet management for Polygon
+- **Trading**: [Polymarket CLOB API](https://docs.polymarket.com/) - Order placement and execution
+- **Bridge/Swap**: Integrated bridge API for cross-chain deposits and USDC swaps
 - **Testing**: [Vitest](https://vitest.dev/) + [fast-check](https://fast-check.dev/) for property-based testing
-- **Data Source**: [Polymarket Gamma API](https://docs.polymarket.com/) + CLOB API
+- **Data Source**: [Polymarket Gamma API](https://docs.polymarket.com/) + CLOB API + Real-Time Data Stream
 
 ---
 
@@ -282,7 +283,7 @@ npm run test:ui
 ### Test Coverage
 
 - **Unit Tests**: Individual functions and components
-- **Integration Tests**: End-to-end API flows
+- **Integration Tests**: API flows and component interactions
 - **Property-Based Tests**: Validation logic with randomized inputs
 - **Error Handling**: Comprehensive error scenario testing
 
@@ -399,22 +400,27 @@ See [polymarket-api-reference.md](./polymarket-api-reference.md) for complete AP
 
 ### Quick Reference
 
-| Endpoint                       | Description                                        |
-| ------------------------------ | -------------------------------------------------- |
-| `GET /api/markets`             | List all markets with filtering                    |
-| `GET /api/markets/[id]`        | Get specific market by ID                          |
-| `GET /api/markets/[id]/tags`   | Get tags for a specific market                     |
-| `GET /api/markets/slug/[slug]` | Get market by slug                                 |
-| `GET /api/events`              | List all events                                    |
-| `GET /api/events/[id]`         | Get specific event                                 |
-| `GET /api/events/[id]/tags`    | Get tags for a specific event                      |
-| `GET /api/series`              | List market series                                 |
-| `GET /api/tags`                | List all category tags                             |
-| `GET /api/search`              | Global search across markets, events, and profiles |
-| `GET /api/comments`            | Get market comments                                |
-| `GET /api/users/positions`     | Get user positions                                 |
-| `GET /api/users/trades`        | Get user trade history                             |
-| `GET /api/users/activity`      | Get user activity                                  |
+| Endpoint                           | Description                                        |
+| ---------------------------------- | -------------------------------------------------- |
+| `GET /api/markets`                 | List all markets with filtering                    |
+| `GET /api/markets/[id]`            | Get specific market by ID                          |
+| `GET /api/markets/[id]/tags`       | Get tags for a specific market                     |
+| `GET /api/markets/slug/[slug]`     | Get market by slug                                 |
+| `GET /api/events`                  | List all events                                    |
+| `GET /api/events/[id]`             | Get specific event                                 |
+| `GET /api/events/[id]/tags`        | Get tags for a specific event                      |
+| `GET /api/series`                  | List market series                                 |
+| `GET /api/tags`                    | List all category tags                             |
+| `GET /api/search`                  | Global search across markets, events, and profiles |
+| `GET /api/comments`                | Get market comments                                |
+| `GET /api/users/positions`         | Get user positions                                 |
+| `GET /api/users/trades`            | Get user trade history                             |
+| `GET /api/users/activity`          | Get user activity                                  |
+| `POST /api/bridge/deposit`         | Create deposit address for cross-chain transfers   |
+| `GET /api/bridge/supported-assets` | Get supported chains and tokens                    |
+| `GET /api/watchlist`               | Get user's watchlist                               |
+| `POST /api/watchlist`              | Add market to watchlist                            |
+| `DELETE /api/watchlist`            | Remove market from watchlist                       |
 
 ### Rate Limiting
 
@@ -474,44 +480,6 @@ Glitch Markets takes security seriously. See [SECURITY_AUDIT_REPORT.md](../SECUR
    npm audit
    npm update
    ```
-
----
-
-## Roadmap
-
-### Q1 2025 - Authentication & User Features ✅
-
-- [x] Supabase Auth (Google OAuth + Email/Password)
-- [x] User registration and login
-- [x] Server wallet creation (Polygon via viem)
-- [x] Polymarket CLOB integration
-- [x] User profile pages
-- [x] Portfolio dashboard
-- [ ] Market watchlists
-
-### Q2 2025 - Trading & Interactions
-
-- [ ] Market trading interface
-- [ ] Position management
-- [ ] Comment and discussion features
-- [ ] Real-time price updates
-- [ ] Mobile-responsive UI
-
-### Q3 2025 - Advanced Features
-
-- [ ] Chart visualizations
-- [ ] Advanced analytics
-- [ ] Market creation tools
-- [ ] Social features
-- [ ] Mobile apps (iOS/Android)
-
-### Q4 2025 - Scale & Polish
-
-- [ ] Performance optimizations
-- [ ] Multi-language support
-- [ ] Advanced search filters
-- [ ] API webhooks
-- [ ] Enterprise features
 
 ---
 
