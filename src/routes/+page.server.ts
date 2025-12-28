@@ -18,7 +18,8 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 			order: 'volume24hr',
 			ascending: false,
 			limit: 20,
-			offset: 0
+			offset: 0,
+			exclude_tag_id: [1, 100639, 64]
 		})
 		.catch((err) => {
 			logger.error('Error loading homepage events', {

@@ -31,7 +31,7 @@
 
 	const browseFilters = [
 		{ label: 'New', href: '/new', icon: '✨' },
-		{ label: 'Trending', href: '/trending', icon: '📈' }
+		{ label: 'Trending', href: '/', icon: '📈' }
 	];
 
 	function handleLinkClick() {

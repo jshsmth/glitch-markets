@@ -77,6 +77,9 @@
 						ascending: 'false',
 						offset: '0'
 					});
+					params.append('exclude_tag_id', '1');
+					params.append('exclude_tag_id', '100639');
+					params.append('exclude_tag_id', '64');
 					const res = await fetch(`/api/events?${params}`);
 					if (!res.ok) throw new Error('Failed to fetch');
 					return res.json();

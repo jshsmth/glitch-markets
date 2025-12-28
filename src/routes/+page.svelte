@@ -19,6 +19,10 @@
 				offset: String(pageParam)
 			});
 
+			params.append('exclude_tag_id', '1');
+			params.append('exclude_tag_id', '100639');
+			params.append('exclude_tag_id', '64');
+
 			const response = await fetch(`/api/events?${params}`);
 			if (!response.ok) {
 				throw new Error('Failed to fetch events');
