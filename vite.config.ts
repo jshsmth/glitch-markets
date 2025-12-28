@@ -8,7 +8,7 @@ export default defineConfig({
 		sveltekit(),
 		mkcert(),
 		SvelteKitPWA({
-			registerType: 'prompt',
+			registerType: 'autoUpdate',
 			srcDir: './src',
 			mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
 			strategies: 'generateSW',
@@ -63,7 +63,8 @@ export default defineConfig({
 			workbox: {
 				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}'],
 				cleanupOutdatedCaches: true,
-				clientsClaim: true
+				clientsClaim: true,
+				skipWaiting: true
 			},
 			devOptions: {
 				enabled: true,

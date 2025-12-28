@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { useRegisterSW } from 'virtual:pwa-register/svelte';
+	import { onMount } from 'svelte';
 
-	const { needRefresh, offlineReady, updateServiceWorker } = useRegisterSW({
+	const { offlineReady, updateServiceWorker } = useRegisterSW({
+		immediate: true,
 		onRegisteredSW(swScriptUrl, registration) {
 			if (registration) {
 				setInterval(
@@ -14,25 +16,59 @@
 		}
 	});
 
-	async function handleUpdate() {
-		await updateServiceWorker(true);
-	}
+	let showToast = $state(false);
+	let timeoutId: number | undefined;
+
+	$effect(() => {
+		if ($offlineReady && !showToast) {
+			showToast = true;
+			if (timeoutId) clearTimeout(timeoutId);
+			timeoutId = window.setTimeout(() => {
+				showToast = false;
+			}, 4000);
+		}
+	});
+
+	onMount(() => {
+		return () => {
+			if (timeoutId) clearTimeout(timeoutId);
+		};
+	});
 
 	function handleClose() {
-		$needRefresh = false;
-		$offlineReady = false;
+		showToast = false;
+		if (timeoutId) clearTimeout(timeoutId);
 	}
 </script>
 
-{#if $needRefresh || $offlineReady}
-	<div class="toast-container" role="alert" aria-live="polite">
+{#if showToast}
+	<div class="toast-container" role="status" aria-live="polite">
 		<div class="toast">
 			<div class="toast-content">
-				{#if $needRefresh}
-					<div class="toast-icon">
+				<div class="toast-icon">
+					<svg
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20z" />
+						<path d="m9 12 2 2 4-4" />
+					</svg>
+				</div>
+				<div class="toast-message">
+					<p class="toast-title">App Ready</p>
+					<p class="toast-description">Cached and ready for offline use</p>
+				</div>
+				<div class="toast-actions">
+					<button class="btn-close" onclick={handleClose} aria-label="Close notification">
 						<svg
-							width="24"
-							height="24"
+							width="18"
+							height="18"
 							viewBox="0 0 24 24"
 							fill="none"
 							stroke="currentColor"
@@ -40,69 +76,10 @@
 							stroke-linecap="round"
 							stroke-linejoin="round"
 						>
-							<path
-								d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"
-							/>
+							<path d="M18 6 6 18M6 6l12 12" />
 						</svg>
-					</div>
-					<div class="toast-message">
-						<p class="toast-title">Update Available</p>
-						<p class="toast-description">A new version is ready to install</p>
-					</div>
-					<div class="toast-actions">
-						<button class="btn-update" onclick={handleUpdate}> Update Now </button>
-						<button class="btn-close" onclick={handleClose} aria-label="Close notification">
-							<svg
-								width="18"
-								height="18"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<path d="M18 6 6 18M6 6l12 12" />
-							</svg>
-						</button>
-					</div>
-				{:else if $offlineReady}
-					<div class="toast-icon">
-						<svg
-							width="24"
-							height="24"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<path d="M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20z" />
-							<path d="m9 12 2 2 4-4" />
-						</svg>
-					</div>
-					<div class="toast-message">
-						<p class="toast-title">Ready to Work Offline</p>
-						<p class="toast-description">App is cached and ready for offline use</p>
-					</div>
-					<div class="toast-actions">
-						<button class="btn-close" onclick={handleClose} aria-label="Close notification">
-							<svg
-								width="18"
-								height="18"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<path d="M18 6 6 18M6 6l12 12" />
-							</svg>
-						</button>
-					</div>
-				{/if}
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -182,31 +159,7 @@
 	.toast-actions {
 		display: flex;
 		align-items: center;
-		gap: 8px;
 		flex-shrink: 0;
-	}
-
-	.btn-update {
-		padding: 10px 18px;
-		background: var(--primary);
-		color: white;
-		border: none;
-		border-radius: 8px;
-		font-size: 14px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 25%, transparent);
-	}
-
-	.btn-update:hover {
-		background: var(--primary-hover);
-		transform: translateY(-1px);
-		box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 35%, transparent);
-	}
-
-	.btn-update:active {
-		transform: translateY(0);
 	}
 
 	.btn-close {
@@ -234,8 +187,7 @@
 		transform: scale(0.95);
 	}
 
-	.btn-close:focus-visible,
-	.btn-update:focus-visible {
+	.btn-close:focus-visible {
 		outline: none;
 		box-shadow: var(--focus-ring);
 	}
@@ -252,17 +204,7 @@
 		}
 
 		.toast-content {
-			flex-wrap: wrap;
-		}
-
-		.toast-actions {
-			width: 100%;
-			margin-top: 12px;
-			justify-content: stretch;
-		}
-
-		.btn-update {
-			flex: 1;
+			gap: 12px;
 		}
 	}
 
@@ -271,7 +213,6 @@
 			animation: none;
 		}
 
-		.btn-update,
 		.btn-close {
 			transition: none;
 		}
