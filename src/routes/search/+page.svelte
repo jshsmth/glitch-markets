@@ -11,8 +11,12 @@
 	let searchQuery = $state('');
 	let searchResults = $state<SearchResults | null>(null);
 	let isLoading = $state(false);
+	let isLoadingMore = $state(false);
 	let abortController: AbortController | null = null;
 	let searchInputElement = $state<HTMLInputElement | undefined>();
+	let currentPage = $state(1);
+
+	const RESULTS_PER_PAGE = 20;
 
 	const hasResults = $derived(
 		searchResults &&
@@ -22,6 +26,7 @@
 	);
 
 	const showBrowse = $derived(!isLoading && !hasResults && searchQuery.length === 0);
+	const canLoadMore = $derived(searchResults?.pagination?.hasMore ?? false);
 
 	const browseFilters = $derived(categories.filter((c) => c.href === '/' || c.href === '/new'));
 	const popularTopics = $derived(categories.filter((c) => c.href !== '/' && c.href !== '/new'));
@@ -37,11 +42,15 @@
 		abortController = new AbortController();
 
 		isLoading = true;
+		currentPage = 1;
 
 		try {
-			const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit_per_type=10`, {
-				signal: abortController.signal
-			});
+			const response = await fetch(
+				`/api/search?q=${encodeURIComponent(query)}&limit_per_type=${RESULTS_PER_PAGE}`,
+				{
+					signal: abortController.signal
+				}
+			);
 
 			if (!response.ok) {
 				throw new Error(`Search failed: ${response.statusText}`);
@@ -56,6 +65,70 @@
 			searchResults = null;
 		} finally {
 			isLoading = false;
+		}
+	}
+
+	async function loadMore() {
+		if (!searchQuery || isLoadingMore || !searchResults || !canLoadMore) return;
+
+		console.log('[LoadMore] Starting load more...', {
+			currentPage,
+			isLoadingMore,
+			canLoadMore,
+			currentCounts: {
+				events: searchResults.events?.length,
+				tags: searchResults.tags?.length,
+				profiles: searchResults.profiles?.length
+			}
+		});
+
+		isLoadingMore = true;
+		const nextPage = currentPage + 1;
+
+		try {
+			const response = await fetch(
+				`/api/search?q=${encodeURIComponent(searchQuery)}&limit_per_type=${RESULTS_PER_PAGE}&page=${nextPage}`,
+				{
+					signal: abortController?.signal
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error(`Search failed: ${response.statusText}`);
+			}
+
+			const data: SearchResults = await response.json();
+
+			console.log('[LoadMore] Received data:', {
+				newEvents: data.events?.length,
+				newTags: data.tags?.length,
+				newProfiles: data.profiles?.length,
+				pagination: data.pagination
+			});
+
+			searchResults = {
+				events: [...(searchResults.events || []), ...(data.events || [])],
+				tags: [...(searchResults.tags || []), ...(data.tags || [])],
+				profiles: [...(searchResults.profiles || []), ...(data.profiles || [])],
+				pagination: data.pagination
+			};
+			currentPage = nextPage;
+
+			console.log('[LoadMore] Updated results:', {
+				totalEvents: searchResults.events.length,
+				totalTags: searchResults.tags.length,
+				totalProfiles: searchResults.profiles.length,
+				newPage: currentPage
+			});
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') {
+				console.log('[LoadMore] Request aborted');
+				return;
+			}
+			console.error('[LoadMore] Error loading more results:', error);
+		} finally {
+			console.log('[LoadMore] Setting isLoadingMore to false');
+			isLoadingMore = false;
 		}
 	}
 
@@ -115,7 +188,7 @@
 		{:else if hasResults && searchResults}
 			{#if searchResults.events.length > 0}
 				<section class="results-section">
-					<h3 class="section-title">Markets</h3>
+					<h3 class="section-title">Markets ({searchResults.events.length})</h3>
 					<div class="events-list">
 						{#each searchResults.events as event (event.id)}
 							<SearchResultItem {event} />
@@ -126,7 +199,7 @@
 
 			{#if searchResults.tags.length > 0}
 				<section class="results-section">
-					<h3 class="section-title">Topics</h3>
+					<h3 class="section-title">Topics ({searchResults.tags.length})</h3>
 					<div class="tags-list">
 						{#each searchResults.tags as tag (tag.id)}
 							<TagChip {tag} />
@@ -137,13 +210,26 @@
 
 			{#if searchResults.profiles.length > 0}
 				<section class="results-section">
-					<h3 class="section-title">Profiles</h3>
+					<h3 class="section-title">Profiles ({searchResults.profiles.length})</h3>
 					<div class="profiles-list">
 						{#each searchResults.profiles as profile (profile.id)}
 							<ProfileListItem {profile} />
 						{/each}
 					</div>
 				</section>
+			{/if}
+
+			{#if canLoadMore}
+				<div class="load-more-container">
+					<button class="load-more-btn" onclick={loadMore} disabled={isLoadingMore}>
+						{#if isLoadingMore}
+							<div class="btn-spinner"></div>
+							<span>Loading...</span>
+						{:else}
+							<span>Load More Results</span>
+						{/if}
+					</button>
+				</div>
 			{/if}
 		{:else if showBrowse}
 			<div class="browse-state">
@@ -407,5 +493,55 @@
 	.topic-label {
 		font-size: 13px;
 		font-weight: 600;
+	}
+
+	/* Load More Container */
+	.load-more-container {
+		margin-top: 24px;
+		padding-top: 24px;
+		border-top: 1px solid var(--bg-3);
+	}
+
+	/* Load More Button */
+	.load-more-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		width: 100%;
+		padding: 14px 24px;
+		background: var(--bg-2);
+		border: 1px solid var(--bg-4);
+		border-radius: var(--radius-md);
+		color: var(--text-0);
+		font-size: 15px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		min-height: 48px;
+	}
+
+	.load-more-btn:hover:not(:disabled) {
+		background: var(--primary-hover-bg);
+		border-color: var(--primary);
+		color: var(--primary);
+	}
+
+	.load-more-btn:active:not(:disabled) {
+		transform: scale(0.98);
+	}
+
+	.load-more-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	.btn-spinner {
+		width: 16px;
+		height: 16px;
+		border: 2px solid var(--bg-4);
+		border-top-color: var(--primary);
+		border-radius: 50%;
+		animation: spin 0.6s linear infinite;
 	}
 </style>
