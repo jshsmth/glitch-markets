@@ -7,6 +7,9 @@
 	import { categories } from '$lib/config/categories';
 	import type { SearchResults } from '$lib/server/api/polymarket-client';
 	import { debounceCancellable } from '$lib/utils/debounce';
+	import { Logger } from '$lib/utils/logger';
+
+	const log = Logger.forComponent('SearchPage');
 
 	let searchQuery = $state('');
 	let searchResults = $state<SearchResults | null>(null);
@@ -71,7 +74,7 @@
 	async function loadMore() {
 		if (!searchQuery || isLoadingMore || !searchResults || !canLoadMore) return;
 
-		console.log('[LoadMore] Starting load more...', {
+		log.debug('Starting load more', {
 			currentPage,
 			isLoadingMore,
 			canLoadMore,
@@ -99,7 +102,7 @@
 
 			const data: SearchResults = await response.json();
 
-			console.log('[LoadMore] Received data:', {
+			log.debug('Received paginated data', {
 				newEvents: data.events?.length,
 				newTags: data.tags?.length,
 				newProfiles: data.profiles?.length,
@@ -114,7 +117,7 @@
 			};
 			currentPage = nextPage;
 
-			console.log('[LoadMore] Updated results:', {
+			log.info('Loaded more results', {
 				totalEvents: searchResults.events.length,
 				totalTags: searchResults.tags.length,
 				totalProfiles: searchResults.profiles.length,
@@ -122,12 +125,11 @@
 			});
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') {
-				console.log('[LoadMore] Request aborted');
+				log.debug('Load more request aborted');
 				return;
 			}
-			console.error('[LoadMore] Error loading more results:', error);
+			log.error('Error loading more results', error);
 		} finally {
-			console.log('[LoadMore] Setting isLoadingMore to false');
 			isLoadingMore = false;
 		}
 	}
@@ -141,9 +143,15 @@
 		const target = event.target as HTMLInputElement;
 		const query = target.value.trim();
 
+		log.debug('Search input changed', {
+			query,
+			queryLength: query.length
+		});
+
 		searchQuery = query;
 
 		if (query.length < 2) {
+			log.debug('Query too short, clearing results');
 			searchResults = null;
 			isLoading = false;
 			return;

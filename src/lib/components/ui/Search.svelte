@@ -3,6 +3,9 @@
 	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
 	import { debounce } from '$lib/utils/debounce';
 	import { DEBOUNCE_DELAYS } from '$lib/config/constants';
+	import { Logger } from '$lib/utils/logger';
+
+	const log = Logger.forComponent('Search');
 
 	interface Props {
 		/**
@@ -84,7 +87,14 @@
 	}
 
 	function clearSearch() {
+		log.debug('Clear search called', { currentValue: value });
 		value = '';
+		if (inputElement) {
+			setTimeout(() => {
+				log.debug('Dispatching input event', { inputValue: inputElement?.value });
+				inputElement?.dispatchEvent(new Event('input', { bubbles: true }));
+			}, 0);
+		}
 		inputElement?.focus();
 	}
 </script>
