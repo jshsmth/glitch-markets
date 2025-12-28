@@ -17,20 +17,24 @@ _A production-grade Progressive Web App for prediction markets_
 
 ## 📊 About
 
-A modern prediction market platform built as a production-quality side project. Demonstrates full-stack TypeScript development, blockchain integration, real-time data handling, and progressive web app architecture while solving real UX problems in the prediction market space.
+**What This Demonstrates:**
 
-**Key Focus:** Making crypto-based prediction markets as simple as using a social media app—eliminating wallet complexity through server-side management, optimizing for mobile performance, and delivering native-app experiences through PWA technology.
+Full-stack TypeScript development with modern tooling (SvelteKit, TanStack Query, Vitest). Blockchain integration using viem for Polygon transactions. Secure architecture with encrypted key storage in Supabase. Progressive Web App implementation with offline support. Cross-chain deposit handling. Optimistic UI patterns for responsive interactions. Production deployment on Vercel's edge network.
+
+**The Goal:**
+
+Show I can build complete, production-quality applications, from system architecture and blockchain integration to polished user interfaces and comprehensive testing. Every piece demonstrates professional engineering practices: type safety, security-first design, performance optimization, and maintainable code.
 
 ---
 
 ## ✨ Features
 
-- **One-Click Trading** - Instant buy/sell with optimistic UI and real-time price feeds
-- **Cross-Chain Bridge** - Deposit from any chain with automatic USDC swapping
-- **Smart Portfolio** - Position tracking, performance analytics, trade history
-- **PWA Experience** - Offline support, home screen install, background sync
-- **Real-Time Updates** - WebSocket integration for live market data
-- **Dark Mode** - Polished themes with CSS variable design system
+- **Instant Trading** - Buy and sell positions in seconds with real-time price updates and zero friction
+- **Smart Portfolio** - Track all positions, view performance metrics, and analyze trade history in one place
+- **Flexible Deposits** - Deposit from any blockchain, funds automatically convert to the right format
+- **Works Everywhere** - Install like a native app, works offline, syncs seamlessly across all your devices
+- **Beautiful Design** - Polished interface that adapts to your preferences with automatic light/dark mode
+- **Mobile-Optimized** - Built for phones first, scales perfectly to tablets and desktops
 
 ---
 
@@ -40,7 +44,7 @@ A modern prediction market platform built as a production-quality side project. 
 Frontend:      SvelteKit 2.x (SSR/SSG) • TypeScript 5.x • TanStack Query
 Blockchain:    viem • Polymarket CLOB API • Server-side wallets
 Database:      Supabase (PostgreSQL) • Encrypted key storage
-Real-Time:     WebSocket • Optimistic updates
+State:         Optimistic updates • TanStack Query cache
 PWA:           Vite PWA Plugin (Workbox) • Service workers
 Build:         Vite • Code splitting • Tree shaking
 Testing:       Vitest • Testing Library
@@ -49,10 +53,10 @@ Deployment:    Vercel Edge Network
 
 **What This Demonstrates:**
 
-- Production TypeScript patterns with strict typing and runtime validation (Zod)
+- Production TypeScript patterns with strict typing and type safety
 - Blockchain integration with encrypted server-side wallet management
 - Progressive Web App with offline-first architecture and service workers
-- Real-time data handling with WebSocket and TanStack Query
+- Real-time data handling with TanStack Query and optimistic updates
 - Mobile-first responsive design with accessibility (WCAG 2.1)
 - Performance optimization (<1s load times, code splitting, lazy loading)
 
@@ -133,7 +137,7 @@ MIT License - See [LICENSE](LICENSE)
 
 ## 📧 Contact
 
-**Your Name** - [X: @JoshSmithBuilds](https://x.com/JoshSmithBuilds) - your.email@example.com
+**Your Name** - [X: @JoshSmithBuilds](https://x.com/JoshSmithBuilds)
 
 **Project Link:** [https://github.com/jshsmth/glitch-markets](https://github.com/jshsmth/glitch-markets)
 

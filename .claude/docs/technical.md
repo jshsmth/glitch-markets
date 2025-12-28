@@ -22,7 +22,8 @@ This document contains comprehensive technical documentation for developers work
 ### Prerequisites
 
 - Node.js 18+ and npm
-- PostgreSQL 14+ (or Docker)
+- Supabase account (free tier available)
+- Alchemy account (for Polygon RPC)
 - Git
 
 ### Installation
@@ -37,13 +38,7 @@ npm install
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env with your configuration
-
-# Start the database (Docker)
-npm run db:start
-
-# Run migrations
-npm run db:push
+# Edit .env with your configuration (Supabase, API keys, etc.)
 
 # Start development server
 npm run dev
@@ -63,7 +58,7 @@ Visit `http://localhost:5173` to see the application.
 - **Trading**: [Polymarket CLOB API](https://docs.polymarket.com/) - Order placement and execution
 - **Bridge/Swap**: Integrated bridge API for cross-chain deposits and USDC swaps
 - **Testing**: [Vitest](https://vitest.dev/) + [fast-check](https://fast-check.dev/) for property-based testing
-- **Data Source**: [Polymarket Gamma API](https://docs.polymarket.com/) + CLOB API + Real-Time Data Stream
+- **Data Source**: [Polymarket Gamma API](https://docs.polymarket.com/) + CLOB API
 
 ---
 
@@ -239,15 +234,8 @@ npm test                 # Run tests in watch mode
 npm run test:ui          # Run tests with UI
 npm run test:run         # Run tests once (CI mode)
 
-# Database
-npm run db:start         # Start PostgreSQL (Docker)
-npm run db:push          # Push schema changes
-npm run db:generate      # Generate migrations
-npm run db:migrate       # Run migrations
-npm run db:studio        # Open Drizzle Studio
-npm run db:drop          # Drop migrations
-npm run db:check         # Check migrations
-npm run db:up            # Apply migrations
+# PWA Assets
+npm run pwa:generate     # Generate PWA assets from logo
 ```
 
 ### Development Workflow
@@ -323,20 +311,26 @@ POLYMARKET_API_TIMEOUT="10000"
 POLYMARKET_CACHE_TTL="60"
 POLYMARKET_CACHE_ENABLED="true"
 
-# Wallet Encryption (required for production)
-WALLET_ENCRYPTION_KEY="your-encryption-key"
+# Encryption Keys (required for production)
+SERVER_WALLET_ENCRYPTION_KEY="your-32-byte-hex-key"
+POLYMARKET_ENCRYPTION_KEY="your-32-byte-hex-key"
+
+# Polygon RPC (required for blockchain operations)
+POLYGON_RPC_URL="https://polygon-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
 ```
 
-| Variable                    | Type    | Default                            | Description                     |
-| --------------------------- | ------- | ---------------------------------- | ------------------------------- |
-| `PUBLIC_SUPABASE_URL`       | string  | _required_                         | Supabase project URL            |
-| `PUBLIC_SUPABASE_ANON_KEY`  | string  | _required_                         | Supabase anonymous key          |
-| `SUPABASE_SERVICE_ROLE_KEY` | string  | _required_                         | Supabase service role key       |
-| `WALLET_ENCRYPTION_KEY`     | string  | _required_                         | Key for encrypting private keys |
-| `POLYMARKET_API_URL`        | string  | `https://gamma-api.polymarket.com` | Polymarket API base URL         |
-| `POLYMARKET_API_TIMEOUT`    | number  | `10000`                            | Request timeout (milliseconds)  |
-| `POLYMARKET_CACHE_TTL`      | number  | `60`                               | Cache TTL (seconds)             |
-| `POLYMARKET_CACHE_ENABLED`  | boolean | `true`                             | Enable/disable caching          |
+| Variable                          | Type    | Default                            | Description                           |
+| --------------------------------- | ------- | ---------------------------------- | ------------------------------------- |
+| `PUBLIC_SUPABASE_URL`             | string  | _required_                         | Supabase project URL                  |
+| `PUBLIC_SUPABASE_ANON_KEY`        | string  | _required_                         | Supabase anonymous key                |
+| `SUPABASE_SERVICE_ROLE_KEY`       | string  | _required_                         | Supabase service role key             |
+| `SERVER_WALLET_ENCRYPTION_KEY`    | string  | _required_                         | Key for encrypting server wallets     |
+| `POLYMARKET_ENCRYPTION_KEY`       | string  | _required_                         | Key for encrypting Polymarket creds   |
+| `POLYGON_RPC_URL`                 | string  | _required_                         | Alchemy RPC endpoint for Polygon      |
+| `POLYMARKET_API_URL`              | string  | `https://gamma-api.polymarket.com` | Polymarket API base URL               |
+| `POLYMARKET_API_TIMEOUT`          | number  | `10000`                            | Request timeout (milliseconds)        |
+| `POLYMARKET_CACHE_TTL`            | number  | `60`                               | Cache TTL (seconds)                   |
+| `POLYMARKET_CACHE_ENABLED`        | boolean | `true`                             | Enable/disable caching                |
 
 ### Caching Strategy
 
@@ -364,11 +358,13 @@ Rate limiting uses in-memory storage suitable for single-instance deployments. F
 ### Production Considerations
 
 1. **Environment Variables**: Set production values for all config
-2. **Database**: Use managed PostgreSQL (e.g., Supabase, Neon, Railway)
-3. **Rate Limiting**: Consider Redis for multi-instance deployments
-4. **Security Headers**: Uncomment HSTS header in `src/hooks.server.ts`
-5. **Monitoring**: Set up error tracking (Sentry, etc.)
-6. **CDN**: Deploy behind CloudFlare or similar for global performance
+2. **Database**: Ensure Supabase production project is configured with proper RLS policies
+3. **Encryption Keys**: Generate secure 32-byte hex keys for wallet and credential encryption
+4. **RPC Endpoint**: Use production Alchemy endpoint with sufficient rate limits
+5. **Rate Limiting**: Consider Redis for multi-instance deployments
+6. **Security Headers**: Uncomment HSTS header in `src/hooks.server.ts`
+7. **Monitoring**: Set up error tracking (Sentry, etc.)
+8. **CDN**: Deploy behind CloudFlare or similar for global performance
 
 ### Deployment Platforms
 
@@ -539,17 +535,12 @@ Closes #123
 
 ### Common Issues
 
-#### Database Connection Errors
+#### Supabase Connection Errors
 
 ```bash
-# Start the database
-npm run db:start
-
-# Verify DATABASE_URL in .env
-# Check Docker is running
-
-# Run migrations
-npm run db:push
+# Verify Supabase credentials in .env
+# Check PUBLIC_SUPABASE_URL and keys are correct
+# Ensure SUPABASE_SERVICE_ROLE_KEY is set for server-side operations
 ```
 
 #### API Connection Errors
@@ -580,7 +571,9 @@ npm run prepare
 
 - [Polymarket API Documentation](https://docs.polymarket.com/)
 - [SvelteKit Documentation](https://kit.svelte.dev/)
+- [Supabase Documentation](https://supabase.com/docs)
 - [Supabase Auth Documentation](https://supabase.com/docs/guides/auth)
 - [viem Documentation](https://viem.sh/)
-- [Drizzle ORM Documentation](https://orm.drizzle.team/)
+- [TanStack Query Documentation](https://tanstack.com/query/latest)
+- [Vitest Documentation](https://vitest.dev/)
 - [Security Audit Report](../SECURITY_AUDIT_REPORT.md)
