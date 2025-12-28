@@ -319,18 +319,18 @@ POLYMARKET_ENCRYPTION_KEY="your-32-byte-hex-key"
 POLYGON_RPC_URL="https://polygon-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
 ```
 
-| Variable                          | Type    | Default                            | Description                           |
-| --------------------------------- | ------- | ---------------------------------- | ------------------------------------- |
-| `PUBLIC_SUPABASE_URL`             | string  | _required_                         | Supabase project URL                  |
-| `PUBLIC_SUPABASE_ANON_KEY`        | string  | _required_                         | Supabase anonymous key                |
-| `SUPABASE_SERVICE_ROLE_KEY`       | string  | _required_                         | Supabase service role key             |
-| `SERVER_WALLET_ENCRYPTION_KEY`    | string  | _required_                         | Key for encrypting server wallets     |
-| `POLYMARKET_ENCRYPTION_KEY`       | string  | _required_                         | Key for encrypting Polymarket creds   |
-| `POLYGON_RPC_URL`                 | string  | _required_                         | Alchemy RPC endpoint for Polygon      |
-| `POLYMARKET_API_URL`              | string  | `https://gamma-api.polymarket.com` | Polymarket API base URL               |
-| `POLYMARKET_API_TIMEOUT`          | number  | `10000`                            | Request timeout (milliseconds)        |
-| `POLYMARKET_CACHE_TTL`            | number  | `60`                               | Cache TTL (seconds)                   |
-| `POLYMARKET_CACHE_ENABLED`        | boolean | `true`                             | Enable/disable caching                |
+| Variable                       | Type    | Default                            | Description                         |
+| ------------------------------ | ------- | ---------------------------------- | ----------------------------------- |
+| `PUBLIC_SUPABASE_URL`          | string  | _required_                         | Supabase project URL                |
+| `PUBLIC_SUPABASE_ANON_KEY`     | string  | _required_                         | Supabase anonymous key              |
+| `SUPABASE_SERVICE_ROLE_KEY`    | string  | _required_                         | Supabase service role key           |
+| `SERVER_WALLET_ENCRYPTION_KEY` | string  | _required_                         | Key for encrypting server wallets   |
+| `POLYMARKET_ENCRYPTION_KEY`    | string  | _required_                         | Key for encrypting Polymarket creds |
+| `POLYGON_RPC_URL`              | string  | _required_                         | Alchemy RPC endpoint for Polygon    |
+| `POLYMARKET_API_URL`           | string  | `https://gamma-api.polymarket.com` | Polymarket API base URL             |
+| `POLYMARKET_API_TIMEOUT`       | number  | `10000`                            | Request timeout (milliseconds)      |
+| `POLYMARKET_CACHE_TTL`         | number  | `60`                               | Cache TTL (seconds)                 |
+| `POLYMARKET_CACHE_ENABLED`     | boolean | `true`                             | Enable/disable caching              |
 
 ### Caching Strategy
 
