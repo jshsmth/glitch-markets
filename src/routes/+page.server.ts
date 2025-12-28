@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { EventService } from '$lib/server/services/event-service.js';
 import { Logger } from '$lib/utils/logger';
+import { EXCLUDED_SPORTS_TAG_IDS } from '$lib/config/filters';
 
 const eventService = new EventService();
 const logger = new Logger({ component: 'HomePage' });
@@ -19,7 +20,7 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 			ascending: false,
 			limit: 20,
 			offset: 0,
-			exclude_tag_id: [1, 100639, 64]
+			exclude_tag_id: [...EXCLUDED_SPORTS_TAG_IDS]
 		})
 		.catch((err) => {
 			logger.error('Error loading homepage events', {

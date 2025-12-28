@@ -3,6 +3,7 @@
 	import EventList from '$lib/components/events/EventList.svelte';
 	import WatchlistSection from '$lib/components/events/WatchlistSection.svelte';
 	import type { Event } from '$lib/server/api/polymarket-client';
+	import { EXCLUDED_SPORTS_TAG_IDS, appendExcludedTags } from '$lib/config/filters';
 
 	let { data } = $props();
 
@@ -19,9 +20,7 @@
 				offset: String(pageParam)
 			});
 
-			params.append('exclude_tag_id', '1');
-			params.append('exclude_tag_id', '100639');
-			params.append('exclude_tag_id', '64');
+			appendExcludedTags(params, EXCLUDED_SPORTS_TAG_IDS);
 
 			const response = await fetch(`/api/events?${params}`);
 			if (!response.ok) {
