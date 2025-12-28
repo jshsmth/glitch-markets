@@ -56,21 +56,23 @@
 	.outcome-card {
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
-		border-radius: 12px;
-		padding: 16px;
-		transition: all var(--transition-fast);
+		border-radius: var(--radius-card);
+		padding: var(--spacing-4);
+		transition: background-color var(--transition-fast);
 	}
 
-	.outcome-card:hover {
-		background: var(--bg-2);
+	@media (hover: hover) {
+		.outcome-card:hover {
+			background: var(--bg-2);
+		}
 	}
 
 	.outcome-card-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
-		margin-bottom: 10px;
-		gap: 8px;
+		margin-bottom: var(--spacing-2);
+		gap: var(--spacing-2);
 	}
 
 	.outcome-card-name {
@@ -93,7 +95,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		gap: 12px;
+		gap: var(--spacing-3);
 	}
 
 	.outcome-card-percentage {
@@ -106,8 +108,8 @@
 	.resolved-tag {
 		font-size: 12px;
 		font-weight: 600;
-		padding: 4px 8px;
-		border-radius: 6px;
+		padding: 4px var(--spacing-2);
+		border-radius: var(--radius-sm);
 		background: var(--bg-3);
 		color: var(--text-2);
 	}
@@ -120,18 +122,20 @@
 	.outcome-card-actions {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--spacing-2);
 		flex: 1;
 	}
 
 	.bet-btn {
-		padding: 10px 16px;
+		padding: var(--spacing-2) var(--spacing-4);
 		font-size: 14px;
 		font-weight: 600;
 		border: none;
-		border-radius: 8px;
+		border-radius: var(--radius-md);
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition:
+			background-color var(--transition-fast),
+			opacity var(--transition-fast);
 		white-space: nowrap;
 	}
 
@@ -141,18 +145,20 @@
 		border: 1px solid transparent;
 	}
 
-	.bet-btn.yes:hover:not(:disabled) {
-		background: rgba(0, 196, 71, 0.12);
-	}
-
 	.bet-btn.no {
 		background: rgba(255, 51, 102, 0.08);
 		color: var(--danger);
 		border: 1px solid transparent;
 	}
 
-	.bet-btn.no:hover:not(:disabled) {
-		background: rgba(255, 51, 102, 0.12);
+	@media (hover: hover) {
+		.bet-btn.yes:hover:not(:disabled) {
+			background: rgba(0, 196, 71, 0.12);
+		}
+
+		.bet-btn.no:hover:not(:disabled) {
+			background: rgba(255, 51, 102, 0.12);
+		}
 	}
 
 	.bet-btn:disabled {

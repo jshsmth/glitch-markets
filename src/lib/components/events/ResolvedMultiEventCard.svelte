@@ -75,13 +75,13 @@
 		background: var(--bg-1);
 		border: 1px solid var(--bg-4);
 		border-radius: var(--radius-card);
-		padding: 18px;
+		padding: var(--spacing-4);
 		box-shadow: var(--shadow-sm);
+		height: 100%;
 		transition:
 			all var(--transition-fast),
 			box-shadow var(--transition-fast);
 		color: inherit;
-		height: 100%;
 	}
 
 	.event-card:focus-within {
@@ -93,7 +93,7 @@
 	.card-content {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: var(--spacing-4);
 		width: 100%;
 	}
 
@@ -104,20 +104,22 @@
 	.markets-preview {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--spacing-2);
 	}
 
 	.market-item {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 12px;
-		padding: 12px;
+		gap: var(--spacing-3);
+		padding: var(--spacing-3);
 		background: var(--bg-2);
 		border: 1px solid var(--bg-4);
 		border-radius: var(--radius-sm);
 		text-decoration: none;
-		transition: all var(--transition-fast);
+		transition:
+			border-color var(--transition-fast),
+			transform var(--transition-fast);
 	}
 
 	.market-item.is-winner {
@@ -129,9 +131,15 @@
 		opacity: 0.6;
 	}
 
-	.market-item:hover {
-		border-color: var(--primary);
-		transform: translateY(-1px);
+	@media (hover: hover) {
+		.market-item:hover {
+			border-color: var(--primary);
+			transform: translateY(-1px);
+		}
+	}
+
+	.market-item:active {
+		transform: translateY(0);
 	}
 
 	.market-item:focus-visible {
@@ -142,7 +150,7 @@
 	.market-header {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: var(--spacing-2);
 		min-width: 0;
 		flex: 1;
 	}
@@ -185,7 +193,7 @@
 
 	@media (max-width: 768px) {
 		.event-card {
-			padding: 16px;
+			padding: var(--spacing-4);
 		}
 	}
 </style>

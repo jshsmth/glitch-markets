@@ -64,7 +64,7 @@
 	.about-content {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: var(--spacing-4);
 	}
 
 	.about-text {
@@ -78,10 +78,10 @@
 	.rules-link {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--spacing-1);
 		padding: 2px 6px;
 		background: var(--bg-2);
-		border-radius: 4px;
+		border-radius: var(--radius-sm);
 		color: var(--primary);
 		text-decoration: none;
 		font-size: 12px;
@@ -97,15 +97,15 @@
 	.about-meta {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
-		padding-top: 12px;
+		gap: var(--spacing-2);
+		padding-top: var(--spacing-3);
 		border-top: 1px solid var(--bg-3);
 	}
 
 	.meta-row {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--spacing-2);
 		font-size: 13px;
 		color: var(--text-2);
 	}

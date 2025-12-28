@@ -42,8 +42,8 @@
 	.card {
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
-		border-radius: 12px;
-		padding: 16px;
+		border-radius: var(--radius-card);
+		padding: var(--spacing-4);
 	}
 
 	.chart-card {
@@ -60,26 +60,30 @@
 
 	.time-controls {
 		display: flex;
-		gap: 8px;
-		padding: 12px 0;
+		gap: var(--spacing-2);
+		padding: var(--spacing-3) 0;
 		justify-content: flex-end;
 	}
 
 	.time-btn {
-		padding: 6px 12px;
+		padding: 6px var(--spacing-3);
 		font-size: 13px;
 		font-weight: 500;
 		background: transparent;
 		border: none;
-		border-radius: 6px;
+		border-radius: var(--radius-sm);
 		color: var(--text-3);
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition:
+			background-color var(--transition-fast),
+			color var(--transition-fast);
 	}
 
-	.time-btn:hover {
-		background: var(--bg-2);
-		color: var(--text-0);
+	@media (hover: hover) {
+		.time-btn:hover {
+			background: var(--bg-2);
+			color: var(--text-0);
+		}
 	}
 
 	.time-btn.active {
@@ -94,7 +98,7 @@
 		}
 
 		.card {
-			padding: 20px;
+			padding: var(--spacing-5);
 		}
 
 		.chart-card {
@@ -102,7 +106,7 @@
 		}
 
 		.time-controls {
-			padding: 16px;
+			padding: var(--spacing-4);
 		}
 	}
 </style>

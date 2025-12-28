@@ -56,7 +56,7 @@
 	.outcomes-panel {
 		background: transparent;
 		border: none;
-		border-radius: 12px;
+		border-radius: var(--radius-card);
 		overflow: hidden;
 	}
 
@@ -67,14 +67,14 @@
 		text-transform: uppercase;
 		letter-spacing: 1px;
 		margin: 0;
-		padding: 8px 0 16px 0;
+		padding: var(--spacing-2) 0 var(--spacing-4) 0;
 		border-bottom: none;
 	}
 
 	.outcomes-scroll {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: var(--spacing-3);
 		max-height: calc(100vh - 200px);
 		overflow-y: auto;
 	}

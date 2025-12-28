@@ -67,8 +67,8 @@
 	.back-link {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
-		padding: 8px 0;
+		gap: var(--spacing-1);
+		padding: var(--spacing-2) 0;
 		font-size: 14px;
 		font-weight: 500;
 		color: var(--text-2);
@@ -87,13 +87,13 @@
 	.header-row {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: var(--spacing-3);
 	}
 
 	.event-icon {
 		width: 44px;
 		height: 44px;
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		object-fit: cover;
 		flex-shrink: 0;
 		border: 1.5px solid var(--bg-3);
@@ -118,16 +118,21 @@
 		justify-content: center;
 		background: var(--bg-2);
 		border: 1px solid var(--bg-3);
-		border-radius: 8px;
+		border-radius: var(--radius-md);
 		color: var(--text-2);
 		cursor: pointer;
 		flex-shrink: 0;
-		transition: all var(--transition-fast);
+		transition:
+			color var(--transition-fast),
+			border-color var(--transition-fast),
+			background-color var(--transition-fast);
 	}
 
-	.share-btn:hover {
-		color: var(--primary);
-		border-color: var(--bg-4);
+	@media (hover: hover) {
+		.share-btn:hover {
+			color: var(--primary);
+			border-color: var(--bg-4);
+		}
 	}
 
 	.share-btn.copied {

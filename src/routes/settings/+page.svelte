@@ -323,7 +323,7 @@
 	.settings-section {
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
-		border-radius: 12px;
+		border-radius: var(--radius-card);
 		padding: var(--spacing-4);
 		margin-bottom: var(--spacing-3);
 	}
@@ -370,8 +370,8 @@
 	}
 
 	.status-badge {
-		padding: 4px 10px;
-		border-radius: 10px;
+		padding: var(--spacing-1) var(--spacing-2);
+		border-radius: var(--radius-md);
 		font-size: 11px;
 		font-weight: 600;
 		text-transform: uppercase;
@@ -443,7 +443,7 @@
 		color: var(--text-0);
 		background: var(--bg-2);
 		padding: 2px 6px;
-		border-radius: 4px;
+		border-radius: var(--radius-sm);
 	}
 
 	.value-with-copy {
@@ -456,18 +456,23 @@
 		padding: 2px 6px;
 		background: var(--bg-3);
 		border: 1px solid var(--bg-4);
-		border-radius: 4px;
+		border-radius: var(--radius-sm);
 		color: var(--text-2);
 		font-size: 11px;
 		cursor: pointer;
-		transition: all 0.2s;
+		transition:
+			background-color 0.2s,
+			border-color 0.2s,
+			color 0.2s;
 		flex-shrink: 0;
 	}
 
-	.copy-btn-small:hover {
-		background: var(--bg-4);
-		border-color: var(--primary);
-		color: var(--primary);
+	@media (hover: hover) {
+		.copy-btn-small:hover {
+			background: var(--bg-4);
+			border-color: var(--primary);
+			color: var(--primary);
+		}
 	}
 
 	.warning-card,
@@ -475,7 +480,7 @@
 	.error-card {
 		background: var(--bg-1);
 		border: 1px solid var(--bg-3);
-		border-radius: 12px;
+		border-radius: var(--radius-card);
 		padding: var(--spacing-4);
 		display: flex;
 		align-items: center;
