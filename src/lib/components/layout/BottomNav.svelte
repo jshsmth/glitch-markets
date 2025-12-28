@@ -4,7 +4,6 @@
 	import { onMount } from 'svelte';
 	import HomeIcon from '$lib/components/icons/HomeIcon.svelte';
 	import CompassIcon from '$lib/components/icons/CompassIcon.svelte';
-	import SearchIcon from '$lib/components/icons/SearchIcon.svelte';
 	import MenuIcon from '$lib/components/icons/MenuIcon.svelte';
 	import PokerChipIcon from '$lib/components/icons/PokerChipIcon.svelte';
 	import UserIcon from '$lib/components/icons/UserIcon.svelte';
@@ -24,7 +23,6 @@
 	import { openDepositModal, openSignInModal } from '$lib/stores/modal.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
 	import { themeState, toggleTheme } from '$lib/stores/theme.svelte';
-	import { categories } from '$lib/config/categories';
 	import { TIMEOUTS } from '$lib/config/constants';
 	import { goto } from '$app/navigation';
 
@@ -43,7 +41,7 @@
 
 	type NavActionItem = NavItemBase & {
 		type: 'action';
-		action: 'discover' | 'more';
+		action: 'more';
 	};
 
 	type NavItem = NavLinkItem | NavActionItem;
@@ -56,10 +54,10 @@
 			icon: HomeIcon
 		},
 		{
-			type: 'action',
+			type: 'link',
 			label: 'Discover',
-			icon: CompassIcon,
-			action: 'discover'
+			href: '/search',
+			icon: CompassIcon
 		},
 		{
 			type: 'link',
@@ -76,12 +74,10 @@
 		}
 	];
 
-	let discoverOpen = $state(false);
 	let moreMenuOpen = $state(false);
 
 	function isActive(item: NavItem): boolean {
 		if (item.type === 'action') {
-			if (item.action === 'discover') return discoverOpen;
 			if (item.action === 'more') return moreMenuOpen;
 			return false;
 		}
@@ -91,9 +87,7 @@
 	function handleNavClick(event: MouseEvent, item: NavItem) {
 		if (item.type === 'action') {
 			event.preventDefault();
-			if (item.action === 'discover') {
-				discoverOpen = true;
-			} else if (item.action === 'more') {
+			if (item.action === 'more') {
 				moreMenuOpen = true;
 			}
 			return;
@@ -142,25 +136,6 @@
 		goto('/settings');
 	}
 
-	function handleDiscoverSearch() {
-		discoverOpen = false;
-		goto('/search');
-	}
-
-	function handleCategoryClick(href: string) {
-		discoverOpen = false;
-		goto(href);
-	}
-
-	function closeDiscover() {
-		discoverOpen = false;
-	}
-
-	const featuredCategories = $derived(
-		categories.filter((c) => c.href === '/' || c.href === '/new')
-	);
-	const regularCategories = $derived(categories.filter((c) => c.href !== '/' && c.href !== '/new'));
-
 	function closeMoreMenu() {
 		moreMenuOpen = false;
 	}
@@ -203,55 +178,6 @@
 		</a>
 	{/each}
 </nav>
-
-<!-- Discover Sheet - combines category exploration and search -->
-<BottomSheet open={discoverOpen} title="Discover" onClose={closeDiscover}>
-	<div class="discover-content">
-		<button class="discover-search-btn" onclick={handleDiscoverSearch}>
-			<SearchIcon size={22} color="currentColor" />
-			<span>Search Markets</span>
-		</button>
-		<div class="discover-divider"></div>
-		<nav class="discover-categories" aria-label="Market categories">
-			<div class="category-section">
-				<h3 class="category-section-title">Featured</h3>
-				<div class="category-grid">
-					{#each featuredCategories as category (category.href)}
-						{@const Icon = category.icon}
-						<button
-							class="category-item"
-							class:active={$page.url.pathname === category.href}
-							onclick={() => handleCategoryClick(category.href)}
-						>
-							<span class="category-icon">
-								<Icon size={20} color="currentColor" />
-							</span>
-							<span class="category-label">{category.name}</span>
-						</button>
-					{/each}
-				</div>
-			</div>
-			<div class="category-section">
-				<h3 class="category-section-title">Categories</h3>
-				<div class="category-grid">
-					{#each regularCategories as category (category.href)}
-						{@const Icon = category.icon}
-						<button
-							class="category-item"
-							class:active={$page.url.pathname === category.href}
-							onclick={() => handleCategoryClick(category.href)}
-						>
-							<span class="category-icon">
-								<Icon size={20} color="currentColor" />
-							</span>
-							<span class="category-label">{category.name}</span>
-						</button>
-					{/each}
-				</div>
-			</div>
-		</nav>
-	</div>
-</BottomSheet>
 
 <!-- More Menu Sheet -->
 <BottomSheet open={moreMenuOpen} title="More" onClose={closeMoreMenu}>
@@ -485,132 +411,5 @@
 		background: var(--bg-3);
 		margin: var(--spacing-2) 0;
 		list-style: none;
-	}
-
-	/* Discover content */
-	.discover-content {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-3);
-	}
-
-	.discover-search-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--spacing-3);
-		width: 100%;
-		padding: var(--spacing-4);
-		background: var(--primary);
-		color: var(--button-primary-text);
-		border: none;
-		border-radius: var(--radius-lg);
-		font-size: var(--text-lg);
-		font-weight: var(--font-semibold);
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		min-height: var(--target-comfortable);
-	}
-
-	.discover-search-btn:hover {
-		background: var(--primary-hover);
-		transform: translateY(-1px);
-	}
-
-	.discover-search-btn:active {
-		transform: translateY(0);
-	}
-
-	.discover-divider {
-		height: 1px;
-		background: var(--bg-3);
-		margin: var(--spacing-2) 0;
-	}
-
-	.discover-categories {
-		margin: 0;
-	}
-
-	.category-section {
-		margin-bottom: var(--spacing-4);
-	}
-
-	.category-section:last-child {
-		margin-bottom: 0;
-	}
-
-	.category-section-title {
-		font-size: var(--text-sm);
-		font-weight: var(--font-semibold);
-		color: var(--text-2);
-		margin: 0 0 var(--spacing-2) 0;
-		text-transform: uppercase;
-		letter-spacing: var(--tracking-wide);
-	}
-
-	.category-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-		gap: var(--spacing-2);
-	}
-
-	.category-item {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: var(--spacing-2);
-		padding: var(--spacing-4);
-		background: var(--bg-2);
-		border: 1px solid var(--bg-3);
-		border-radius: var(--radius-lg);
-		color: var(--text-1);
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		min-height: 80px;
-	}
-
-	.category-item:hover {
-		background: var(--primary-hover-bg);
-		border-color: var(--primary);
-		color: var(--primary);
-	}
-
-	.category-item:active {
-		transform: scale(0.98);
-	}
-
-	.category-item.active {
-		background: var(--primary);
-		border-color: var(--primary);
-		color: var(--button-primary-text);
-	}
-
-	.category-icon {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.category-label {
-		font-size: var(--text-sm);
-		font-weight: var(--font-medium);
-		text-align: center;
-		line-height: 1.2;
-	}
-
-	@media (max-width: 640px) {
-		.category-grid {
-			grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-		}
-
-		.category-item {
-			min-height: 70px;
-			padding: var(--spacing-3);
-		}
-
-		.category-label {
-			font-size: 12px;
-		}
 	}
 </style>
