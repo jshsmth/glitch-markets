@@ -9,7 +9,7 @@
 
 **Experience the infinite money glitch.**
 
-*A production-grade Progressive Web App for prediction markets*
+_A production-grade Progressive Web App for prediction markets_
 
 </div>
 
@@ -48,6 +48,7 @@ Deployment:    Vercel Edge Network
 ```
 
 **What This Demonstrates:**
+
 - Production TypeScript patterns with strict typing and runtime validation (Zod)
 - Blockchain integration with encrypted server-side wallet management
 - Progressive Web App with offline-first architecture and service workers
@@ -100,6 +101,7 @@ npm run build
 ```
 
 **Environment Variables:**
+
 ```bash
 PUBLIC_SUPABASE_URL=your_supabase_url
 PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -143,6 +145,6 @@ MIT License - See [LICENSE](LICENSE)
 
 **Built as a demonstration of production-grade full-stack engineering**
 
-*Note: Glitch Markets is an independent project and is not officially affiliated with Polymarket.*
+_Note: Glitch Markets is an independent project and is not officially affiliated with Polymarket._
 
 </div>

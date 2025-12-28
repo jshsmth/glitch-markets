@@ -400,27 +400,27 @@ See [polymarket-api-reference.md](./polymarket-api-reference.md) for complete AP
 
 ### Quick Reference
 
-| Endpoint                       | Description                                        |
-| ------------------------------ | -------------------------------------------------- |
-| `GET /api/markets`             | List all markets with filtering                    |
-| `GET /api/markets/[id]`        | Get specific market by ID                          |
-| `GET /api/markets/[id]/tags`   | Get tags for a specific market                     |
-| `GET /api/markets/slug/[slug]` | Get market by slug                                 |
-| `GET /api/events`              | List all events                                    |
-| `GET /api/events/[id]`         | Get specific event                                 |
-| `GET /api/events/[id]/tags`    | Get tags for a specific event                      |
-| `GET /api/series`              | List market series                                 |
-| `GET /api/tags`                | List all category tags                             |
-| `GET /api/search`              | Global search across markets, events, and profiles |
-| `GET /api/comments`            | Get market comments                                |
-| `GET /api/users/positions`     | Get user positions                                 |
-| `GET /api/users/trades`        | Get user trade history                             |
-| `GET /api/users/activity`      | Get user activity                                  |
-| `POST /api/bridge/deposit`     | Create deposit address for cross-chain transfers   |
-| `GET /api/bridge/supported-assets` | Get supported chains and tokens                |
-| `GET /api/watchlist`           | Get user's watchlist                               |
-| `POST /api/watchlist`          | Add market to watchlist                            |
-| `DELETE /api/watchlist`        | Remove market from watchlist                       |
+| Endpoint                           | Description                                        |
+| ---------------------------------- | -------------------------------------------------- |
+| `GET /api/markets`                 | List all markets with filtering                    |
+| `GET /api/markets/[id]`            | Get specific market by ID                          |
+| `GET /api/markets/[id]/tags`       | Get tags for a specific market                     |
+| `GET /api/markets/slug/[slug]`     | Get market by slug                                 |
+| `GET /api/events`                  | List all events                                    |
+| `GET /api/events/[id]`             | Get specific event                                 |
+| `GET /api/events/[id]/tags`        | Get tags for a specific event                      |
+| `GET /api/series`                  | List market series                                 |
+| `GET /api/tags`                    | List all category tags                             |
+| `GET /api/search`                  | Global search across markets, events, and profiles |
+| `GET /api/comments`                | Get market comments                                |
+| `GET /api/users/positions`         | Get user positions                                 |
+| `GET /api/users/trades`            | Get user trade history                             |
+| `GET /api/users/activity`          | Get user activity                                  |
+| `POST /api/bridge/deposit`         | Create deposit address for cross-chain transfers   |
+| `GET /api/bridge/supported-assets` | Get supported chains and tokens                    |
+| `GET /api/watchlist`               | Get user's watchlist                               |
+| `POST /api/watchlist`              | Add market to watchlist                            |
+| `DELETE /api/watchlist`            | Remove market from watchlist                       |
 
 ### Rate Limiting
 
