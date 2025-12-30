@@ -24,6 +24,10 @@ vi.mock('$lib/utils/logger', () => {
 		}
 	};
 });
+vi.mock('$env/static/private', () => ({
+	SERVER_WALLET_ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+	SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key'
+}));
 
 const TEST_USER_ID = 'user-123';
 const TEST_FROM_ADDRESS = '0x1234567890123456789012345678901234567890';

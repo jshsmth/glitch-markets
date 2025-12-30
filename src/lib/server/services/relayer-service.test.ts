@@ -32,6 +32,10 @@ vi.mock('$lib/utils/logger', () => ({
 		})
 	}
 }));
+vi.mock('$env/static/private', () => ({
+	SERVER_WALLET_ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+	SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key'
+}));
 vi.mock('$env/dynamic/private', () => ({
 	env: {
 		POLYGON_RPC_URL: 'https://polygon-rpc.com',
