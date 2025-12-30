@@ -170,11 +170,11 @@
      ============================================ */
 
 	.input-container.size-small {
-		height: 38px;
+		height: 44px;
 	}
 
 	.input-container.size-medium {
-		height: 44px;
+		height: 48px;
 	}
 
 	.input-container.size-large {
@@ -202,13 +202,19 @@
 
 		/* Typography */
 		color: var(--text-0);
-		font-size: var(--text-md);
+		font-size: 16px;
 		font-family: var(--font-sans);
 		line-height: var(--leading-normal);
 		-webkit-font-smoothing: antialiased;
 
 		/* Transitions */
 		transition: border-color var(--transition-base);
+	}
+
+	@media (min-width: 768px) {
+		.input {
+			font-size: var(--text-md);
+		}
 	}
 
 	.input:hover {

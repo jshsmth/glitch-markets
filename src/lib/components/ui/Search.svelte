@@ -112,6 +112,11 @@
 		{inputSize}
 		variant="search"
 		aria-label="Search"
+		autocomplete="off"
+		autocapitalize="off"
+		autocorrect="off"
+		spellcheck={false}
+		enterkeyhint="search"
 	>
 		{#snippet iconBefore()}
 			<SearchIcon size={16} color="currentColor" />
@@ -163,6 +168,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		position: relative;
 		width: 20px;
 		height: 20px;
 		padding: 0;
@@ -173,6 +179,22 @@
 		cursor: pointer;
 		pointer-events: all;
 		transition: all var(--transition-fast);
+	}
+
+	.clear-button::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: max(100%, 44px);
+		height: max(100%, 44px);
+	}
+
+	@media (pointer: fine) {
+		.clear-button::before {
+			display: none;
+		}
 	}
 
 	.clear-button:hover {
