@@ -77,23 +77,23 @@ describe('RelayerService', () => {
 		const { Wallet } = await import('@ethersproject/wallet');
 		const { JsonRpcProvider } = await import('@ethersproject/providers');
 
-		vi.mocked(RelayClient).mockImplementation(function (this: any) {
+		vi.mocked(RelayClient).mockImplementation(function (this: typeof mockRelayClient) {
 			Object.assign(this, mockRelayClient);
 			return this;
-		} as any);
+		} as unknown as typeof RelayClient);
 
-		vi.mocked(BuilderConfig).mockImplementation(function (this: any, config: any) {
+		vi.mocked(BuilderConfig).mockImplementation(function (this: object, config: unknown) {
 			return config;
-		} as any);
+		} as unknown as typeof BuilderConfig);
 
-		vi.mocked(Wallet).mockImplementation(function (this: any) {
+		vi.mocked(Wallet).mockImplementation(function (this: { address: string }) {
 			this.address = TEST_WALLET_ADDRESS;
 			return this;
-		} as any);
+		} as unknown as typeof Wallet);
 
-		vi.mocked(JsonRpcProvider).mockImplementation(function (this: any) {
+		vi.mocked(JsonRpcProvider).mockImplementation(function (this: object) {
 			return this;
-		} as any);
+		} as unknown as typeof JsonRpcProvider);
 
 		const viem = await import('viem');
 		mockEncodeFunctionData = vi.fn().mockReturnValue('0xencoded');
