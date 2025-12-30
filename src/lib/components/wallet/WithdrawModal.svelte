@@ -2,6 +2,7 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { UsdcIcon, PolygonIcon } from '$lib/components/icons/chains';
+	import { walletState } from '$lib/stores/wallet.svelte';
 
 	interface Props {
 		isOpen: boolean;
@@ -13,10 +14,12 @@
 	let amount = $state('');
 	let destinationAddress = $state('');
 	let isLoading = $state(false);
+	let isFetchingBalance = $state(false);
 	let error = $state<string | null>(null);
+	let successMessage = $state<string | null>(null);
 
 	let availableBalance = $state(0);
-	let networkFee = $derived(amount && parseFloat(amount) > 0 ? 0.1 : 0);
+	let networkFee = $derived(0);
 
 	let isValidAmount = $derived.by(() => {
 		const numAmount = parseFloat(amount);
@@ -47,16 +50,60 @@
 		}
 	}
 
+	async function fetchBalance() {
+		if (!walletState.proxyWalletAddress) {
+			availableBalance = 0;
+			return;
+		}
+
+		isFetchingBalance = true;
+		try {
+			const response = await fetch('/api/user/balance');
+			if (response.ok) {
+				const data = await response.json();
+				availableBalance = parseFloat(data.balance || '0');
+			} else {
+				console.error('Failed to fetch balance');
+				availableBalance = 0;
+			}
+		} catch (err) {
+			console.error('Error fetching balance:', err);
+			availableBalance = 0;
+		} finally {
+			isFetchingBalance = false;
+		}
+	}
+
 	async function handleWithdraw() {
-		if (!canSubmit) return;
+		if (!canSubmit || !walletState.proxyWalletAddress) return;
 
 		isLoading = true;
 		error = null;
+		successMessage = null;
 
 		try {
-			// TODO: Call /api/withdraw endpoint
-			await new Promise((resolve) => setTimeout(resolve, 1500));
-			handleClose();
+			const response = await fetch('/api/withdraw', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					fromAddress: walletState.proxyWalletAddress,
+					toAddress: destinationAddress,
+					amount: amount
+				})
+			});
+
+			const result = await response.json();
+
+			if (result.success) {
+				successMessage = `Successfully withdrew ${amount} USDC to ${destinationAddress.slice(0, 6)}...${destinationAddress.slice(-4)}`;
+				setTimeout(() => {
+					handleClose();
+				}, 2000);
+			} else {
+				error = result.error || 'Failed to process withdrawal';
+			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to process withdrawal';
 		} finally {
@@ -64,10 +111,17 @@
 		}
 	}
 
+	$effect(() => {
+		if (isOpen) {
+			fetchBalance();
+		}
+	});
+
 	function handleClose() {
 		amount = '';
 		destinationAddress = '';
 		error = null;
+		successMessage = null;
 		isLoading = false;
 		onClose();
 	}
@@ -80,7 +134,11 @@
 				<span class="balance-label">Available balance</span>
 				<div class="balance-value">
 					<UsdcIcon size={18} />
-					<span>${availableBalance.toFixed(2)}</span>
+					{#if isFetchingBalance}
+						<span class="loading-text">Loading...</span>
+					{:else}
+						<span>${availableBalance.toFixed(2)}</span>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -139,13 +197,23 @@
 			</div>
 			<div class="summary-row">
 				<span class="summary-label">Network fee</span>
-				<span class="summary-value fee">${networkFee.toFixed(2)}</span>
+				<span class="summary-value fee gasless">
+					$0.00
+					<span class="gasless-badge">⚡ Gasless</span>
+				</span>
 			</div>
 			<div class="summary-row total">
 				<span class="summary-label">You'll receive</span>
 				<span class="summary-value">${receiveAmount.toFixed(2)}</span>
 			</div>
 		</div>
+
+		{#if successMessage}
+			<div class="success-banner" role="status">
+				<span class="success-icon">✓</span>
+				<span>{successMessage}</span>
+			</div>
+		{/if}
 
 		{#if error}
 			<div class="error-banner" role="alert">
@@ -154,7 +222,7 @@
 			</div>
 		{/if}
 
-		{#if availableBalance === 0}
+		{#if availableBalance === 0 && !isFetchingBalance}
 			<div class="info-banner">
 				<span class="info-icon">i</span>
 				<span>You don't have any funds to withdraw. Deposit USDC first to start trading.</span>
@@ -355,6 +423,27 @@
 		color: var(--text-2);
 	}
 
+	.summary-value.gasless {
+		gap: var(--spacing-2);
+	}
+
+	.gasless-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 2px 8px;
+		background: color-mix(in srgb, var(--success) 15%, transparent);
+		color: var(--success);
+		border-radius: var(--radius-md);
+		font-size: var(--text-xs);
+		font-weight: var(--font-semibold);
+		line-height: 1;
+	}
+
+	.loading-text {
+		color: var(--text-2);
+		font-style: italic;
+	}
+
 	.summary-row.total .summary-label {
 		font-weight: var(--font-semibold);
 		color: var(--text-1);
@@ -414,6 +503,32 @@
 		font-weight: var(--font-semibold);
 		border-radius: var(--radius-full);
 		background: var(--primary);
+		color: var(--bg-0);
+	}
+
+	.success-banner {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--spacing-3);
+		padding: var(--spacing-3) var(--spacing-4);
+		background: color-mix(in srgb, var(--success) 12%, transparent);
+		border-radius: var(--radius-lg);
+		font-size: var(--text-sm);
+		color: var(--success);
+		line-height: 1.4;
+	}
+
+	.success-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
+		min-width: 18px;
+		font-size: var(--text-xs);
+		font-weight: var(--font-bold);
+		border-radius: var(--radius-full);
+		background: var(--success);
 		color: var(--bg-0);
 	}
 
