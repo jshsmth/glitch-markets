@@ -90,9 +90,13 @@ tests/                  # Unit + integration tests
 # Install
 npm install
 
-# Configure
-cp .env.example .env.local
+# Configure environment variables
+cp .env.example .env
 # Add your Supabase credentials
+
+# Configure MCP servers (optional - for Claude Code)
+cp .mcp.json.example .mcp.json
+# Add your Supabase project ID to enable the Supabase MCP server
 
 # Run
 npm run dev
