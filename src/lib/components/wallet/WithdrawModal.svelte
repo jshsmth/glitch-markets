@@ -184,7 +184,7 @@
 					autocomplete="off"
 				/>
 			</div>
-			<span class="input-hint">Enter the Polygon wallet address to receive USDC</span>
+			<span class="input-hint">Enter the Polygon wallet address to receive USDC.e</span>
 		</div>
 
 		<div class="summary-section">
@@ -197,10 +197,7 @@
 			</div>
 			<div class="summary-row">
 				<span class="summary-label">Network fee</span>
-				<span class="summary-value fee gasless">
-					$0.00
-					<span class="gasless-badge">⚡ Gasless</span>
-				</span>
+				<span class="summary-value fee free">FREE</span>
 			</div>
 			<div class="summary-row total">
 				<span class="summary-label">You'll receive</span>
@@ -423,20 +420,9 @@
 		color: var(--text-2);
 	}
 
-	.summary-value.gasless {
-		gap: var(--spacing-2);
-	}
-
-	.gasless-badge {
-		display: inline-flex;
-		align-items: center;
-		padding: 2px 8px;
-		background: color-mix(in srgb, var(--success) 15%, transparent);
+	.summary-value.free {
 		color: var(--success);
-		border-radius: var(--radius-md);
-		font-size: var(--text-xs);
-		font-weight: var(--font-semibold);
-		line-height: 1;
+		font-weight: var(--font-bold);
 	}
 
 	.loading-text {
