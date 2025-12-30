@@ -71,7 +71,9 @@ export async function POST({ request, locals }: RequestEvent) {
 		if (!fromAddress || typeof fromAddress !== 'string') {
 			log.error('Missing or invalid fromAddress field', { body });
 			return json(
-				formatErrorResponse(new ValidationError('fromAddress field is required and must be a string')),
+				formatErrorResponse(
+					new ValidationError('fromAddress field is required and must be a string')
+				),
 				{ status: 400 }
 			);
 		}
@@ -79,7 +81,9 @@ export async function POST({ request, locals }: RequestEvent) {
 		if (!toAddress || typeof toAddress !== 'string') {
 			log.error('Missing or invalid toAddress field', { body });
 			return json(
-				formatErrorResponse(new ValidationError('toAddress field is required and must be a string')),
+				formatErrorResponse(
+					new ValidationError('toAddress field is required and must be a string')
+				),
 				{ status: 400 }
 			);
 		}
