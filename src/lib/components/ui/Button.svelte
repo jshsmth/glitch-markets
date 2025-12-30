@@ -315,6 +315,10 @@
 	}
 
 	.loading-spinner {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
 		width: 16px;
 		height: 16px;
 		border: 2px solid currentColor;
@@ -324,8 +328,11 @@
 	}
 
 	@keyframes spin {
+		from {
+			transform: translate(-50%, -50%) rotate(0deg);
+		}
 		to {
-			transform: rotate(360deg);
+			transform: translate(-50%, -50%) rotate(360deg);
 		}
 	}
 
