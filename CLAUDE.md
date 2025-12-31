@@ -80,6 +80,46 @@ You have access to the Svelte MCP server with comprehensive Svelte 5 and SvelteK
 
 ---
 
+## Wallet Architecture
+
+Glitch Markets uses a dual-wallet architecture for Polymarket integration:
+
+### Server Wallet (EOA)
+
+**Purpose:** Signs transactions and authenticates with Polymarket's CLOB API (L1). Controls and owns the proxy wallet.
+**Usage:** Pass as `wallet` parameter in `ClobClient`, generate API credentials, sign relayer transactions. Never shown to users.
+
+### Proxy Wallet (Smart Contract)
+
+**Purpose:** Holds user's assets (USDC, positions) and acts as the "funder" address. This is the user-facing wallet shown on Polymarket.com.
+**Usage:** Pass as `funder` parameter in `ClobClient`, display in UI, check balances, query user data (`?user=<proxyWalletAddress>`), withdraw funds.
+
+### Usage Examples
+
+```typescript
+// ✅ CORRECT: L2 Client (Trading)
+const client = new ClobClient(
+  CLOB_API_URL,
+  CHAIN_ID,
+  serverWallet,           // Signer (server wallet for signing)
+  credentials,            // API credentials
+  SIGNATURE_TYPE,
+  proxyWalletAddress      // Funder (proxy wallet holds funds)
+);
+
+// ✅ CORRECT: Fetching user positions
+const res = await fetch(`/api/users/positions?user=${walletState.proxyWalletAddress}`);
+
+// ✅ CORRECT: Checking balance
+const balance = await getUSDCBalance(proxyWalletAddress);
+
+// ❌ WRONG: Don't use server wallet for user-facing operations
+const balance = await getUSDCBalance(serverWalletAddress); // Wrong!
+
+// ❌ WRONG: Don't show server wallet to users
+<span>{walletState.serverWalletAddress}</span> // Wrong!
+```
+
 ## Documentation Structure
 
 ```
