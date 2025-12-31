@@ -353,10 +353,9 @@
 			role="tooltip"
 			style="top: {tooltipPosition.top}px; left: {tooltipPosition.left}px;"
 		>
-			You appear to be in {geoblockState.country || 'a restricted jurisdiction'}{geoblockState.region
-				? ` (${geoblockState.region})`
-				: ''}. Trading is unavailable to persons in the US, France, or other restricted
-			jurisdictions. See
+			You appear to be in {geoblockState.country ||
+				'a restricted jurisdiction'}{geoblockState.region ? ` (${geoblockState.region})` : ''}.
+			Trading is unavailable to persons in the US, France, or other restricted jurisdictions. See
 			<a
 				href="https://docs.polymarket.com/polymarket-learn/FAQ/geoblocking"
 				target="_blank"
