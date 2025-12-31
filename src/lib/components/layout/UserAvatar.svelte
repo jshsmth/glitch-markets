@@ -128,7 +128,7 @@
 	}
 
 	async function handleCopyAddress() {
-		const address = walletState.serverWalletAddress;
+		const address = walletState.proxyWalletAddress;
 		if (!address) return;
 
 		try {
@@ -215,9 +215,9 @@
 					<div class="header-info">
 						{#if walletState.isLoading}
 							<div class="wallet-skeleton"></div>
-						{:else if walletState.serverWalletAddress}
+						{:else if walletState.proxyWalletAddress}
 							<div class="header-address">
-								<span class="address-text">{formatAddress(walletState.serverWalletAddress)}</span>
+								<span class="address-text">{formatAddress(walletState.proxyWalletAddress)}</span>
 								<button
 									class="copy-button"
 									onclick={handleCopyAddress}
