@@ -20,6 +20,7 @@
 	import LogoutIcon from '$lib/components/icons/LogoutIcon.svelte';
 	import { openSignInModal } from '$lib/stores/modal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { geoblockState, checkGeoblock } from '$lib/stores/geoblock.svelte';
 
 	interface Props {
 		size?: number;
@@ -32,6 +33,9 @@
 	let showDropdown = $state(false);
 	let closeTimeout: ReturnType<typeof setTimeout> | null = null;
 	let windowWidth = $state(1024);
+	let showGeoblockTooltip = $state(false);
+	let tooltipPosition = $state({ top: 0, left: 0 });
+	let viewOnlyButtonRef = $state<HTMLButtonElement | null>(null);
 
 	let isMobile = $derived(windowWidth <= 767);
 
@@ -43,6 +47,8 @@
 		};
 
 		window.addEventListener('resize', handleResize);
+
+		checkGeoblock();
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
@@ -146,6 +152,34 @@
 		if (!address) return '';
 		return `${address.slice(0, 6)}...${address.slice(-4)}`;
 	}
+
+	function updateTooltipPosition() {
+		if (viewOnlyButtonRef) {
+			const rect = viewOnlyButtonRef.getBoundingClientRect();
+			tooltipPosition = {
+				top: rect.bottom + 8,
+				left: rect.left
+			};
+		}
+	}
+
+	function handleTooltipToggle() {
+		updateTooltipPosition();
+		showGeoblockTooltip = !showGeoblockTooltip;
+	}
+
+	function handleTooltipMouseEnter() {
+		if (!isMobile) {
+			updateTooltipPosition();
+			showGeoblockTooltip = true;
+		}
+	}
+
+	function handleTooltipMouseLeave() {
+		if (!isMobile) {
+			showGeoblockTooltip = false;
+		}
+	}
 </script>
 
 <svelte:window onclick={handleClickOutside} />
@@ -193,7 +227,22 @@
 								</button>
 							</div>
 							{#if walletState.isRegistered}
-								<div class="header-subtext ready-badge">Ready to Trade</div>
+								{#if geoblockState.isBlocked}
+									<div class="header-subtext view-only-container">
+										<button
+											bind:this={viewOnlyButtonRef}
+											class="view-only-badge"
+											onclick={handleTooltipToggle}
+											onmouseenter={handleTooltipMouseEnter}
+											onmouseleave={handleTooltipMouseLeave}
+											aria-label="View only mode information"
+										>
+											View Only Mode
+										</button>
+									</div>
+								{:else}
+									<div class="header-subtext ready-badge">Ready to Trade</div>
+								{/if}
 							{:else if walletState.proxyWalletAddress}
 								<div class="header-subtext deploying-badge">
 									<div class="deployment-spinner"></div>
@@ -294,6 +343,26 @@
 			>
 				Sign Up
 			</Button>
+		</div>
+	{/if}
+
+	<!-- Geoblock tooltip rendered outside dropdown to avoid clipping -->
+	{#if showGeoblockTooltip && geoblockState.isBlocked}
+		<div
+			class="geoblock-tooltip"
+			role="tooltip"
+			style="top: {tooltipPosition.top}px; left: {tooltipPosition.left}px;"
+		>
+			You appear to be in {geoblockState.country ||
+				'a restricted jurisdiction'}{geoblockState.region ? ` (${geoblockState.region})` : ''}.
+			Trading is unavailable to persons in the US, France, or other restricted jurisdictions. See
+			<a
+				href="https://docs.polymarket.com/polymarket-learn/FAQ/geoblocking"
+				target="_blank"
+				rel="noopener noreferrer"
+			>
+				Terms of Use
+			</a> for details.
 		</div>
 	{/if}
 </div>
@@ -563,6 +632,72 @@
 		color: var(--success);
 		font-weight: 600;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	}
+
+	.view-only-container {
+		position: relative;
+	}
+
+	.view-only-badge {
+		color: var(--warning);
+		font-weight: 600;
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		text-decoration: underline;
+		text-decoration-style: dotted;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 2px;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		transition: var(--transition-all);
+	}
+
+	.view-only-badge:hover {
+		color: var(--warning-hover, color-mix(in srgb, var(--warning) 80%, black));
+	}
+
+	.view-only-badge:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+		border-radius: 2px;
+	}
+
+	.geoblock-tooltip {
+		position: fixed;
+		min-width: 280px;
+		max-width: 320px;
+		background: var(--bg-1);
+		border: 1px solid var(--bg-4);
+		border-radius: 8px;
+		padding: 12px;
+		font-size: 12px;
+		line-height: 1.5;
+		color: var(--text-1);
+		box-shadow: var(--shadow-lg);
+		z-index: calc(var(--z-popover) + 10);
+		animation: tooltip-appear 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.geoblock-tooltip a {
+		color: var(--primary);
+		text-decoration: none;
+		transition: var(--transition-all);
+	}
+
+	.geoblock-tooltip a:hover {
+		text-decoration: underline;
+	}
+
+	@keyframes tooltip-appear {
+		from {
+			opacity: 0;
+			transform: translateY(-4px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 
 	.deploying-badge {
