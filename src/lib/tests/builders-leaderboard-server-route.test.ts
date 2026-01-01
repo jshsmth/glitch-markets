@@ -137,7 +137,9 @@ describe('Builders Leaderboard Server Route', () => {
 
 			const response = await GET(mockRequest);
 
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=300, s-maxage=300');
+			expect(response.headers.get('Cache-Control')).toBe(
+				'public, max-age=300, s-maxage=300, stale-while-revalidate=600'
+			);
 			expect(response.headers.get('CDN-Cache-Control')).toBe('public, max-age=300');
 			expect(response.headers.get('Vercel-CDN-Cache-Control')).toBe('public, max-age=300');
 		});

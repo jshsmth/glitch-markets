@@ -55,7 +55,7 @@ export async function GET({ url }: RequestEvent) {
 
 		return json(leaderboard, {
 			headers: {
-				'Cache-Control': 'public, max-age=300, s-maxage=300',
+				'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600',
 				'CDN-Cache-Control': 'public, max-age=300',
 				'Vercel-CDN-Cache-Control': 'public, max-age=300'
 			}
