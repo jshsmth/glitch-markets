@@ -51,8 +51,7 @@
 	// Composables use $effect internally which properly tracks these reactive values
 	// svelte-ignore state_referenced_locally
 	useAuthInitialization(session, profile);
-	// svelte-ignore state_referenced_locally
-	useClientInitialization(queryClient);
+	useClientInitialization();
 	useRoutePreloading();
 	// svelte-ignore state_referenced_locally
 	useAuthListener(supabase, session, profile, handleUserRegistration);

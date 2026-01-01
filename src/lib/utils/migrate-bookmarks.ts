@@ -3,7 +3,6 @@
  * Should be called once after user signs in for the first time
  */
 
-import { addToWatchlist } from '$lib/stores/watchlist.svelte';
 import { Logger } from '$lib/utils/logger';
 
 const log = Logger.forModule('BookmarkMigration');
@@ -32,8 +31,13 @@ export async function migrateLocalStorageBookmarks(): Promise<{
 
 		for (const eventId of eventIds) {
 			try {
-				const success = await addToWatchlist(eventId);
-				if (success) {
+				const response = await fetch('/api/watchlist', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ eventId })
+				});
+
+				if (response.ok || response.status === 401) {
 					migrated++;
 				} else {
 					failed++;

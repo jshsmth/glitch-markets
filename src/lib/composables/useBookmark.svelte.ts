@@ -3,12 +3,16 @@
  * Handles authentication checks and bookmark state management
  */
 
-import { isBookmarked, addToWatchlist, removeFromWatchlist } from '$lib/stores/watchlist.svelte';
+import { isBookmarked } from '$lib/stores/watchlist.svelte';
+import { useAddToWatchlist, useRemoveFromWatchlist } from './use-watchlist.svelte';
 import { openSignInModal } from '$lib/stores/modal.svelte';
 import { authState } from '$lib/stores/auth.svelte';
 import type { Event } from '$lib/server/api/polymarket-client';
 
 export function useBookmark(getEventId: () => string, getEvent?: () => Event) {
+	const addMutation = useAddToWatchlist();
+	const removeMutation = useRemoveFromWatchlist();
+
 	const isEventBookmarked = $derived(isBookmarked(getEventId()));
 
 	async function toggleBookmark() {
@@ -20,11 +24,11 @@ export function useBookmark(getEventId: () => string, getEvent?: () => Event) {
 		const eventId = getEventId();
 
 		if (isEventBookmarked) {
-			await removeFromWatchlist(eventId);
+			removeMutation.mutate(eventId);
 		} else {
 			try {
 				const event = getEvent?.();
-				await addToWatchlist(eventId, event);
+				addMutation.mutate({ eventId, event });
 			} catch (error) {
 				if (error instanceof Error && error.message === 'UNAUTHORIZED') {
 					openSignInModal();
@@ -36,6 +40,9 @@ export function useBookmark(getEventId: () => string, getEvent?: () => Event) {
 	return {
 		get isBookmarked() {
 			return isEventBookmarked;
+		},
+		get isLoading() {
+			return addMutation.isPending || removeMutation.isPending;
 		},
 		toggleBookmark
 	};
