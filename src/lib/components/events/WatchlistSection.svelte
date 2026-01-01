@@ -9,7 +9,7 @@
 	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
 
 	const watchlistQuery = createQuery<Event[]>(() => ({
-		queryKey: [...queryKeys.watchlist.all],
+		queryKey: queryKeys.watchlist.all,
 		queryFn: async () => {
 			const response = await fetch('/api/watchlist');
 

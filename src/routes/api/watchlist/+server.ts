@@ -53,18 +53,13 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 		const eventIds = watchlistEntries.map((entry) => entry.event_id);
 
-		const events = await Promise.all(
-			eventIds.map(async (eventId) => {
-				try {
-					return await eventService.getEventById(eventId);
-				} catch {
-					log.warn('Event not found or unavailable', { eventId });
-					return null;
-				}
-			})
+		const eventResults = await Promise.allSettled(
+			eventIds.map((eventId) => eventService.getEventById(eventId))
 		);
 
-		const validEvents = events.filter((event) => event !== null);
+		const validEvents = eventResults
+			.filter((result) => result.status === 'fulfilled')
+			.map((result) => result.value);
 
 		return json(validEvents, {
 			headers: {
