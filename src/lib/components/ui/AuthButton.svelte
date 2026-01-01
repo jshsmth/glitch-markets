@@ -48,13 +48,7 @@
 	}: Props = $props();
 </script>
 
-<button
-	class="auth-button {variant}"
-	{disabled}
-	aria-busy={ariaBusy}
-	{onclick}
-	{type}
->
+<button class="auth-button {variant}" {disabled} aria-busy={ariaBusy} {onclick} {type}>
 	{#if loading}
 		<div class="spinner"></div>
 	{:else if icon}
