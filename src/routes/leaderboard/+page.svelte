@@ -7,6 +7,7 @@
 	} from '$lib/server/api/polymarket-client';
 	import { browser } from '$app/environment';
 	import { fade } from 'svelte/transition';
+	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 
 	let { data } = $props();
 
@@ -19,6 +20,7 @@
 	let selectedType = $state<LeaderboardType>('traders');
 	let selectedPeriod = $state<TimePeriod>('ALL');
 	let currentPage = $state(1);
+	let filterSheetOpen = $state(false);
 
 	const ITEMS_PER_PAGE = 10;
 
@@ -217,6 +219,14 @@
 			});
 		}
 	}
+
+	function closeFilterSheet() {
+		filterSheetOpen = false;
+	}
+
+	function openFilterSheet() {
+		filterSheetOpen = true;
+	}
 </script>
 
 <svelte:head>
@@ -224,63 +234,101 @@
 </svelte:head>
 
 <div class="page-container">
-	<div class="controls">
-		<div class="type-selector" role="group" aria-label="Leaderboard type selector">
-			<button
-				class="type-button"
-				class:active={selectedType === 'traders'}
-				onclick={() => (selectedType = 'traders')}
-				onmouseenter={() => handlePrefetch('traders')}
-				onfocus={() => handlePrefetch('traders')}
-				aria-pressed={selectedType === 'traders'}
+	<!-- Mobile filter button -->
+	<div class="mobile-filter-button">
+		<button class="filter-button" onclick={openFilterSheet}>
+			<svg
+				width="20"
+				height="20"
+				viewBox="0 0 20 20"
+				fill="none"
+				xmlns="http://www.w3.org/2000/svg"
 			>
-				Traders
-			</button>
-			<button
-				class="type-button"
-				class:active={selectedType === 'builders'}
-				onclick={() => (selectedType = 'builders')}
-				onmouseenter={() => handlePrefetch('builders')}
-				onfocus={() => handlePrefetch('builders')}
-				aria-pressed={selectedType === 'builders'}
+				<path
+					d="M2.5 5.83333H17.5M5.83333 10H14.1667M8.33333 14.1667H11.6667"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+				/>
+			</svg>
+			<span>Filters</span>
+		</button>
+	</div>
+
+	<!-- Desktop controls -->
+	<div class="controls desktop-controls">
+		<div class="filter-group">
+			<label class="filter-label" for="type-selector">Leaderboard:</label>
+			<div
+				id="type-selector"
+				class="type-selector"
+				role="group"
+				aria-label="Leaderboard type selector"
 			>
-				Builders
-			</button>
+				<button
+					class="type-button"
+					class:active={selectedType === 'traders'}
+					onclick={() => (selectedType = 'traders')}
+					onmouseenter={() => handlePrefetch('traders')}
+					onfocus={() => handlePrefetch('traders')}
+					aria-pressed={selectedType === 'traders'}
+				>
+					Traders
+				</button>
+				<button
+					class="type-button"
+					class:active={selectedType === 'builders'}
+					onclick={() => (selectedType = 'builders')}
+					onmouseenter={() => handlePrefetch('builders')}
+					onfocus={() => handlePrefetch('builders')}
+					aria-pressed={selectedType === 'builders'}
+				>
+					Builders
+				</button>
+			</div>
 		</div>
 
-		<div class="period-selector" role="group" aria-label="Time period selector">
-			<button
-				class="period-button"
-				class:active={selectedPeriod === 'DAY'}
-				onclick={() => (selectedPeriod = 'DAY')}
-				aria-pressed={selectedPeriod === 'DAY'}
+		<div class="filter-group">
+			<label class="filter-label" for="period-selector">Period:</label>
+			<div
+				id="period-selector"
+				class="period-selector"
+				role="group"
+				aria-label="Time period selector"
 			>
-				Day
-			</button>
-			<button
-				class="period-button"
-				class:active={selectedPeriod === 'WEEK'}
-				onclick={() => (selectedPeriod = 'WEEK')}
-				aria-pressed={selectedPeriod === 'WEEK'}
-			>
-				Week
-			</button>
-			<button
-				class="period-button"
-				class:active={selectedPeriod === 'MONTH'}
-				onclick={() => (selectedPeriod = 'MONTH')}
-				aria-pressed={selectedPeriod === 'MONTH'}
-			>
-				Month
-			</button>
-			<button
-				class="period-button"
-				class:active={selectedPeriod === 'ALL'}
-				onclick={() => (selectedPeriod = 'ALL')}
-				aria-pressed={selectedPeriod === 'ALL'}
-			>
-				All
-			</button>
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'DAY'}
+					onclick={() => (selectedPeriod = 'DAY')}
+					aria-pressed={selectedPeriod === 'DAY'}
+				>
+					Day
+				</button>
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'WEEK'}
+					onclick={() => (selectedPeriod = 'WEEK')}
+					aria-pressed={selectedPeriod === 'WEEK'}
+				>
+					Week
+				</button>
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'MONTH'}
+					onclick={() => (selectedPeriod = 'MONTH')}
+					aria-pressed={selectedPeriod === 'MONTH'}
+				>
+					Month
+				</button>
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'ALL'}
+					onclick={() => (selectedPeriod = 'ALL')}
+					aria-pressed={selectedPeriod === 'ALL'}
+				>
+					All
+				</button>
+			</div>
 		</div>
 	</div>
 
@@ -459,6 +507,85 @@
 	{/if}
 </div>
 
+<!-- Mobile filter bottom sheet -->
+<BottomSheet open={filterSheetOpen} title="Filters" onClose={closeFilterSheet}>
+	<div class="filter-sheet-content">
+		<div class="filter-group">
+			<label class="filter-label" for="sheet-type-selector">Leaderboard:</label>
+			<div
+				id="sheet-type-selector"
+				class="type-selector"
+				role="group"
+				aria-label="Leaderboard type selector"
+			>
+				<button
+					class="type-button"
+					class:active={selectedType === 'traders'}
+					onclick={() => (selectedType = 'traders')}
+					aria-pressed={selectedType === 'traders'}
+				>
+					Traders
+				</button>
+				<button
+					class="type-button"
+					class:active={selectedType === 'builders'}
+					onclick={() => (selectedType = 'builders')}
+					aria-pressed={selectedType === 'builders'}
+				>
+					Builders
+				</button>
+			</div>
+		</div>
+
+		<div class="filter-group">
+			<label class="filter-label" for="sheet-period-selector">Period:</label>
+			<div
+				id="sheet-period-selector"
+				class="period-selector"
+				role="group"
+				aria-label="Time period selector"
+			>
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'DAY'}
+					onclick={() => (selectedPeriod = 'DAY')}
+					aria-pressed={selectedPeriod === 'DAY'}
+				>
+					Day
+				</button>
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'WEEK'}
+					onclick={() => (selectedPeriod = 'WEEK')}
+					aria-pressed={selectedPeriod === 'WEEK'}
+				>
+					Week
+				</button>
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'MONTH'}
+					onclick={() => (selectedPeriod = 'MONTH')}
+					aria-pressed={selectedPeriod === 'MONTH'}
+				>
+					Month
+				</button>
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'ALL'}
+					onclick={() => (selectedPeriod = 'ALL')}
+					aria-pressed={selectedPeriod === 'ALL'}
+				>
+					All
+				</button>
+			</div>
+		</div>
+	</div>
+
+	{#snippet footer()}
+		<button class="apply-filters-button" onclick={closeFilterSheet}> Close </button>
+	{/snippet}
+</BottomSheet>
+
 <style>
 	.page-container {
 		max-width: 1200px;
@@ -474,41 +601,95 @@
 		}
 	}
 
+	.mobile-filter-button {
+		margin-bottom: var(--space-md);
+	}
+
+	@media (min-width: 768px) {
+		.mobile-filter-button {
+			display: none;
+		}
+	}
+
+	.filter-button {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		padding: 10px 16px;
+		background: var(--bg-1);
+		border: 1px solid var(--bg-3);
+		border-radius: 8px;
+		color: var(--text-0);
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		min-height: 44px;
+	}
+
+	.filter-button:hover {
+		background: var(--bg-2);
+		border-color: var(--bg-4);
+	}
+
+	.filter-button:active {
+		transform: scale(0.98);
+	}
+
+	.filter-button:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
 	.controls {
 		margin-bottom: var(--space-md);
 		display: flex;
-		gap: 8px;
-		align-items: center;
+		gap: var(--space-lg);
+		align-items: flex-end;
+		flex-wrap: wrap;
+	}
+
+	.desktop-controls {
+		display: none;
+	}
+
+	@media (min-width: 768px) {
+		.desktop-controls {
+			display: flex;
+		}
 	}
 
 	@media (max-width: 767px) {
 		.controls {
-			gap: 6px;
+			gap: var(--space-md);
+			flex-direction: column;
+			align-items: flex-start;
 		}
+	}
+
+	.filter-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		align-items: flex-start;
+	}
+
+	.filter-label {
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--text-2);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 
 	.type-selector,
 	.period-selector {
-		display: flex;
+		display: inline-flex;
 		gap: 3px;
 		background: var(--bg-1);
 		padding: 3px;
 		border-radius: 8px;
 		border: 1px solid var(--bg-3);
-	}
-
-	.type-selector {
-		flex-shrink: 0;
-	}
-
-	.period-selector {
-		flex: 1;
-	}
-
-	@media (min-width: 768px) {
-		.period-selector {
-			flex: 0 1 auto;
-		}
 	}
 
 	.type-button,
@@ -524,19 +705,6 @@
 		transition: all 0.15s ease;
 		min-height: 36px;
 		white-space: nowrap;
-	}
-
-	@media (max-width: 767px) {
-		.type-button {
-			padding: 7px 14px;
-			font-size: 13px;
-		}
-
-		.period-button {
-			flex: 1;
-			padding: 7px 8px;
-			font-size: 12px;
-		}
 	}
 
 	.type-button:hover,
@@ -1140,5 +1308,48 @@
 			font-size: 13px;
 			min-width: 80px;
 		}
+	}
+
+	.filter-sheet-content {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+	}
+
+	.filter-sheet-content .filter-group {
+		width: 100%;
+	}
+
+	.filter-sheet-content .type-selector,
+	.filter-sheet-content .period-selector {
+		display: inline-flex;
+		width: auto;
+	}
+
+	.apply-filters-button {
+		width: 100%;
+		padding: 14px 24px;
+		background: var(--primary);
+		color: var(--button-primary-text);
+		border: none;
+		border-radius: 8px;
+		font-size: 16px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		min-height: 52px;
+	}
+
+	.apply-filters-button:hover {
+		background: var(--primary-hover);
+	}
+
+	.apply-filters-button:active {
+		transform: scale(0.98);
+	}
+
+	.apply-filters-button:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
 	}
 </style>
