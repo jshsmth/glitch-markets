@@ -168,6 +168,24 @@
 		transition: fill var(--transition-fast);
 	}
 
+	@media (min-width: 769px) {
+		.stats {
+			gap: var(--spacing-5);
+		}
+
+		.stat:not(:last-child)::after {
+			margin-left: var(--spacing-5);
+		}
+
+		.stat-value {
+			font-size: 13px;
+		}
+
+		.stat-label {
+			font-size: 12px;
+		}
+	}
+
 	@media (max-width: 768px) {
 		.stats {
 			gap: var(--spacing-4);
