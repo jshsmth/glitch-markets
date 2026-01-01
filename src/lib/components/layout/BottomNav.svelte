@@ -99,7 +99,6 @@
 		bottom: 0;
 		left: 0;
 		right: 0;
-		height: calc(var(--target-large) + env(safe-area-inset-bottom, 0px));
 		background-color: var(--bg-1);
 		backdrop-filter: blur(12px);
 		-webkit-backdrop-filter: blur(12px);
@@ -107,9 +106,8 @@
 		display: flex;
 		justify-content: space-around;
 		align-items: flex-start;
-		padding: 0 var(--spacing-2);
-		padding-top: 6px;
-		padding-bottom: env(safe-area-inset-bottom, 8px);
+		padding: 6px var(--spacing-2);
+		padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
 		z-index: var(--z-bottom-nav);
 	}
 
@@ -166,10 +164,6 @@
 	}
 
 	@media (min-width: 414px) and (max-width: 767px) {
-		.bottom-nav {
-			height: calc(68px + env(safe-area-inset-bottom, 0px));
-		}
-
 		.nav-icon {
 			font-size: 22px;
 		}

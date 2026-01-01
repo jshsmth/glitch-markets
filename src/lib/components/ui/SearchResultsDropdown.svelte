@@ -86,7 +86,7 @@
 		{#if hasMore}
 			<div class="view-all-footer">
 				<a
-					href="/search?q={encodeURIComponent(query)}"
+					href="/results?q={encodeURIComponent(query)}"
 					class="view-all-link"
 					onclick={handleLinkClick}
 				>
