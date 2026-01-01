@@ -225,62 +225,68 @@
 
 <div class="page-container">
 	<div class="controls">
-		<div class="type-selector" role="group" aria-label="Leaderboard type selector">
-			<button
-				class="type-button"
-				class:active={selectedType === 'traders'}
-				onclick={() => (selectedType = 'traders')}
-				onmouseenter={() => handlePrefetch('traders')}
-				onfocus={() => handlePrefetch('traders')}
-				aria-pressed={selectedType === 'traders'}
-			>
-				Traders
-			</button>
-			<button
-				class="type-button"
-				class:active={selectedType === 'builders'}
-				onclick={() => (selectedType = 'builders')}
-				onmouseenter={() => handlePrefetch('builders')}
-				onfocus={() => handlePrefetch('builders')}
-				aria-pressed={selectedType === 'builders'}
-			>
-				Builders
-			</button>
+		<div class="filter-group">
+			<span class="filter-label">Leaderboard</span>
+			<div class="type-selector" role="group" aria-label="Leaderboard type selector">
+				<button
+					class="type-button"
+					class:active={selectedType === 'traders'}
+					onclick={() => (selectedType = 'traders')}
+					onmouseenter={() => handlePrefetch('traders')}
+					onfocus={() => handlePrefetch('traders')}
+					aria-pressed={selectedType === 'traders'}
+				>
+					Traders
+				</button>
+				<button
+					class="type-button"
+					class:active={selectedType === 'builders'}
+					onclick={() => (selectedType = 'builders')}
+					onmouseenter={() => handlePrefetch('builders')}
+					onfocus={() => handlePrefetch('builders')}
+					aria-pressed={selectedType === 'builders'}
+				>
+					Builders
+				</button>
+			</div>
 		</div>
 
-		<div class="period-selector" role="group" aria-label="Time period selector">
-			<button
-				class="period-button"
-				class:active={selectedPeriod === 'DAY'}
-				onclick={() => (selectedPeriod = 'DAY')}
-				aria-pressed={selectedPeriod === 'DAY'}
-			>
-				Day
-			</button>
-			<button
-				class="period-button"
-				class:active={selectedPeriod === 'WEEK'}
-				onclick={() => (selectedPeriod = 'WEEK')}
-				aria-pressed={selectedPeriod === 'WEEK'}
-			>
-				Week
-			</button>
-			<button
-				class="period-button"
-				class:active={selectedPeriod === 'MONTH'}
-				onclick={() => (selectedPeriod = 'MONTH')}
-				aria-pressed={selectedPeriod === 'MONTH'}
-			>
-				Month
-			</button>
-			<button
-				class="period-button"
-				class:active={selectedPeriod === 'ALL'}
-				onclick={() => (selectedPeriod = 'ALL')}
-				aria-pressed={selectedPeriod === 'ALL'}
-			>
-				All Time
-			</button>
+		<div class="filter-group">
+			<span class="filter-label">Time Period</span>
+			<div class="period-selector" role="group" aria-label="Time period selector">
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'DAY'}
+					onclick={() => (selectedPeriod = 'DAY')}
+					aria-pressed={selectedPeriod === 'DAY'}
+				>
+					Day
+				</button>
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'WEEK'}
+					onclick={() => (selectedPeriod = 'WEEK')}
+					aria-pressed={selectedPeriod === 'WEEK'}
+				>
+					Week
+				</button>
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'MONTH'}
+					onclick={() => (selectedPeriod = 'MONTH')}
+					aria-pressed={selectedPeriod === 'MONTH'}
+				>
+					Month
+				</button>
+				<button
+					class="period-button"
+					class:active={selectedPeriod === 'ALL'}
+					onclick={() => (selectedPeriod = 'ALL')}
+					aria-pressed={selectedPeriod === 'ALL'}
+				>
+					All Time
+				</button>
+			</div>
 		</div>
 	</div>
 
@@ -402,9 +408,6 @@
 									{/if}
 									<div class="builder-details">
 										<span class="builder-name">{entry.builder}</span>
-										{#if entry.verified}
-											<span class="verified-badge" title="Verified">✓</span>
-										{/if}
 									</div>
 								</div>
 							</div>
@@ -480,130 +483,87 @@
 	.controls {
 		margin-bottom: var(--space-lg);
 		display: flex;
-		flex-direction: column;
-		gap: var(--space-md);
-		align-items: center;
+		flex-wrap: wrap;
+		gap: 20px;
+		align-items: flex-start;
 	}
 
 	@media (max-width: 767px) {
 		.controls {
-			gap: var(--space-sm);
+			gap: 16px;
 			margin-bottom: var(--space-md);
 		}
 	}
 
-	@media (min-width: 768px) {
-		.controls {
-			flex-direction: row;
-			justify-content: space-between;
-		}
-	}
-
-	.type-selector {
+	.filter-group {
 		display: flex;
-		gap: var(--space-xs);
-		background: var(--bg-1);
-		padding: 4px;
-		border-radius: 12px;
-		border: 1px solid var(--bg-3);
+		flex-direction: column;
+		gap: 8px;
 	}
 
 	@media (max-width: 767px) {
-		.type-selector {
-			padding: 3px;
-			border-radius: 8px;
-			gap: 4px;
-		}
-	}
-
-	.type-button {
-		padding: 10px 24px;
-		border: none;
-		border-radius: 8px;
-		background: transparent;
-		color: var(--text-2);
-		font-size: 15px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		min-height: 44px;
-	}
-
-	@media (max-width: 767px) {
-		.type-button {
-			padding: 8px 20px;
-			font-size: 14px;
-			min-height: 40px;
-			border-radius: 6px;
-		}
-	}
-
-	.type-button:hover {
-		background: var(--bg-2);
-		color: var(--text-1);
-	}
-
-	.type-button:focus-visible {
-		outline: 2px solid var(--primary);
-		outline-offset: 2px;
-	}
-
-	.type-button.active {
-		background: var(--primary);
-		color: var(--bg-0);
-	}
-
-	.period-selector {
-		display: flex;
-		gap: var(--space-xs);
-		background: var(--bg-1);
-		padding: 4px;
-		border-radius: 12px;
-		border: 1px solid var(--bg-3);
-	}
-
-	@media (max-width: 767px) {
-		.period-selector {
-			padding: 3px;
-			border-radius: 8px;
-			gap: 4px;
+		.filter-group {
 			width: 100%;
 		}
 	}
 
+	.filter-label {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text-3);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		padding-left: 2px;
+	}
+
+	.type-selector,
+	.period-selector {
+		display: flex;
+		gap: 4px;
+		background: var(--bg-1);
+		padding: 4px;
+		border-radius: 10px;
+		border: 1px solid var(--bg-3);
+	}
+
+	.type-button,
 	.period-button {
 		padding: 8px 16px;
 		border: none;
-		border-radius: 8px;
+		border-radius: 7px;
 		background: transparent;
 		color: var(--text-2);
 		font-size: 14px;
-		font-weight: 500;
+		font-weight: 600;
 		cursor: pointer;
-		transition: all 0.2s ease;
-		min-height: 44px;
+		transition: all 0.15s ease;
+		min-height: 36px;
+		white-space: nowrap;
 	}
 
 	@media (max-width: 767px) {
+		.type-button,
 		.period-button {
-			padding: 6px 12px;
-			font-size: 13px;
-			min-height: 40px;
 			flex: 1;
-			border-radius: 6px;
+			padding: 7px 10px;
+			font-size: 13px;
+			min-height: 34px;
 		}
 	}
 
+	.type-button:hover,
 	.period-button:hover {
 		background: var(--bg-2);
 		color: var(--text-1);
 	}
 
+	.type-button:focus-visible,
 	.period-button:focus-visible {
 		outline: 2px solid var(--primary);
 		outline-offset: 2px;
 	}
 
+	.type-button.active,
 	.period-button.active {
 		background: var(--primary);
 		color: var(--bg-0);
