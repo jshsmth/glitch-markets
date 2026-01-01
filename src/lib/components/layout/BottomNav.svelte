@@ -4,147 +4,61 @@
 	import { onMount } from 'svelte';
 	import HomeIcon from '$lib/components/icons/HomeIcon.svelte';
 	import CompassIcon from '$lib/components/icons/CompassIcon.svelte';
-	import MenuIcon from '$lib/components/icons/MenuIcon.svelte';
 	import PokerChipIcon from '$lib/components/icons/PokerChipIcon.svelte';
-	import UserIcon from '$lib/components/icons/UserIcon.svelte';
-	import DollarCircleIcon from '$lib/components/icons/DollarCircleIcon.svelte';
-	import SettingsIcon from '$lib/components/icons/SettingsIcon.svelte';
-	import LogoutIcon from '$lib/components/icons/LogoutIcon.svelte';
 	import LeaderboardIcon from '$lib/components/icons/LeaderboardIcon.svelte';
-	import DocumentTextIcon from '$lib/components/icons/DocumentTextIcon.svelte';
-	import { Logger } from '$lib/utils/logger';
-
-	const log = Logger.forComponent('BottomNav');
-	import LegalIcon from '$lib/components/icons/LegalIcon.svelte';
-	import ElectricityIcon from '$lib/components/icons/ElectricityIcon.svelte';
-	import MoonIcon from '$lib/components/icons/MoonIcon.svelte';
-	import SunIcon from '$lib/components/icons/SunIcon.svelte';
-	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
-	import { openDepositModal, openSignInModal } from '$lib/stores/modal.svelte';
+	import { openSignInModal } from '$lib/stores/modal.svelte';
 	import { authState } from '$lib/stores/auth.svelte';
-	import { themeState, toggleTheme } from '$lib/stores/theme.svelte';
 	import { TIMEOUTS } from '$lib/config/constants';
-	import { goto } from '$app/navigation';
 
 	import type { Component } from 'svelte';
 
-	type NavItemBase = {
+	type NavItem = {
 		label: string;
-		icon: Component;
-	};
-
-	type NavLinkItem = NavItemBase & {
-		type: 'link';
 		href: string;
+		icon: Component;
 		requiresAuth?: boolean;
 	};
 
-	type NavActionItem = NavItemBase & {
-		type: 'action';
-		action: 'more';
-	};
-
-	type NavItem = NavLinkItem | NavActionItem;
-
 	const navItems: NavItem[] = [
 		{
-			type: 'link',
 			label: 'Home',
 			href: '/',
 			icon: HomeIcon
 		},
 		{
-			type: 'link',
 			label: 'Discover',
 			href: '/search',
 			icon: CompassIcon
 		},
 		{
-			type: 'link',
 			label: 'Portfolio',
 			href: '/portfolio',
 			icon: PokerChipIcon,
 			requiresAuth: true
 		},
 		{
-			type: 'action',
-			label: 'More',
-			icon: MenuIcon,
-			action: 'more'
+			label: 'Leaderboard',
+			href: '/leaderboard',
+			icon: LeaderboardIcon
 		}
 	];
 
-	let moreMenuOpen = $state(false);
-
 	function isActive(item: NavItem): boolean {
-		if (item.type === 'action') {
-			if (item.action === 'more') return moreMenuOpen;
-			return false;
-		}
 		return $page.url.pathname === item.href;
 	}
 
 	function handleNavClick(event: MouseEvent, item: NavItem) {
-		if (item.type === 'action') {
-			event.preventDefault();
-			if (item.action === 'more') {
-				moreMenuOpen = true;
-			}
-			return;
-		}
-
 		if (item.requiresAuth && !authState.user) {
 			event.preventDefault();
 			openSignInModal();
 		}
 	}
 
-	function handleDeposit() {
-		moreMenuOpen = false;
-		openDepositModal();
-	}
-
-	function handleSignIn() {
-		moreMenuOpen = false;
-		openSignInModal();
-	}
-
-	async function handleLogout() {
-		const supabase = $page.data.supabase;
-		if (!supabase) return;
-
-		try {
-			await supabase.auth.signOut();
-			moreMenuOpen = false;
-			goto('/');
-		} catch (err) {
-			log.error('Logout error', err);
-		}
-	}
-
-	function handleThemeToggle() {
-		toggleTheme();
-	}
-
-	function handleLeaderboardClick() {
-		moreMenuOpen = false;
-		goto('/leaderboard');
-	}
-
-	function handleSettingsClick() {
-		moreMenuOpen = false;
-		goto('/settings');
-	}
-
-	function closeMoreMenu() {
-		moreMenuOpen = false;
-	}
-
 	onMount(() => {
 		const currentPath = $page.url.pathname;
 		const preloadRoutes = () => {
 			navItems.forEach((item) => {
-				if (item.type === 'link' && item.href !== currentPath) {
+				if (item.href !== currentPath) {
 					preloadData(item.href).catch(() => {});
 				}
 			});
@@ -162,7 +76,7 @@
 	{#each navItems as item (item.label)}
 		{@const Icon = item.icon}
 		<a
-			href={item.type === 'link' ? item.href : '#'}
+			href={item.href}
 			class="nav-item"
 			class:active={isActive(item)}
 			aria-current={isActive(item) ? 'page' : undefined}
@@ -178,99 +92,6 @@
 		</a>
 	{/each}
 </nav>
-
-<!-- More Menu Sheet -->
-<BottomSheet open={moreMenuOpen} title="More" onClose={closeMoreMenu}>
-	<nav aria-label="More options">
-		<ul class="menu-list" role="menu">
-			{#if authState.user}
-				<li>
-					<button class="menu-item" role="menuitem" onclick={handleDeposit}>
-						<DollarCircleIcon size={22} color="currentColor" />
-						<span>Deposit</span>
-					</button>
-				</li>
-			{/if}
-			<li>
-				<button class="menu-item" role="menuitem" onclick={handleLeaderboardClick}>
-					<LeaderboardIcon size={22} color="currentColor" />
-					<span>Leaderboard</span>
-				</button>
-			</li>
-			<li>
-				<button class="menu-item" role="menuitem" onclick={handleSettingsClick}>
-					<SettingsIcon size={22} color="currentColor" />
-					<span>Settings</span>
-				</button>
-			</li>
-			<li>
-				<button class="menu-item" role="menuitem" onclick={handleThemeToggle}>
-					{#if themeState.current === 'dark'}
-						<SunIcon size={22} color="currentColor" />
-						<span>Light Mode</span>
-					{:else}
-						<MoonIcon size={22} color="currentColor" />
-						<span>Dark Mode</span>
-					{/if}
-				</button>
-			</li>
-			<li class="menu-divider"></li>
-			<li>
-				<a
-					href="https://docs.polymarket.com/quickstart/introduction/main"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="menu-item"
-					role="menuitem"
-				>
-					<ElectricityIcon size={22} color="currentColor" />
-					<span>APIs</span>
-				</a>
-			</li>
-			<li>
-				<a
-					href="https://docs.polymarket.com/polymarket-learn/get-started/what-is-polymarket#introduction"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="menu-item"
-					role="menuitem"
-				>
-					<DocumentTextIcon size={22} color="currentColor" />
-					<span>Documentation</span>
-				</a>
-			</li>
-			<li>
-				<a
-					href="https://polymarket.com/tos"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="menu-item"
-					role="menuitem"
-				>
-					<LegalIcon size={22} color="currentColor" />
-					<span>Terms of Use</span>
-				</a>
-			</li>
-			{#if authState.user}
-				<li class="menu-divider"></li>
-				<li>
-					<button class="menu-item menu-item-danger" role="menuitem" onclick={handleLogout}>
-						<LogoutIcon size={22} color="currentColor" />
-						<span>Sign Out</span>
-					</button>
-				</li>
-			{:else}
-				<li class="menu-divider"></li>
-				<li>
-					<button class="menu-item menu-item-primary" role="menuitem" onclick={handleSignIn}>
-						<UserIcon size={22} color="currentColor" />
-						<span>Sign In</span>
-					</button>
-				</li>
-			{/if}
-		</ul>
-	</nav>
-</BottomSheet>
 
 <style>
 	.bottom-nav {
@@ -356,60 +177,5 @@
 		.nav-label {
 			font-size: 12px;
 		}
-	}
-
-	.menu-list {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-1);
-	}
-
-	.menu-item {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-3);
-		width: 100%;
-		padding: var(--spacing-3) var(--spacing-4);
-		background: transparent;
-		border: none;
-		border-radius: var(--radius-lg);
-		font-size: var(--text-base);
-		font-weight: var(--font-medium);
-		color: var(--text-0);
-		text-decoration: none;
-		cursor: pointer;
-		transition: var(--transition-fast);
-	}
-
-	.menu-item:hover {
-		background: var(--bg-2);
-	}
-
-	.menu-item:active {
-		background: var(--bg-3);
-	}
-
-	.menu-item-primary {
-		background: var(--primary);
-		color: var(--button-primary-text);
-	}
-
-	.menu-item-primary:hover {
-		background: var(--primary-hover);
-	}
-
-	.menu-item-danger {
-		color: var(--danger);
-	}
-
-	.menu-item-danger:hover {
-		background: var(--danger-bg);
-	}
-
-	.menu-divider {
-		height: 1px;
-		background: var(--bg-3);
-		margin: var(--spacing-2) 0;
-		list-style: none;
 	}
 </style>

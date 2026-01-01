@@ -202,9 +202,7 @@
 	</div>
 
 	{#snippet footer()}
-		<button class="apply-button" onclick={() => (isMobileFilterOpen = false)}>
-			Apply Filters
-		</button>
+		<button class="apply-button" onclick={() => (isMobileFilterOpen = false)}> Close </button>
 	{/snippet}
 </BottomSheet>
 

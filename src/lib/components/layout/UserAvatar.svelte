@@ -318,6 +318,8 @@
 					<span>Terms of Use</span>
 				</a>
 
+				<div class="dropdown-divider"></div>
+
 				<button class="dropdown-item logout-item" onclick={handleLogout}>
 					<span class="dropdown-item-icon">
 						<LogoutIcon size={18} color="currentColor" />
@@ -344,8 +346,11 @@
 			>
 				Sign Up
 			</Button>
-			<GuestMenu />
 		</div>
+	{/if}
+
+	{#if !authState.isInitializing && !authState.user}
+		<GuestMenu />
 	{/if}
 
 	<!-- Geoblock tooltip rendered outside dropdown to avoid clipping -->
@@ -374,7 +379,9 @@
 
 	.avatar-container {
 		position: relative;
-		display: inline-block;
+		display: flex;
+		align-items: center;
+		gap: 8px;
 	}
 
 	.avatar-skeleton {
@@ -427,6 +434,13 @@
 		gap: 8px;
 	}
 
+	/* Hide auth buttons on small screens to prevent overlap with logo */
+	@media (max-width: 480px) {
+		.auth-buttons :global(button) {
+			display: none;
+		}
+	}
+
 	.dropdown {
 		position: absolute;
 		top: calc(100% + 8px);
@@ -436,8 +450,10 @@
 		border-radius: 12px;
 		box-shadow: var(--shadow-md);
 		min-width: 280px;
+		max-height: 80vh;
+		overflow-y: auto;
+		overflow-x: hidden;
 		z-index: var(--z-popover);
-		overflow: hidden;
 		padding: 12px;
 		animation: dropdown-appear 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 	}

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { themeState, toggleTheme } from '$lib/stores/theme.svelte';
+	import { authState } from '$lib/stores/auth.svelte';
+	import { openSignInModal } from '$lib/stores/modal.svelte';
 	import MoonIcon from '$lib/components/icons/MoonIcon.svelte';
 	import SunIcon from '$lib/components/icons/SunIcon.svelte';
 	import DocumentTextIcon from '$lib/components/icons/DocumentTextIcon.svelte';
@@ -8,12 +10,14 @@
 	import ElectricityIcon from '$lib/components/icons/ElectricityIcon.svelte';
 	import MenuIcon from '$lib/components/icons/MenuIcon.svelte';
 	import LeaderboardIcon from '$lib/components/icons/LeaderboardIcon.svelte';
+	import UserIcon from '$lib/components/icons/UserIcon.svelte';
 
 	let showDropdown = $state(false);
 	let closeTimeout: ReturnType<typeof setTimeout> | null = null;
 	let windowWidth = $state(1024);
 
 	let isMobile = $derived(windowWidth <= 767);
+	let isSmallScreen = $derived(windowWidth <= 480);
 
 	onMount(() => {
 		windowWidth = window.innerWidth;
@@ -87,6 +91,16 @@
 	function handleThemeToggle() {
 		toggleTheme();
 	}
+
+	function handleLoginClick() {
+		showDropdown = false;
+		openSignInModal('signin');
+	}
+
+	function handleSignUpClick() {
+		showDropdown = false;
+		openSignInModal('signup');
+	}
 </script>
 
 <svelte:window onclick={handleClickOutside} />
@@ -111,6 +125,24 @@
 			onmouseenter={handleDropdownMouseEnter}
 			onmouseleave={handleDropdownMouseLeave}
 		>
+			{#if !authState.user && isSmallScreen}
+				<button class="dropdown-item" onclick={handleLoginClick}>
+					<span class="dropdown-item-icon">
+						<UserIcon size={18} color="currentColor" />
+					</span>
+					<span>Log In</span>
+				</button>
+
+				<button class="dropdown-item" onclick={handleSignUpClick}>
+					<span class="dropdown-item-icon">
+						<UserIcon size={18} color="currentColor" />
+					</span>
+					<span>Sign Up</span>
+				</button>
+
+				<div class="dropdown-divider"></div>
+			{/if}
+
 			<a href="/leaderboard" class="dropdown-item" onclick={() => (showDropdown = false)}>
 				<span class="dropdown-item-icon">
 					<LeaderboardIcon size={18} color="currentColor" />
