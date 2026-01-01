@@ -15,9 +15,10 @@
 			<img
 				src={event.image}
 				alt={event.title || 'Event icon'}
-				width={variant === 'compact' ? 32 : 44}
-				height={variant === 'compact' ? 32 : 44}
+				width={variant === 'compact' ? 32 : 40}
+				height={variant === 'compact' ? 32 : 40}
 				loading="lazy"
+				decoding="async"
 			/>
 		</div>
 	{/if}
@@ -43,8 +44,8 @@
 
 	.event-icon {
 		flex-shrink: 0;
-		width: 44px;
-		height: 44px;
+		width: 40px;
+		height: 40px;
 		border-radius: var(--radius-md);
 		overflow: hidden;
 		background: var(--bg-2);
@@ -82,7 +83,7 @@
 	}
 
 	.event-title {
-		font-size: 15px;
+		font-size: 16px;
 		font-weight: 700;
 		color: var(--text-0);
 		line-height: 1.35;
@@ -107,8 +108,8 @@
 
 	@media (min-width: 768px) {
 		.event-icon {
-			width: 48px;
-			height: 48px;
+			width: 44px;
+			height: 44px;
 		}
 
 		.event-icon.compact {
@@ -117,11 +118,11 @@
 		}
 
 		.event-title {
-			font-size: 16px;
+			font-size: 17px;
 		}
 
 		.event-title.compact {
-			font-size: 14px;
+			font-size: 15px;
 		}
 	}
 </style>

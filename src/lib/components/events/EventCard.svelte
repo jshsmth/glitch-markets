@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
-	import FireIcon from '$lib/components/icons/FireIcon.svelte';
+	import ClockIcon from '$lib/components/icons/ClockIcon.svelte';
 	import CupIcon from '$lib/components/icons/CupIcon.svelte';
 	import EventCardHeader from '$lib/components/events/EventCardHeader.svelte';
 	import EventCardFooter from '$lib/components/events/EventCardFooter.svelte';
@@ -61,21 +61,21 @@
 	class:compact={variant === 'compact'}
 	class:resolved={isEffectivelyResolved}
 >
-	{#if isEffectivelyResolved}
-		<div class="corner-badge resolved-badge" class:compact={variant === 'compact'}>
-			<CheckCircleIcon size={12} />
-			<span>Resolved</span>
-		</div>
-	{:else if closingSoon}
-		<div class="closing-indicator" class:compact={variant === 'compact'}>
-			<FireIcon size={variant === 'compact' ? 14 : 12} />
-			{#if variant !== 'compact'}
-				<span>Ending soon</span>
-			{/if}
-		</div>
-	{/if}
-
 	<div class="card-content">
+		{#if isEffectivelyResolved}
+			<div class="corner-badge resolved-badge" class:compact={variant === 'compact'}>
+				<CheckCircleIcon size={12} />
+				<span>Resolved</span>
+			</div>
+		{:else if closingSoon}
+			<div class="closing-indicator" class:compact={variant === 'compact'}>
+				{#if variant !== 'compact'}
+					<span>Ending soon</span>
+				{/if}
+				<ClockIcon size={14} />
+			</div>
+		{/if}
+
 		<div class="card-header">
 			<EventCardHeader {event} {variant} />
 		</div>
@@ -207,17 +207,15 @@
 		height: 100%;
 		transition:
 			border-color var(--transition-fast),
-			box-shadow var(--transition-fast),
 			transform var(--transition-fast),
-			opacity var(--transition-fast),
-			background-color var(--transition-fast);
+			opacity var(--transition-fast);
 	}
 
 	@media (hover: hover) {
 		.event-card:hover {
 			border-color: var(--bg-4);
-			box-shadow: var(--shadow-md);
-			transform: translateY(-2px);
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+			transform: translateY(-1px);
 		}
 	}
 
@@ -229,6 +227,7 @@
 	.event-card.resolved {
 		opacity: 0.65;
 		background: var(--bg-2);
+		padding: var(--spacing-2);
 	}
 
 	@media (hover: hover) {
@@ -239,9 +238,6 @@
 
 	/* Corner badges - pill shaped for differentiation */
 	.corner-badge {
-		position: absolute;
-		top: 8px;
-		right: 8px;
 		display: flex;
 		align-items: center;
 		gap: 3px;
@@ -250,7 +246,14 @@
 		font-size: var(--font-xs);
 		font-weight: 600;
 		white-space: nowrap;
-		z-index: 1;
+		align-self: flex-end;
+		margin-bottom: 4px;
+		line-height: 1;
+	}
+
+	.corner-badge :global(svg) {
+		flex-shrink: 0;
+		display: block;
 	}
 
 	.resolved-badge {
@@ -260,30 +263,31 @@
 	}
 
 	.corner-badge.compact {
-		top: 6px;
-		right: 6px;
 		padding: 3px 8px;
 		font-size: 9px;
 		gap: 2px;
 	}
 
 	.closing-indicator {
-		position: absolute;
-		top: 8px;
-		right: 8px;
 		display: flex;
 		align-items: center;
 		gap: 4px;
 		font-size: var(--font-xs);
 		font-weight: 600;
-		color: var(--danger);
 		white-space: nowrap;
-		z-index: 1;
+		align-self: flex-end;
+		margin-bottom: 4px;
+		color: var(--warning-dark);
+		line-height: 1;
+	}
+
+	.closing-indicator :global(svg) {
+		flex-shrink: 0;
+		display: block;
 	}
 
 	.closing-indicator.compact {
-		top: 8px;
-		right: 8px;
+		font-size: 9px;
 		gap: 0;
 	}
 
@@ -304,7 +308,6 @@
 	.card-header {
 		display: flex;
 		align-items: flex-start;
-		padding-right: 60px;
 		min-width: 0;
 	}
 
@@ -550,10 +553,6 @@
 	@media (min-width: 769px) {
 		.event-card {
 			padding: var(--spacing-4);
-		}
-
-		.card-header {
-			padding-right: 70px;
 		}
 
 		.corner-badge {

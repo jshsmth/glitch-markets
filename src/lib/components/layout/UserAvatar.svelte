@@ -157,9 +157,23 @@
 	function updateTooltipPosition() {
 		if (viewOnlyButtonRef) {
 			const rect = viewOnlyButtonRef.getBoundingClientRect();
+			const tooltipWidth = 320;
+			const viewportWidth = window.innerWidth;
+			const padding = 16;
+
+			let left = rect.left;
+
+			if (left + tooltipWidth > viewportWidth - padding) {
+				left = viewportWidth - tooltipWidth - padding;
+			}
+
+			if (left < padding) {
+				left = padding;
+			}
+
 			tooltipPosition = {
 				top: rect.bottom + 8,
-				left: rect.left
+				left: left
 			};
 		}
 	}

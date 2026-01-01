@@ -303,7 +303,6 @@
 		background: var(--bg-3);
 		border-color: var(--text-3);
 		transform: translateY(-1px);
-		box-shadow: var(--shadow-button-hover);
 	}
 
 	.option-button:active {
@@ -315,7 +314,6 @@
 		color: var(--bg-0);
 		border-color: var(--primary);
 		font-weight: 700;
-		box-shadow: var(--shadow-button-primary-glow);
 	}
 
 	.option-button.active::before {
@@ -338,7 +336,6 @@
 		font-weight: 700;
 		cursor: pointer;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		box-shadow: var(--shadow-button-primary-glow);
 		position: relative;
 		overflow: hidden;
 	}
@@ -353,12 +350,10 @@
 
 	.apply-button:hover {
 		transform: translateY(-1px);
-		box-shadow: var(--shadow-button-primary-glow-hover);
 	}
 
 	.apply-button:active {
 		transform: translateY(0);
-		box-shadow: var(--shadow-button-primary-hover);
 	}
 
 	/* Desktop Styles */
