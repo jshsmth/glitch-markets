@@ -225,68 +225,62 @@
 
 <div class="page-container">
 	<div class="controls">
-		<div class="filter-group">
-			<span class="filter-label">Leaderboard</span>
-			<div class="type-selector" role="group" aria-label="Leaderboard type selector">
-				<button
-					class="type-button"
-					class:active={selectedType === 'traders'}
-					onclick={() => (selectedType = 'traders')}
-					onmouseenter={() => handlePrefetch('traders')}
-					onfocus={() => handlePrefetch('traders')}
-					aria-pressed={selectedType === 'traders'}
-				>
-					Traders
-				</button>
-				<button
-					class="type-button"
-					class:active={selectedType === 'builders'}
-					onclick={() => (selectedType = 'builders')}
-					onmouseenter={() => handlePrefetch('builders')}
-					onfocus={() => handlePrefetch('builders')}
-					aria-pressed={selectedType === 'builders'}
-				>
-					Builders
-				</button>
-			</div>
+		<div class="type-selector" role="group" aria-label="Leaderboard type selector">
+			<button
+				class="type-button"
+				class:active={selectedType === 'traders'}
+				onclick={() => (selectedType = 'traders')}
+				onmouseenter={() => handlePrefetch('traders')}
+				onfocus={() => handlePrefetch('traders')}
+				aria-pressed={selectedType === 'traders'}
+			>
+				Traders
+			</button>
+			<button
+				class="type-button"
+				class:active={selectedType === 'builders'}
+				onclick={() => (selectedType = 'builders')}
+				onmouseenter={() => handlePrefetch('builders')}
+				onfocus={() => handlePrefetch('builders')}
+				aria-pressed={selectedType === 'builders'}
+			>
+				Builders
+			</button>
 		</div>
 
-		<div class="filter-group">
-			<span class="filter-label">Time Period</span>
-			<div class="period-selector" role="group" aria-label="Time period selector">
-				<button
-					class="period-button"
-					class:active={selectedPeriod === 'DAY'}
-					onclick={() => (selectedPeriod = 'DAY')}
-					aria-pressed={selectedPeriod === 'DAY'}
-				>
-					Day
-				</button>
-				<button
-					class="period-button"
-					class:active={selectedPeriod === 'WEEK'}
-					onclick={() => (selectedPeriod = 'WEEK')}
-					aria-pressed={selectedPeriod === 'WEEK'}
-				>
-					Week
-				</button>
-				<button
-					class="period-button"
-					class:active={selectedPeriod === 'MONTH'}
-					onclick={() => (selectedPeriod = 'MONTH')}
-					aria-pressed={selectedPeriod === 'MONTH'}
-				>
-					Month
-				</button>
-				<button
-					class="period-button"
-					class:active={selectedPeriod === 'ALL'}
-					onclick={() => (selectedPeriod = 'ALL')}
-					aria-pressed={selectedPeriod === 'ALL'}
-				>
-					All Time
-				</button>
-			</div>
+		<div class="period-selector" role="group" aria-label="Time period selector">
+			<button
+				class="period-button"
+				class:active={selectedPeriod === 'DAY'}
+				onclick={() => (selectedPeriod = 'DAY')}
+				aria-pressed={selectedPeriod === 'DAY'}
+			>
+				Day
+			</button>
+			<button
+				class="period-button"
+				class:active={selectedPeriod === 'WEEK'}
+				onclick={() => (selectedPeriod = 'WEEK')}
+				aria-pressed={selectedPeriod === 'WEEK'}
+			>
+				Week
+			</button>
+			<button
+				class="period-button"
+				class:active={selectedPeriod === 'MONTH'}
+				onclick={() => (selectedPeriod = 'MONTH')}
+				aria-pressed={selectedPeriod === 'MONTH'}
+			>
+				Month
+			</button>
+			<button
+				class="period-button"
+				class:active={selectedPeriod === 'ALL'}
+				onclick={() => (selectedPeriod = 'ALL')}
+				aria-pressed={selectedPeriod === 'ALL'}
+			>
+				All
+			</button>
 		</div>
 	</div>
 
@@ -450,7 +444,7 @@
 			</button>
 
 			<span class="pagination-info">
-				Page {currentPage}{canGoNext ? '+' : ''}
+				Page {currentPage}
 			</span>
 
 			<button
@@ -470,70 +464,61 @@
 		max-width: 1200px;
 		margin: 0 auto;
 		padding: var(--space-lg) 12px;
-		padding-bottom: 60px;
+		padding-bottom: 100px;
 	}
 
 	@media (min-width: 768px) {
 		.page-container {
 			padding: var(--space-lg) 24px;
-			padding-bottom: var(--space-lg);
+			padding-bottom: 100px;
 		}
 	}
 
 	.controls {
-		margin-bottom: var(--space-lg);
+		margin-bottom: var(--space-md);
 		display: flex;
-		flex-wrap: wrap;
-		gap: 20px;
-		align-items: flex-start;
+		gap: 8px;
+		align-items: center;
 	}
 
 	@media (max-width: 767px) {
 		.controls {
-			gap: 16px;
-			margin-bottom: var(--space-md);
+			gap: 6px;
 		}
-	}
-
-	.filter-group {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
-
-	@media (max-width: 767px) {
-		.filter-group {
-			width: 100%;
-		}
-	}
-
-	.filter-label {
-		font-size: 12px;
-		font-weight: 600;
-		color: var(--text-3);
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		padding-left: 2px;
 	}
 
 	.type-selector,
 	.period-selector {
 		display: flex;
-		gap: 4px;
+		gap: 3px;
 		background: var(--bg-1);
-		padding: 4px;
-		border-radius: 10px;
+		padding: 3px;
+		border-radius: 8px;
 		border: 1px solid var(--bg-3);
+	}
+
+	.type-selector {
+		flex-shrink: 0;
+	}
+
+	.period-selector {
+		flex: 1;
+	}
+
+	@media (min-width: 768px) {
+		.period-selector {
+			flex: 0 1 auto;
+		}
 	}
 
 	.type-button,
 	.period-button {
-		padding: 8px 16px;
+		padding: 7px 16px;
 		border: none;
-		border-radius: 7px;
+		border-radius: 6px;
 		background: transparent;
 		color: var(--text-2);
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.15s ease;
@@ -542,12 +527,15 @@
 	}
 
 	@media (max-width: 767px) {
-		.type-button,
+		.type-button {
+			padding: 7px 14px;
+			font-size: 13px;
+		}
+
 		.period-button {
 			flex: 1;
-			padding: 7px 10px;
-			font-size: 13px;
-			min-height: 34px;
+			padding: 7px 8px;
+			font-size: 12px;
 		}
 	}
 
@@ -1066,27 +1054,33 @@
 	}
 
 	.pagination {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		gap: var(--space-lg);
-		padding: var(--space-md) 0;
-		margin-top: var(--space-md);
+		padding: var(--space-md) var(--space-lg);
+		background: rgba(var(--bg-0-rgb), 0.95);
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		border-top: 1px solid var(--bg-3);
+		box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+		z-index: 100;
+	}
+
+	:global([data-theme='dark']) .pagination {
+		background: rgba(var(--bg-0-rgb), 0.92);
+		box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
 	}
 
 	@media (max-width: 640px) {
 		.pagination {
-			position: fixed;
 			bottom: calc(var(--target-large, 60px) + env(safe-area-inset-bottom, 0px));
-			left: 0;
-			right: 0;
-			background: var(--bg-0);
-			border-top: 1px solid var(--bg-3);
 			padding: var(--space-sm) var(--space-md);
-			margin-top: 0;
 			gap: var(--space-sm);
-			z-index: 100;
-			box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
 		}
 	}
 
