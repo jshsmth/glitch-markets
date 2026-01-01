@@ -1,10 +1,9 @@
 import type { PageServerLoad } from './$types';
 import { Logger } from '$lib/utils/logger';
-import { fetchWithTimeout } from '$lib/server/utils/fetch-with-timeout';
 
 const logger = new Logger({ component: 'LeaderboardPage' });
 
-export const load: PageServerLoad = async ({ setHeaders }) => {
+export const load: PageServerLoad = async ({ setHeaders, fetch }) => {
 	setHeaders({
 		'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600'
 	});
@@ -12,25 +11,30 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 	try {
 		const tradersParams = new URLSearchParams({
 			category: 'OVERALL',
-			timePeriod: 'DAY',
+			timePeriod: 'ALL',
 			orderBy: 'PNL',
-			limit: '50',
+			limit: '10',
 			offset: '0'
 		});
 
 		const buildersParams = new URLSearchParams({
-			timePeriod: 'DAY',
-			limit: '50',
+			timePeriod: 'ALL',
+			limit: '10',
 			offset: '0'
 		});
 
 		const [tradersResponse, buildersResponse] = await Promise.all([
-			fetchWithTimeout(`/api/traders/leaderboard?${tradersParams.toString()}`),
-			fetchWithTimeout(`/api/builders/leaderboard?${buildersParams.toString()}`)
+			fetch(`/api/traders/leaderboard?${tradersParams.toString()}`),
+			fetch(`/api/builders/leaderboard?${buildersParams.toString()}`)
 		]);
 
 		const traders = tradersResponse.ok ? await tradersResponse.json() : [];
 		const builders = buildersResponse.ok ? await buildersResponse.json() : [];
+
+		logger.info('Loaded leaderboard data', {
+			tradersCount: traders.length,
+			buildersCount: builders.length
+		});
 
 		return {
 			initialTraders: traders,
