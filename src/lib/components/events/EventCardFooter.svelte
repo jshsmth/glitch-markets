@@ -139,6 +139,8 @@
 		color: var(--text-3);
 		cursor: pointer;
 		transition: all var(--transition-fast);
+		-webkit-tap-highlight-color: transparent;
+		user-select: none;
 	}
 
 	.bookmark-btn:hover {
