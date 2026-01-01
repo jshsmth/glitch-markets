@@ -2,7 +2,9 @@
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
 	import EmailIcon from '$lib/components/icons/EmailIcon.svelte';
+	import AuthButton from '$lib/components/ui/AuthButton.svelte';
 	import { Logger } from '$lib/utils/logger';
+	import { getErrorMessage } from '$lib/utils/error';
 
 	const log = Logger.forComponent('EmailOTPForm');
 	const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -49,17 +51,22 @@
 	}
 
 	async function handleSignUp() {
-		if (!browser || !emailAddress.trim() || !password.trim()) {
+		if (!browser) return;
+
+		const email = emailAddress.trim();
+		const pwd = password.trim();
+
+		if (!email || !pwd) {
 			onError?.('Please enter both email and password.');
 			return;
 		}
 
-		if (!isValidEmail(emailAddress.trim())) {
+		if (!isValidEmail(email)) {
 			onError?.('Please enter a valid email address.');
 			return;
 		}
 
-		if (password.length < 6) {
+		if (pwd.length < 6) {
 			onError?.('Password must be at least 6 characters.');
 			return;
 		}
@@ -69,11 +76,10 @@
 
 		try {
 			const supabase = $page.data.supabase;
-			const email = emailAddress.trim();
 
 			const { error } = await supabase.auth.signUp({
 				email,
-				password: password.trim(),
+				password: pwd,
 				options: {
 					emailRedirectTo: `${window.location.origin}/auth/callback`
 				}
@@ -85,20 +91,24 @@
 			emailSent = true;
 		} catch (err) {
 			log.error('Sign up failed', err);
-			const error = err as { message?: string };
-			onError?.(error.message || 'Failed to create account. Please try again.');
+			onError?.(getErrorMessage(err, 'Failed to create account. Please try again.'));
 		} finally {
 			setAuthenticating(false);
 		}
 	}
 
 	async function handleSignIn() {
-		if (!browser || !emailAddress.trim() || !password.trim()) {
+		if (!browser) return;
+
+		const email = emailAddress.trim();
+		const pwd = password.trim();
+
+		if (!email || !pwd) {
 			onError?.('Please enter both email and password.');
 			return;
 		}
 
-		if (!isValidEmail(emailAddress.trim())) {
+		if (!isValidEmail(email)) {
 			onError?.('Please enter a valid email address.');
 			return;
 		}
@@ -110,8 +120,8 @@
 			const supabase = $page.data.supabase;
 
 			const { error } = await supabase.auth.signInWithPassword({
-				email: emailAddress.trim(),
-				password: password.trim()
+				email,
+				password: pwd
 			});
 
 			if (error) throw error;
@@ -119,8 +129,7 @@
 			onSuccess?.();
 		} catch (err) {
 			log.error('Sign in failed', err);
-			const error = err as { message?: string };
-			onError?.(error.message || 'Invalid email or password.');
+			onError?.(getErrorMessage(err, 'Invalid email or password.'));
 		} finally {
 			setAuthenticating(false);
 		}
@@ -155,8 +164,8 @@
 			We've sent a confirmation link to <strong>{sentToEmail}</strong>. Click the link in the email
 			to verify your account.
 		</p>
-		<button
-			class="auth-button secondary"
+		<AuthButton
+			variant="secondary"
 			onclick={() => {
 				emailSent = false;
 				emailAddress = '';
@@ -164,7 +173,7 @@
 			}}
 		>
 			Back to sign in
-		</button>
+		</AuthButton>
 	</div>
 {:else}
 	<div class="email-form">
@@ -202,19 +211,18 @@
 				}
 			}}
 		/>
-		<button
-			class="auth-button primary"
+		<AuthButton
+			variant="primary"
 			onclick={handleSubmit}
 			disabled={isAuthenticating || !emailAddress.trim() || !password.trim()}
-			aria-busy={isAuthenticating}
+			loading={isAuthenticating}
+			ariaBusy={isAuthenticating}
 		>
-			{#if isAuthenticating}
-				<div class="spinner"></div>
-			{:else}
+			{#snippet icon()}
 				<EmailIcon size={22} />
-			{/if}
+			{/snippet}
 			<span>{emailButtonText}</span>
-		</button>
+		</AuthButton>
 		<button
 			class="toggle-mode-button"
 			type="button"
@@ -297,59 +305,6 @@
 		font-weight: 400;
 	}
 
-	.auth-button {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 12px;
-		padding: 16px 24px;
-		border: none;
-		border-radius: 10px;
-		font-size: 16px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		height: 54px;
-		width: 100%;
-	}
-
-	.auth-button:disabled {
-		cursor: not-allowed;
-		opacity: 0.5;
-		filter: saturate(0.8);
-	}
-
-	.auth-button:not(:disabled):hover {
-		transform: translateY(-1px);
-		box-shadow: var(--shadow-button-lift);
-	}
-
-	.auth-button:not(:disabled):active {
-		transform: translateY(0);
-	}
-
-	.auth-button.primary {
-		background: var(--primary);
-		color: white;
-		box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 25%, transparent);
-	}
-
-	.auth-button.primary:not(:disabled):hover {
-		background: var(--primary-hover);
-		box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 35%, transparent);
-	}
-
-	.auth-button.secondary {
-		background: var(--bg-2);
-		color: var(--text-1);
-		border: 1px solid var(--bg-4);
-	}
-
-	.auth-button.secondary:not(:disabled):hover {
-		background: var(--bg-3);
-		color: var(--text-0);
-	}
-
 	.toggle-mode-button {
 		background: none;
 		border: none;
@@ -370,37 +325,5 @@
 	.toggle-mode-button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
-	}
-
-	.spinner {
-		width: 20px;
-		height: 20px;
-		border: 2px solid currentColor;
-		border-top-color: transparent;
-		border-radius: 50%;
-		animation: spin 0.8s linear infinite;
-	}
-
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
-	}
-
-	@media (min-width: 768px) {
-		.auth-button {
-			height: 52px;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.auth-button {
-			transition: none;
-		}
-
-		.spinner {
-			animation: none;
-			border-top-color: currentColor;
-		}
 	}
 </style>

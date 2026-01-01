@@ -9,12 +9,10 @@
 
 	let isAuthenticating = $state<AuthProvider | null>(null);
 	let errorMessage = $state<string | null>(null);
-	let showSocialButtons = $state(true);
 
 	function resetModalState() {
 		errorMessage = null;
 		isAuthenticating = null;
-		showSocialButtons = true;
 	}
 
 	function handleModalClose() {
@@ -46,19 +44,17 @@
 	<div class="sign-in-content">
 		<EmailOTPForm {initialMode} onAuthStateChange={handleEmailAuthChange} onError={handleError} />
 
-		{#if showSocialButtons}
-			<div class="divider">
-				<span class="divider-line"></span>
-				<span class="divider-text">or</span>
-				<span class="divider-line"></span>
-			</div>
+		<div class="divider">
+			<span class="divider-line"></span>
+			<span class="divider-text">or</span>
+			<span class="divider-line"></span>
+		</div>
 
-			<SocialAuthButtons
-				authenticatingProvider={isAuthenticating}
-				onAuthStateChange={handleSocialAuthChange}
-				onError={handleError}
-			/>
-		{/if}
+		<SocialAuthButtons
+			authenticatingProvider={isAuthenticating}
+			onAuthStateChange={handleSocialAuthChange}
+			onError={handleError}
+		/>
 
 		{#if errorMessage}
 			<div class="error-message" role="alert" aria-live="polite">
@@ -66,15 +62,13 @@
 			</div>
 		{/if}
 
-		{#if showSocialButtons}
-			<p class="privacy-text">
-				By continuing, you agree to our <a href="/terms" target="_blank" rel="noopener noreferrer"
-					>Terms of Service</a
-				>
-				and
-				<a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
-			</p>
-		{/if}
+		<p class="privacy-text">
+			By continuing, you agree to our <a href="/terms" target="_blank" rel="noopener noreferrer"
+				>Terms of Service</a
+			>
+			and
+			<a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+		</p>
 	</div>
 </Modal>
 
