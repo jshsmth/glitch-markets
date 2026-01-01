@@ -279,7 +279,7 @@
 				onclick={() => (selectedPeriod = 'ALL')}
 				aria-pressed={selectedPeriod === 'ALL'}
 			>
-				All Time
+				All
 			</button>
 		</div>
 	</div>
@@ -402,9 +402,6 @@
 									{/if}
 									<div class="builder-details">
 										<span class="builder-name">{entry.builder}</span>
-										{#if entry.verified}
-											<span class="verified-badge" title="Verified">✓</span>
-										{/if}
 									</div>
 								</div>
 							</div>
@@ -447,7 +444,7 @@
 			</button>
 
 			<span class="pagination-info">
-				Page {currentPage}{canGoNext ? '+' : ''}
+				Page {currentPage}
 			</span>
 
 			<button
@@ -467,143 +464,94 @@
 		max-width: 1200px;
 		margin: 0 auto;
 		padding: var(--space-lg) 12px;
-		padding-bottom: 60px;
+		padding-bottom: 100px;
 	}
 
 	@media (min-width: 768px) {
 		.page-container {
 			padding: var(--space-lg) 24px;
-			padding-bottom: var(--space-lg);
+			padding-bottom: 100px;
 		}
 	}
 
 	.controls {
-		margin-bottom: var(--space-lg);
+		margin-bottom: var(--space-md);
 		display: flex;
-		flex-direction: column;
-		gap: var(--space-md);
+		gap: 8px;
 		align-items: center;
 	}
 
 	@media (max-width: 767px) {
 		.controls {
-			gap: var(--space-sm);
-			margin-bottom: var(--space-md);
+			gap: 6px;
 		}
 	}
 
-	@media (min-width: 768px) {
-		.controls {
-			flex-direction: row;
-			justify-content: space-between;
-		}
-	}
-
-	.type-selector {
+	.type-selector,
+	.period-selector {
 		display: flex;
-		gap: var(--space-xs);
+		gap: 3px;
 		background: var(--bg-1);
-		padding: 4px;
-		border-radius: 12px;
+		padding: 3px;
+		border-radius: 8px;
 		border: 1px solid var(--bg-3);
 	}
 
-	@media (max-width: 767px) {
-		.type-selector {
-			padding: 3px;
-			border-radius: 8px;
-			gap: 4px;
+	.type-selector {
+		flex-shrink: 0;
+	}
+
+	.period-selector {
+		flex: 1;
+	}
+
+	@media (min-width: 768px) {
+		.period-selector {
+			flex: 0 1 auto;
 		}
 	}
 
-	.type-button {
-		padding: 10px 24px;
+	.type-button,
+	.period-button {
+		padding: 7px 16px;
 		border: none;
-		border-radius: 8px;
+		border-radius: 6px;
 		background: transparent;
 		color: var(--text-2);
-		font-size: 15px;
+		font-size: 13px;
 		font-weight: 600;
 		cursor: pointer;
-		transition: all 0.2s ease;
-		min-height: 44px;
+		transition: all 0.15s ease;
+		min-height: 36px;
+		white-space: nowrap;
 	}
 
 	@media (max-width: 767px) {
 		.type-button {
-			padding: 8px 20px;
-			font-size: 14px;
-			min-height: 40px;
-			border-radius: 6px;
-		}
-	}
-
-	.type-button:hover {
-		background: var(--bg-2);
-		color: var(--text-1);
-	}
-
-	.type-button:focus-visible {
-		outline: 2px solid var(--primary);
-		outline-offset: 2px;
-	}
-
-	.type-button.active {
-		background: var(--primary);
-		color: var(--bg-0);
-	}
-
-	.period-selector {
-		display: flex;
-		gap: var(--space-xs);
-		background: var(--bg-1);
-		padding: 4px;
-		border-radius: 12px;
-		border: 1px solid var(--bg-3);
-	}
-
-	@media (max-width: 767px) {
-		.period-selector {
-			padding: 3px;
-			border-radius: 8px;
-			gap: 4px;
-			width: 100%;
-		}
-	}
-
-	.period-button {
-		padding: 8px 16px;
-		border: none;
-		border-radius: 8px;
-		background: transparent;
-		color: var(--text-2);
-		font-size: 14px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		min-height: 44px;
-	}
-
-	@media (max-width: 767px) {
-		.period-button {
-			padding: 6px 12px;
+			padding: 7px 14px;
 			font-size: 13px;
-			min-height: 40px;
+		}
+
+		.period-button {
 			flex: 1;
-			border-radius: 6px;
+			padding: 7px 8px;
+			font-size: 12px;
 		}
 	}
 
+	.type-button:hover,
 	.period-button:hover {
 		background: var(--bg-2);
 		color: var(--text-1);
 	}
 
+	.type-button:focus-visible,
 	.period-button:focus-visible {
 		outline: 2px solid var(--primary);
 		outline-offset: 2px;
 	}
 
+	.type-button.active,
 	.period-button.active {
 		background: var(--primary);
 		color: var(--bg-0);
@@ -1106,27 +1054,33 @@
 	}
 
 	.pagination {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		gap: var(--space-lg);
-		padding: var(--space-md) 0;
-		margin-top: var(--space-md);
+		padding: var(--space-md) var(--space-lg);
+		background: rgba(var(--bg-0-rgb), 0.95);
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		border-top: 1px solid var(--bg-3);
+		box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+		z-index: 100;
+	}
+
+	:global([data-theme='dark']) .pagination {
+		background: rgba(var(--bg-0-rgb), 0.92);
+		box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
 	}
 
 	@media (max-width: 640px) {
 		.pagination {
-			position: fixed;
 			bottom: calc(var(--target-large, 60px) + env(safe-area-inset-bottom, 0px));
-			left: 0;
-			right: 0;
-			background: var(--bg-0);
-			border-top: 1px solid var(--bg-3);
 			padding: var(--space-sm) var(--space-md);
-			margin-top: 0;
 			gap: var(--space-sm);
-			z-index: 100;
-			box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
 		}
 	}
 

@@ -21,6 +21,7 @@
 	import { openSignInModal } from '$lib/stores/modal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { geoblockState, checkGeoblock } from '$lib/stores/geoblock.svelte';
+	import GuestMenu from './GuestMenu.svelte';
 
 	interface Props {
 		size?: number;
@@ -343,6 +344,7 @@
 			>
 				Sign Up
 			</Button>
+			<GuestMenu />
 		</div>
 	{/if}
 
