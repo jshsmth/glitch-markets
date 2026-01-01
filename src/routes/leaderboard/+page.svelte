@@ -25,8 +25,8 @@
 	const queryClient = useQueryClient();
 
 	$effect(() => {
-		selectedType;
-		selectedPeriod;
+		void selectedType;
+		void selectedPeriod;
 		currentPage = 1;
 	});
 
@@ -36,6 +36,7 @@
 		page: number
 	): URLSearchParams {
 		const offset = (page - 1) * ITEMS_PER_PAGE;
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const params = new URLSearchParams({
 			timePeriod: period,
 			limit: ITEMS_PER_PAGE.toString(),
@@ -109,23 +110,32 @@
 
 	const activeQuery = $derived(selectedType === 'traders' ? tradersQuery : buildersQuery);
 	const isPending = $derived(browser && activeQuery.isPending);
-	const isFetching = $derived(browser && activeQuery.isFetching);
 	const error = $derived(browser ? activeQuery.error : null);
 
-	const currentData = $derived.by(() => {
-		if (browser && activeQuery.data) {
-			return activeQuery.data;
+	const tradersData = $derived.by((): EnrichedTraderEntry[] | null => {
+		if (selectedType !== 'traders') return null;
+		if (browser && tradersQuery.data) {
+			return tradersQuery.data;
 		}
-		if (selectedPeriod === 'ALL' && currentPage === 1) {
-			const serverData = selectedType === 'traders' ? data?.initialTraders : data?.initialBuilders;
-			if (serverData && serverData.length > 0) {
-				return enrichWithRankNumber(serverData);
-			}
+		if (selectedPeriod === 'ALL' && currentPage === 1 && data?.initialTraders) {
+			return enrichWithRankNumber(data.initialTraders);
 		}
-		return browser ? activeQuery.data : null;
+		return browser ? (tradersQuery.data ?? null) : null;
 	});
 
-	const totalPages = $derived(currentData && currentData.length === ITEMS_PER_PAGE ? 5 : currentPage);
+	const buildersData = $derived.by((): EnrichedBuilderEntry[] | null => {
+		if (selectedType !== 'builders') return null;
+		if (browser && buildersQuery.data) {
+			return buildersQuery.data;
+		}
+		if (selectedPeriod === 'ALL' && currentPage === 1 && data?.initialBuilders) {
+			return enrichWithRankNumber(data.initialBuilders);
+		}
+		return browser ? (buildersQuery.data ?? null) : null;
+	});
+
+	const currentData = $derived(selectedType === 'traders' ? tradersData : buildersData);
+
 	const canGoNext = $derived(currentData && currentData.length === ITEMS_PER_PAGE);
 	const canGoPrev = $derived(currentPage > 1);
 
@@ -154,32 +164,10 @@
 		return '';
 	}
 
-	function formatTimestamp(timestamp: number | null): string {
-		if (!timestamp) return '';
-		const date = new Date(timestamp);
-		const now = new Date();
-		const diffMs = now.getTime() - date.getTime();
-		const diffMins = Math.floor(diffMs / 60000);
-
-		if (diffMins < 1) return 'Just now';
-		if (diffMins === 1) return '1 minute ago';
-		if (diffMins < 60) return `${diffMins} minutes ago`;
-
-		const diffHours = Math.floor(diffMins / 60);
-		if (diffHours === 1) return '1 hour ago';
-		if (diffHours < 24) return `${diffHours} hours ago`;
-
-		return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-	}
-
 	function handleRefetch() {
 		if (browser) {
 			activeQuery.refetch();
 		}
-	}
-
-	function goToPage(page: number) {
-		currentPage = page;
 	}
 
 	function nextPage() {
@@ -319,8 +307,13 @@
 			<button class="retry-button" onclick={handleRefetch}>Try Again</button>
 		</div>
 	{:else if currentData && currentData.length > 0}
-		{#key `${selectedType}-${selectedPeriod}-${currentPage}`}
-			<div class="leaderboard-table" role="table" aria-label="{selectedType} leaderboard" transition:fade={{ duration: 150 }}>
+		{#key `${selectedType}-${selectedPeriod}`}
+			<div
+				class="leaderboard-table"
+				role="table"
+				aria-label="{selectedType} leaderboard"
+				transition:fade={{ duration: 150 }}
+			>
 				<div class="table-header" role="row">
 					{#if selectedType === 'traders'}
 						<div class="col-rank" role="columnheader">Rank</div>
@@ -335,8 +328,8 @@
 					{/if}
 				</div>
 
-				{#if selectedType === 'traders'}
-					{#each currentData as entry (entry.proxyWallet)}
+				{#if selectedType === 'traders' && tradersData}
+					{#each tradersData as entry (entry.proxyWallet)}
 						<div class="table-row" class:top-three={entry.rankNumber <= 3} role="row">
 							<div class="col-rank" role="cell">
 								<span class="rank-number">{entry.rank}</span>
@@ -369,7 +362,11 @@
 							</div>
 
 							<div class="col-pnl" role="cell">
-								<span class="pnl-amount" class:positive={entry.pnl >= 0} class:negative={entry.pnl < 0}>
+								<span
+									class="pnl-amount"
+									class:positive={entry.pnl >= 0}
+									class:negative={entry.pnl < 0}
+								>
 									{formatPnL(entry.pnl)}
 								</span>
 							</div>
@@ -379,8 +376,8 @@
 							</div>
 						</div>
 					{/each}
-				{:else}
-					{#each currentData as entry (entry.builder)}
+				{:else if selectedType === 'builders' && buildersData}
+					{#each buildersData as entry (entry.builder)}
 						<div class="table-row" class:top-three={entry.rankNumber <= 3} role="row">
 							<div class="col-rank" role="cell">
 								<span class="rank-number">{entry.rank}</span>
@@ -399,7 +396,9 @@
 											loading="lazy"
 										/>
 									{:else}
-										<div class="builder-logo-placeholder">{entry.builder.charAt(0).toUpperCase()}</div>
+										<div class="builder-logo-placeholder">
+											{entry.builder.charAt(0).toUpperCase()}
+										</div>
 									{/if}
 									<div class="builder-details">
 										<span class="builder-name">{entry.builder}</span>
@@ -649,7 +648,9 @@
 
 	.table-header {
 		display: grid;
-		grid-template-columns: var(--col-rank) var(--col-content) var(--col-metric-1) var(--col-metric-2);
+		grid-template-columns: var(--col-rank) var(--col-content) var(--col-metric-1) var(
+				--col-metric-2
+			);
 		gap: var(--space-md);
 		padding: var(--space-md) var(--space-lg);
 		background: var(--bg-2);
@@ -668,7 +669,9 @@
 
 	.table-row {
 		display: grid;
-		grid-template-columns: var(--col-rank) var(--col-content) var(--col-metric-1) var(--col-metric-2);
+		grid-template-columns: var(--col-rank) var(--col-content) var(--col-metric-1) var(
+				--col-metric-2
+			);
 		gap: var(--space-md);
 		padding: var(--space-md) var(--space-lg);
 		border-bottom: 1px solid var(--bg-2);
