@@ -174,6 +174,7 @@
 		grid-area: main;
 		width: 100%;
 		overflow-x: hidden;
+		padding-bottom: var(--space-xl); /* Prevent bottom content cutoff on mobile */
 	}
 
 	.app-layout :global(.bottom-nav) {
@@ -191,6 +192,10 @@
 
 		.app-layout :global(.bottom-nav) {
 			display: none;
+		}
+
+		.main-content {
+			padding-bottom: var(--space-lg); /* Less padding on desktop without bottom nav */
 		}
 	}
 </style>
