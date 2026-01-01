@@ -485,6 +485,13 @@
 		align-items: center;
 	}
 
+	@media (max-width: 767px) {
+		.controls {
+			gap: var(--space-sm);
+			margin-bottom: var(--space-md);
+		}
+	}
+
 	@media (min-width: 768px) {
 		.controls {
 			flex-direction: row;
@@ -501,6 +508,14 @@
 		border: 1px solid var(--bg-3);
 	}
 
+	@media (max-width: 767px) {
+		.type-selector {
+			padding: 3px;
+			border-radius: 8px;
+			gap: 4px;
+		}
+	}
+
 	.type-button {
 		padding: 10px 24px;
 		border: none;
@@ -512,6 +527,15 @@
 		cursor: pointer;
 		transition: all 0.2s ease;
 		min-height: 44px;
+	}
+
+	@media (max-width: 767px) {
+		.type-button {
+			padding: 8px 20px;
+			font-size: 14px;
+			min-height: 40px;
+			border-radius: 6px;
+		}
 	}
 
 	.type-button:hover {
@@ -538,6 +562,15 @@
 		border: 1px solid var(--bg-3);
 	}
 
+	@media (max-width: 767px) {
+		.period-selector {
+			padding: 3px;
+			border-radius: 8px;
+			gap: 4px;
+			width: 100%;
+		}
+	}
+
 	.period-button {
 		padding: 8px 16px;
 		border: none;
@@ -549,6 +582,16 @@
 		cursor: pointer;
 		transition: all 0.2s ease;
 		min-height: 44px;
+	}
+
+	@media (max-width: 767px) {
+		.period-button {
+			padding: 6px 12px;
+			font-size: 13px;
+			min-height: 40px;
+			flex: 1;
+			border-radius: 6px;
+		}
 	}
 
 	.period-button:hover {
@@ -1073,9 +1116,23 @@
 
 	@media (max-width: 640px) {
 		.pagination {
-			padding: var(--space-md) 0;
-			margin-top: var(--space-md);
+			position: fixed;
+			bottom: calc(var(--target-large, 60px) + env(safe-area-inset-bottom, 0px));
+			left: 0;
+			right: 0;
+			background: var(--bg-0);
+			border-top: 1px solid var(--bg-3);
+			padding: var(--space-sm) var(--space-md);
+			margin-top: 0;
 			gap: var(--space-sm);
+			z-index: 100;
+			box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+		}
+	}
+
+	@media (min-width: 414px) and (max-width: 640px) {
+		.pagination {
+			bottom: calc(68px + env(safe-area-inset-bottom, 0px));
 		}
 	}
 
