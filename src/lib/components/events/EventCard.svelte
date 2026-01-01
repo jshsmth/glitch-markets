@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Event } from '$lib/server/api/polymarket-client';
 	import CheckCircleIcon from '$lib/components/icons/CheckCircleIcon.svelte';
-	import FireIcon from '$lib/components/icons/FireIcon.svelte';
+	import ClockIcon from '$lib/components/icons/ClockIcon.svelte';
 	import CupIcon from '$lib/components/icons/CupIcon.svelte';
 	import EventCardHeader from '$lib/components/events/EventCardHeader.svelte';
 	import EventCardFooter from '$lib/components/events/EventCardFooter.svelte';
@@ -72,7 +72,7 @@
 				{#if variant !== 'compact'}
 					<span>Ending soon</span>
 				{/if}
-				<FireIcon size={variant === 'compact' ? 14 : 12} />
+				<ClockIcon size={14} />
 			</div>
 		{/if}
 
@@ -248,6 +248,12 @@
 		white-space: nowrap;
 		align-self: flex-end;
 		margin-bottom: 4px;
+		line-height: 1;
+	}
+
+	.corner-badge :global(svg) {
+		flex-shrink: 0;
+		display: block;
 	}
 
 	.resolved-badge {
@@ -268,13 +274,20 @@
 		gap: 4px;
 		font-size: var(--font-xs);
 		font-weight: 600;
-		color: var(--danger);
 		white-space: nowrap;
 		align-self: flex-end;
 		margin-bottom: 4px;
+		color: var(--warning-dark);
+		line-height: 1;
+	}
+
+	.closing-indicator :global(svg) {
+		flex-shrink: 0;
+		display: block;
 	}
 
 	.closing-indicator.compact {
+		font-size: 9px;
 		gap: 0;
 	}
 
