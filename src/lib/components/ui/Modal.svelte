@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ModalProps } from '$lib/types/modal';
 	import { browser } from '$app/environment';
+	import { focusTrap } from '$lib/actions/focusTrap';
 
 	let {
 		isOpen,
@@ -13,44 +14,15 @@
 	}: ModalProps = $props();
 
 	let modalElement = $state<HTMLDivElement | null>(null);
-	let previousFocusElement = $state<HTMLElement | null>(null);
 
 	$effect(() => {
 		if (!browser) return;
 
-		if (isOpen && modalElement) {
-			previousFocusElement = document.activeElement as HTMLElement;
+		if (isOpen) {
 			document.body.style.overflow = 'hidden';
 
-			const focusableElements = modalElement.querySelectorAll<HTMLElement>(
-				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-			);
-
-			if (focusableElements.length > 0) {
-				focusableElements[0].focus();
-			}
-
-			const handleTabKey = (e: KeyboardEvent) => {
-				if (e.key !== 'Tab') return;
-
-				const firstFocusable = focusableElements[0];
-				const lastFocusable = focusableElements[focusableElements.length - 1];
-
-				if (e.shiftKey && document.activeElement === firstFocusable) {
-					e.preventDefault();
-					lastFocusable.focus();
-				} else if (!e.shiftKey && document.activeElement === lastFocusable) {
-					e.preventDefault();
-					firstFocusable.focus();
-				}
-			};
-
-			document.addEventListener('keydown', handleTabKey);
-
 			return () => {
-				previousFocusElement?.focus();
 				document.body.style.overflow = '';
-				document.removeEventListener('keydown', handleTabKey);
 			};
 		}
 	});
@@ -74,6 +46,7 @@
 	<div class="modal-backdrop" onclick={handleBackdropClick} role="presentation">
 		<div
 			bind:this={modalElement}
+			use:focusTrap={{ enabled: isOpen }}
 			class="modal-container"
 			class:full-screen-mobile={fullScreenMobile}
 			style="max-width: {maxWidth}"
