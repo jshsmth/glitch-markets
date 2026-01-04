@@ -108,8 +108,6 @@ export function useRemoveFromWatchlist() {
 			if (context?.eventId) {
 				bookmarkedEventIds.add(context.eventId);
 			}
-		},
-		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.all });
 		}
 	}));
