@@ -168,24 +168,26 @@
 	@import '$lib/styles/skeleton.css';
 
 	.watchlist-section {
-		margin-bottom: var(--space-lg);
+		margin-bottom: var(--space-2xl);
 	}
 
 	.section-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin-bottom: var(--space-md);
+		padding-bottom: var(--space-md);
+		margin-bottom: var(--space-lg);
+		border-bottom: 1px solid var(--bg-3);
 	}
 
 	.title-group {
 		display: flex;
 		align-items: center;
-		gap: var(--spacing-2);
+		gap: var(--spacing-3);
 	}
 
 	.section-title {
-		font-size: 20px;
+		font-size: 24px;
 		font-weight: 700;
 		color: var(--text-0);
 		margin: 0;
@@ -249,10 +251,22 @@
 
 	.watchlist-scroll.show-all {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		grid-template-columns: repeat(1, 1fr);
 		overflow-x: visible;
 		scroll-snap-type: none;
-		gap: 12px;
+		gap: 16px;
+	}
+
+	@media (min-width: 641px) {
+		.watchlist-scroll.show-all {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (min-width: 1025px) {
+		.watchlist-scroll.show-all {
+			grid-template-columns: repeat(3, 1fr);
+		}
 	}
 
 	.watchlist-scroll::-webkit-scrollbar {
@@ -406,6 +420,15 @@
 	}
 
 	@media (max-width: 640px) {
+		.watchlist-section {
+			margin-bottom: var(--space-xl);
+		}
+
+		.section-header {
+			padding-bottom: var(--space-sm);
+			margin-bottom: var(--space-md);
+		}
+
 		.watchlist-card {
 			width: 280px;
 		}
@@ -416,7 +439,7 @@
 		}
 
 		.section-title {
-			font-size: 18px;
+			font-size: 20px;
 		}
 	}
 
@@ -509,11 +532,5 @@
 
 	.sign-in-btn:active {
 		transform: translateY(0);
-	}
-
-	@media (max-width: 640px) {
-		.section-title {
-			font-size: 18px;
-		}
 	}
 </style>

@@ -116,22 +116,27 @@
 	}
 
 	.section-title {
-		font-size: 20px;
+		font-size: 24px;
 		font-weight: 700;
 		color: var(--text-0);
-		margin: 0 0 var(--space-md) 0;
+		margin: 0;
+		padding-bottom: var(--space-md);
+		margin-bottom: var(--space-lg);
+		border-bottom: 1px solid var(--bg-3);
 	}
 
 	@media (max-width: 640px) {
 		.section-title {
-			font-size: 18px;
+			font-size: 20px;
+			padding-bottom: var(--space-sm);
+			margin-bottom: var(--space-md);
 		}
 	}
 
 	.event-grid {
 		display: grid;
 		grid-template-columns: 1fr;
-		gap: 8px;
+		gap: 16px;
 	}
 
 	@media (min-width: 641px) {
@@ -143,12 +148,6 @@
 	@media (min-width: 1025px) {
 		.event-grid {
 			grid-template-columns: repeat(3, 1fr);
-		}
-	}
-
-	@media (min-width: 1400px) {
-		.event-grid {
-			grid-template-columns: repeat(4, 1fr);
 		}
 	}
 
